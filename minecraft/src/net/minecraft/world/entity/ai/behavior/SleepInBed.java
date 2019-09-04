@@ -7,9 +7,11 @@ import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.core.SerializableLong;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
 import net.minecraft.world.entity.schedule.Activity;
@@ -20,7 +22,7 @@ public class SleepInBed extends Behavior<LivingEntity> {
 	private long nextOkStartTime;
 
 	public SleepInBed() {
-		super(ImmutableMap.of(MemoryModuleType.HOME, MemoryStatus.VALUE_PRESENT));
+		super(ImmutableMap.of(MemoryModuleType.HOME, MemoryStatus.VALUE_PRESENT, MemoryModuleType.LAST_WOKEN, MemoryStatus.REGISTERED));
 	}
 
 	@Override
@@ -28,12 +30,18 @@ public class SleepInBed extends Behavior<LivingEntity> {
 		if (livingEntity.isPassenger()) {
 			return false;
 		} else {
-			GlobalPos globalPos = (GlobalPos)livingEntity.getBrain().getMemory(MemoryModuleType.HOME).get();
+			Brain<?> brain = livingEntity.getBrain();
+			GlobalPos globalPos = (GlobalPos)brain.getMemory(MemoryModuleType.HOME).get();
 			if (!Objects.equals(serverLevel.getDimension().getType(), globalPos.dimension())) {
 				return false;
 			} else {
-				BlockState blockState = serverLevel.getBlockState(globalPos.pos());
-				return globalPos.pos().closerThan(livingEntity.position(), 2.0) && blockState.getBlock().is(BlockTags.BEDS) && !blockState.getValue(BedBlock.OCCUPIED);
+				Optional<SerializableLong> optional = brain.getMemory(MemoryModuleType.LAST_WOKEN);
+				if (optional.isPresent() && serverLevel.getGameTime() - ((SerializableLong)optional.get()).value() < 100L) {
+					return false;
+				} else {
+					BlockState blockState = serverLevel.getBlockState(globalPos.pos());
+					return globalPos.pos().closerThan(livingEntity.position(), 2.0) && blockState.getBlock().is(BlockTags.BEDS) && !blockState.getValue(BedBlock.OCCUPIED);
+				}
 			}
 		}
 	}

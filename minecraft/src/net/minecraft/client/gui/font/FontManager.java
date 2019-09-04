@@ -186,6 +186,11 @@ public class FontManager implements AutoCloseable {
 			profilerFiller.pop();
 			profilerFiller.endTick();
 		}
+
+		@Override
+		public String getName() {
+			return "FontManager";
+		}
 	};
 
 	public FontManager(TextureManager textureManager, boolean bl) {

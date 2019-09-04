@@ -92,7 +92,7 @@ public class Boat extends Entity {
 	}
 
 	@Override
-	protected boolean makeStepSound() {
+	protected boolean isMovementNoisy() {
 		return false;
 	}
 
@@ -692,7 +692,7 @@ public class Boat extends Entity {
 
 	@Override
 	public boolean interact(Player player, InteractionHand interactionHand) {
-		if (player.isSneaking()) {
+		if (player.isSecondaryUseActive()) {
 			return false;
 		} else {
 			if (!this.level.isClientSide && this.outOfControlTicks < 60.0F) {
