@@ -50,8 +50,12 @@ public class EnchantmentHelper {
 	}
 
 	public static Map<Enchantment, Integer> getEnchantments(ItemStack itemStack) {
-		Map<Enchantment, Integer> map = Maps.newLinkedHashMap();
 		ListTag listTag = itemStack.getItem() == Items.ENCHANTED_BOOK ? EnchantedBookItem.getEnchantments(itemStack) : itemStack.getEnchantmentTags();
+		return deserializeEnchantments(listTag);
+	}
+
+	public static Map<Enchantment, Integer> deserializeEnchantments(ListTag listTag) {
+		Map<Enchantment, Integer> map = Maps.newLinkedHashMap();
 
 		for(int i = 0; i < listTag.size(); ++i) {
 			CompoundTag compoundTag = listTag.getCompound(i);
