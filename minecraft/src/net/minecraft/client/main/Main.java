@@ -133,25 +133,28 @@ public class Main {
 		thread.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler(LOGGER));
 		Runtime.getRuntime().addShutdownHook(thread);
 		new RenderPipeline();
-		final Minecraft minecraft = new Minecraft(gameConfig);
-		Thread.currentThread().setName("Render thread");
-		RenderSystem.initRenderThread();
 
+		final Minecraft minecraft;
 		try {
-			minecraft.init();
+			Thread.currentThread().setName("Render thread");
+			RenderSystem.initRenderThread();
+			RenderSystem.beginInitialization();
+			minecraft = new Minecraft(gameConfig);
+			RenderSystem.finishInitialization();
 		} catch (Throwable var65) {
 			CrashReport crashReport = CrashReport.forThrowable(var65, "Initializing game");
 			crashReport.addCategory("Initialization");
-			minecraft.crash(minecraft.fillReport(crashReport));
+			Minecraft.fillReport(null, gameConfig.game.launchVersion, null, crashReport);
+			Minecraft.crash(crashReport);
 			return;
 		}
 
 		Thread thread2;
 		if (minecraft.renderOnThread()) {
-			thread2 = new Thread("Client thread") {
+			thread2 = new Thread("Game thread") {
 				public void run() {
 					try {
-						RenderSystem.initClientThread();
+						RenderSystem.initGameThread(true);
 						minecraft.run();
 					} catch (Throwable var2) {
 						Main.LOGGER.error("Exception in client thread", var2);
@@ -166,6 +169,7 @@ public class Main {
 			thread2 = null;
 
 			try {
+				RenderSystem.initGameThread(false);
 				minecraft.run();
 			} catch (Throwable var64) {
 				LOGGER.error("Unhandled game exception", var64);
@@ -188,6 +192,7 @@ public class Main {
 		return integer != null ? OptionalInt.of(integer) : OptionalInt.empty();
 	}
 
+	@Nullable
 	private static <T> T parseArgument(OptionSet optionSet, OptionSpec<T> optionSpec) {
 		try {
 			return optionSet.valueOf(optionSpec);
@@ -204,7 +209,7 @@ public class Main {
 		}
 	}
 
-	private static boolean stringHasValue(String string) {
+	private static boolean stringHasValue(@Nullable String string) {
 		return string != null && !string.isEmpty();
 	}
 

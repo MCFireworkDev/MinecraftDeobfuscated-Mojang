@@ -152,17 +152,20 @@ public abstract class PatrollingMonster extends Monster {
 		private final T mob;
 		private final double speedModifier;
 		private final double leaderSpeedModifier;
+		private long cooldownUntil;
 
 		public LongDistancePatrolGoal(T patrollingMonster, double d, double e) {
 			this.mob = patrollingMonster;
 			this.speedModifier = d;
 			this.leaderSpeedModifier = e;
+			this.cooldownUntil = -1L;
 			this.setFlags(EnumSet.of(Goal.Flag.MOVE));
 		}
 
 		@Override
 		public boolean canUse() {
-			return this.mob.isPatrolling() && this.mob.getTarget() == null && !this.mob.isVehicle() && this.mob.hasPatrolTarget();
+			boolean bl = this.mob.level.getGameTime() < this.cooldownUntil;
+			return this.mob.isPatrolling() && this.mob.getTarget() == null && !this.mob.isVehicle() && this.mob.hasPatrolTarget() && !bl;
 		}
 
 		@Override
@@ -194,7 +197,9 @@ public abstract class PatrollingMonster extends Monster {
 					if (!pathNavigation.moveTo((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ(), bl ? this.leaderSpeedModifier : this.speedModifier)
 						)
 					 {
-						this.moveRandomly();
+						if (!this.moveRandomly()) {
+							this.cooldownUntil = this.mob.level.getGameTime() + 200L;
+						}
 					} else if (bl) {
 						for(PatrollingMonster patrollingMonster : list) {
 							patrollingMonster.setPatrolTarget(blockPos);
@@ -214,12 +219,12 @@ public abstract class PatrollingMonster extends Monster {
 				);
 		}
 
-		private void moveRandomly() {
+		private boolean moveRandomly() {
 			Random random = this.mob.getRandom();
 			BlockPos blockPos = this.mob
 				.level
 				.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(this.mob).offset(-8 + random.nextInt(16), 0, -8 + random.nextInt(16)));
-			this.mob.getNavigation().moveTo((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ(), this.speedModifier);
+			return this.mob.getNavigation().moveTo((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ(), this.speedModifier);
 		}
 	}
 }

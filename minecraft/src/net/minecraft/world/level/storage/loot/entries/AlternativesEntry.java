@@ -2,14 +2,9 @@ package net.minecraft.world.level.storage.loot.entries;
 
 import com.google.common.collect.Lists;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.loot.LootContext;
-import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.world.level.storage.loot.LootTableProblemCollector;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParamSet;
+import net.minecraft.world.level.storage.loot.ValidationContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -41,17 +36,12 @@ public class AlternativesEntry extends CompositeEntryBase {
 	}
 
 	@Override
-	public void validate(
-		LootTableProblemCollector lootTableProblemCollector,
-		Function<ResourceLocation, LootTable> function,
-		Set<ResourceLocation> set,
-		LootContextParamSet lootContextParamSet
-	) {
-		super.validate(lootTableProblemCollector, function, set, lootContextParamSet);
+	public void validate(ValidationContext validationContext) {
+		super.validate(validationContext);
 
 		for(int i = 0; i < this.children.length - 1; ++i) {
 			if (ArrayUtils.isEmpty((Object[])this.children[i].conditions)) {
-				lootTableProblemCollector.reportProblem("Unreachable entry!");
+				validationContext.reportProblem("Unreachable entry!");
 			}
 		}
 	}
