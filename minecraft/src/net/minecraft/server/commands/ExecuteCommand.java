@@ -281,7 +281,7 @@ public class ExecuteCommand {
 														commandContext.getSource(),
 														dataProvider.access(commandContext),
 														NbtPathArgument.getPath(commandContext, "path"),
-														i -> new IntTag((int)((double)i * DoubleArgumentType.getDouble(commandContext, "scale"))),
+														i -> IntTag.valueOf((int)((double)i * DoubleArgumentType.getDouble(commandContext, "scale"))),
 														bl
 													)
 											)
@@ -297,7 +297,7 @@ public class ExecuteCommand {
 														commandContext.getSource(),
 														dataProvider.access(commandContext),
 														NbtPathArgument.getPath(commandContext, "path"),
-														i -> new FloatTag((float)((double)i * DoubleArgumentType.getDouble(commandContext, "scale"))),
+														i -> FloatTag.valueOf((float)((double)i * DoubleArgumentType.getDouble(commandContext, "scale"))),
 														bl
 													)
 											)
@@ -313,7 +313,7 @@ public class ExecuteCommand {
 														commandContext.getSource(),
 														dataProvider.access(commandContext),
 														NbtPathArgument.getPath(commandContext, "path"),
-														i -> new ShortTag((short)((int)((double)i * DoubleArgumentType.getDouble(commandContext, "scale")))),
+														i -> ShortTag.valueOf((short)((int)((double)i * DoubleArgumentType.getDouble(commandContext, "scale")))),
 														bl
 													)
 											)
@@ -329,7 +329,7 @@ public class ExecuteCommand {
 														commandContext.getSource(),
 														dataProvider.access(commandContext),
 														NbtPathArgument.getPath(commandContext, "path"),
-														i -> new LongTag((long)((double)i * DoubleArgumentType.getDouble(commandContext, "scale"))),
+														i -> LongTag.valueOf((long)((double)i * DoubleArgumentType.getDouble(commandContext, "scale"))),
 														bl
 													)
 											)
@@ -345,7 +345,7 @@ public class ExecuteCommand {
 														commandContext.getSource(),
 														dataProvider.access(commandContext),
 														NbtPathArgument.getPath(commandContext, "path"),
-														i -> new DoubleTag((double)i * DoubleArgumentType.getDouble(commandContext, "scale")),
+														i -> DoubleTag.valueOf((double)i * DoubleArgumentType.getDouble(commandContext, "scale")),
 														bl
 													)
 											)
@@ -361,7 +361,7 @@ public class ExecuteCommand {
 														commandContext.getSource(),
 														dataProvider.access(commandContext),
 														NbtPathArgument.getPath(commandContext, "path"),
-														i -> new ByteTag((byte)((int)((double)i * DoubleArgumentType.getDouble(commandContext, "scale")))),
+														i -> ByteTag.valueOf((byte)((int)((double)i * DoubleArgumentType.getDouble(commandContext, "scale")))),
 														bl
 													)
 											)
