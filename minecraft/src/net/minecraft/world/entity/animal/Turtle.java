@@ -612,7 +612,8 @@ public class Turtle extends Animal {
 
 		@Override
 		protected PathFinder createPathFinder(int i) {
-			return new PathFinder(new TurtleNodeEvaluator(), i);
+			this.nodeEvaluator = new TurtleNodeEvaluator();
+			return new PathFinder(this.nodeEvaluator, i);
 		}
 
 		@Override
