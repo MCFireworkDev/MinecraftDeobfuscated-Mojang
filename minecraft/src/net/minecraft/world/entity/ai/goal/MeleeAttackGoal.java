@@ -46,7 +46,7 @@ public class MeleeAttackGoal extends Goal {
 				if (this.path != null) {
 					return true;
 				} else {
-					return this.getAttackReachSqr(livingEntity) >= this.mob.distanceToSqr(livingEntity.x, livingEntity.getBoundingBox().minY, livingEntity.z);
+					return this.getAttackReachSqr(livingEntity) >= this.mob.distanceToSqr(livingEntity.getX(), livingEntity.getY(), livingEntity.getZ());
 				}
 			}
 		}
@@ -90,7 +90,7 @@ public class MeleeAttackGoal extends Goal {
 	public void tick() {
 		LivingEntity livingEntity = this.mob.getTarget();
 		this.mob.getLookControl().setLookAt(livingEntity, 30.0F, 30.0F);
-		double d = this.mob.distanceToSqr(livingEntity.x, livingEntity.getBoundingBox().minY, livingEntity.z);
+		double d = this.mob.distanceToSqr(livingEntity.getX(), livingEntity.getY(), livingEntity.getZ());
 		--this.timeToRecalcPath;
 		if ((this.trackTarget || this.mob.getSensing().canSee(livingEntity))
 			&& this.timeToRecalcPath <= 0
@@ -99,9 +99,9 @@ public class MeleeAttackGoal extends Goal {
 					|| livingEntity.distanceToSqr(this.pathedTargetX, this.pathedTargetY, this.pathedTargetZ) >= 1.0
 					|| this.mob.getRandom().nextFloat() < 0.05F
 			)) {
-			this.pathedTargetX = livingEntity.x;
-			this.pathedTargetY = livingEntity.getBoundingBox().minY;
-			this.pathedTargetZ = livingEntity.z;
+			this.pathedTargetX = livingEntity.getX();
+			this.pathedTargetY = livingEntity.getY();
+			this.pathedTargetZ = livingEntity.getZ();
 			this.timeToRecalcPath = 4 + this.mob.getRandom().nextInt(7);
 			if (d > 1024.0) {
 				this.timeToRecalcPath += 10;
