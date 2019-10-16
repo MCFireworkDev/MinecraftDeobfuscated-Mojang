@@ -28,6 +28,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ChunkBufferBuilderPack;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
@@ -516,7 +517,7 @@ public class ChunkRenderDispatcher {
 
 						FluidState fluidState = renderChunkRegion.getFluidState(blockPos3);
 						if (!fluidState.isEmpty()) {
-							RenderType renderType = RenderType.getRenderLayer(fluidState);
+							RenderType renderType = ItemBlockRenderTypes.getRenderLayer(fluidState);
 							BufferBuilder bufferBuilder = chunkBufferBuilderPack.builder(renderType);
 							if (compiledChunk.hasLayer.add(renderType)) {
 								RenderChunk.this.beginLayer(bufferBuilder);
@@ -529,16 +530,20 @@ public class ChunkRenderDispatcher {
 						}
 
 						if (blockState.getRenderShape() != RenderShape.INVISIBLE) {
-							RenderType renderType = RenderType.getChunkRenderType(blockState);
+							RenderType renderType = ItemBlockRenderTypes.getChunkRenderType(blockState);
 							BufferBuilder bufferBuilder = chunkBufferBuilderPack.builder(renderType);
 							if (compiledChunk.hasLayer.add(renderType)) {
 								RenderChunk.this.beginLayer(bufferBuilder);
 							}
 
+							poseStack.pushPose();
+							poseStack.translate((double)(blockPos3.getX() & 15), (double)(blockPos3.getY() & 15), (double)(blockPos3.getZ() & 15));
 							if (blockRenderDispatcher.renderBatched(blockState, blockPos3, renderChunkRegion, poseStack, bufferBuilder, true, random)) {
 								compiledChunk.isCompletelyEmpty = false;
 								compiledChunk.hasBlocks.add(renderType);
 							}
+
+							poseStack.popPose();
 						}
 					}
 
