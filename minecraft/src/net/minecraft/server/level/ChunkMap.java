@@ -351,6 +351,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 			} while(mutableBoolean.isTrue());
 
 			this.processUnloads(() -> true);
+			this.flushWorker();
 			LOGGER.info("ThreadedAnvilChunkStorage ({}): All chunks are saved", this.storageFolder.getName());
 		} else {
 			this.visibleChunkMap.values().stream().filter(ChunkHolder::wasAccessibleSinceLastSave).forEach(chunkHolder -> {
