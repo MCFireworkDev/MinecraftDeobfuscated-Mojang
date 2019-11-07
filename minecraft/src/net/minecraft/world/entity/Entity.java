@@ -76,6 +76,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FenceGateBlock;
@@ -1084,9 +1085,8 @@ public abstract class Entity implements Nameable, CommandSource {
 	}
 
 	@Environment(EnvType.CLIENT)
-	public int getLightColor() {
-		BlockPos blockPos = new BlockPos(this.getX(), this.getEyeY(), this.getZ());
-		return this.level.hasChunkAt(blockPos) ? this.level.getLightColor(blockPos) : 0;
+	public int getBlockLightLevel() {
+		return this.isOnFire() ? 15 : this.level.getBrightness(LightLayer.BLOCK, new BlockPos(this.getX(), this.getY(), this.getZ()));
 	}
 
 	public float getBrightness() {
@@ -2741,5 +2741,8 @@ public abstract class Entity implements Nameable, CommandSource {
 		this.x = d;
 		this.y = e;
 		this.z = f;
+	}
+
+	public void checkDespawn() {
 	}
 }

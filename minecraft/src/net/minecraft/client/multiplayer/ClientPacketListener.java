@@ -52,6 +52,7 @@ import net.minecraft.client.particle.ItemPickupParticle;
 import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.player.RemotePlayer;
+import net.minecraft.client.renderer.debug.BeeDebugRenderer;
 import net.minecraft.client.renderer.debug.GoalSelectorDebugRenderer;
 import net.minecraft.client.renderer.debug.NeighborsUpdateRenderer;
 import net.minecraft.client.renderer.debug.VillageDebugRenderer;
@@ -304,7 +305,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 	private final GameProfile localGameProfile;
 	private final Screen callbackScreen;
 	private Minecraft minecraft;
-	private MultiPlayerLevel level;
+	private ClientLevel level;
 	private boolean started;
 	private final Map<UUID, PlayerInfo> playerInfoMap = Maps.newHashMap();
 	private final ClientAdvancements advancements;
@@ -343,7 +344,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		PacketUtils.ensureRunningOnSameThread(clientboundLoginPacket, this, this.minecraft);
 		this.minecraft.gameMode = new MultiPlayerGameMode(this.minecraft, this);
 		this.serverChunkRadius = clientboundLoginPacket.getChunkRadius();
-		this.level = new MultiPlayerLevel(
+		this.level = new ClientLevel(
 			this,
 			new LevelSettings(
 				clientboundLoginPacket.getSeed(), clientboundLoginPacket.getGameType(), false, clientboundLoginPacket.isHardcore(), clientboundLoginPacket.getLevelType()
@@ -737,7 +738,6 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		LevelChunk levelChunk = this.level
 			.getChunkSource()
 			.replaceWithPacketData(
-				this.level,
 				i,
 				j,
 				clientboundLevelChunkPacket.getBiomes(),
@@ -1036,7 +1036,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		if (dimensionType != localPlayer.dimension) {
 			this.started = false;
 			Scoreboard scoreboard = this.level.getScoreboard();
-			this.level = new MultiPlayerLevel(
+			this.level = new ClientLevel(
 				this,
 				new LevelSettings(
 					clientboundRespawnPacket.getSeed(),
@@ -2024,14 +2024,46 @@ public class ClientPacketListener implements ClientGamePacketListener {
 				}
 
 				this.minecraft.debugRenderer.villageDebugRenderer.addOrUpdateBrainDump(brainDump);
+			} else if (ClientboundCustomPayloadPacket.DEBUG_BEE.equals(resourceLocation)) {
+				double d = friendlyByteBuf.readDouble();
+				double e = friendlyByteBuf.readDouble();
+				double g = friendlyByteBuf.readDouble();
+				Position position = new PositionImpl(d, e, g);
+				UUID uUID = friendlyByteBuf.readUUID();
+				int o = friendlyByteBuf.readInt();
+				BlockPos blockPos4 = friendlyByteBuf.readBlockPos();
+				BlockPos blockPos5 = friendlyByteBuf.readBlockPos();
+				boolean bl4 = friendlyByteBuf.readBoolean();
+				Path path3;
+				if (bl4) {
+					path3 = Path.createFromStream(friendlyByteBuf);
+				} else {
+					path3 = null;
+				}
+
+				BeeDebugRenderer.BeeInfo beeInfo = new BeeDebugRenderer.BeeInfo(uUID, o, position, path3, blockPos4, blockPos5);
+				int w = friendlyByteBuf.readInt();
+
+				for(int x = 0; x < w; ++x) {
+					String string10 = friendlyByteBuf.readUtf();
+					beeInfo.goals.add(string10);
+				}
+
+				this.minecraft.debugRenderer.beeDebugRenderer.addOrUpdateBeeInfo(beeInfo);
+			} else if (ClientboundCustomPayloadPacket.DEBUG_HIVE.equals(resourceLocation)) {
+				BlockPos blockPos2 = friendlyByteBuf.readBlockPos();
+				String string = friendlyByteBuf.readUtf();
+				int m = friendlyByteBuf.readInt();
+				BeeDebugRenderer.HiveInfo hiveInfo = new BeeDebugRenderer.HiveInfo(blockPos2, string, m, this.level.getGameTime());
+				this.minecraft.debugRenderer.beeDebugRenderer.addOrUpdateHiveInfo(hiveInfo);
 			} else if (ClientboundCustomPayloadPacket.DEBUG_GAME_TEST_CLEAR.equals(resourceLocation)) {
 				this.minecraft.debugRenderer.gameTestDebugRenderer.clear();
 			} else if (ClientboundCustomPayloadPacket.DEBUG_GAME_TEST_ADD_MARKER.equals(resourceLocation)) {
 				BlockPos blockPos2 = friendlyByteBuf.readBlockPos();
 				int j = friendlyByteBuf.readInt();
-				String string10 = friendlyByteBuf.readUtf();
-				int w = friendlyByteBuf.readInt();
-				this.minecraft.debugRenderer.gameTestDebugRenderer.addMarker(blockPos2, j, string10, w);
+				String string11 = friendlyByteBuf.readUtf();
+				int y = friendlyByteBuf.readInt();
+				this.minecraft.debugRenderer.gameTestDebugRenderer.addMarker(blockPos2, j, string11, y);
 			} else {
 				LOGGER.warn("Unknown custom packed identifier: {}", resourceLocation);
 			}
@@ -2329,7 +2361,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		return this.commands;
 	}
 
-	public MultiPlayerLevel getLevel() {
+	public ClientLevel getLevel() {
 		return this.level;
 	}
 
