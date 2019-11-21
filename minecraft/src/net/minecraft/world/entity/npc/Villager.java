@@ -556,6 +556,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 
 	@Override
 	public void die(DamageSource damageSource) {
+		LOGGER.info("Villager {} died, message: '{}'", this, damageSource.getLocalizedDeathMessage(this).getString());
 		Entity entity = damageSource.getEntity();
 		if (entity != null) {
 			this.tellWitnessesThatIWasMurdered(entity);
