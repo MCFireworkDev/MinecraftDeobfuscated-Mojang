@@ -3,6 +3,8 @@ package net.minecraft.client.renderer.blockentity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Vector3f;
+import it.unimi.dsi.fastutil.floats.Float2FloatFunction;
+import it.unimi.dsi.fastutil.ints.Int2IntFunction;
 import java.util.Calendar;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -13,9 +15,12 @@ import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.DoubleBlockCombiner;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.LidBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
@@ -75,34 +80,40 @@ public class ChestRenderer<T extends BlockEntity & LidBlockEntity> extends Block
 		boolean bl = level != null;
 		BlockState blockState = bl ? blockEntity.getBlockState() : Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.SOUTH);
 		ChestType chestType = blockState.hasProperty(ChestBlock.TYPE) ? blockState.getValue(ChestBlock.TYPE) : ChestType.SINGLE;
-		boolean bl2 = chestType != ChestType.SINGLE;
-		poseStack.pushPose();
-		float g = ((Direction)blockState.getValue(ChestBlock.FACING)).toYRot();
-		poseStack.translate(0.5, 0.5, 0.5);
-		poseStack.mulPose(Vector3f.YP.rotationDegrees(-g));
-		poseStack.translate(-0.5, -0.5, -0.5);
-		float h;
-		if (bl) {
-			h = ChestBlock.getCombinedOpenness(blockEntity, blockState, level, blockEntity.getBlockPos(), f);
-		} else {
-			h = blockEntity.getOpenNess(f);
-		}
-
-		h = 1.0F - h;
-		h = 1.0F - h * h * h;
-		Material material = Sheets.chooseMaterial(blockEntity, chestType, this.xmasTextures);
-		VertexConsumer vertexConsumer = material.buffer(multiBufferSource, RenderType::entityCutout);
-		if (bl2) {
-			if (chestType == ChestType.LEFT) {
-				this.render(poseStack, vertexConsumer, this.doubleRightLid, this.doubleRightLock, this.doubleRightBottom, h, i, j);
+		Block block = blockState.getBlock();
+		if (block instanceof ChestBlock) {
+			ChestBlock chestBlock = (ChestBlock)block;
+			boolean bl2 = chestType != ChestType.SINGLE;
+			poseStack.pushPose();
+			float g = ((Direction)blockState.getValue(ChestBlock.FACING)).toYRot();
+			poseStack.translate(0.5, 0.5, 0.5);
+			poseStack.mulPose(Vector3f.YP.rotationDegrees(-g));
+			poseStack.translate(-0.5, -0.5, -0.5);
+			DoubleBlockCombiner.NeighborCombineResult<? extends ChestBlockEntity> neighborCombineResult;
+			if (bl) {
+				neighborCombineResult = ChestBlock.combine(chestBlock, blockState, level, blockEntity.getBlockPos(), true);
 			} else {
-				this.render(poseStack, vertexConsumer, this.doubleLeftLid, this.doubleLeftLock, this.doubleLeftBottom, h, i, j);
+				neighborCombineResult = DoubleBlockCombiner.Combiner::acceptNone;
 			}
-		} else {
-			this.render(poseStack, vertexConsumer, this.lid, this.lock, this.bottom, h, i, j);
-		}
 
-		poseStack.popPose();
+			float h = neighborCombineResult.<Float2FloatFunction>apply(ChestBlock.opennessCombiner(blockEntity)).get(f);
+			h = 1.0F - h;
+			h = 1.0F - h * h * h;
+			int k = neighborCombineResult.<Int2IntFunction>apply(new BrightnessCombiner<>()).applyAsInt(i);
+			Material material = Sheets.chooseMaterial(blockEntity, chestType, this.xmasTextures);
+			VertexConsumer vertexConsumer = material.buffer(multiBufferSource, RenderType::entityCutout);
+			if (bl2) {
+				if (chestType == ChestType.LEFT) {
+					this.render(poseStack, vertexConsumer, this.doubleRightLid, this.doubleRightLock, this.doubleRightBottom, h, k, j);
+				} else {
+					this.render(poseStack, vertexConsumer, this.doubleLeftLid, this.doubleLeftLock, this.doubleLeftBottom, h, k, j);
+				}
+			} else {
+				this.render(poseStack, vertexConsumer, this.lid, this.lock, this.bottom, h, k, j);
+			}
+
+			poseStack.popPose();
+		}
 	}
 
 	private void render(

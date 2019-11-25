@@ -1220,6 +1220,7 @@ public abstract class Mob extends LivingEntity {
 			}
 
 			this.doEnchantDamageEffects(this, entity);
+			this.setLastHurtMob(entity);
 		}
 
 		return bl;
