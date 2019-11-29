@@ -20,7 +20,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.Item;
@@ -41,7 +40,7 @@ public class EnchantmentHelper {
 				CompoundTag compoundTag = listTag.getCompound(i);
 				ResourceLocation resourceLocation2 = ResourceLocation.tryParse(compoundTag.getString("id"));
 				if (resourceLocation2 != null && resourceLocation2.equals(resourceLocation)) {
-					return compoundTag.getInt("lvl");
+					return Mth.clamp(compoundTag.getInt("lvl"), 0, 255);
 				}
 			}
 
@@ -50,8 +49,12 @@ public class EnchantmentHelper {
 	}
 
 	public static Map<Enchantment, Integer> getEnchantments(ItemStack itemStack) {
-		Map<Enchantment, Integer> map = Maps.newLinkedHashMap();
 		ListTag listTag = itemStack.getItem() == Items.ENCHANTED_BOOK ? EnchantedBookItem.getEnchantments(itemStack) : itemStack.getEnchantmentTags();
+		return deserializeEnchantments(listTag);
+	}
+
+	public static Map<Enchantment, Integer> deserializeEnchantments(ListTag listTag) {
+		Map<Enchantment, Integer> map = Maps.newLinkedHashMap();
 
 		for(int i = 0; i < listTag.size(); ++i) {
 			CompoundTag compoundTag = listTag.getCompound(i);
@@ -110,9 +113,9 @@ public class EnchantmentHelper {
 		return mutableInt.intValue();
 	}
 
-	public static float getDamageBonus(ItemStack itemStack, MobType mobType) {
+	public static float getDamageBonus(ItemStack itemStack, LivingEntity livingEntity) {
 		MutableFloat mutableFloat = new MutableFloat();
-		runIterationOnItem((enchantment, i) -> mutableFloat.add(enchantment.getDamageBonus(i, mobType)), itemStack);
+		runIterationOnItem((enchantment, i) -> mutableFloat.add(enchantment.getDamageBonus(i, livingEntity)), itemStack);
 		return mutableFloat.floatValue();
 	}
 
@@ -169,6 +172,10 @@ public class EnchantmentHelper {
 		return getEnchantmentLevel(Enchantments.FIRE_ASPECT, livingEntity);
 	}
 
+	public static int getChopping(LivingEntity livingEntity) {
+		return getEnchantmentLevel(Enchantments.CHOPPING, livingEntity);
+	}
+
 	public static int getRespiration(LivingEntity livingEntity) {
 		return getEnchantmentLevel(Enchantments.RESPIRATION, livingEntity);
 	}
@@ -177,8 +184,8 @@ public class EnchantmentHelper {
 		return getEnchantmentLevel(Enchantments.DEPTH_STRIDER, livingEntity);
 	}
 
-	public static int getBlockEfficiency(LivingEntity livingEntity) {
-		return getEnchantmentLevel(Enchantments.BLOCK_EFFICIENCY, livingEntity);
+	public static int getDiggingEfficiency(LivingEntity livingEntity) {
+		return getEnchantmentLevel(Enchantments.DIGGING_EFFICIENCY, livingEntity);
 	}
 
 	public static int getFishingLuckBonus(ItemStack itemStack) {

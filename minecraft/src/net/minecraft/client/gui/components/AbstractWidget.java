@@ -1,6 +1,7 @@
 package net.minecraft.client.gui.components;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.Objects;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -65,9 +66,9 @@ public abstract class AbstractWidget extends GuiComponent implements Widget, Gui
 			if (this.wasHovered != this.isHovered()) {
 				if (this.isHovered()) {
 					if (this.focused) {
-						this.nextNarration = Util.getMillis() + 200L;
+						this.queueNarration(200);
 					} else {
-						this.nextNarration = Util.getMillis() + 750L;
+						this.queueNarration(750);
 					}
 				} else {
 					this.nextNarration = Long.MAX_VALUE;
@@ -94,31 +95,23 @@ public abstract class AbstractWidget extends GuiComponent implements Widget, Gui
 	}
 
 	protected String getNarrationMessage() {
-		return this.message.isEmpty() ? "" : I18n.get("gui.narrate.button", this.getMessage());
+		return this.getMessage().isEmpty() ? "" : I18n.get("gui.narrate.button", this.getMessage());
 	}
 
 	public void renderButton(int i, int j, float f) {
 		Minecraft minecraft = Minecraft.getInstance();
 		Font font = minecraft.font;
 		minecraft.getTextureManager().bind(WIDGETS_LOCATION);
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, this.alpha);
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.alpha);
 		int k = this.getYImage(this.isHovered());
-		GlStateManager.enableBlend();
-		GlStateManager.blendFuncSeparate(
-			GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO
-		);
-		GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+		RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 		this.blit(this.x, this.y, 0, 46 + k * 20, this.width / 2, this.height);
 		this.blit(this.x + this.width / 2, this.y, 200 - this.width / 2, 46 + k * 20, this.width / 2, this.height);
 		this.renderBg(minecraft, i, j);
-		int l = 14737632;
-		if (!this.active) {
-			l = 10526880;
-		} else if (this.isHovered()) {
-			l = 16777120;
-		}
-
-		this.drawCenteredString(font, this.message, this.x + this.width / 2, this.y + (this.height - 8) / 2, l | Mth.ceil(this.alpha * 255.0F) << 24);
+		int l = this.active ? 16777215 : 10526880;
+		this.drawCenteredString(font, this.getMessage(), this.x + this.width / 2, this.y + (this.height - 8) / 2, l | Mth.ceil(this.alpha * 255.0F) << 24);
 	}
 
 	protected void renderBg(Minecraft minecraft, int i, int j) {
@@ -223,10 +216,14 @@ public abstract class AbstractWidget extends GuiComponent implements Widget, Gui
 
 	public void setMessage(String string) {
 		if (!Objects.equals(string, this.message)) {
-			this.nextNarration = Util.getMillis() + 250L;
+			this.queueNarration(250);
 		}
 
 		this.message = string;
+	}
+
+	public void queueNarration(int i) {
+		this.nextNarration = Util.getMillis() + (long)i;
 	}
 
 	public String getMessage() {

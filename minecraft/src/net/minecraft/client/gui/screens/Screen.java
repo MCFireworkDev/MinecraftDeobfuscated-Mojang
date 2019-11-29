@@ -3,13 +3,14 @@ package net.minecraft.client.gui.screens;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonSyntaxException;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.math.Matrix4f;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,6 +33,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -133,10 +135,8 @@ public abstract class Screen extends AbstractContainerEventHandler implements Wi
 
 	public void renderTooltip(List<String> list, int i, int j) {
 		if (!list.isEmpty()) {
-			GlStateManager.disableRescaleNormal();
-			Lighting.turnOff();
-			GlStateManager.disableLighting();
-			GlStateManager.disableDepthTest();
+			RenderSystem.disableRescaleNormal();
+			RenderSystem.disableDepthTest();
 			int k = 0;
 
 			for(String string : list) {
@@ -161,7 +161,7 @@ public abstract class Screen extends AbstractContainerEventHandler implements Wi
 				n = this.height - o - 6;
 			}
 
-			this.blitOffset = 300;
+			this.setBlitOffset(300);
 			this.itemRenderer.blitOffset = 300.0F;
 			int p = -267386864;
 			this.fillGradient(m - 3, n - 4, m + k + 3, n - 3, -267386864, -267386864);
@@ -175,10 +175,17 @@ public abstract class Screen extends AbstractContainerEventHandler implements Wi
 			this.fillGradient(m + k + 2, n - 3 + 1, m + k + 3, n + o + 3 - 1, 1347420415, 1344798847);
 			this.fillGradient(m - 3, n - 3, m + k + 3, n - 3 + 1, 1347420415, 1347420415);
 			this.fillGradient(m - 3, n + o + 2, m + k + 3, n + o + 3, 1344798847, 1344798847);
+			PoseStack poseStack = new PoseStack();
+			MultiBufferSource.BufferSource bufferSource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+			poseStack.translate(0.0, 0.0, (double)this.itemRenderer.blitOffset);
+			Matrix4f matrix4f = poseStack.last().pose();
 
 			for(int s = 0; s < list.size(); ++s) {
 				String string2 = (String)list.get(s);
-				this.font.drawShadow(string2, (float)m, (float)n, -1);
+				if (string2 != null) {
+					this.font.drawInBatch(string2, (float)m, (float)n, -1, true, matrix4f, bufferSource, false, 0, 15728880);
+				}
+
 				if (s == 0) {
 					n += 2;
 				}
@@ -186,12 +193,11 @@ public abstract class Screen extends AbstractContainerEventHandler implements Wi
 				n += 10;
 			}
 
-			this.blitOffset = 0;
+			bufferSource.endBatch();
+			this.setBlitOffset(0);
 			this.itemRenderer.blitOffset = 0.0F;
-			GlStateManager.enableLighting();
-			GlStateManager.enableDepthTest();
-			Lighting.turnOn();
-			GlStateManager.enableRescaleNormal();
+			RenderSystem.enableDepthTest();
+			RenderSystem.enableRescaleNormal();
 		}
 	}
 
@@ -238,8 +244,6 @@ public abstract class Screen extends AbstractContainerEventHandler implements Wi
 			} else if (hoverEvent.getAction() == HoverEvent.Action.SHOW_TEXT) {
 				this.renderTooltip(this.minecraft.font.split(hoverEvent.getValue().getColoredString(), Math.max(this.width / 2, 200)), i, j);
 			}
-
-			GlStateManager.disableLighting();
 		}
 	}
 
@@ -288,6 +292,8 @@ public abstract class Screen extends AbstractContainerEventHandler implements Wi
 					this.insertText(clickEvent.getValue(), true);
 				} else if (clickEvent.getAction() == ClickEvent.Action.RUN_COMMAND) {
 					this.sendMessage(clickEvent.getValue(), false);
+				} else if (clickEvent.getAction() == ClickEvent.Action.COPY_TO_CLIPBOARD) {
+					this.minecraft.keyboardHandler.setClipboard(clickEvent.getValue());
 				} else {
 					LOGGER.error("Don't know how to handle {}", clickEvent);
 				}
@@ -355,21 +361,19 @@ public abstract class Screen extends AbstractContainerEventHandler implements Wi
 	}
 
 	public void renderDirtBackground(int i) {
-		GlStateManager.disableLighting();
-		GlStateManager.disableFog();
 		Tesselator tesselator = Tesselator.getInstance();
 		BufferBuilder bufferBuilder = tesselator.getBuilder();
 		this.minecraft.getTextureManager().bind(BACKGROUND_LOCATION);
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		float f = 32.0F;
 		bufferBuilder.begin(7, DefaultVertexFormat.POSITION_TEX_COLOR);
-		bufferBuilder.vertex(0.0, (double)this.height, 0.0).uv(0.0, (double)((float)this.height / 32.0F + (float)i)).color(64, 64, 64, 255).endVertex();
+		bufferBuilder.vertex(0.0, (double)this.height, 0.0).uv(0.0F, (float)this.height / 32.0F + (float)i).color(64, 64, 64, 255).endVertex();
 		bufferBuilder.vertex((double)this.width, (double)this.height, 0.0)
-			.uv((double)((float)this.width / 32.0F), (double)((float)this.height / 32.0F + (float)i))
+			.uv((float)this.width / 32.0F, (float)this.height / 32.0F + (float)i)
 			.color(64, 64, 64, 255)
 			.endVertex();
-		bufferBuilder.vertex((double)this.width, 0.0, 0.0).uv((double)((float)this.width / 32.0F), (double)i).color(64, 64, 64, 255).endVertex();
-		bufferBuilder.vertex(0.0, 0.0, 0.0).uv(0.0, (double)i).color(64, 64, 64, 255).endVertex();
+		bufferBuilder.vertex((double)this.width, 0.0, 0.0).uv((float)this.width / 32.0F, (float)i).color(64, 64, 64, 255).endVertex();
+		bufferBuilder.vertex(0.0, 0.0, 0.0).uv(0.0F, (float)i).color(64, 64, 64, 255).endVertex();
 		tesselator.end();
 	}
 
@@ -392,22 +396,22 @@ public abstract class Screen extends AbstractContainerEventHandler implements Wi
 
 	public static boolean hasControlDown() {
 		if (Minecraft.ON_OSX) {
-			return InputConstants.isKeyDown(Minecraft.getInstance().window.getWindow(), 343)
-				|| InputConstants.isKeyDown(Minecraft.getInstance().window.getWindow(), 347);
+			return InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 343)
+				|| InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 347);
 		} else {
-			return InputConstants.isKeyDown(Minecraft.getInstance().window.getWindow(), 341)
-				|| InputConstants.isKeyDown(Minecraft.getInstance().window.getWindow(), 345);
+			return InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 341)
+				|| InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 345);
 		}
 	}
 
 	public static boolean hasShiftDown() {
-		return InputConstants.isKeyDown(Minecraft.getInstance().window.getWindow(), 340)
-			|| InputConstants.isKeyDown(Minecraft.getInstance().window.getWindow(), 344);
+		return InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 340)
+			|| InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 344);
 	}
 
 	public static boolean hasAltDown() {
-		return InputConstants.isKeyDown(Minecraft.getInstance().window.getWindow(), 342)
-			|| InputConstants.isKeyDown(Minecraft.getInstance().window.getWindow(), 346);
+		return InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 342)
+			|| InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 346);
 	}
 
 	public static boolean isCut(int i) {

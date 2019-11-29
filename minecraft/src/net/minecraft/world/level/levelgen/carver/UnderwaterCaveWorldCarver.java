@@ -8,10 +8,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.levelgen.feature.ProbabilityFeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.ProbabilityFeatureConfiguration;
 
 public class UnderwaterCaveWorldCarver extends CaveWorldCarver {
 	public UnderwaterCaveWorldCarver(Function<Dynamic<?>, ? extends ProbabilityFeatureConfiguration> function) {
@@ -65,6 +66,7 @@ public class UnderwaterCaveWorldCarver extends CaveWorldCarver {
 	@Override
 	protected boolean carveBlock(
 		ChunkAccess chunkAccess,
+		Function<BlockPos, Biome> function,
 		BitSet bitSet,
 		Random random,
 		BlockPos.MutableBlockPos mutableBlockPos,

@@ -3,16 +3,18 @@ package net.minecraft.client.renderer.debug;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.AABB;
 
@@ -41,48 +43,33 @@ public class NeighborsUpdateRenderer implements DebugRenderer.SimpleDebugRendere
 	}
 
 	@Override
-	public void render(long l) {
-		long m = this.minecraft.level.getGameTime();
-		Camera camera = this.minecraft.gameRenderer.getMainCamera();
-		double d = camera.getPosition().x;
-		double e = camera.getPosition().y;
-		double f = camera.getPosition().z;
-		GlStateManager.enableBlend();
-		GlStateManager.blendFuncSeparate(
-			GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO
-		);
-		GlStateManager.lineWidth(2.0F);
-		GlStateManager.disableTexture();
-		GlStateManager.depthMask(false);
+	public void render(PoseStack poseStack, MultiBufferSource multiBufferSource, double d, double e, double f) {
+		long l = this.minecraft.level.getGameTime();
 		int i = 200;
 		double g = 0.0025;
 		Set<BlockPos> set = Sets.<BlockPos>newHashSet();
 		Map<BlockPos, Integer> map = Maps.newHashMap();
+		VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.lines());
 		Iterator<Entry<Long, Map<BlockPos, Integer>>> iterator = this.lastUpdate.entrySet().iterator();
 
 		while(iterator.hasNext()) {
 			Entry<Long, Map<BlockPos, Integer>> entry = (Entry)iterator.next();
 			Long long_ = (Long)entry.getKey();
 			Map<BlockPos, Integer> map2 = (Map)entry.getValue();
-			long n = m - long_;
-			if (n > 200L) {
+			long m = l - long_;
+			if (m > 200L) {
 				iterator.remove();
 			} else {
 				for(Entry<BlockPos, Integer> entry2 : map2.entrySet()) {
 					BlockPos blockPos = (BlockPos)entry2.getKey();
 					Integer integer = (Integer)entry2.getValue();
 					if (set.add(blockPos)) {
-						LevelRenderer.renderLineBox(
-							new AABB(BlockPos.ZERO)
-								.inflate(0.002)
-								.deflate(0.0025 * (double)n)
-								.move((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ())
-								.move(-d, -e, -f),
-							1.0F,
-							1.0F,
-							1.0F,
-							1.0F
-						);
+						AABB aABB = new AABB(BlockPos.ZERO)
+							.inflate(0.002)
+							.deflate(0.0025 * (double)m)
+							.move((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ())
+							.move(-d, -e, -f);
+						LevelRenderer.renderLineBox(vertexConsumer, aABB.minX, aABB.minY, aABB.minZ, aABB.maxX, aABB.maxY, aABB.maxZ, 1.0F, 1.0F, 1.0F, 1.0F);
 						map.put(blockPos, integer);
 					}
 				}
@@ -94,9 +81,5 @@ public class NeighborsUpdateRenderer implements DebugRenderer.SimpleDebugRendere
 			Integer integer2 = (Integer)entry.getValue();
 			DebugRenderer.renderFloatingText(String.valueOf(integer2), blockPos2.getX(), blockPos2.getY(), blockPos2.getZ(), -1);
 		}
-
-		GlStateManager.depthMask(true);
-		GlStateManager.enableTexture();
-		GlStateManager.disableBlend();
 	}
 }

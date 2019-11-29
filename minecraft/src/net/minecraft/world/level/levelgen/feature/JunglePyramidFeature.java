@@ -4,6 +4,7 @@ import com.mojang.datafixers.Dynamic;
 import java.util.function.Function;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.JunglePyramidPiece;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
@@ -35,8 +36,8 @@ public class JunglePyramidFeature extends RandomScatteredFeature<NoneFeatureConf
 	}
 
 	public static class FeatureStart extends StructureStart {
-		public FeatureStart(StructureFeature<?> structureFeature, int i, int j, Biome biome, BoundingBox boundingBox, int k, long l) {
-			super(structureFeature, i, j, biome, boundingBox, k, l);
+		public FeatureStart(StructureFeature<?> structureFeature, int i, int j, BoundingBox boundingBox, int k, long l) {
+			super(structureFeature, i, j, boundingBox, k, l);
 		}
 
 		@Override

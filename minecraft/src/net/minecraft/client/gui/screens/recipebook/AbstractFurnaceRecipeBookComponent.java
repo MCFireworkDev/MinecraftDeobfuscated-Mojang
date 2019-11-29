@@ -1,7 +1,6 @@
 package net.minecraft.client.gui.screens.recipebook;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -114,17 +113,13 @@ public abstract class AbstractFurnaceRecipeBookComponent extends RecipeBookCompo
 				this.time += f;
 			}
 
-			Lighting.turnOnGui();
-			GlStateManager.disableLighting();
 			int k = this.fuelSlot.x + i;
 			int l = this.fuelSlot.y + j;
 			GuiComponent.fill(k, l, k + 16, l + 16, 822018048);
 			this.minecraft.getItemRenderer().renderAndDecorateItem(this.minecraft.player, this.getFuel().getDefaultInstance(), k, l);
-			GlStateManager.depthFunc(516);
+			RenderSystem.depthFunc(516);
 			GuiComponent.fill(k, l, k + 16, l + 16, 822083583);
-			GlStateManager.depthFunc(515);
-			GlStateManager.enableLighting();
-			Lighting.turnOff();
+			RenderSystem.depthFunc(515);
 		}
 	}
 

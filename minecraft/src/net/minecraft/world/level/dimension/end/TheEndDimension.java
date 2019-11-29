@@ -24,7 +24,7 @@ public class TheEndDimension extends Dimension {
 	private final EndDragonFight dragonFight;
 
 	public TheEndDimension(Level level, DimensionType dimensionType) {
-		super(level, dimensionType);
+		super(level, dimensionType, 0.0F);
 		CompoundTag compoundTag = level.getLevelData().getDimensionData(DimensionType.THE_END);
 		this.dragonFight = level instanceof ServerLevel ? new EndDragonFight((ServerLevel)level, compoundTag.getCompound("DragonFight")) : null;
 	}
@@ -36,7 +36,7 @@ public class TheEndDimension extends Dimension {
 		theEndGeneratorSettings.setDefaultFluid(Blocks.AIR.defaultBlockState());
 		theEndGeneratorSettings.setSpawnPosition(this.getDimensionSpecificSpawn());
 		return ChunkGeneratorType.FLOATING_ISLANDS
-			.create(this.level, BiomeSourceType.THE_END.create(BiomeSourceType.THE_END.createSettings().setSeed(this.level.getSeed())), theEndGeneratorSettings);
+			.create(this.level, BiomeSourceType.THE_END.create(BiomeSourceType.THE_END.createSettings(this.level.getLevelData())), theEndGeneratorSettings);
 	}
 
 	@Override

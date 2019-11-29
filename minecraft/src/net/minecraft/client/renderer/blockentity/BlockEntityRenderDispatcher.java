@@ -1,9 +1,8 @@
 package net.minecraft.client.renderer.blockentity;
 
 import com.google.common.collect.Maps;
-import com.mojang.blaze3d.platform.GLX;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.Map;
 import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
@@ -14,81 +13,55 @@ import net.minecraft.ReportedException;
 import net.minecraft.client.Camera;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.model.ShulkerModel;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BannerBlockEntity;
-import net.minecraft.world.level.block.entity.BeaconBlockEntity;
-import net.minecraft.world.level.block.entity.BedBlockEntity;
-import net.minecraft.world.level.block.entity.BellBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.CampfireBlockEntity;
-import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.minecraft.world.level.block.entity.ConduitBlockEntity;
-import net.minecraft.world.level.block.entity.EnchantmentTableBlockEntity;
-import net.minecraft.world.level.block.entity.EnderChestBlockEntity;
-import net.minecraft.world.level.block.entity.LecternBlockEntity;
-import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
-import net.minecraft.world.level.block.entity.SignBlockEntity;
-import net.minecraft.world.level.block.entity.SkullBlockEntity;
-import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
-import net.minecraft.world.level.block.entity.StructureBlockEntity;
-import net.minecraft.world.level.block.entity.TheEndGatewayBlockEntity;
-import net.minecraft.world.level.block.entity.TheEndPortalBlockEntity;
-import net.minecraft.world.level.block.piston.PistonMovingBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.phys.HitResult;
 
 @Environment(EnvType.CLIENT)
 public class BlockEntityRenderDispatcher {
-	private final Map<Class<? extends BlockEntity>, BlockEntityRenderer<? extends BlockEntity>> renderers = Maps.newHashMap();
+	private final Map<BlockEntityType<?>, BlockEntityRenderer<?>> renderers = Maps.<BlockEntityType<?>, BlockEntityRenderer<?>>newHashMap();
 	public static final BlockEntityRenderDispatcher instance = new BlockEntityRenderDispatcher();
+	private final BufferBuilder singleRenderBuffer = new BufferBuilder(256);
 	private Font font;
-	public static double xOff;
-	public static double yOff;
-	public static double zOff;
 	public TextureManager textureManager;
 	public Level level;
 	public Camera camera;
 	public HitResult cameraHitResult;
 
 	private BlockEntityRenderDispatcher() {
-		this.renderers.put(SignBlockEntity.class, new SignRenderer());
-		this.renderers.put(SpawnerBlockEntity.class, new SpawnerRenderer());
-		this.renderers.put(PistonMovingBlockEntity.class, new PistonHeadRenderer());
-		this.renderers.put(ChestBlockEntity.class, new ChestRenderer());
-		this.renderers.put(EnderChestBlockEntity.class, new ChestRenderer());
-		this.renderers.put(EnchantmentTableBlockEntity.class, new EnchantTableRenderer());
-		this.renderers.put(LecternBlockEntity.class, new LecternRenderer());
-		this.renderers.put(TheEndPortalBlockEntity.class, new TheEndPortalRenderer());
-		this.renderers.put(TheEndGatewayBlockEntity.class, new TheEndGatewayRenderer());
-		this.renderers.put(BeaconBlockEntity.class, new BeaconRenderer());
-		this.renderers.put(SkullBlockEntity.class, new SkullBlockRenderer());
-		this.renderers.put(BannerBlockEntity.class, new BannerRenderer());
-		this.renderers.put(StructureBlockEntity.class, new StructureBlockRenderer());
-		this.renderers.put(ShulkerBoxBlockEntity.class, new ShulkerBoxRenderer(new ShulkerModel()));
-		this.renderers.put(BedBlockEntity.class, new BedRenderer());
-		this.renderers.put(ConduitBlockEntity.class, new ConduitRenderer());
-		this.renderers.put(BellBlockEntity.class, new BellRenderer());
-		this.renderers.put(CampfireBlockEntity.class, new CampfireRenderer());
-
-		for(BlockEntityRenderer<?> blockEntityRenderer : this.renderers.values()) {
-			blockEntityRenderer.init(this);
-		}
+		this.register(BlockEntityType.SIGN, new SignRenderer(this));
+		this.register(BlockEntityType.MOB_SPAWNER, new SpawnerRenderer(this));
+		this.register(BlockEntityType.PISTON, new PistonHeadRenderer(this));
+		this.register(BlockEntityType.CHEST, new ChestRenderer<>(this));
+		this.register(BlockEntityType.ENDER_CHEST, new ChestRenderer<>(this));
+		this.register(BlockEntityType.TRAPPED_CHEST, new ChestRenderer<>(this));
+		this.register(BlockEntityType.ENCHANTING_TABLE, new EnchantTableRenderer(this));
+		this.register(BlockEntityType.LECTERN, new LecternRenderer(this));
+		this.register(BlockEntityType.END_PORTAL, new TheEndPortalRenderer<>(this));
+		this.register(BlockEntityType.END_GATEWAY, new TheEndGatewayRenderer(this));
+		this.register(BlockEntityType.BEACON, new BeaconRenderer(this));
+		this.register(BlockEntityType.SKULL, new SkullBlockRenderer(this));
+		this.register(BlockEntityType.BANNER, new BannerRenderer(this));
+		this.register(BlockEntityType.STRUCTURE_BLOCK, new StructureBlockRenderer(this));
+		this.register(BlockEntityType.SHULKER_BOX, new ShulkerBoxRenderer(new ShulkerModel(), this));
+		this.register(BlockEntityType.BED, new BedRenderer(this));
+		this.register(BlockEntityType.CONDUIT, new ConduitRenderer(this));
+		this.register(BlockEntityType.BELL, new BellRenderer(this));
+		this.register(BlockEntityType.CAMPFIRE, new CampfireRenderer(this));
 	}
 
-	public <T extends BlockEntity> BlockEntityRenderer<T> getRenderer(Class<? extends BlockEntity> class_) {
-		BlockEntityRenderer<? extends BlockEntity> blockEntityRenderer = (BlockEntityRenderer)this.renderers.get(class_);
-		if (blockEntityRenderer == null && class_ != BlockEntity.class) {
-			blockEntityRenderer = this.getRenderer(class_.getSuperclass());
-			this.renderers.put(class_, blockEntityRenderer);
-		}
-
-		return blockEntityRenderer;
+	private <E extends BlockEntity> void register(BlockEntityType<E> blockEntityType, BlockEntityRenderer<E> blockEntityRenderer) {
+		this.renderers.put(blockEntityType, blockEntityRenderer);
 	}
 
 	@Nullable
-	public <T extends BlockEntity> BlockEntityRenderer<T> getRenderer(@Nullable BlockEntity blockEntity) {
-		return blockEntity == null ? null : this.getRenderer(blockEntity.getClass());
+	public <E extends BlockEntity> BlockEntityRenderer<E> getRenderer(E blockEntity) {
+		return (BlockEntityRenderer<E>)this.renderers.get(blockEntity.getType());
 	}
 
 	public void prepare(Level level, TextureManager textureManager, Font font, Camera camera, HitResult hitResult) {
@@ -102,40 +75,56 @@ public class BlockEntityRenderDispatcher {
 		this.cameraHitResult = hitResult;
 	}
 
-	public void render(BlockEntity blockEntity, float f, int i) {
+	public <E extends BlockEntity> void render(E blockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource) {
 		if (blockEntity.distanceToSqr(this.camera.getPosition().x, this.camera.getPosition().y, this.camera.getPosition().z) < blockEntity.getViewDistance()) {
-			Lighting.turnOn();
-			int j = this.level.getLightColor(blockEntity.getBlockPos(), 0);
-			int k = j % 65536;
-			int l = j / 65536;
-			GLX.glMultiTexCoord2f(GLX.GL_TEXTURE1, (float)k, (float)l);
-			GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-			BlockPos blockPos = blockEntity.getBlockPos();
-			this.render(blockEntity, (double)blockPos.getX() - xOff, (double)blockPos.getY() - yOff, (double)blockPos.getZ() - zOff, f, i, false);
+			BlockEntityRenderer<E> blockEntityRenderer = this.getRenderer(blockEntity);
+			if (blockEntityRenderer != null) {
+				if (blockEntity.hasLevel() && blockEntity.getType().isValid(blockEntity.getBlockState().getBlock())) {
+					tryRender(blockEntity, () -> setupAndRender(blockEntityRenderer, blockEntity, f, poseStack, multiBufferSource));
+				}
+			}
 		}
 	}
 
-	public void render(BlockEntity blockEntity, double d, double e, double f, float g) {
-		this.render(blockEntity, d, e, f, g, -1, false);
+	private static <T extends BlockEntity> void setupAndRender(
+		BlockEntityRenderer<T> blockEntityRenderer, T blockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource
+	) {
+		Level level = blockEntity.getLevel();
+		int i;
+		if (level != null) {
+			i = LevelRenderer.getLightColor(level, blockEntity.getBlockPos());
+		} else {
+			i = 15728880;
+		}
+
+		blockEntityRenderer.render(blockEntity, f, poseStack, multiBufferSource, i, OverlayTexture.NO_OVERLAY);
 	}
 
-	public void renderItem(BlockEntity blockEntity) {
-		this.render(blockEntity, 0.0, 0.0, 0.0, 0.0F, -1, true);
+	@Deprecated
+	public <E extends BlockEntity> void renderItem(E blockEntity, PoseStack poseStack) {
+		MultiBufferSource.BufferSource bufferSource = MultiBufferSource.immediate(this.singleRenderBuffer);
+		this.renderItem(blockEntity, poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
+		bufferSource.endBatch();
 	}
 
-	public void render(BlockEntity blockEntity, double d, double e, double f, float g, int i, boolean bl) {
-		BlockEntityRenderer<BlockEntity> blockEntityRenderer = this.getRenderer(blockEntity);
-		if (blockEntityRenderer != null) {
-			try {
-				if (bl || blockEntity.hasLevel() && blockEntity.getType().isValid(blockEntity.getBlockState().getBlock())) {
-					blockEntityRenderer.render(blockEntity, d, e, f, g, i);
-				}
-			} catch (Throwable var15) {
-				CrashReport crashReport = CrashReport.forThrowable(var15, "Rendering Block Entity");
-				CrashReportCategory crashReportCategory = crashReport.addCategory("Block Entity Details");
-				blockEntity.fillCrashReportCategory(crashReportCategory);
-				throw new ReportedException(crashReport);
-			}
+	public <E extends BlockEntity> boolean renderItem(E blockEntity, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j) {
+		BlockEntityRenderer<E> blockEntityRenderer = this.getRenderer(blockEntity);
+		if (blockEntityRenderer == null) {
+			return true;
+		} else {
+			tryRender(blockEntity, () -> blockEntityRenderer.render(blockEntity, 0.0F, poseStack, multiBufferSource, i, j));
+			return false;
+		}
+	}
+
+	private static void tryRender(BlockEntity blockEntity, Runnable runnable) {
+		try {
+			runnable.run();
+		} catch (Throwable var5) {
+			CrashReport crashReport = CrashReport.forThrowable(var5, "Rendering Block Entity");
+			CrashReportCategory crashReportCategory = crashReport.addCategory("Block Entity Details");
+			blockEntity.fillCrashReportCategory(crashReportCategory);
+			throw new ReportedException(crashReport);
 		}
 	}
 

@@ -1,9 +1,14 @@
 package net.minecraft.client.renderer.entity.layers;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.PigModel;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.Pig;
 
@@ -16,16 +21,13 @@ public class PigSaddleLayer extends RenderLayer<Pig, PigModel<Pig>> {
 		super(renderLayerParent);
 	}
 
-	public void render(Pig pig, float f, float g, float h, float i, float j, float k, float l) {
+	public void render(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, Pig pig, float f, float g, float h, float j, float k, float l) {
 		if (pig.hasSaddle()) {
-			this.bindTexture(SADDLE_LOCATION);
 			this.getParentModel().copyPropertiesTo(this.model);
-			this.model.render(pig, f, g, i, j, k, l);
+			this.model.prepareMobModel(pig, f, g, h);
+			this.model.setupAnim(pig, f, g, j, k, l);
+			VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.entityCutoutNoCull(SADDLE_LOCATION));
+			this.model.renderToBuffer(poseStack, vertexConsumer, i, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
 		}
-	}
-
-	@Override
-	public boolean colorsOnDamage() {
-		return false;
 	}
 }

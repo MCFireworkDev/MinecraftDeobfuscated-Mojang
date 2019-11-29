@@ -16,6 +16,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.properties.StructureMode;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.templatesystem.BlockIgnoreProcessor;
 import net.minecraft.world.level.levelgen.structure.templatesystem.JigsawReplacementProcessor;
@@ -78,7 +79,7 @@ public class SinglePoolElement extends StructurePoolElement {
 	) {
 		StructureTemplate structureTemplate = structureManager.getOrCreate(this.location);
 		List<StructureTemplate.StructureBlockInfo> list = structureTemplate.filterBlocks(
-			blockPos, new StructurePlaceSettings().setRotation(rotation), Blocks.JIGSAW_BLOCK, true
+			blockPos, new StructurePlaceSettings().setRotation(rotation), Blocks.JIGSAW, true
 		);
 		Collections.shuffle(list, random);
 		return list;
@@ -92,7 +93,13 @@ public class SinglePoolElement extends StructurePoolElement {
 
 	@Override
 	public boolean place(
-		StructureManager structureManager, LevelAccessor levelAccessor, BlockPos blockPos, Rotation rotation, BoundingBox boundingBox, Random random
+		StructureManager structureManager,
+		LevelAccessor levelAccessor,
+		ChunkGenerator<?> chunkGenerator,
+		BlockPos blockPos,
+		Rotation rotation,
+		BoundingBox boundingBox,
+		Random random
 	) {
 		StructureTemplate structureTemplate = structureManager.getOrCreate(this.location);
 		StructurePlaceSettings structurePlaceSettings = this.getSettings(rotation, boundingBox);

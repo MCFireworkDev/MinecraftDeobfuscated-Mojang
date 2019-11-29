@@ -405,7 +405,7 @@ public class Panda extends Animal {
 				double d = (double)(-this.random.nextFloat()) * 0.6 - 0.3;
 				Vec3 vec32 = new Vec3(((double)this.random.nextFloat() - 0.5) * 0.8, d, 1.0 + ((double)this.random.nextFloat() - 0.5) * 0.4);
 				vec32 = vec32.yRot(-this.yBodyRot * (float) (Math.PI / 180.0));
-				vec32 = vec32.add(this.x, this.y + (double)this.getEyeHeight() + 1.0, this.z);
+				vec32 = vec32.add(this.getX(), this.getEyeY() + 1.0, this.getZ());
 				this.level
 					.addParticle(
 						new ItemParticleOption(ParticleTypes.ITEM, this.getItemBySlot(EquipmentSlot.MAINHAND)), vec32.x, vec32.y, vec32.z, vec3.x, vec3.y + 0.05, vec3.z
@@ -482,9 +482,9 @@ public class Panda extends Animal {
 		this.level
 			.addParticle(
 				ParticleTypes.SNEEZE,
-				this.x - (double)(this.getBbWidth() + 1.0F) * 0.5 * (double)Mth.sin(this.yBodyRot * (float) (Math.PI / 180.0)),
-				this.y + (double)this.getEyeHeight() - 0.1F,
-				this.z + (double)(this.getBbWidth() + 1.0F) * 0.5 * (double)Mth.cos(this.yBodyRot * (float) (Math.PI / 180.0)),
+				this.getX() - (double)(this.getBbWidth() + 1.0F) * 0.5 * (double)Mth.sin(this.yBodyRot * (float) (Math.PI / 180.0)),
+				this.getEyeY() - 0.1F,
+				this.getZ() + (double)(this.getBbWidth() + 1.0F) * 0.5 * (double)Mth.cos(this.yBodyRot * (float) (Math.PI / 180.0)),
 				vec3.x,
 				0.0,
 				vec3.z
@@ -528,19 +528,15 @@ public class Panda extends Animal {
 		@Nullable SpawnGroupData spawnGroupData,
 		@Nullable CompoundTag compoundTag
 	) {
-		spawnGroupData = super.finalizeSpawn(levelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
 		this.setMainGene(Panda.Gene.getRandom(this.random));
 		this.setHiddenGene(Panda.Gene.getRandom(this.random));
 		this.setAttributes();
-		if (spawnGroupData instanceof Panda.PandaGroupData) {
-			if (this.random.nextInt(5) == 0) {
-				this.setAge(-24000);
-			}
-		} else {
-			spawnGroupData = new Panda.PandaGroupData();
+		if (spawnGroupData == null) {
+			spawnGroupData = new AgableMob.AgableMobGroupData();
+			((AgableMob.AgableMobGroupData)spawnGroupData).setBabySpawnChance(0.2F);
 		}
 
-		return spawnGroupData;
+		return super.finalizeSpawn(levelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
 	}
 
 	public void setGeneFromParents(Panda panda, @Nullable Panda panda2) {
@@ -628,6 +624,7 @@ public class Panda extends Animal {
 				this.usePlayerItem(player, itemStack);
 			}
 
+			player.swing(interactionHand, true);
 			return true;
 		} else {
 			return false;
@@ -828,11 +825,6 @@ public class Panda extends Animal {
 			}
 
 			return false;
-		}
-	}
-
-	static class PandaGroupData implements SpawnGroupData {
-		private PandaGroupData() {
 		}
 	}
 

@@ -107,7 +107,7 @@ public class StructureTemplate {
 		this.entityInfoList.clear();
 
 		for(Entity entity : list) {
-			Vec3 vec3 = new Vec3(entity.x - (double)blockPos.getX(), entity.y - (double)blockPos.getY(), entity.z - (double)blockPos.getZ());
+			Vec3 vec3 = new Vec3(entity.getX() - (double)blockPos.getX(), entity.getY() - (double)blockPos.getY(), entity.getZ() - (double)blockPos.getZ());
 			CompoundTag compoundTag = new CompoundTag();
 			entity.save(compoundTag);
 			BlockPos blockPos3;
@@ -129,7 +129,7 @@ public class StructureTemplate {
 		List<StructureTemplate.StructureBlockInfo> list = Lists.<StructureTemplate.StructureBlockInfo>newArrayList();
 		BoundingBox boundingBox = structurePlaceSettings.getBoundingBox();
 
-		for(StructureTemplate.StructureBlockInfo structureBlockInfo : structurePlaceSettings.getPalette(this.palettes, blockPos)) {
+		for(StructureTemplate.StructureBlockInfo structureBlockInfo : structurePlaceSettings.getRandomPalette(this.palettes, blockPos)) {
 			BlockPos blockPos2 = bl ? calculateRelativePosition(structurePlaceSettings, structureBlockInfo.pos).offset(blockPos) : structureBlockInfo.pos;
 			if (boundingBox == null || boundingBox.isInside(blockPos2)) {
 				BlockState blockState = structureBlockInfo.state;
@@ -167,7 +167,7 @@ public class StructureTemplate {
 		if (this.palettes.isEmpty()) {
 			return false;
 		} else {
-			List<StructureTemplate.StructureBlockInfo> list = structurePlaceSettings.getPalette(this.palettes, blockPos);
+			List<StructureTemplate.StructureBlockInfo> list = structurePlaceSettings.getRandomPalette(this.palettes, blockPos);
 			if ((!list.isEmpty() || !structurePlaceSettings.isIgnoreEntities() && !this.entityInfoList.isEmpty())
 				&& this.size.getX() >= 1
 				&& this.size.getY() >= 1
@@ -364,9 +364,9 @@ public class StructureTemplate {
 				Vec3 vec3 = transform(structureEntityInfo.pos, mirror, rotation, blockPos2);
 				Vec3 vec32 = vec3.add((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ());
 				ListTag listTag = new ListTag();
-				listTag.add(new DoubleTag(vec32.x));
-				listTag.add(new DoubleTag(vec32.y));
-				listTag.add(new DoubleTag(vec32.z));
+				listTag.add(DoubleTag.valueOf(vec32.x));
+				listTag.add(DoubleTag.valueOf(vec32.y));
+				listTag.add(DoubleTag.valueOf(vec32.z));
 				compoundTag.put("Pos", listTag);
 				compoundTag.remove("UUIDMost");
 				compoundTag.remove("UUIDLeast");
@@ -679,7 +679,7 @@ public class StructureTemplate {
 		ListTag listTag = new ListTag();
 
 		for(int i : is) {
-			listTag.add(new IntTag(i));
+			listTag.add(IntTag.valueOf(i));
 		}
 
 		return listTag;
@@ -689,7 +689,7 @@ public class StructureTemplate {
 		ListTag listTag = new ListTag();
 
 		for(double d : ds) {
-			listTag.add(new DoubleTag(d));
+			listTag.add(DoubleTag.valueOf(d));
 		}
 
 		return listTag;

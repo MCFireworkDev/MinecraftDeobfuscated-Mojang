@@ -31,6 +31,7 @@ public class LargeFireball extends Fireball {
 
 	@Override
 	protected void onHit(HitResult hitResult) {
+		super.onHit(hitResult);
 		if (!this.level.isClientSide) {
 			if (hitResult.getType() == HitResult.Type.ENTITY) {
 				Entity entity = ((EntityHitResult)hitResult).getEntity();
@@ -39,7 +40,10 @@ public class LargeFireball extends Fireball {
 			}
 
 			boolean bl = this.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
-			this.level.explode(null, this.x, this.y, this.z, (float)this.explosionPower, bl, bl ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE);
+			this.level
+				.explode(
+					null, this.getX(), this.getY(), this.getZ(), (float)this.explosionPower, bl, bl ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE
+				);
 			this.remove();
 		}
 	}

@@ -7,14 +7,11 @@ import net.minecraft.client.Option;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.OptionsList;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.TranslatableComponent;
 
 @Environment(EnvType.CLIENT)
-public class VideoSettingsScreen extends Screen {
-	private final Screen lastScreen;
-	private final Options options;
+public class VideoSettingsScreen extends OptionsSubScreen {
 	private OptionsList list;
 	private static final Option[] OPTIONS = new Option[]{
 		Option.GRAPHICS,
@@ -25,32 +22,31 @@ public class VideoSettingsScreen extends Screen {
 		Option.VIEW_BOBBING,
 		Option.GUI_SCALE,
 		Option.ATTACK_INDICATOR,
+		Option.SHIELD_INDICATOR,
 		Option.GAMMA,
 		Option.RENDER_CLOUDS,
 		Option.USE_FULLSCREEN,
 		Option.PARTICLES,
 		Option.MIPMAP_LEVELS,
-		Option.ENTITY_SHADOWS,
-		Option.BIOME_BLEND_RADIUS
+		Option.ENTITY_SHADOWS
 	};
 	private int oldMipmaps;
 
 	public VideoSettingsScreen(Screen screen, Options options) {
-		super(new TranslatableComponent("options.videoTitle"));
-		this.lastScreen = screen;
-		this.options = options;
+		super(screen, options, new TranslatableComponent("options.videoTitle"));
 	}
 
 	@Override
 	protected void init() {
 		this.oldMipmaps = this.options.mipmapLevels;
 		this.list = new OptionsList(this.minecraft, this.width, this.height, 32, this.height - 32, 25);
-		this.list.addBig(new FullscreenResolutionProgressOption(this.minecraft.window));
+		this.list.addBig(new FullscreenResolutionProgressOption(this.minecraft.getWindow()));
+		this.list.addBig(Option.BIOME_BLEND_RADIUS);
 		this.list.addSmall(OPTIONS);
 		this.children.add(this.list);
 		this.addButton(new Button(this.width / 2 - 100, this.height - 27, 200, 20, I18n.get("gui.done"), button -> {
 			this.minecraft.options.save();
-			this.minecraft.window.changeFullscreenVideoMode();
+			this.minecraft.getWindow().changeFullscreenVideoMode();
 			this.minecraft.setScreen(this.lastScreen);
 		}));
 	}
@@ -58,13 +54,11 @@ public class VideoSettingsScreen extends Screen {
 	@Override
 	public void removed() {
 		if (this.options.mipmapLevels != this.oldMipmaps) {
-			this.minecraft.getTextureAtlas().setMaxMipLevel(this.options.mipmapLevels);
-			this.minecraft.getTextureManager().bind(TextureAtlas.LOCATION_BLOCKS);
-			this.minecraft.getTextureAtlas().setFilter(false, this.options.mipmapLevels > 0);
+			this.minecraft.updateMaxMipLevel(this.options.mipmapLevels);
 			this.minecraft.delayTextureReload();
 		}
 
-		this.minecraft.options.save();
+		super.removed();
 	}
 
 	@Override

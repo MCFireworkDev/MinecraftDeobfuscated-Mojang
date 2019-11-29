@@ -23,6 +23,7 @@ import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.world.entity.ai.goal.BreedGoal;
@@ -102,17 +103,17 @@ public class Ocelot extends Animal {
 		if (this.getMoveControl().hasWanted()) {
 			double d = this.getMoveControl().getSpeedModifier();
 			if (d == 0.6) {
-				this.setSneaking(true);
+				this.setPose(Pose.CROUCHING);
 				this.setSprinting(false);
 			} else if (d == 1.33) {
-				this.setSneaking(false);
+				this.setPose(Pose.STANDING);
 				this.setSprinting(true);
 			} else {
-				this.setSneaking(false);
+				this.setPose(Pose.STANDING);
 				this.setSprinting(false);
 			}
 		} else {
-			this.setSneaking(false);
+			this.setPose(Pose.STANDING);
 			this.setSprinting(false);
 		}
 	}
@@ -127,10 +128,12 @@ public class Ocelot extends Animal {
 		super.registerAttributes();
 		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(10.0);
 		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.3F);
+		this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(3.0);
 	}
 
 	@Override
-	public void causeFallDamage(float f, float g) {
+	public boolean causeFallDamage(float f, float g) {
+		return false;
 	}
 
 	@Nullable
@@ -154,9 +157,13 @@ public class Ocelot extends Animal {
 		return SoundEvents.OCELOT_DEATH;
 	}
 
+	private float getAttackDamage() {
+		return (float)this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
+	}
+
 	@Override
 	public boolean doHurtTarget(Entity entity) {
-		return entity.hurt(DamageSource.mobAttack(this), 3.0F);
+		return entity.hurt(DamageSource.mobAttack(this), this.getAttackDamage());
 	}
 
 	@Override
@@ -208,16 +215,7 @@ public class Ocelot extends Animal {
 			double d = this.random.nextGaussian() * 0.02;
 			double e = this.random.nextGaussian() * 0.02;
 			double f = this.random.nextGaussian() * 0.02;
-			this.level
-				.addParticle(
-					particleOptions,
-					this.x + (double)(this.random.nextFloat() * this.getBbWidth() * 2.0F) - (double)this.getBbWidth(),
-					this.y + 0.5 + (double)(this.random.nextFloat() * this.getBbHeight()),
-					this.z + (double)(this.random.nextFloat() * this.getBbWidth() * 2.0F) - (double)this.getBbWidth(),
-					d,
-					e,
-					f
-				);
+			this.level.addParticle(particleOptions, this.getRandomX(1.0), this.getRandomY() + 0.5, this.getRandomZ(1.0), d, e, f);
 		}
 	}
 
@@ -250,7 +248,7 @@ public class Ocelot extends Animal {
 	@Override
 	public boolean checkSpawnObstruction(LevelReader levelReader) {
 		if (levelReader.isUnobstructed(this) && !levelReader.containsAnyLiquid(this.getBoundingBox())) {
-			BlockPos blockPos = new BlockPos(this.x, this.getBoundingBox().minY, this.z);
+			BlockPos blockPos = new BlockPos(this);
 			if (blockPos.getY() < levelReader.getSeaLevel()) {
 				return false;
 			}
@@ -265,15 +263,6 @@ public class Ocelot extends Animal {
 		return false;
 	}
 
-	protected void addKittensDuringSpawn() {
-		for(int i = 0; i < 2; ++i) {
-			Ocelot ocelot = EntityType.OCELOT.create(this.level);
-			ocelot.moveTo(this.x, this.y, this.z, this.yRot, 0.0F);
-			ocelot.setAge(-24000);
-			this.level.addFreshEntity(ocelot);
-		}
-	}
-
 	@Nullable
 	@Override
 	public SpawnGroupData finalizeSpawn(
@@ -283,12 +272,12 @@ public class Ocelot extends Animal {
 		@Nullable SpawnGroupData spawnGroupData,
 		@Nullable CompoundTag compoundTag
 	) {
-		spawnGroupData = super.finalizeSpawn(levelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
-		if (levelAccessor.getRandom().nextInt(7) == 0) {
-			this.addKittensDuringSpawn();
+		if (spawnGroupData == null) {
+			spawnGroupData = new AgableMob.AgableMobGroupData();
+			((AgableMob.AgableMobGroupData)spawnGroupData).setBabySpawnChance(1.0F);
 		}
 
-		return spawnGroupData;
+		return super.finalizeSpawn(levelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
 	}
 
 	static class OcelotAvoidEntityGoal<T extends LivingEntity> extends AvoidEntityGoal<T> {

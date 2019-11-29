@@ -21,15 +21,15 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureMana
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
 public class FeaturePoolElement extends StructurePoolElement {
-	private final ConfiguredFeature<?> feature;
+	private final ConfiguredFeature<?, ?> feature;
 	private final CompoundTag defaultJigsawNBT;
 
 	@Deprecated
-	public FeaturePoolElement(ConfiguredFeature<?> configuredFeature) {
+	public FeaturePoolElement(ConfiguredFeature<?, ?> configuredFeature) {
 		this(configuredFeature, StructureTemplatePool.Projection.RIGID);
 	}
 
-	public FeaturePoolElement(ConfiguredFeature<?> configuredFeature, StructureTemplatePool.Projection projection) {
+	public FeaturePoolElement(ConfiguredFeature<?, ?> configuredFeature, StructureTemplatePool.Projection projection) {
 		super(projection);
 		this.feature = configuredFeature;
 		this.defaultJigsawNBT = this.fillDefaultJigsawNBT();
@@ -59,9 +59,7 @@ public class FeaturePoolElement extends StructurePoolElement {
 	) {
 		List<StructureTemplate.StructureBlockInfo> list = Lists.<StructureTemplate.StructureBlockInfo>newArrayList();
 		list.add(
-			new StructureTemplate.StructureBlockInfo(
-				blockPos, Blocks.JIGSAW_BLOCK.defaultBlockState().setValue(JigsawBlock.FACING, Direction.DOWN), this.defaultJigsawNBT
-			)
+			new StructureTemplate.StructureBlockInfo(blockPos, Blocks.JIGSAW.defaultBlockState().setValue(JigsawBlock.FACING, Direction.DOWN), this.defaultJigsawNBT)
 		);
 		return list;
 	}
@@ -81,9 +79,14 @@ public class FeaturePoolElement extends StructurePoolElement {
 
 	@Override
 	public boolean place(
-		StructureManager structureManager, LevelAccessor levelAccessor, BlockPos blockPos, Rotation rotation, BoundingBox boundingBox, Random random
+		StructureManager structureManager,
+		LevelAccessor levelAccessor,
+		ChunkGenerator<?> chunkGenerator,
+		BlockPos blockPos,
+		Rotation rotation,
+		BoundingBox boundingBox,
+		Random random
 	) {
-		ChunkGenerator<?> chunkGenerator = levelAccessor.getChunkSource().getGenerator();
 		return this.feature.place(levelAccessor, chunkGenerator, random, blockPos);
 	}
 

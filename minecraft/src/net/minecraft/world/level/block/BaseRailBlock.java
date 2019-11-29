@@ -1,9 +1,10 @@
 package net.minecraft.world.level.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.item.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.BlockLayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.state.BlockState;
@@ -49,11 +50,9 @@ public abstract class BaseRailBlock extends Block {
 	@Override
 	public void onPlace(BlockState blockState, Level level, BlockPos blockPos, BlockState blockState2, boolean bl) {
 		if (blockState2.getBlock() != blockState.getBlock()) {
-			if (!level.isClientSide) {
-				blockState = this.updateDir(level, blockPos, blockState, true);
-				if (this.isStraight) {
-					blockState.neighborChanged(level, blockPos, this, blockPos, bl);
-				}
+			blockState = this.updateDir(level, blockPos, blockState, true);
+			if (this.isStraight) {
+				blockState.neighborChanged(level, blockPos, this, blockPos, bl);
 			}
 		}
 	}
@@ -104,17 +103,17 @@ public abstract class BaseRailBlock extends Block {
 	}
 
 	protected BlockState updateDir(Level level, BlockPos blockPos, BlockState blockState, boolean bl) {
-		return level.isClientSide ? blockState : new RailState(level, blockPos, blockState).place(level.hasNeighborSignal(blockPos), bl).getState();
+		if (level.isClientSide) {
+			return blockState;
+		} else {
+			RailShape railShape = blockState.getValue(this.getShapeProperty());
+			return new RailState(level, blockPos, blockState).place(level.hasNeighborSignal(blockPos), bl, railShape).getState();
+		}
 	}
 
 	@Override
 	public PushReaction getPistonPushReaction(BlockState blockState) {
 		return PushReaction.NORMAL;
-	}
-
-	@Override
-	public BlockLayer getRenderLayer() {
-		return BlockLayer.CUTOUT;
 	}
 
 	@Override
@@ -130,6 +129,14 @@ public abstract class BaseRailBlock extends Block {
 				level.updateNeighborsAt(blockPos.below(), this);
 			}
 		}
+	}
+
+	@Override
+	public BlockState getStateForPlacement(BlockPlaceContext blockPlaceContext) {
+		BlockState blockState = super.defaultBlockState();
+		Direction direction = blockPlaceContext.getHorizontalDirection();
+		boolean bl = direction == Direction.EAST || direction == Direction.WEST;
+		return blockState.setValue(this.getShapeProperty(), bl ? RailShape.EAST_WEST : RailShape.NORTH_SOUTH);
 	}
 
 	public abstract Property<RailShape> getShapeProperty();

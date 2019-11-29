@@ -95,7 +95,7 @@ public class WrittenBookItem extends Item {
 		ItemStack itemStack = player.getItemInHand(interactionHand);
 		player.openItemGui(itemStack, interactionHand);
 		player.awardStat(Stats.ITEM_USED.get(this));
-		return new InteractionResultHolder<>(InteractionResult.SUCCESS, itemStack);
+		return InteractionResultHolder.success(itemStack);
 	}
 
 	public static boolean resolveBookComponents(ItemStack itemStack, @Nullable CommandSourceStack commandSourceStack, @Nullable Player player) {
@@ -118,7 +118,7 @@ public class WrittenBookItem extends Item {
 						component = new TextComponent(string);
 					}
 
-					listTag.set(i, (Tag)(new StringTag(Component.Serializer.toJson(component))));
+					listTag.set(i, (Tag)StringTag.valueOf(Component.Serializer.toJson(component)));
 				}
 
 				compoundTag.put("pages", listTag);
@@ -129,7 +129,6 @@ public class WrittenBookItem extends Item {
 		}
 	}
 
-	@Environment(EnvType.CLIENT)
 	@Override
 	public boolean isFoil(ItemStack itemStack) {
 		return true;

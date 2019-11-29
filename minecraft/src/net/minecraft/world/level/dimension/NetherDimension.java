@@ -16,8 +16,10 @@ import net.minecraft.world.level.levelgen.NetherGeneratorSettings;
 import net.minecraft.world.phys.Vec3;
 
 public class NetherDimension extends Dimension {
+	private static final Vec3 NETHER_FOG_COLOR = new Vec3(0.2F, 0.03F, 0.03F);
+
 	public NetherDimension(Level level, DimensionType dimensionType) {
-		super(level, dimensionType);
+		super(level, dimensionType, 0.1F);
 		this.ultraWarm = true;
 		this.hasCeiling = true;
 	}
@@ -25,17 +27,7 @@ public class NetherDimension extends Dimension {
 	@Environment(EnvType.CLIENT)
 	@Override
 	public Vec3 getFogColor(float f, float g) {
-		return new Vec3(0.2F, 0.03F, 0.03F);
-	}
-
-	@Override
-	protected void updateLightRamp() {
-		float f = 0.1F;
-
-		for(int i = 0; i <= 15; ++i) {
-			float g = 1.0F - (float)i / 15.0F;
-			this.brightnessRamp[i] = (1.0F - g) / (g * 3.0F + 1.0F) * 0.9F + 0.1F;
-		}
+		return NETHER_FOG_COLOR;
 	}
 
 	@Override
@@ -44,7 +36,9 @@ public class NetherDimension extends Dimension {
 		netherGeneratorSettings.setDefaultBlock(Blocks.NETHERRACK.defaultBlockState());
 		netherGeneratorSettings.setDefaultFluid(Blocks.LAVA.defaultBlockState());
 		return ChunkGeneratorType.CAVES
-			.create(this.level, BiomeSourceType.FIXED.create(BiomeSourceType.FIXED.createSettings().setBiome(Biomes.NETHER)), netherGeneratorSettings);
+			.create(
+				this.level, BiomeSourceType.FIXED.create(BiomeSourceType.FIXED.createSettings(this.level.getLevelData()).setBiome(Biomes.NETHER)), netherGeneratorSettings
+			);
 	}
 
 	@Override

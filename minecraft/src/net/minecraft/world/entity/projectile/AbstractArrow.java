@@ -33,7 +33,6 @@ import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -79,7 +78,7 @@ public abstract class AbstractArrow extends Entity implements Projectile {
 	}
 
 	protected AbstractArrow(EntityType<? extends AbstractArrow> entityType, LivingEntity livingEntity, Level level) {
-		this(entityType, livingEntity.x, livingEntity.y + (double)livingEntity.getEyeHeight() - 0.1F, livingEntity.z, level);
+		this(entityType, livingEntity.getX(), livingEntity.getEyeY() - 0.1F, livingEntity.getZ(), level);
 		this.setOwner(livingEntity);
 		if (livingEntity instanceof Player) {
 			this.pickup = AbstractArrow.Pickup.ALLOWED;
@@ -151,7 +150,7 @@ public abstract class AbstractArrow extends Entity implements Projectile {
 			this.yRot = (float)(Mth.atan2(d, f) * 180.0F / (float)Math.PI);
 			this.xRotO = this.xRot;
 			this.yRotO = this.yRot;
-			this.moveTo(this.x, this.y, this.z, this.yRot, this.xRot);
+			this.moveTo(this.getX(), this.getY(), this.getZ(), this.yRot, this.xRot);
 			this.life = 0;
 		}
 	}
@@ -169,13 +168,15 @@ public abstract class AbstractArrow extends Entity implements Projectile {
 			this.xRotO = this.xRot;
 		}
 
-		BlockPos blockPos = new BlockPos(this.x, this.y, this.z);
+		BlockPos blockPos = new BlockPos(this);
 		BlockState blockState = this.level.getBlockState(blockPos);
 		if (!blockState.isAir() && !bl) {
 			VoxelShape voxelShape = blockState.getCollisionShape(this.level, blockPos);
 			if (!voxelShape.isEmpty()) {
+				Vec3 vec32 = this.position();
+
 				for(AABB aABB : voxelShape.toAabbs()) {
-					if (aABB.move(blockPos).contains(new Vec3(this.x, this.y, this.z))) {
+					if (aABB.move(blockPos).contains(vec32)) {
 						this.inGround = true;
 						break;
 					}
@@ -200,22 +201,22 @@ public abstract class AbstractArrow extends Entity implements Projectile {
 				this.life = 0;
 				this.flightTime = 0;
 			} else if (!this.level.isClientSide) {
-				this.checkDespawn();
+				this.tickDespawn();
 			}
 
 			++this.inGroundTime;
 		} else {
 			this.inGroundTime = 0;
 			++this.flightTime;
-			Vec3 vec32 = new Vec3(this.x, this.y, this.z);
-			Vec3 vec33 = vec32.add(vec3);
-			HitResult hitResult = this.level.clip(new ClipContext(vec32, vec33, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+			Vec3 vec33 = this.position();
+			Vec3 vec32 = vec33.add(vec3);
+			HitResult hitResult = this.level.clip(new ClipContext(vec33, vec32, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
 			if (hitResult.getType() != HitResult.Type.MISS) {
-				vec33 = hitResult.getLocation();
+				vec32 = hitResult.getLocation();
 			}
 
 			while(!this.removed) {
-				EntityHitResult entityHitResult = this.findHitEntity(vec32, vec33);
+				EntityHitResult entityHitResult = this.findHitEntity(vec33, vec32);
 				if (entityHitResult != null) {
 					hitResult = entityHitResult;
 				}
@@ -247,21 +248,24 @@ public abstract class AbstractArrow extends Entity implements Projectile {
 			double g = vec3.z;
 			if (this.isCritArrow()) {
 				for(int i = 0; i < 4; ++i) {
-					this.level.addParticle(ParticleTypes.CRIT, this.x + d * (double)i / 4.0, this.y + e * (double)i / 4.0, this.z + g * (double)i / 4.0, -d, -e + 0.2, -g);
+					this.level
+						.addParticle(
+							ParticleTypes.CRIT, this.getX() + d * (double)i / 4.0, this.getY() + e * (double)i / 4.0, this.getZ() + g * (double)i / 4.0, -d, -e + 0.2, -g
+						);
 				}
 			}
 
-			this.x += d;
-			this.y += e;
-			this.z += g;
-			float h = Mth.sqrt(getHorizontalDistanceSqr(vec3));
+			double h = this.getX() + d;
+			double j = this.getY() + e;
+			double k = this.getZ() + g;
+			float l = Mth.sqrt(getHorizontalDistanceSqr(vec3));
 			if (bl) {
 				this.yRot = (float)(Mth.atan2(-d, -g) * 180.0F / (float)Math.PI);
 			} else {
 				this.yRot = (float)(Mth.atan2(d, g) * 180.0F / (float)Math.PI);
 			}
 
-			this.xRot = (float)(Mth.atan2(e, (double)h) * 180.0F / (float)Math.PI);
+			this.xRot = (float)(Mth.atan2(e, (double)l) * 180.0F / (float)Math.PI);
 
 			while(this.xRot - this.xRotO < -180.0F) {
 				this.xRotO -= 360.0F;
@@ -281,29 +285,29 @@ public abstract class AbstractArrow extends Entity implements Projectile {
 
 			this.xRot = Mth.lerp(0.2F, this.xRotO, this.xRot);
 			this.yRot = Mth.lerp(0.2F, this.yRotO, this.yRot);
-			float j = 0.99F;
-			float k = 0.05F;
+			float m = 0.99F;
+			float n = 0.05F;
 			if (this.isInWater()) {
-				for(int l = 0; l < 4; ++l) {
-					float m = 0.25F;
-					this.level.addParticle(ParticleTypes.BUBBLE, this.x - d * 0.25, this.y - e * 0.25, this.z - g * 0.25, d, e, g);
+				for(int o = 0; o < 4; ++o) {
+					float p = 0.25F;
+					this.level.addParticle(ParticleTypes.BUBBLE, h - d * 0.25, j - e * 0.25, k - g * 0.25, d, e, g);
 				}
 
-				j = this.getWaterInertia();
+				m = this.getWaterInertia();
 			}
 
-			this.setDeltaMovement(vec3.scale((double)j));
+			this.setDeltaMovement(vec3.scale((double)m));
 			if (!this.isNoGravity() && !bl) {
 				Vec3 vec34 = this.getDeltaMovement();
 				this.setDeltaMovement(vec34.x, vec34.y - 0.05F, vec34.z);
 			}
 
-			this.setPos(this.x, this.y, this.z);
+			this.setPos(h, j, k);
 			this.checkInsideBlocks();
 		}
 	}
 
-	protected void checkDespawn() {
+	protected void tickDespawn() {
 		++this.life;
 		if (this.life >= 1200) {
 			this.remove();
@@ -318,12 +322,10 @@ public abstract class AbstractArrow extends Entity implements Projectile {
 			BlockHitResult blockHitResult = (BlockHitResult)hitResult;
 			BlockState blockState = this.level.getBlockState(blockHitResult.getBlockPos());
 			this.lastState = blockState;
-			Vec3 vec3 = blockHitResult.getLocation().subtract(this.x, this.y, this.z);
+			Vec3 vec3 = blockHitResult.getLocation().subtract(this.getX(), this.getY(), this.getZ());
 			this.setDeltaMovement(vec3);
 			Vec3 vec32 = vec3.normalize().scale(0.05F);
-			this.x -= vec32.x;
-			this.y -= vec32.y;
-			this.z -= vec32.z;
+			this.setPosRaw(this.getX() - vec32.x, this.getY() - vec32.y, this.getZ() - vec32.z);
 			this.playSound(this.getHitGroundSoundEvent(), 1.0F, 1.2F / (this.random.nextFloat() * 0.2F + 0.9F));
 			this.inGround = true;
 			this.shakeTime = 7;
@@ -382,12 +384,17 @@ public abstract class AbstractArrow extends Entity implements Projectile {
 			}
 		}
 
+		boolean bl = entity.getType() == EntityType.ENDERMAN;
 		int j = entity.getRemainingFireTicks();
-		if (this.isOnFire() && !(entity instanceof EnderMan)) {
+		if (this.isOnFire() && !bl) {
 			entity.setSecondsOnFire(5);
 		}
 
 		if (entity.hurt(damageSource, (float)i)) {
+			if (bl) {
+				return;
+			}
+
 			if (entity instanceof LivingEntity) {
 				LivingEntity livingEntity = (LivingEntity)entity;
 				if (!this.level.isClientSide && this.getPierceLevel() <= 0) {
@@ -426,7 +433,7 @@ public abstract class AbstractArrow extends Entity implements Projectile {
 			}
 
 			this.playSound(this.soundEvent, 1.0F, 1.2F / (this.random.nextFloat() * 0.2F + 0.9F));
-			if (this.getPierceLevel() <= 0 && !(entity instanceof EnderMan)) {
+			if (this.getPierceLevel() <= 0) {
 				this.remove();
 			}
 		} else {
@@ -480,7 +487,7 @@ public abstract class AbstractArrow extends Entity implements Projectile {
 		}
 
 		compoundTag.putByte("shake", (byte)this.shakeTime);
-		compoundTag.putByte("inGround", (byte)(this.inGround ? 1 : 0));
+		compoundTag.putBoolean("inGround", this.inGround);
 		compoundTag.putByte("pickup", (byte)this.pickup.ordinal());
 		compoundTag.putDouble("damage", this.baseDamage);
 		compoundTag.putBoolean("crit", this.isCritArrow());
@@ -501,7 +508,7 @@ public abstract class AbstractArrow extends Entity implements Projectile {
 		}
 
 		this.shakeTime = compoundTag.getByte("shake") & 255;
-		this.inGround = compoundTag.getByte("inGround") == 1;
+		this.inGround = compoundTag.getBoolean("inGround");
 		if (compoundTag.contains("damage", 99)) {
 			this.baseDamage = compoundTag.getDouble("damage");
 		}
@@ -559,7 +566,7 @@ public abstract class AbstractArrow extends Entity implements Projectile {
 	protected abstract ItemStack getPickupItem();
 
 	@Override
-	protected boolean makeStepSound() {
+	protected boolean isMovementNoisy() {
 		return false;
 	}
 

@@ -1,13 +1,13 @@
 package net.minecraft.client.renderer.blockentity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Blocks;
@@ -17,103 +17,86 @@ import net.minecraft.world.level.block.state.properties.StructureMode;
 
 @Environment(EnvType.CLIENT)
 public class StructureBlockRenderer extends BlockEntityRenderer<StructureBlockEntity> {
-	public void render(StructureBlockEntity structureBlockEntity, double d, double e, double f, float g, int i) {
+	public StructureBlockRenderer(BlockEntityRenderDispatcher blockEntityRenderDispatcher) {
+		super(blockEntityRenderDispatcher);
+	}
+
+	public void render(StructureBlockEntity structureBlockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j) {
 		if (Minecraft.getInstance().player.canUseGameMasterBlocks() || Minecraft.getInstance().player.isSpectator()) {
-			super.render(structureBlockEntity, d, e, f, g, i);
 			BlockPos blockPos = structureBlockEntity.getStructurePos();
 			BlockPos blockPos2 = structureBlockEntity.getStructureSize();
 			if (blockPos2.getX() >= 1 && blockPos2.getY() >= 1 && blockPos2.getZ() >= 1) {
 				if (structureBlockEntity.getMode() == StructureMode.SAVE || structureBlockEntity.getMode() == StructureMode.LOAD) {
-					double h = 0.01;
-					double j = (double)blockPos.getX();
-					double k = (double)blockPos.getZ();
-					double l = e + (double)blockPos.getY() - 0.01;
-					double m = l + (double)blockPos2.getY() + 0.02;
-					double n;
-					double o;
+					double d = (double)blockPos.getX();
+					double e = (double)blockPos.getZ();
+					double g = (double)blockPos.getY();
+					double h = g + (double)blockPos2.getY();
+					double k;
+					double l;
 					switch(structureBlockEntity.getMirror()) {
 						case LEFT_RIGHT:
-							n = (double)blockPos2.getX() + 0.02;
-							o = -((double)blockPos2.getZ() + 0.02);
+							k = (double)blockPos2.getX();
+							l = (double)(-blockPos2.getZ());
 							break;
 						case FRONT_BACK:
-							n = -((double)blockPos2.getX() + 0.02);
-							o = (double)blockPos2.getZ() + 0.02;
+							k = (double)(-blockPos2.getX());
+							l = (double)blockPos2.getZ();
 							break;
 						default:
-							n = (double)blockPos2.getX() + 0.02;
-							o = (double)blockPos2.getZ() + 0.02;
+							k = (double)blockPos2.getX();
+							l = (double)blockPos2.getZ();
 					}
 
+					double m;
+					double n;
+					double o;
 					double p;
-					double q;
-					double r;
-					double s;
 					switch(structureBlockEntity.getRotation()) {
 						case CLOCKWISE_90:
-							p = d + (o < 0.0 ? j - 0.01 : j + 1.0 + 0.01);
-							q = f + (n < 0.0 ? k + 1.0 + 0.01 : k - 0.01);
-							r = p - o;
-							s = q + n;
+							m = l < 0.0 ? d : d + 1.0;
+							n = k < 0.0 ? e + 1.0 : e;
+							o = m - l;
+							p = n + k;
 							break;
 						case CLOCKWISE_180:
-							p = d + (n < 0.0 ? j - 0.01 : j + 1.0 + 0.01);
-							q = f + (o < 0.0 ? k - 0.01 : k + 1.0 + 0.01);
-							r = p - n;
-							s = q - o;
+							m = k < 0.0 ? d : d + 1.0;
+							n = l < 0.0 ? e : e + 1.0;
+							o = m - k;
+							p = n - l;
 							break;
 						case COUNTERCLOCKWISE_90:
-							p = d + (o < 0.0 ? j + 1.0 + 0.01 : j - 0.01);
-							q = f + (n < 0.0 ? k - 0.01 : k + 1.0 + 0.01);
-							r = p + o;
-							s = q - n;
+							m = l < 0.0 ? d + 1.0 : d;
+							n = k < 0.0 ? e : e + 1.0;
+							o = m + l;
+							p = n - k;
 							break;
 						default:
-							p = d + (n < 0.0 ? j + 1.0 + 0.01 : j - 0.01);
-							q = f + (o < 0.0 ? k + 1.0 + 0.01 : k - 0.01);
-							r = p + n;
-							s = q + o;
+							m = k < 0.0 ? d + 1.0 : d;
+							n = l < 0.0 ? e + 1.0 : e;
+							o = m + k;
+							p = n + l;
 					}
 
-					int t = 255;
-					int u = 223;
-					int v = 127;
-					Tesselator tesselator = Tesselator.getInstance();
-					BufferBuilder bufferBuilder = tesselator.getBuilder();
-					GlStateManager.disableFog();
-					GlStateManager.disableLighting();
-					GlStateManager.disableTexture();
-					GlStateManager.enableBlend();
-					GlStateManager.blendFuncSeparate(
-						GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO
-					);
-					this.setOverlayRenderState(true);
+					float q = 1.0F;
+					float r = 0.9F;
+					float s = 0.5F;
+					VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.lines());
 					if (structureBlockEntity.getMode() == StructureMode.SAVE || structureBlockEntity.getShowBoundingBox()) {
-						this.renderBox(tesselator, bufferBuilder, p, l, q, r, m, s, 255, 223, 127);
+						LevelRenderer.renderLineBox(poseStack, vertexConsumer, m, g, n, o, h, p, 0.9F, 0.9F, 0.9F, 1.0F, 0.5F, 0.5F, 0.5F);
 					}
 
 					if (structureBlockEntity.getMode() == StructureMode.SAVE && structureBlockEntity.getShowAir()) {
-						this.renderInvisibleBlocks(structureBlockEntity, d, e, f, blockPos, tesselator, bufferBuilder, true);
-						this.renderInvisibleBlocks(structureBlockEntity, d, e, f, blockPos, tesselator, bufferBuilder, false);
+						this.renderInvisibleBlocks(structureBlockEntity, vertexConsumer, blockPos, true, poseStack);
+						this.renderInvisibleBlocks(structureBlockEntity, vertexConsumer, blockPos, false, poseStack);
 					}
-
-					this.setOverlayRenderState(false);
-					GlStateManager.lineWidth(1.0F);
-					GlStateManager.enableLighting();
-					GlStateManager.enableTexture();
-					GlStateManager.enableDepthTest();
-					GlStateManager.depthMask(true);
-					GlStateManager.enableFog();
 				}
 			}
 		}
 	}
 
 	private void renderInvisibleBlocks(
-		StructureBlockEntity structureBlockEntity, double d, double e, double f, BlockPos blockPos, Tesselator tesselator, BufferBuilder bufferBuilder, boolean bl
+		StructureBlockEntity structureBlockEntity, VertexConsumer vertexConsumer, BlockPos blockPos, boolean bl, PoseStack poseStack
 	) {
-		GlStateManager.lineWidth(bl ? 3.0F : 1.0F);
-		bufferBuilder.begin(3, DefaultVertexFormat.POSITION_COLOR);
 		BlockGetter blockGetter = structureBlockEntity.getLevel();
 		BlockPos blockPos2 = structureBlockEntity.getBlockPos();
 		BlockPos blockPos3 = blockPos2.offset(blockPos);
@@ -123,49 +106,22 @@ public class StructureBlockRenderer extends BlockEntityRenderer<StructureBlockEn
 			boolean bl2 = blockState.isAir();
 			boolean bl3 = blockState.getBlock() == Blocks.STRUCTURE_VOID;
 			if (bl2 || bl3) {
-				float g = bl2 ? 0.05F : 0.0F;
-				double h = (double)((float)(blockPos4.getX() - blockPos2.getX()) + 0.45F) + d - (double)g;
-				double i = (double)((float)(blockPos4.getY() - blockPos2.getY()) + 0.45F) + e - (double)g;
-				double j = (double)((float)(blockPos4.getZ() - blockPos2.getZ()) + 0.45F) + f - (double)g;
-				double k = (double)((float)(blockPos4.getX() - blockPos2.getX()) + 0.55F) + d + (double)g;
-				double l = (double)((float)(blockPos4.getY() - blockPos2.getY()) + 0.55F) + e + (double)g;
-				double m = (double)((float)(blockPos4.getZ() - blockPos2.getZ()) + 0.55F) + f + (double)g;
+				float f = bl2 ? 0.05F : 0.0F;
+				double d = (double)((float)(blockPos4.getX() - blockPos2.getX()) + 0.45F - f);
+				double e = (double)((float)(blockPos4.getY() - blockPos2.getY()) + 0.45F - f);
+				double g = (double)((float)(blockPos4.getZ() - blockPos2.getZ()) + 0.45F - f);
+				double h = (double)((float)(blockPos4.getX() - blockPos2.getX()) + 0.55F + f);
+				double i = (double)((float)(blockPos4.getY() - blockPos2.getY()) + 0.55F + f);
+				double j = (double)((float)(blockPos4.getZ() - blockPos2.getZ()) + 0.55F + f);
 				if (bl) {
-					LevelRenderer.addChainedLineBoxVertices(bufferBuilder, h, i, j, k, l, m, 0.0F, 0.0F, 0.0F, 1.0F);
+					LevelRenderer.renderLineBox(poseStack, vertexConsumer, d, e, g, h, i, j, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 0.0F);
 				} else if (bl2) {
-					LevelRenderer.addChainedLineBoxVertices(bufferBuilder, h, i, j, k, l, m, 0.5F, 0.5F, 1.0F, 1.0F);
+					LevelRenderer.renderLineBox(poseStack, vertexConsumer, d, e, g, h, i, j, 0.5F, 0.5F, 1.0F, 1.0F, 0.5F, 0.5F, 1.0F);
 				} else {
-					LevelRenderer.addChainedLineBoxVertices(bufferBuilder, h, i, j, k, l, m, 1.0F, 0.25F, 0.25F, 1.0F);
+					LevelRenderer.renderLineBox(poseStack, vertexConsumer, d, e, g, h, i, j, 1.0F, 0.25F, 0.25F, 1.0F, 1.0F, 0.25F, 0.25F);
 				}
 			}
 		}
-
-		tesselator.end();
-	}
-
-	private void renderBox(Tesselator tesselator, BufferBuilder bufferBuilder, double d, double e, double f, double g, double h, double i, int j, int k, int l) {
-		GlStateManager.lineWidth(2.0F);
-		bufferBuilder.begin(3, DefaultVertexFormat.POSITION_COLOR);
-		bufferBuilder.vertex(d, e, f).color((float)k, (float)k, (float)k, 0.0F).endVertex();
-		bufferBuilder.vertex(d, e, f).color(k, k, k, j).endVertex();
-		bufferBuilder.vertex(g, e, f).color(k, l, l, j).endVertex();
-		bufferBuilder.vertex(g, e, i).color(k, k, k, j).endVertex();
-		bufferBuilder.vertex(d, e, i).color(k, k, k, j).endVertex();
-		bufferBuilder.vertex(d, e, f).color(l, l, k, j).endVertex();
-		bufferBuilder.vertex(d, h, f).color(l, k, l, j).endVertex();
-		bufferBuilder.vertex(g, h, f).color(k, k, k, j).endVertex();
-		bufferBuilder.vertex(g, h, i).color(k, k, k, j).endVertex();
-		bufferBuilder.vertex(d, h, i).color(k, k, k, j).endVertex();
-		bufferBuilder.vertex(d, h, f).color(k, k, k, j).endVertex();
-		bufferBuilder.vertex(d, h, i).color(k, k, k, j).endVertex();
-		bufferBuilder.vertex(d, e, i).color(k, k, k, j).endVertex();
-		bufferBuilder.vertex(g, e, i).color(k, k, k, j).endVertex();
-		bufferBuilder.vertex(g, h, i).color(k, k, k, j).endVertex();
-		bufferBuilder.vertex(g, h, f).color(k, k, k, j).endVertex();
-		bufferBuilder.vertex(g, e, f).color(k, k, k, j).endVertex();
-		bufferBuilder.vertex(g, e, f).color((float)k, (float)k, (float)k, 0.0F).endVertex();
-		tesselator.end();
-		GlStateManager.lineWidth(1.0F);
 	}
 
 	public boolean shouldRenderOffScreen(StructureBlockEntity structureBlockEntity) {

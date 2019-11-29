@@ -19,6 +19,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
@@ -51,8 +52,10 @@ import net.minecraft.world.entity.animal.Turtle;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -271,8 +274,40 @@ public class Zombie extends Monster {
 				zombie.setCustomNameVisible(this.isCustomNameVisible());
 			}
 
+			if (this.isPersistenceRequired()) {
+				zombie.setPersistenceRequired();
+			}
+
+			zombie.setInvulnerable(this.isInvulnerable());
 			this.level.addFreshEntity(zombie);
 			this.remove();
+		}
+	}
+
+	@Override
+	public boolean mobInteract(Player player, InteractionHand interactionHand) {
+		ItemStack itemStack = player.getItemInHand(interactionHand);
+		Item item = itemStack.getItem();
+		if (item instanceof SpawnEggItem && ((SpawnEggItem)item).spawnsEntity(itemStack.getTag(), this.getType())) {
+			if (!this.level.isClientSide) {
+				Zombie zombie = (Zombie)this.getType().create(this.level);
+				if (zombie != null) {
+					zombie.setBaby(true);
+					zombie.moveTo(this.getX(), this.getY(), this.getZ(), 0.0F, 0.0F);
+					this.level.addFreshEntity(zombie);
+					if (itemStack.hasCustomHoverName()) {
+						zombie.setCustomName(itemStack.getHoverName());
+					}
+
+					if (!player.abilities.instabuild) {
+						itemStack.shrink(1);
+					}
+				}
+			}
+
+			return true;
+		} else {
+			return super.mobInteract(player, interactionHand);
 		}
 	}
 
@@ -292,9 +327,9 @@ public class Zombie extends Monster {
 				&& this.level.getDifficulty() == Difficulty.HARD
 				&& (double)this.random.nextFloat() < this.getAttribute(SPAWN_REINFORCEMENTS_CHANCE).getValue()
 				&& this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING)) {
-				int i = Mth.floor(this.x);
-				int j = Mth.floor(this.y);
-				int k = Mth.floor(this.z);
+				int i = Mth.floor(this.getX());
+				int j = Mth.floor(this.getY());
+				int k = Mth.floor(this.getZ());
 				Zombie zombie = new Zombie(this.level);
 
 				for(int l = 0; l < 50; ++l) {
@@ -434,6 +469,11 @@ public class Zombie extends Monster {
 				zombieVillager.setCustomNameVisible(villager.isCustomNameVisible());
 			}
 
+			if (this.isPersistenceRequired()) {
+				zombieVillager.setPersistenceRequired();
+			}
+
+			zombieVillager.setInvulnerable(this.isInvulnerable());
 			this.level.addFreshEntity(zombieVillager);
 			this.level.levelEvent(null, 1026, new BlockPos(this), 0);
 		}
@@ -478,7 +518,7 @@ public class Zombie extends Monster {
 					}
 				} else if ((double)levelAccessor.getRandom().nextFloat() < 0.05) {
 					Chicken chicken2 = EntityType.CHICKEN.create(this.level);
-					chicken2.moveTo(this.x, this.y, this.z, this.yRot, 0.0F);
+					chicken2.moveTo(this.getX(), this.getY(), this.getZ(), this.yRot, 0.0F);
 					chicken2.finalizeSpawn(levelAccessor, difficultyInstance, MobSpawnType.JOCKEY, null, null);
 					chicken2.setChickenJockey(true);
 					levelAccessor.addFreshEntity(chicken2);

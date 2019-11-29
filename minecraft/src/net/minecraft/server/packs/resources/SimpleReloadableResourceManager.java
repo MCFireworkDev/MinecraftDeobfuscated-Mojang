@@ -5,7 +5,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +43,7 @@ public class SimpleReloadableResourceManager implements ReloadableResourceManage
 			this.namespaces.add(string);
 			FallbackResourceManager fallbackResourceManager = (FallbackResourceManager)this.namespacedPacks.get(string);
 			if (fallbackResourceManager == null) {
-				fallbackResourceManager = new FallbackResourceManager(this.type);
+				fallbackResourceManager = new FallbackResourceManager(this.type, string);
 				this.namespacedPacks.put(string, fallbackResourceManager);
 			}
 
@@ -118,9 +117,9 @@ public class SimpleReloadableResourceManager implements ReloadableResourceManage
 	protected ReloadInstance createReload(Executor executor, Executor executor2, List<PreparableReloadListener> list, CompletableFuture<Unit> completableFuture) {
 		ReloadInstance reloadInstance;
 		if (LOGGER.isDebugEnabled()) {
-			reloadInstance = new ProfiledReloadInstance(this, new ArrayList(list), executor, executor2, completableFuture);
+			reloadInstance = new ProfiledReloadInstance(this, Lists.<PreparableReloadListener>newArrayList(list), executor, executor2, completableFuture);
 		} else {
-			reloadInstance = SimpleReloadInstance.of(this, new ArrayList(list), executor, executor2, completableFuture);
+			reloadInstance = SimpleReloadInstance.of(this, Lists.<PreparableReloadListener>newArrayList(list), executor, executor2, completableFuture);
 		}
 
 		this.recentlyRegistered.clear();

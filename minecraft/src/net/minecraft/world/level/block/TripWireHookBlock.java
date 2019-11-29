@@ -5,13 +5,13 @@ import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.BlockPlaceContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.BlockLayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
@@ -168,8 +168,8 @@ public class TripWireHookBlock extends Block {
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
-		this.calculateState(level, blockPos, blockState, false, true, -1, null);
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+		this.calculateState(serverLevel, blockPos, blockState, false, true, -1, null);
 	}
 
 	private void playSound(Level level, BlockPos blockPos, boolean bl, boolean bl2, boolean bl3, boolean bl4) {
@@ -224,11 +224,6 @@ public class TripWireHookBlock extends Block {
 	@Override
 	public boolean isSignalSource(BlockState blockState) {
 		return true;
-	}
-
-	@Override
-	public BlockLayer getRenderLayer() {
-		return BlockLayer.CUTOUT_MIPPED;
 	}
 
 	@Override

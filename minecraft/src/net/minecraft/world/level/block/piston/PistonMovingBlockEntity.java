@@ -30,11 +30,7 @@ public class PistonMovingBlockEntity extends BlockEntity implements TickableBloc
 	private Direction direction;
 	private boolean extending;
 	private boolean isSourcePiston;
-	private static final ThreadLocal<Direction> NOCLIP = new ThreadLocal<Direction>() {
-		protected Direction initialValue() {
-			return null;
-		}
-	};
+	private static final ThreadLocal<Direction> NOCLIP = ThreadLocal.withInitial(() -> null);
 	private float progress;
 	private float progressO;
 	private long lastTicked;
@@ -111,12 +107,11 @@ public class PistonMovingBlockEntity extends BlockEntity implements TickableBloc
 		if (!voxelShape.isEmpty()) {
 			List<AABB> list = voxelShape.toAabbs();
 			AABB aABB = this.moveByPositionAndProgress(this.getMinMaxPiecesAABB(list));
-			List<Entity> list2 = this.level.getEntities(null, this.getMovementArea(aABB, direction, d).minmax(aABB));
+			List<Entity> list2 = this.level.getEntities(null, PistonMath.getMovementArea(aABB, direction, d).minmax(aABB));
 			if (!list2.isEmpty()) {
 				boolean bl = this.movedState.getBlock() == Blocks.SLIME_BLOCK;
 
-				for(int i = 0; i < list2.size(); ++i) {
-					Entity entity = (Entity)list2.get(i);
+				for(Entity entity : list2) {
 					if (entity.getPistonPushReaction() != PushReaction.IGNORE) {
 						if (bl) {
 							Vec3 vec3 = entity.getDeltaMovement();
@@ -137,24 +132,22 @@ public class PistonMovingBlockEntity extends BlockEntity implements TickableBloc
 							entity.setDeltaMovement(e, g, h);
 						}
 
-						double j = 0.0;
+						double i = 0.0;
 
-						for(int k = 0; k < list.size(); ++k) {
-							AABB aABB2 = this.getMovementArea(this.moveByPositionAndProgress((AABB)list.get(k)), direction, d);
-							AABB aABB3 = entity.getBoundingBox();
-							if (aABB2.intersects(aABB3)) {
-								j = Math.max(j, this.getMovement(aABB2, direction, aABB3));
-								if (j >= d) {
+						for(AABB aABB2 : list) {
+							AABB aABB3 = PistonMath.getMovementArea(this.moveByPositionAndProgress(aABB2), direction, d);
+							AABB aABB4 = entity.getBoundingBox();
+							if (aABB3.intersects(aABB4)) {
+								i = Math.max(i, getMovement(aABB3, direction, aABB4));
+								if (i >= d) {
 									break;
 								}
 							}
 						}
 
-						if (!(j <= 0.0)) {
-							j = Math.min(j, d) + 0.01;
-							NOCLIP.set(direction);
-							entity.move(MoverType.PISTON, new Vec3(j * (double)direction.getStepX(), j * (double)direction.getStepY(), j * (double)direction.getStepZ()));
-							NOCLIP.set(null);
+						if (!(i <= 0.0)) {
+							i = Math.min(i, d) + 0.01;
+							moveEntityByPiston(direction, entity, i, direction);
 							if (!this.extending && this.isSourcePiston) {
 								this.fixEntityWithinPistonBase(entity, direction, d);
 							}
@@ -163,6 +156,40 @@ public class PistonMovingBlockEntity extends BlockEntity implements TickableBloc
 				}
 			}
 		}
+	}
+
+	private static void moveEntityByPiston(Direction direction, Entity entity, double d, Direction direction2) {
+		NOCLIP.set(direction);
+		entity.move(MoverType.PISTON, new Vec3(d * (double)direction2.getStepX(), d * (double)direction2.getStepY(), d * (double)direction2.getStepZ()));
+		NOCLIP.set(null);
+	}
+
+	private void moveStuckEntities(float f) {
+		if (this.isStickyForEntities()) {
+			Direction direction = this.getMovementDirection();
+			if (direction.getAxis().isHorizontal()) {
+				double d = this.movedState.getCollisionShape(this.level, this.worldPosition).max(Direction.Axis.Y);
+				AABB aABB = this.moveByPositionAndProgress(new AABB(0.0, d, 0.0, 1.0, 1.5000000999999998, 1.0));
+				double e = (double)(f - this.progress);
+
+				for(Entity entity : this.level.getEntities((Entity)null, aABB, entityx -> matchesStickyCritera(aABB, entityx))) {
+					moveEntityByPiston(direction, entity, e, direction);
+				}
+			}
+		}
+	}
+
+	private static boolean matchesStickyCritera(AABB aABB, Entity entity) {
+		return entity.getPistonPushReaction() == PushReaction.NORMAL
+			&& entity.onGround
+			&& entity.getX() >= aABB.minX
+			&& entity.getX() <= aABB.maxX
+			&& entity.getZ() >= aABB.minZ
+			&& entity.getZ() <= aABB.maxZ;
+	}
+
+	private boolean isStickyForEntities() {
+		return this.movedState.getBlock() == Blocks.HONEY_BLOCK;
 	}
 
 	public Direction getMovementDirection() {
@@ -189,15 +216,21 @@ public class PistonMovingBlockEntity extends BlockEntity implements TickableBloc
 		return new AABB(d, e, f, g, h, i);
 	}
 
-	private double getMovement(AABB aABB, Direction direction, AABB aABB2) {
-		switch(direction.getAxis()) {
-			case X:
-				return getDeltaX(aABB, direction, aABB2);
-			case Y:
+	private static double getMovement(AABB aABB, Direction direction, AABB aABB2) {
+		switch(direction) {
+			case EAST:
+				return aABB.maxX - aABB2.minX;
+			case WEST:
+				return aABB2.maxX - aABB.minX;
+			case UP:
 			default:
-				return getDeltaY(aABB, direction, aABB2);
-			case Z:
-				return getDeltaZ(aABB, direction, aABB2);
+				return aABB.maxY - aABB2.minY;
+			case DOWN:
+				return aABB2.maxY - aABB.minY;
+			case SOUTH:
+				return aABB.maxZ - aABB2.minZ;
+			case NORTH:
+				return aABB2.maxZ - aABB.minZ;
 		}
 	}
 
@@ -210,53 +243,18 @@ public class PistonMovingBlockEntity extends BlockEntity implements TickableBloc
 		);
 	}
 
-	private AABB getMovementArea(AABB aABB, Direction direction, double d) {
-		double e = d * (double)direction.getAxisDirection().getStep();
-		double f = Math.min(e, 0.0);
-		double g = Math.max(e, 0.0);
-		switch(direction) {
-			case WEST:
-				return new AABB(aABB.minX + f, aABB.minY, aABB.minZ, aABB.minX + g, aABB.maxY, aABB.maxZ);
-			case EAST:
-				return new AABB(aABB.maxX + f, aABB.minY, aABB.minZ, aABB.maxX + g, aABB.maxY, aABB.maxZ);
-			case DOWN:
-				return new AABB(aABB.minX, aABB.minY + f, aABB.minZ, aABB.maxX, aABB.minY + g, aABB.maxZ);
-			case UP:
-			default:
-				return new AABB(aABB.minX, aABB.maxY + f, aABB.minZ, aABB.maxX, aABB.maxY + g, aABB.maxZ);
-			case NORTH:
-				return new AABB(aABB.minX, aABB.minY, aABB.minZ + f, aABB.maxX, aABB.maxY, aABB.minZ + g);
-			case SOUTH:
-				return new AABB(aABB.minX, aABB.minY, aABB.maxZ + f, aABB.maxX, aABB.maxY, aABB.maxZ + g);
-		}
-	}
-
 	private void fixEntityWithinPistonBase(Entity entity, Direction direction, double d) {
 		AABB aABB = entity.getBoundingBox();
 		AABB aABB2 = Shapes.block().bounds().move(this.worldPosition);
 		if (aABB.intersects(aABB2)) {
 			Direction direction2 = direction.getOpposite();
-			double e = this.getMovement(aABB2, direction2, aABB) + 0.01;
-			double f = this.getMovement(aABB2, direction2, aABB.intersect(aABB2)) + 0.01;
+			double e = getMovement(aABB2, direction2, aABB) + 0.01;
+			double f = getMovement(aABB2, direction2, aABB.intersect(aABB2)) + 0.01;
 			if (Math.abs(e - f) < 0.01) {
 				e = Math.min(e, d) + 0.01;
-				NOCLIP.set(direction);
-				entity.move(MoverType.PISTON, new Vec3(e * (double)direction2.getStepX(), e * (double)direction2.getStepY(), e * (double)direction2.getStepZ()));
-				NOCLIP.set(null);
+				moveEntityByPiston(direction, entity, e, direction2);
 			}
 		}
-	}
-
-	private static double getDeltaX(AABB aABB, Direction direction, AABB aABB2) {
-		return direction.getAxisDirection() == Direction.AxisDirection.POSITIVE ? aABB.maxX - aABB2.minX : aABB2.maxX - aABB.minX;
-	}
-
-	private static double getDeltaY(AABB aABB, Direction direction, AABB aABB2) {
-		return direction.getAxisDirection() == Direction.AxisDirection.POSITIVE ? aABB.maxY - aABB2.minY : aABB2.maxY - aABB.minY;
-	}
-
-	private static double getDeltaZ(AABB aABB, Direction direction, AABB aABB2) {
-		return direction.getAxisDirection() == Direction.AxisDirection.POSITIVE ? aABB.maxZ - aABB2.minZ : aABB2.maxZ - aABB.minZ;
 	}
 
 	public BlockState getMovedState() {
@@ -307,6 +305,7 @@ public class PistonMovingBlockEntity extends BlockEntity implements TickableBloc
 		} else {
 			float f = this.progress + 0.5F;
 			this.moveCollidedEntities(f);
+			this.moveStuckEntities(f);
 			this.progress = f;
 			if (this.progress >= 1.0F) {
 				this.progress = 1.0F;

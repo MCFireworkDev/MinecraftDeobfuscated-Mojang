@@ -1,9 +1,12 @@
 package net.minecraft.client.renderer.entity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.SkullModel;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.projectile.WitherSkull;
@@ -18,47 +21,23 @@ public class WitherSkullRenderer extends EntityRenderer<WitherSkull> {
 		super(entityRenderDispatcher);
 	}
 
-	private float rotlerp(float f, float g, float h) {
-		float i = g - f;
-
-		while(i < -180.0F) {
-			i += 360.0F;
-		}
-
-		while(i >= 180.0F) {
-			i -= 360.0F;
-		}
-
-		return f + h * i;
+	protected int getBlockLightLevel(WitherSkull witherSkull, float f) {
+		return 15;
 	}
 
-	public void render(WitherSkull witherSkull, double d, double e, double f, float g, float h) {
-		GlStateManager.pushMatrix();
-		GlStateManager.disableCull();
-		float i = this.rotlerp(witherSkull.yRotO, witherSkull.yRot, h);
-		float j = Mth.lerp(h, witherSkull.xRotO, witherSkull.xRot);
-		GlStateManager.translatef((float)d, (float)e, (float)f);
-		float k = 0.0625F;
-		GlStateManager.enableRescaleNormal();
-		GlStateManager.scalef(-1.0F, -1.0F, 1.0F);
-		GlStateManager.enableAlphaTest();
-		this.bindTexture(witherSkull);
-		if (this.solidRender) {
-			GlStateManager.enableColorMaterial();
-			GlStateManager.setupSolidRenderingTextureCombine(this.getTeamColor(witherSkull));
-		}
-
-		this.model.render(0.0F, 0.0F, 0.0F, i, j, 0.0625F);
-		if (this.solidRender) {
-			GlStateManager.tearDownSolidRenderingTextureCombine();
-			GlStateManager.disableColorMaterial();
-		}
-
-		GlStateManager.popMatrix();
-		super.render(witherSkull, d, e, f, g, h);
+	public void render(WitherSkull witherSkull, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+		poseStack.pushPose();
+		poseStack.scale(-1.0F, -1.0F, 1.0F);
+		float h = Mth.rotlerp(witherSkull.yRotO, witherSkull.yRot, g);
+		float j = Mth.lerp(g, witherSkull.xRotO, witherSkull.xRot);
+		VertexConsumer vertexConsumer = multiBufferSource.getBuffer(this.model.renderType(this.getTextureLocation(witherSkull)));
+		this.model.setupAnim(0.0F, h, j);
+		this.model.renderToBuffer(poseStack, vertexConsumer, i, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+		poseStack.popPose();
+		super.render(witherSkull, f, g, poseStack, multiBufferSource, i);
 	}
 
-	protected ResourceLocation getTextureLocation(WitherSkull witherSkull) {
+	public ResourceLocation getTextureLocation(WitherSkull witherSkull) {
 		return witherSkull.isDangerous() ? WITHER_INVULNERABLE_LOCATION : WITHER_LOCATION;
 	}
 }

@@ -2,8 +2,6 @@ package net.minecraft.world.item;
 
 import java.util.Collection;
 import javax.annotation.Nullable;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
@@ -27,7 +25,6 @@ public class DebugStickItem extends Item {
 		super(properties);
 	}
 
-	@Environment(EnvType.CLIENT)
 	@Override
 	public boolean isFoil(ItemStack itemStack) {
 		return true;
@@ -71,11 +68,11 @@ public class DebugStickItem extends Item {
 						property = (Property)collection.iterator().next();
 					}
 
-					BlockState blockState2 = cycleState(blockState, property, player.isSneaking());
+					BlockState blockState2 = cycleState(blockState, property, player.isSecondaryUseActive());
 					levelAccessor.setBlock(blockPos, blockState2, 18);
 					message(player, new TranslatableComponent(this.getDescriptionId() + ".update", property.getName(), getNameHelper(blockState2, property)));
 				} else {
-					property = getRelative(collection, property, player.isSneaking());
+					property = getRelative(collection, property, player.isSecondaryUseActive());
 					String string3 = property.getName();
 					compoundTag.putString(string, string3);
 					message(player, new TranslatableComponent(this.getDescriptionId() + ".select", string3, getNameHelper(blockState, property)));

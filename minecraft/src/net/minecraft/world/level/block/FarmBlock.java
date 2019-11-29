@@ -3,6 +3,7 @@ package net.minecraft.world.level.block;
 import java.util.Random;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -13,6 +14,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.piston.MovingPistonBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -44,7 +46,7 @@ public class FarmBlock extends Block {
 	@Override
 	public boolean canSurvive(BlockState blockState, LevelReader levelReader, BlockPos blockPos) {
 		BlockState blockState2 = levelReader.getBlockState(blockPos.above());
-		return !blockState2.getMaterial().isSolid() || blockState2.getBlock() instanceof FenceGateBlock;
+		return !blockState2.getMaterial().isSolid() || blockState2.getBlock() instanceof FenceGateBlock || blockState2.getBlock() instanceof MovingPistonBlock;
 	}
 
 	@Override
@@ -65,19 +67,19 @@ public class FarmBlock extends Block {
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
-		if (!blockState.canSurvive(level, blockPos)) {
-			turnToDirt(blockState, level, blockPos);
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+		if (!blockState.canSurvive(serverLevel, blockPos)) {
+			turnToDirt(blockState, serverLevel, blockPos);
 		} else {
 			int i = blockState.getValue(MOISTURE);
-			if (!isNearWater(level, blockPos) && !level.isRainingAt(blockPos.above())) {
+			if (!isNearWater(serverLevel, blockPos) && !serverLevel.isRainingAt(blockPos.above())) {
 				if (i > 0) {
-					level.setBlock(blockPos, blockState.setValue(MOISTURE, Integer.valueOf(i - 1)), 2);
-				} else if (!isUnderCrops(level, blockPos)) {
-					turnToDirt(blockState, level, blockPos);
+					serverLevel.setBlock(blockPos, blockState.setValue(MOISTURE, Integer.valueOf(i - 1)), 2);
+				} else if (!isUnderCrops(serverLevel, blockPos)) {
+					turnToDirt(blockState, serverLevel, blockPos);
 				}
 			} else if (i < 7) {
-				level.setBlock(blockPos, blockState.setValue(MOISTURE, Integer.valueOf(7)), 2);
+				serverLevel.setBlock(blockPos, blockState.setValue(MOISTURE, Integer.valueOf(7)), 2);
 			}
 		}
 	}

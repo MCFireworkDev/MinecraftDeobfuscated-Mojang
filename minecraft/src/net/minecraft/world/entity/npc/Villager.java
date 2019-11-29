@@ -26,7 +26,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -81,8 +80,6 @@ import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.scores.PlayerTeam;
-import net.minecraft.world.scores.Team;
 
 public class Villager extends AbstractVillager implements ReputationEventHandler, VillagerDataHolder {
 	private static final EntityDataAccessor<VillagerData> DATA_VILLAGER_DATA = SynchedEntityData.defineId(Villager.class, EntityDataSerializers.VILLAGER_DATA);
@@ -127,6 +124,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 		MemoryModuleType.HEARD_BELL_TIME,
 		MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE,
 		MemoryModuleType.LAST_SLEPT,
+		MemoryModuleType.LAST_WOKEN,
 		MemoryModuleType.LAST_WORKED_AT_POI,
 		MemoryModuleType.GOLEM_LAST_SEEN_TIME
 	);
@@ -365,7 +363,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 
 	private boolean needsToRestock() {
 		for(MerchantOffer merchantOffer : this.getOffers()) {
-			if (merchantOffer.isOutOfStock()) {
+			if (merchantOffer.needsRestock()) {
 				return true;
 			}
 		}
@@ -374,21 +372,23 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	}
 
 	private boolean allowedToRestock() {
-		return this.numberOfRestocksToday < 2 && this.level.getGameTime() > this.lastRestockGameTime + 2400L;
+		return this.numberOfRestocksToday == 0 || this.numberOfRestocksToday < 2 && this.level.getGameTime() > this.lastRestockGameTime + 2400L;
 	}
 
 	public boolean shouldRestock() {
 		long l = this.lastRestockGameTime + 12000L;
-		boolean bl = this.level.getGameTime() > l;
-		long m = this.level.getDayTime();
+		long m = this.level.getGameTime();
+		boolean bl = m > l;
+		long n = this.level.getDayTime();
 		if (this.lastRestockCheckDayTime > 0L) {
-			long n = this.lastRestockCheckDayTime / 24000L;
-			long o = m / 24000L;
-			bl |= o > n;
+			long o = this.lastRestockCheckDayTime / 24000L;
+			long p = n / 24000L;
+			bl |= p > o;
 		}
 
-		this.lastRestockCheckDayTime = m;
+		this.lastRestockCheckDayTime = n;
 		if (bl) {
+			this.lastRestockGameTime = m;
 			this.resetNumberOfRestocks();
 		}
 
@@ -506,7 +506,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	}
 
 	public void playWorkSound() {
-		SoundEvent soundEvent = this.getVillagerData().getProfession().getJobPoiType().getUseSound();
+		SoundEvent soundEvent = this.getVillagerData().getProfession().getWorkSound();
 		if (soundEvent != null) {
 			this.playSound(soundEvent, this.getSoundVolume(), this.getVoicePitch());
 		}
@@ -538,7 +538,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 		}
 
 		if (merchantOffer.shouldRewardExp()) {
-			this.level.addFreshEntity(new ExperienceOrb(this.level, this.x, this.y + 0.5, this.z, i));
+			this.level.addFreshEntity(new ExperienceOrb(this.level, this.getX(), this.getY() + 0.5, this.getZ(), i));
 		}
 	}
 
@@ -556,6 +556,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 
 	@Override
 	public void die(DamageSource damageSource) {
+		LOGGER.info("Villager {} died, message: '{}'", this, damageSource.getLocalizedDeathMessage(this).getString());
 		Entity entity = damageSource.getEntity();
 		if (entity != null) {
 			this.tellWitnessesThatIWasMurdered(entity);
@@ -654,23 +655,10 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	}
 
 	@Override
-	public Component getDisplayName() {
-		Team team = this.getTeam();
-		Component component = this.getCustomName();
-		if (component != null) {
-			return PlayerTeam.formatNameForTeam(team, component).withStyle(style -> style.setHoverEvent(this.createHoverEvent()).setInsertion(this.getStringUUID()));
-		} else {
-			VillagerProfession villagerProfession = this.getVillagerData().getProfession();
-			Component component2 = new TranslatableComponent(
-					this.getType().getDescriptionId() + '.' + Registry.VILLAGER_PROFESSION.getKey(villagerProfession).getPath()
-				)
-				.withStyle(style -> style.setHoverEvent(this.createHoverEvent()).setInsertion(this.getStringUUID()));
-			if (team != null) {
-				component2.withStyle(team.getColor());
-			}
-
-			return component2;
-		}
+	protected Component getTypeName() {
+		return new TranslatableComponent(
+			this.getType().getDescriptionId() + '.' + Registry.VILLAGER_PROFESSION.getKey(this.getVillagerData().getProfession()).getPath()
+		);
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -702,7 +690,10 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 			this.setVillagerData(this.getVillagerData().setProfession(VillagerProfession.NONE));
 		}
 
-		if (mobSpawnType == MobSpawnType.COMMAND || mobSpawnType == MobSpawnType.SPAWN_EGG || mobSpawnType == MobSpawnType.SPAWNER) {
+		if (mobSpawnType == MobSpawnType.COMMAND
+			|| mobSpawnType == MobSpawnType.SPAWN_EGG
+			|| mobSpawnType == MobSpawnType.SPAWNER
+			|| mobSpawnType == MobSpawnType.DISPENSER) {
 			this.setVillagerData(this.getVillagerData().setType(VillagerType.byBiome(levelAccessor.getBiome(new BlockPos(this)))));
 		}
 
@@ -728,7 +719,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	@Override
 	public void thunderHit(LightningBolt lightningBolt) {
 		Witch witch = EntityType.WITCH.create(this.level);
-		witch.moveTo(this.x, this.y, this.z, this.yRot, this.xRot);
+		witch.moveTo(this.getX(), this.getY(), this.getZ(), this.yRot, this.xRot);
 		witch.finalizeSpawn(this.level, this.level.getCurrentDifficultyAt(new BlockPos(witch)), MobSpawnType.CONVERSION, null, null);
 		witch.setNoAi(this.isNoAi());
 		if (this.hasCustomName()) {
@@ -966,6 +957,12 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	public void startSleeping(BlockPos blockPos) {
 		super.startSleeping(blockPos);
 		this.brain.setMemory(MemoryModuleType.LAST_SLEPT, SerializableLong.of(this.level.getGameTime()));
+	}
+
+	@Override
+	public void stopSleeping() {
+		super.stopSleeping();
+		this.brain.setMemory(MemoryModuleType.LAST_WOKEN, SerializableLong.of(this.level.getGameTime()));
 	}
 
 	private boolean golemSpawnConditionsMet(long l) {

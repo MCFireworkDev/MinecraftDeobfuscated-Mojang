@@ -88,11 +88,11 @@ public class Rabbit extends Animal {
 
 	@Override
 	protected float getJumpPower() {
-		if (!this.horizontalCollision && (!this.moveControl.hasWanted() || !(this.moveControl.getWantedY() > this.y + 0.5))) {
+		if (!this.horizontalCollision && (!this.moveControl.hasWanted() || !(this.moveControl.getWantedY() > this.getY() + 0.5))) {
 			Path path = this.navigation.getPath();
 			if (path != null && path.getIndex() < path.getSize()) {
 				Vec3 vec3 = path.currentPos(this);
-				if (vec3.y > this.y + 0.5) {
+				if (vec3.y > this.getY() + 0.5) {
 					return 0.5F;
 				}
 			}
@@ -171,8 +171,8 @@ public class Rabbit extends Animal {
 			if (this.getRabbitType() == 99 && this.jumpDelayTicks == 0) {
 				LivingEntity livingEntity = this.getTarget();
 				if (livingEntity != null && this.distanceToSqr(livingEntity) < 16.0) {
-					this.facePoint(livingEntity.x, livingEntity.z);
-					this.moveControl.setWantedPosition(livingEntity.x, livingEntity.y, livingEntity.z, this.moveControl.getSpeedModifier());
+					this.facePoint(livingEntity.getX(), livingEntity.getZ());
+					this.moveControl.setWantedPosition(livingEntity.getX(), livingEntity.getY(), livingEntity.getZ(), this.moveControl.getSpeedModifier());
 					this.startJumping();
 					this.wasOnGround = true;
 				}
@@ -203,7 +203,7 @@ public class Rabbit extends Animal {
 	}
 
 	private void facePoint(double d, double e) {
-		this.yRot = (float)(Mth.atan2(e - this.z, d - this.x) * 180.0F / (float)Math.PI) - 90.0F;
+		this.yRot = (float)(Mth.atan2(e - this.getZ(), d - this.getX()) * 180.0F / (float)Math.PI) - 90.0F;
 	}
 
 	private void enableJumpControl() {
@@ -351,22 +351,15 @@ public class Rabbit extends Animal {
 		@Nullable SpawnGroupData spawnGroupData,
 		@Nullable CompoundTag compoundTag
 	) {
-		spawnGroupData = super.finalizeSpawn(levelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
 		int i = this.getRandomRabbitType(levelAccessor);
-		boolean bl = false;
 		if (spawnGroupData instanceof Rabbit.RabbitGroupData) {
 			i = ((Rabbit.RabbitGroupData)spawnGroupData).rabbitType;
-			bl = true;
 		} else {
 			spawnGroupData = new Rabbit.RabbitGroupData(i);
 		}
 
 		this.setRabbitType(i);
-		if (bl) {
-			this.setAge(-24000);
-		}
-
-		return spawnGroupData;
+		return super.finalizeSpawn(levelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
 	}
 
 	private int getRandomRabbitType(LevelAccessor levelAccessor) {
@@ -429,11 +422,12 @@ public class Rabbit extends Animal {
 		}
 	}
 
-	public static class RabbitGroupData implements SpawnGroupData {
+	public static class RabbitGroupData extends AgableMob.AgableMobGroupData {
 		public final int rabbitType;
 
 		public RabbitGroupData(int i) {
 			this.rabbitType = i;
+			this.setBabySpawnChance(1.0F);
 		}
 	}
 
@@ -562,7 +556,7 @@ public class Rabbit extends Animal {
 					Integer integer = blockState.getValue(CarrotBlock.AGE);
 					if (integer == 0) {
 						level.setBlock(blockPos, Blocks.AIR.defaultBlockState(), 2);
-						level.destroyBlock(blockPos, true);
+						level.destroyBlock(blockPos, true, this.rabbit);
 					} else {
 						level.setBlock(blockPos, blockState.setValue(CarrotBlock.AGE, Integer.valueOf(integer - 1)), 2);
 						level.levelEvent(2001, blockPos, Block.getId(blockState));

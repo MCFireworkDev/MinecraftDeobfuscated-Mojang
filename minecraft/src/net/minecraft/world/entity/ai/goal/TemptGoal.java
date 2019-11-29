@@ -2,6 +2,7 @@ package net.minecraft.world.entity.ai.goal;
 
 import java.util.EnumSet;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.player.Player;
@@ -38,7 +39,7 @@ public class TemptGoal extends Goal {
 		this.items = ingredient;
 		this.canScare = bl;
 		this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
-		if (!(pathfinderMob.getNavigation() instanceof GroundPathNavigation)) {
+		if (!(pathfinderMob.getNavigation() instanceof GroundPathNavigation) && !(pathfinderMob.getNavigation() instanceof FlyingPathNavigation)) {
 			throw new IllegalArgumentException("Unsupported mob type for TemptGoal");
 		}
 	}
@@ -74,9 +75,9 @@ public class TemptGoal extends Goal {
 					return false;
 				}
 			} else {
-				this.px = this.player.x;
-				this.py = this.player.y;
-				this.pz = this.player.z;
+				this.px = this.player.getX();
+				this.py = this.player.getY();
+				this.pz = this.player.getZ();
 			}
 
 			this.pRotX = (double)this.player.xRot;
@@ -92,9 +93,9 @@ public class TemptGoal extends Goal {
 
 	@Override
 	public void start() {
-		this.px = this.player.x;
-		this.py = this.player.y;
-		this.pz = this.player.z;
+		this.px = this.player.getX();
+		this.py = this.player.getY();
+		this.pz = this.player.getZ();
 		this.isRunning = true;
 	}
 

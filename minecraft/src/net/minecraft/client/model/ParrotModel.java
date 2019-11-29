@@ -1,5 +1,8 @@
 package net.minecraft.client.model;
 
+import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.geom.ModelPart;
@@ -7,7 +10,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.animal.Parrot;
 
 @Environment(EnvType.CLIENT)
-public class ParrotModel extends EntityModel<Parrot> {
+public class ParrotModel extends ListModel<Parrot> {
 	private final ModelPart body;
 	private final ModelPart tail;
 	private final ModelPart wingLeft;
@@ -24,49 +27,50 @@ public class ParrotModel extends EntityModel<Parrot> {
 		this.texWidth = 32;
 		this.texHeight = 32;
 		this.body = new ModelPart(this, 2, 8);
-		this.body.addBox(-1.5F, 0.0F, -1.5F, 3, 6, 3);
+		this.body.addBox(-1.5F, 0.0F, -1.5F, 3.0F, 6.0F, 3.0F);
 		this.body.setPos(0.0F, 16.5F, -3.0F);
 		this.tail = new ModelPart(this, 22, 1);
-		this.tail.addBox(-1.5F, -1.0F, -1.0F, 3, 4, 1);
+		this.tail.addBox(-1.5F, -1.0F, -1.0F, 3.0F, 4.0F, 1.0F);
 		this.tail.setPos(0.0F, 21.07F, 1.16F);
 		this.wingLeft = new ModelPart(this, 19, 8);
-		this.wingLeft.addBox(-0.5F, 0.0F, -1.5F, 1, 5, 3);
+		this.wingLeft.addBox(-0.5F, 0.0F, -1.5F, 1.0F, 5.0F, 3.0F);
 		this.wingLeft.setPos(1.5F, 16.94F, -2.76F);
 		this.wingRight = new ModelPart(this, 19, 8);
-		this.wingRight.addBox(-0.5F, 0.0F, -1.5F, 1, 5, 3);
+		this.wingRight.addBox(-0.5F, 0.0F, -1.5F, 1.0F, 5.0F, 3.0F);
 		this.wingRight.setPos(-1.5F, 16.94F, -2.76F);
 		this.head = new ModelPart(this, 2, 2);
-		this.head.addBox(-1.0F, -1.5F, -1.0F, 2, 3, 2);
+		this.head.addBox(-1.0F, -1.5F, -1.0F, 2.0F, 3.0F, 2.0F);
 		this.head.setPos(0.0F, 15.69F, -2.76F);
 		this.head2 = new ModelPart(this, 10, 0);
-		this.head2.addBox(-1.0F, -0.5F, -2.0F, 2, 1, 4);
+		this.head2.addBox(-1.0F, -0.5F, -2.0F, 2.0F, 1.0F, 4.0F);
 		this.head2.setPos(0.0F, -2.0F, -1.0F);
 		this.head.addChild(this.head2);
 		this.beak1 = new ModelPart(this, 11, 7);
-		this.beak1.addBox(-0.5F, -1.0F, -0.5F, 1, 2, 1);
+		this.beak1.addBox(-0.5F, -1.0F, -0.5F, 1.0F, 2.0F, 1.0F);
 		this.beak1.setPos(0.0F, -0.5F, -1.5F);
 		this.head.addChild(this.beak1);
 		this.beak2 = new ModelPart(this, 16, 7);
-		this.beak2.addBox(-0.5F, 0.0F, -0.5F, 1, 2, 1);
+		this.beak2.addBox(-0.5F, 0.0F, -0.5F, 1.0F, 2.0F, 1.0F);
 		this.beak2.setPos(0.0F, -1.75F, -2.45F);
 		this.head.addChild(this.beak2);
 		this.feather = new ModelPart(this, 2, 18);
-		this.feather.addBox(0.0F, -4.0F, -2.0F, 0, 5, 4);
+		this.feather.addBox(0.0F, -4.0F, -2.0F, 0.0F, 5.0F, 4.0F);
 		this.feather.setPos(0.0F, -2.15F, 0.15F);
 		this.head.addChild(this.feather);
 		this.legLeft = new ModelPart(this, 14, 18);
-		this.legLeft.addBox(-0.5F, 0.0F, -0.5F, 1, 2, 1);
+		this.legLeft.addBox(-0.5F, 0.0F, -0.5F, 1.0F, 2.0F, 1.0F);
 		this.legLeft.setPos(1.0F, 22.0F, -1.05F);
 		this.legRight = new ModelPart(this, 14, 18);
-		this.legRight.addBox(-0.5F, 0.0F, -0.5F, 1, 2, 1);
+		this.legRight.addBox(-0.5F, 0.0F, -0.5F, 1.0F, 2.0F, 1.0F);
 		this.legRight.setPos(-1.0F, 22.0F, -1.05F);
 	}
 
-	public void render(Parrot parrot, float f, float g, float h, float i, float j, float k) {
-		this.render(k);
+	@Override
+	public Iterable<ModelPart> parts() {
+		return ImmutableList.<ModelPart>of(this.body, this.wingLeft, this.wingRight, this.tail, this.head, this.legLeft, this.legRight);
 	}
 
-	public void setupAnim(Parrot parrot, float f, float g, float h, float i, float j, float k) {
+	public void setupAnim(Parrot parrot, float f, float g, float h, float i, float j) {
 		this.setupAnim(getState(parrot), parrot.tickCount, f, g, h, i, j);
 	}
 
@@ -74,20 +78,10 @@ public class ParrotModel extends EntityModel<Parrot> {
 		this.prepare(getState(parrot));
 	}
 
-	public void renderOnShoulder(float f, float g, float h, float i, float j, int k) {
+	public void renderOnShoulder(PoseStack poseStack, VertexConsumer vertexConsumer, int i, int j, float f, float g, float h, float k, int l) {
 		this.prepare(ParrotModel.State.ON_SHOULDER);
-		this.setupAnim(ParrotModel.State.ON_SHOULDER, k, f, g, 0.0F, h, i);
-		this.render(j);
-	}
-
-	private void render(float f) {
-		this.body.render(f);
-		this.wingLeft.render(f);
-		this.wingRight.render(f);
-		this.tail.render(f);
-		this.head.render(f);
-		this.legLeft.render(f);
-		this.legRight.render(f);
+		this.setupAnim(ParrotModel.State.ON_SHOULDER, l, f, g, 0.0F, h, k);
+		this.parts().forEach(modelPart -> modelPart.render(poseStack, vertexConsumer, i, j));
 	}
 
 	private void setupAnim(ParrotModel.State state, int i, float f, float g, float h, float j, float k) {

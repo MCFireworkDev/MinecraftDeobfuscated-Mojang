@@ -17,6 +17,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap.Entry;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -151,8 +152,8 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 	private static double euclideanDistanceSquared(ChunkPos chunkPos, Entity entity) {
 		double d = (double)(chunkPos.x * 16 + 8);
 		double e = (double)(chunkPos.z * 16 + 8);
-		double f = d - entity.x;
-		double g = e - entity.z;
+		double f = d - entity.getX();
+		double g = e - entity.getZ();
 		return f * f + g * g;
 	}
 
@@ -164,8 +165,8 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 			i = sectionPos.x();
 			j = sectionPos.z();
 		} else {
-			i = Mth.floor(serverPlayer.x / 16.0);
-			j = Mth.floor(serverPlayer.z / 16.0);
+			i = Mth.floor(serverPlayer.getX() / 16.0);
+			j = Mth.floor(serverPlayer.getZ() / 16.0);
 		}
 
 		return checkerboardDistance(chunkPos, i, j);
@@ -350,6 +351,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 			} while(mutableBoolean.isTrue());
 
 			this.processUnloads(() -> true);
+			this.flushWorker();
 			LOGGER.info("ThreadedAnvilChunkStorage ({}): All chunks are saved", this.storageFolder.getName());
 		} else {
 			this.visibleChunkMap.values().stream().filter(ChunkHolder::wasAccessibleSinceLastSave).forEach(chunkHolder -> {
@@ -799,8 +801,8 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 	void updatePlayerStatus(ServerPlayer serverPlayer, boolean bl) {
 		boolean bl2 = this.skipPlayer(serverPlayer);
 		boolean bl3 = this.playerMap.ignoredOrUnknown(serverPlayer);
-		int i = Mth.floor(serverPlayer.x) >> 4;
-		int j = Mth.floor(serverPlayer.z) >> 4;
+		int i = Mth.floor(serverPlayer.getX()) >> 4;
+		int j = Mth.floor(serverPlayer.getZ()) >> 4;
 		if (bl) {
 			this.playerMap.addPlayer(ChunkPos.asLong(i, j), serverPlayer, bl2);
 			this.updatePlayerPos(serverPlayer);
@@ -839,8 +841,8 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 			}
 		}
 
-		int i = Mth.floor(serverPlayer.x) >> 4;
-		int j = Mth.floor(serverPlayer.z) >> 4;
+		int i = Mth.floor(serverPlayer.getX()) >> 4;
+		int j = Mth.floor(serverPlayer.getZ()) >> 4;
 		SectionPos sectionPos = serverPlayer.getLastSectionPos();
 		SectionPos sectionPos2 = SectionPos.of(serverPlayer);
 		long l = sectionPos.chunk().toLong();
@@ -927,7 +929,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 				int i = entityType.chunkRange() * 16;
 				int j = entityType.updateInterval();
 				if (this.entityMap.containsKey(entity.getId())) {
-					throw new IllegalStateException("Entity is already tracked!");
+					throw (IllegalStateException)Util.pauseInIde(new IllegalStateException("Entity is already tracked!"));
 				} else {
 					ChunkMap.TrackedEntity trackedEntity = new ChunkMap.TrackedEntity(entity, i, j, entityType.trackDeltas());
 					this.entityMap.put(entity.getId(), trackedEntity);
@@ -983,8 +985,10 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 			trackedEntity.serverEntity.sendChanges();
 		}
 
-		for(ChunkMap.TrackedEntity trackedEntity : this.entityMap.values()) {
-			trackedEntity.updatePlayers(list);
+		if (!list.isEmpty()) {
+			for(ChunkMap.TrackedEntity trackedEntity : this.entityMap.values()) {
+				trackedEntity.updatePlayers(list);
+			}
 		}
 	}
 
@@ -1124,8 +1128,8 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 
 		public void updatePlayer(ServerPlayer serverPlayer) {
 			if (serverPlayer != this.entity) {
-				Vec3 vec3 = new Vec3(serverPlayer.x, serverPlayer.y, serverPlayer.z).subtract(this.serverEntity.sentPos());
-				int i = Math.min(this.range, (ChunkMap.this.viewDistance - 1) * 16);
+				Vec3 vec3 = serverPlayer.position().subtract(this.serverEntity.sentPos());
+				int i = Math.min(this.getEffectiveRange(), (ChunkMap.this.viewDistance - 1) * 16);
 				boolean bl = vec3.x >= (double)(-i) && vec3.x <= (double)i && vec3.z >= (double)(-i) && vec3.z <= (double)i && this.entity.broadcastToPlayer(serverPlayer);
 				if (bl) {
 					boolean bl2 = this.entity.forcedLoading;
@@ -1144,6 +1148,20 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 					this.serverEntity.removePairing(serverPlayer);
 				}
 			}
+		}
+
+		private int getEffectiveRange() {
+			Collection<Entity> collection = this.entity.getIndirectPassengers();
+			int i = this.range;
+
+			for(Entity entity : collection) {
+				int j = entity.getType().chunkRange() * 16;
+				if (j > i) {
+					i = j;
+				}
+			}
+
+			return i;
 		}
 
 		public void updatePlayers(List<ServerPlayer> list) {

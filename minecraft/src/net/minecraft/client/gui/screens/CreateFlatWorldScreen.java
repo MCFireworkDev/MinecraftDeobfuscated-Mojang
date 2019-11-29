@@ -1,7 +1,6 @@
 package net.minecraft.client.gui.screens;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.datafixers.Dynamic;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -102,6 +101,11 @@ public class CreateFlatWorldScreen extends Screen {
 
 	private boolean hasValidSelection() {
 		return this.list.getSelected() != null;
+	}
+
+	@Override
+	public void onClose() {
+		this.minecraft.setScreen(this.parent);
 	}
 
 	@Override
@@ -220,20 +224,18 @@ public class CreateFlatWorldScreen extends Screen {
 
 			private void blitSlot(int i, int j, ItemStack itemStack) {
 				this.blitSlotBg(i + 1, j + 1);
-				GlStateManager.enableRescaleNormal();
+				RenderSystem.enableRescaleNormal();
 				if (!itemStack.isEmpty()) {
-					Lighting.turnOnGui();
 					CreateFlatWorldScreen.this.itemRenderer.renderGuiItem(itemStack, i + 2, j + 2);
-					Lighting.turnOff();
 				}
 
-				GlStateManager.disableRescaleNormal();
+				RenderSystem.disableRescaleNormal();
 			}
 
 			private void blitSlotBg(int i, int j) {
-				GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+				RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 				DetailsList.this.minecraft.getTextureManager().bind(GuiComponent.STATS_ICON_LOCATION);
-				GuiComponent.blit(i, j, CreateFlatWorldScreen.this.blitOffset, 0.0F, 0.0F, 18, 18, 128, 128);
+				GuiComponent.blit(i, j, CreateFlatWorldScreen.this.getBlitOffset(), 0.0F, 0.0F, 18, 18, 128, 128);
 			}
 		}
 	}

@@ -14,6 +14,7 @@ import net.minecraft.util.datafix.fixes.AddNewChoices;
 import net.minecraft.util.datafix.fixes.AdvancementsFix;
 import net.minecraft.util.datafix.fixes.BedBlockEntityInjecter;
 import net.minecraft.util.datafix.fixes.BedItemColorFix;
+import net.minecraft.util.datafix.fixes.BeehivePoiRenameFix;
 import net.minecraft.util.datafix.fixes.BiomeFix;
 import net.minecraft.util.datafix.fixes.BlockEntityBannerColorFix;
 import net.minecraft.util.datafix.fixes.BlockEntityBlockStateFix;
@@ -27,6 +28,7 @@ import net.minecraft.util.datafix.fixes.BlockNameFlatteningFix;
 import net.minecraft.util.datafix.fixes.BlockRenameFix;
 import net.minecraft.util.datafix.fixes.BlockStateStructureTemplateFix;
 import net.minecraft.util.datafix.fixes.CatTypeFix;
+import net.minecraft.util.datafix.fixes.ChunkBiomeFix;
 import net.minecraft.util.datafix.fixes.ChunkLightRemoveFix;
 import net.minecraft.util.datafix.fixes.ChunkPalettedStorageFix;
 import net.minecraft.util.datafix.fixes.ChunkStatusFix;
@@ -62,6 +64,7 @@ import net.minecraft.util.datafix.fixes.EntityTippedArrowFix;
 import net.minecraft.util.datafix.fixes.EntityWolfColorFix;
 import net.minecraft.util.datafix.fixes.EntityZombieSplitFix;
 import net.minecraft.util.datafix.fixes.EntityZombieVillagerTypeFix;
+import net.minecraft.util.datafix.fixes.ForcePoiRebuild;
 import net.minecraft.util.datafix.fixes.HeightmapRenamingFix;
 import net.minecraft.util.datafix.fixes.IglooMetadataRemovalFix;
 import net.minecraft.util.datafix.fixes.ItemBannerColorFix;
@@ -100,6 +103,7 @@ import net.minecraft.util.datafix.fixes.RenamedCoralFix;
 import net.minecraft.util.datafix.fixes.ReorganizePoi;
 import net.minecraft.util.datafix.fixes.SavedDataVillageCropFix;
 import net.minecraft.util.datafix.fixes.StatsCounterFix;
+import net.minecraft.util.datafix.fixes.StructureReferenceCountFix;
 import net.minecraft.util.datafix.fixes.SwimStatsRenameFix;
 import net.minecraft.util.datafix.fixes.TeamDisplayNameFix;
 import net.minecraft.util.datafix.fixes.TrappedChestBlockEntityFix;
@@ -141,6 +145,7 @@ import net.minecraft.util.datafix.schemas.V1920;
 import net.minecraft.util.datafix.schemas.V1928;
 import net.minecraft.util.datafix.schemas.V1929;
 import net.minecraft.util.datafix.schemas.V1931;
+import net.minecraft.util.datafix.schemas.V2100;
 import net.minecraft.util.datafix.schemas.V501;
 import net.minecraft.util.datafix.schemas.V700;
 import net.minecraft.util.datafix.schemas.V701;
@@ -514,5 +519,24 @@ public class DataFixers {
 		dataFixerBuilder.addFixer(new ZombieVillagerRebuildXpFix(schema94, false));
 		Schema schema95 = dataFixerBuilder.addSchema(1961, SAME_NAMESPACED);
 		dataFixerBuilder.addFixer(new ChunkLightRemoveFix(schema95, false));
+		Schema schema96 = dataFixerBuilder.addSchema(2100, V2100::new);
+		dataFixerBuilder.addFixer(new AddNewChoices(schema96, "Added Bee and Bee Stinger", References.ENTITY));
+		dataFixerBuilder.addFixer(new AddNewChoices(schema96, "Add beehive", References.BLOCK_ENTITY));
+		Schema schema97 = dataFixerBuilder.addSchema(2202, SAME_NAMESPACED);
+		dataFixerBuilder.addFixer(new ChunkBiomeFix(schema97, false));
+		Schema schema98 = dataFixerBuilder.addSchema(2209, SAME_NAMESPACED);
+		dataFixerBuilder.addFixer(
+			ItemRenameFix.create(schema98, "Rename bee_hive item to beehive", string -> Objects.equals(string, "minecraft:bee_hive") ? "minecraft:beehive" : string)
+		);
+		dataFixerBuilder.addFixer(new BeehivePoiRenameFix(schema98));
+		dataFixerBuilder.addFixer(
+			BlockRenameFix.create(
+				schema98, "Rename bee_hive block to beehive", string -> (String)ImmutableMap.of("minecraft:bee_hive", "minecraft:beehive").getOrDefault(string, string)
+			)
+		);
+		Schema schema99 = dataFixerBuilder.addSchema(2211, SAME_NAMESPACED);
+		dataFixerBuilder.addFixer(new StructureReferenceCountFix(schema99, false));
+		Schema schema100 = dataFixerBuilder.addSchema(2218, SAME_NAMESPACED);
+		dataFixerBuilder.addFixer(new ForcePoiRebuild(schema100, false));
 	}
 }

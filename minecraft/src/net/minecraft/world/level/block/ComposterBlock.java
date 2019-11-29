@@ -10,9 +10,11 @@ import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.WorldlyContainerHolder;
@@ -190,7 +192,9 @@ public class ComposterBlock extends Block implements WorldlyContainerHolder {
 	}
 
 	@Override
-	public boolean use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
+	public InteractionResult use(
+		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	) {
 		int i = blockState.getValue(LEVEL);
 		ItemStack itemStack = player.getItemInHand(interactionHand);
 		if (i < 8 && COMPOSTABLES.containsKey(itemStack.getItem())) {
@@ -202,7 +206,7 @@ public class ComposterBlock extends Block implements WorldlyContainerHolder {
 				}
 			}
 
-			return true;
+			return InteractionResult.SUCCESS;
 		} else if (i == 8) {
 			if (!level.isClientSide) {
 				float f = 0.7F;
@@ -218,9 +222,9 @@ public class ComposterBlock extends Block implements WorldlyContainerHolder {
 
 			empty(blockState, level, blockPos);
 			level.playSound(null, blockPos, SoundEvents.COMPOSTER_EMPTY, SoundSource.BLOCKS, 1.0F, 1.0F);
-			return true;
+			return InteractionResult.SUCCESS;
 		} else {
-			return false;
+			return InteractionResult.PASS;
 		}
 	}
 
@@ -245,13 +249,13 @@ public class ComposterBlock extends Block implements WorldlyContainerHolder {
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
 		if (blockState.getValue(LEVEL) == 7) {
-			level.setBlock(blockPos, blockState.cycle(LEVEL), 3);
-			level.playSound(null, blockPos, SoundEvents.COMPOSTER_READY, SoundSource.BLOCKS, 1.0F, 1.0F);
+			serverLevel.setBlock(blockPos, blockState.cycle(LEVEL), 3);
+			serverLevel.playSound(null, blockPos, SoundEvents.COMPOSTER_READY, SoundSource.BLOCKS, 1.0F, 1.0F);
 		}
 
-		super.tick(blockState, level, blockPos, random);
+		super.tick(blockState, serverLevel, blockPos, random);
 	}
 
 	@Override

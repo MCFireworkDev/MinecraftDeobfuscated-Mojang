@@ -10,9 +10,9 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.OceanRuinConfiguration;
 import net.minecraft.world.level.levelgen.feature.RandomScatteredFeature;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
+import net.minecraft.world.level.levelgen.feature.configurations.OceanRuinConfiguration;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 
 public class OceanRuinFeature extends RandomScatteredFeature<OceanRuinConfiguration> {
@@ -51,8 +51,8 @@ public class OceanRuinFeature extends RandomScatteredFeature<OceanRuinConfigurat
 	}
 
 	public static class OceanRuinStart extends StructureStart {
-		public OceanRuinStart(StructureFeature<?> structureFeature, int i, int j, Biome biome, BoundingBox boundingBox, int k, long l) {
-			super(structureFeature, i, j, biome, boundingBox, k, l);
+		public OceanRuinStart(StructureFeature<?> structureFeature, int i, int j, BoundingBox boundingBox, int k, long l) {
+			super(structureFeature, i, j, boundingBox, k, l);
 		}
 
 		@Override

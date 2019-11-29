@@ -4,11 +4,11 @@ import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.BlockLayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
@@ -84,9 +84,11 @@ public class TrapDoorBlock extends HorizontalDirectionalBlock implements SimpleW
 	}
 
 	@Override
-	public boolean use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
+	public InteractionResult use(
+		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	) {
 		if (this.material == Material.METAL) {
-			return false;
+			return InteractionResult.PASS;
 		} else {
 			blockState = blockState.cycle(OPEN);
 			level.setBlock(blockPos, blockState, 2);
@@ -95,7 +97,7 @@ public class TrapDoorBlock extends HorizontalDirectionalBlock implements SimpleW
 			}
 
 			this.playSound(player, level, blockPos, blockState.getValue(OPEN));
-			return true;
+			return InteractionResult.SUCCESS;
 		}
 	}
 
@@ -145,11 +147,6 @@ public class TrapDoorBlock extends HorizontalDirectionalBlock implements SimpleW
 		}
 
 		return blockState.setValue(WATERLOGGED, Boolean.valueOf(fluidState.getType() == Fluids.WATER));
-	}
-
-	@Override
-	public BlockLayer getRenderLayer() {
-		return BlockLayer.CUTOUT;
 	}
 
 	@Override

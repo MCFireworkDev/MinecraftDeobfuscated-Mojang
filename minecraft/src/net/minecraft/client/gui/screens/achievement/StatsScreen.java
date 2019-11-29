@@ -2,8 +2,7 @@ package net.minecraft.client.gui.screens.achievement;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.Tesselator;
 import java.util.Comparator;
 import java.util.List;
@@ -133,17 +132,15 @@ public class StatsScreen extends Screen implements StatsUpdateListener {
 
 	private void blitSlot(int i, int j, Item item) {
 		this.blitSlotIcon(i + 1, j + 1, 0, 0);
-		GlStateManager.enableRescaleNormal();
-		Lighting.turnOnGui();
+		RenderSystem.enableRescaleNormal();
 		this.itemRenderer.renderGuiItem(item.getDefaultInstance(), i + 2, j + 2);
-		Lighting.turnOff();
-		GlStateManager.disableRescaleNormal();
+		RenderSystem.disableRescaleNormal();
 	}
 
 	private void blitSlotIcon(int i, int j, int k, int l) {
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		this.minecraft.getTextureManager().bind(STATS_ICON_LOCATION);
-		blit(i, j, this.blitOffset, (float)k, (float)l, 18, 18, 128, 128);
+		blit(i, j, this.getBlitOffset(), (float)k, (float)l, 18, 18, 128, 128);
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -342,7 +339,10 @@ public class StatsScreen extends Screen implements StatsUpdateListener {
 				int l = j - 12;
 				int m = StatsScreen.this.font.width(string);
 				this.fillGradient(k - 3, l - 3, k + m + 3, l + 8 + 3, -1073741824, -1073741824);
+				RenderSystem.pushMatrix();
+				RenderSystem.translatef(0.0F, 0.0F, 400.0F);
 				StatsScreen.this.font.drawShadow(string, (float)k, (float)l, -1);
+				RenderSystem.popMatrix();
 			}
 		}
 

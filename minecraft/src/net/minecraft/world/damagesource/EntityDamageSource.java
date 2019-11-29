@@ -13,6 +13,7 @@ public class EntityDamageSource extends DamageSource {
 	@Nullable
 	protected final Entity entity;
 	private boolean isThorns;
+	private boolean isCritSpecial;
 
 	public EntityDamageSource(String string, @Nullable Entity entity) {
 		super(string);
@@ -21,6 +22,11 @@ public class EntityDamageSource extends DamageSource {
 
 	public EntityDamageSource setThorns() {
 		this.isThorns = true;
+		return this;
+	}
+
+	public EntityDamageSource setCritSpecial(boolean bl) {
+		this.isCritSpecial = bl;
 		return this;
 	}
 
@@ -51,6 +57,6 @@ public class EntityDamageSource extends DamageSource {
 	@Nullable
 	@Override
 	public Vec3 getSourcePosition() {
-		return new Vec3(this.entity.x, this.entity.y, this.entity.z);
+		return this.entity != null ? this.entity.position() : null;
 	}
 }

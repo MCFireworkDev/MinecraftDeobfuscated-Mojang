@@ -4,17 +4,17 @@ import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.BlockAndBiomeGetter;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.ColorResolver;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.FluidState;
 
 @Environment(EnvType.CLIENT)
-public class RenderChunkRegion implements BlockAndBiomeGetter {
+public class RenderChunkRegion implements BlockAndTintGetter {
 	protected final int centerX;
 	protected final int centerZ;
 	protected final BlockPos start;
@@ -105,15 +105,8 @@ public class RenderChunkRegion implements BlockAndBiomeGetter {
 	}
 
 	@Override
-	public int getBrightness(LightLayer lightLayer, BlockPos blockPos) {
-		return this.level.getBrightness(lightLayer, blockPos);
-	}
-
-	@Override
-	public Biome getBiome(BlockPos blockPos) {
-		int i = (blockPos.getX() >> 4) - this.centerX;
-		int j = (blockPos.getZ() >> 4) - this.centerZ;
-		return this.chunks[i][j].getBiome(blockPos);
+	public LevelLightEngine getLightEngine() {
+		return this.level.getLightEngine();
 	}
 
 	@Nullable
@@ -127,5 +120,10 @@ public class RenderChunkRegion implements BlockAndBiomeGetter {
 		int i = (blockPos.getX() >> 4) - this.centerX;
 		int j = (blockPos.getZ() >> 4) - this.centerZ;
 		return this.chunks[i][j].getBlockEntity(blockPos, entityCreationType);
+	}
+
+	@Override
+	public int getBlockTint(BlockPos blockPos, ColorResolver colorResolver) {
+		return this.level.getBlockTint(blockPos, colorResolver);
 	}
 }

@@ -135,7 +135,9 @@ public class Pig extends Animal {
 
 	@Override
 	public boolean mobInteract(Player player, InteractionHand interactionHand) {
-		if (!super.mobInteract(player, interactionHand)) {
+		if (super.mobInteract(player, interactionHand)) {
+			return true;
+		} else {
 			ItemStack itemStack = player.getItemInHand(interactionHand);
 			if (itemStack.getItem() == Items.NAME_TAG) {
 				itemStack.interactEnemy(player, this, interactionHand);
@@ -146,14 +148,9 @@ public class Pig extends Animal {
 				}
 
 				return true;
-			} else if (itemStack.getItem() == Items.SADDLE) {
-				itemStack.interactEnemy(player, this, interactionHand);
-				return true;
 			} else {
-				return false;
+				return itemStack.getItem() == Items.SADDLE && itemStack.interactEnemy(player, this, interactionHand);
 			}
-		} else {
-			return true;
 		}
 	}
 
@@ -181,7 +178,7 @@ public class Pig extends Animal {
 	public void thunderHit(LightningBolt lightningBolt) {
 		PigZombie pigZombie = EntityType.ZOMBIE_PIGMAN.create(this.level);
 		pigZombie.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.GOLDEN_SWORD));
-		pigZombie.moveTo(this.x, this.y, this.z, this.yRot, this.xRot);
+		pigZombie.moveTo(this.getX(), this.getY(), this.getZ(), this.yRot, this.xRot);
 		pigZombie.setNoAi(this.isNoAi());
 		if (this.hasCustomName()) {
 			pigZombie.setCustomName(this.getCustomName());
@@ -217,13 +214,14 @@ public class Pig extends Animal {
 
 					this.setSpeed(f);
 					super.travel(new Vec3(0.0, 0.0, 1.0));
+					this.lerpSteps = 0;
 				} else {
 					this.setDeltaMovement(Vec3.ZERO);
 				}
 
 				this.animationSpeedOld = this.animationSpeed;
-				double d = this.x - this.xo;
-				double e = this.z - this.zo;
+				double d = this.getX() - this.xo;
+				double e = this.getZ() - this.zo;
 				float g = Mth.sqrt(d * d + e * e) * 4.0F;
 				if (g > 1.0F) {
 					g = 1.0F;

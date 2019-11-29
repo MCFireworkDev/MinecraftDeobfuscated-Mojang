@@ -1,82 +1,72 @@
 package net.minecraft.client.model;
 
+import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.renderer.entity.ArmedModel;
-import net.minecraft.client.renderer.entity.HeadedModel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.monster.AbstractIllager;
 
 @Environment(EnvType.CLIENT)
-public class IllagerModel<T extends AbstractIllager> extends EntityModel<T> implements ArmedModel, HeadedModel {
-	protected final ModelPart head;
+public class IllagerModel<T extends AbstractIllager> extends ListModel<T> implements ArmedModel, HeadedModel {
+	private final ModelPart head;
 	private final ModelPart hat;
-	protected final ModelPart body;
-	protected final ModelPart arms;
-	protected final ModelPart leftLeg;
-	protected final ModelPart rightLeg;
-	private final ModelPart nose;
-	protected final ModelPart rightArm;
-	protected final ModelPart leftArm;
+	private final ModelPart body;
+	private final ModelPart arms;
+	private final ModelPart leftLeg;
+	private final ModelPart rightLeg;
+	private final ModelPart rightArm;
+	private final ModelPart leftArm;
 	private float itemUseTicks;
 
 	public IllagerModel(float f, float g, int i, int j) {
 		this.head = new ModelPart(this).setTexSize(i, j);
 		this.head.setPos(0.0F, 0.0F + g, 0.0F);
-		this.head.texOffs(0, 0).addBox(-4.0F, -10.0F, -4.0F, 8, 10, 8, f);
+		this.head.texOffs(0, 0).addBox(-4.0F, -10.0F, -4.0F, 8.0F, 10.0F, 8.0F, f);
 		this.hat = new ModelPart(this, 32, 0).setTexSize(i, j);
-		this.hat.addBox(-4.0F, -10.0F, -4.0F, 8, 12, 8, f + 0.45F);
+		this.hat.addBox(-4.0F, -10.0F, -4.0F, 8.0F, 12.0F, 8.0F, f + 0.45F);
 		this.head.addChild(this.hat);
 		this.hat.visible = false;
-		this.nose = new ModelPart(this).setTexSize(i, j);
-		this.nose.setPos(0.0F, g - 2.0F, 0.0F);
-		this.nose.texOffs(24, 0).addBox(-1.0F, -1.0F, -6.0F, 2, 4, 2, f);
-		this.head.addChild(this.nose);
+		ModelPart modelPart = new ModelPart(this).setTexSize(i, j);
+		modelPart.setPos(0.0F, g - 2.0F, 0.0F);
+		modelPart.texOffs(24, 0).addBox(-1.0F, -1.0F, -6.0F, 2.0F, 4.0F, 2.0F, f);
+		this.head.addChild(modelPart);
 		this.body = new ModelPart(this).setTexSize(i, j);
 		this.body.setPos(0.0F, 0.0F + g, 0.0F);
-		this.body.texOffs(16, 20).addBox(-4.0F, 0.0F, -3.0F, 8, 12, 6, f);
-		this.body.texOffs(0, 38).addBox(-4.0F, 0.0F, -3.0F, 8, 18, 6, f + 0.5F);
+		this.body.texOffs(16, 20).addBox(-4.0F, 0.0F, -3.0F, 8.0F, 12.0F, 6.0F, f);
+		this.body.texOffs(0, 38).addBox(-4.0F, 0.0F, -3.0F, 8.0F, 18.0F, 6.0F, f + 0.5F);
 		this.arms = new ModelPart(this).setTexSize(i, j);
 		this.arms.setPos(0.0F, 0.0F + g + 2.0F, 0.0F);
-		this.arms.texOffs(44, 22).addBox(-8.0F, -2.0F, -2.0F, 4, 8, 4, f);
-		ModelPart modelPart = new ModelPart(this, 44, 22).setTexSize(i, j);
-		modelPart.mirror = true;
-		modelPart.addBox(4.0F, -2.0F, -2.0F, 4, 8, 4, f);
-		this.arms.addChild(modelPart);
-		this.arms.texOffs(40, 38).addBox(-4.0F, 2.0F, -2.0F, 8, 4, 4, f);
+		this.arms.texOffs(44, 22).addBox(-8.0F, -2.0F, -2.0F, 4.0F, 8.0F, 4.0F, f);
+		ModelPart modelPart2 = new ModelPart(this, 44, 22).setTexSize(i, j);
+		modelPart2.mirror = true;
+		modelPart2.addBox(4.0F, -2.0F, -2.0F, 4.0F, 8.0F, 4.0F, f);
+		this.arms.addChild(modelPart2);
+		this.arms.texOffs(40, 38).addBox(-4.0F, 2.0F, -2.0F, 8.0F, 4.0F, 4.0F, f);
 		this.leftLeg = new ModelPart(this, 0, 22).setTexSize(i, j);
 		this.leftLeg.setPos(-2.0F, 12.0F + g, 0.0F);
-		this.leftLeg.addBox(-2.0F, 0.0F, -2.0F, 4, 12, 4, f);
+		this.leftLeg.addBox(-2.0F, 0.0F, -2.0F, 4.0F, 12.0F, 4.0F, f);
 		this.rightLeg = new ModelPart(this, 0, 22).setTexSize(i, j);
 		this.rightLeg.mirror = true;
 		this.rightLeg.setPos(2.0F, 12.0F + g, 0.0F);
-		this.rightLeg.addBox(-2.0F, 0.0F, -2.0F, 4, 12, 4, f);
+		this.rightLeg.addBox(-2.0F, 0.0F, -2.0F, 4.0F, 12.0F, 4.0F, f);
 		this.rightArm = new ModelPart(this, 40, 46).setTexSize(i, j);
-		this.rightArm.addBox(-3.0F, -2.0F, -2.0F, 4, 12, 4, f);
+		this.rightArm.addBox(-3.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, f);
 		this.rightArm.setPos(-5.0F, 2.0F + g, 0.0F);
 		this.leftArm = new ModelPart(this, 40, 46).setTexSize(i, j);
 		this.leftArm.mirror = true;
-		this.leftArm.addBox(-1.0F, -2.0F, -2.0F, 4, 12, 4, f);
+		this.leftArm.addBox(-1.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, f);
 		this.leftArm.setPos(5.0F, 2.0F + g, 0.0F);
 	}
 
-	public void render(T abstractIllager, float f, float g, float h, float i, float j, float k) {
-		this.setupAnim(abstractIllager, f, g, h, i, j, k);
-		this.head.render(k);
-		this.body.render(k);
-		this.leftLeg.render(k);
-		this.rightLeg.render(k);
-		if (abstractIllager.getArmPose() == AbstractIllager.IllagerArmPose.CROSSED) {
-			this.arms.render(k);
-		} else {
-			this.rightArm.render(k);
-			this.leftArm.render(k);
-		}
+	@Override
+	public Iterable<ModelPart> parts() {
+		return ImmutableList.<ModelPart>of(this.head, this.body, this.leftLeg, this.rightLeg, this.arms, this.rightArm, this.leftArm);
 	}
 
-	public void setupAnim(T abstractIllager, float f, float g, float h, float i, float j, float k) {
+	public void setupAnim(T abstractIllager, float f, float g, float h, float i, float j) {
 		this.head.yRot = i * (float) (Math.PI / 180.0);
 		this.head.xRot = j * (float) (Math.PI / 180.0);
 		this.arms.y = 3.0F;
@@ -112,8 +102,8 @@ public class IllagerModel<T extends AbstractIllager> extends EntityModel<T> impl
 
 		AbstractIllager.IllagerArmPose illagerArmPose = abstractIllager.getArmPose();
 		if (illagerArmPose == AbstractIllager.IllagerArmPose.ATTACKING) {
-			float l = Mth.sin(this.attackTime * (float) Math.PI);
-			float m = Mth.sin((1.0F - (1.0F - this.attackTime) * (1.0F - this.attackTime)) * (float) Math.PI);
+			float k = Mth.sin(this.attackTime * (float) Math.PI);
+			float l = Mth.sin((1.0F - (1.0F - this.attackTime) * (1.0F - this.attackTime)) * (float) Math.PI);
 			this.rightArm.zRot = 0.0F;
 			this.leftArm.zRot = 0.0F;
 			this.rightArm.yRot = (float) (Math.PI / 20);
@@ -121,13 +111,13 @@ public class IllagerModel<T extends AbstractIllager> extends EntityModel<T> impl
 			if (abstractIllager.getMainArm() == HumanoidArm.RIGHT) {
 				this.rightArm.xRot = -1.8849558F + Mth.cos(h * 0.09F) * 0.15F;
 				this.leftArm.xRot = -0.0F + Mth.cos(h * 0.19F) * 0.5F;
-				this.rightArm.xRot += l * 2.2F - m * 0.4F;
-				this.leftArm.xRot += l * 1.2F - m * 0.4F;
+				this.rightArm.xRot += k * 2.2F - l * 0.4F;
+				this.leftArm.xRot += k * 1.2F - l * 0.4F;
 			} else {
 				this.rightArm.xRot = -0.0F + Mth.cos(h * 0.19F) * 0.5F;
 				this.leftArm.xRot = -1.8849558F + Mth.cos(h * 0.09F) * 0.15F;
-				this.rightArm.xRot += l * 1.2F - m * 0.4F;
-				this.leftArm.xRot += l * 2.2F - m * 0.4F;
+				this.rightArm.xRot += k * 1.2F - l * 0.4F;
+				this.leftArm.xRot += k * 2.2F - l * 0.4F;
 			}
 
 			this.rightArm.zRot += Mth.cos(h * 0.09F) * 0.05F + 0.05F;
@@ -160,9 +150,9 @@ public class IllagerModel<T extends AbstractIllager> extends EntityModel<T> impl
 			this.rightArm.yRot = -0.8F;
 			this.rightArm.xRot = -0.97079635F;
 			this.leftArm.xRot = -0.97079635F;
-			float l = Mth.clamp(this.itemUseTicks, 0.0F, 25.0F);
-			this.leftArm.yRot = Mth.lerp(l / 25.0F, 0.4F, 0.85F);
-			this.leftArm.xRot = Mth.lerp(l / 25.0F, this.leftArm.xRot, (float) (-Math.PI / 2));
+			float k = Mth.clamp(this.itemUseTicks, 0.0F, 25.0F);
+			this.leftArm.yRot = Mth.lerp(k / 25.0F, 0.4F, 0.85F);
+			this.leftArm.xRot = Mth.lerp(k / 25.0F, this.leftArm.xRot, (float) (-Math.PI / 2));
 		} else if (illagerArmPose == AbstractIllager.IllagerArmPose.CELEBRATING) {
 			this.rightArm.z = 0.0F;
 			this.rightArm.x = -5.0F;
@@ -175,6 +165,11 @@ public class IllagerModel<T extends AbstractIllager> extends EntityModel<T> impl
 			this.leftArm.zRot = (float) (-Math.PI * 3.0 / 4.0);
 			this.leftArm.yRot = 0.0F;
 		}
+
+		boolean bl = illagerArmPose == AbstractIllager.IllagerArmPose.CROSSED;
+		this.arms.visible = bl;
+		this.leftArm.visible = !bl;
+		this.rightArm.visible = !bl;
 	}
 
 	public void prepareMobModel(T abstractIllager, float f, float g, float h) {
@@ -196,7 +191,7 @@ public class IllagerModel<T extends AbstractIllager> extends EntityModel<T> impl
 	}
 
 	@Override
-	public void translateToHand(float f, HumanoidArm humanoidArm) {
-		this.getArm(humanoidArm).translateTo(0.0625F);
+	public void translateToHand(HumanoidArm humanoidArm, PoseStack poseStack) {
+		this.getArm(humanoidArm).translateAndRotate(poseStack);
 	}
 }

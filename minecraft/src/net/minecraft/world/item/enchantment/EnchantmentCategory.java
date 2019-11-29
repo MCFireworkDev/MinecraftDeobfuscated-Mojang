@@ -2,6 +2,7 @@ package net.minecraft.world.item.enchantment;
 
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.DiggerItem;
@@ -12,7 +13,7 @@ import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.level.block.AbstractSkullBlock;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.PumpkinBlock;
+import net.minecraft.world.level.block.CarvedPumpkinBlock;
 
 public enum EnchantmentCategory {
 	ALL {
@@ -60,7 +61,7 @@ public enum EnchantmentCategory {
 	WEAPON {
 		@Override
 		public boolean canEnchant(Item item) {
-			return item instanceof SwordItem;
+			return item instanceof SwordItem || item instanceof AxeItem;
 		}
 	},
 	DIGGER {
@@ -97,13 +98,19 @@ public enum EnchantmentCategory {
 		@Override
 		public boolean canEnchant(Item item) {
 			Block block = Block.byItem(item);
-			return item instanceof ArmorItem || item instanceof ElytraItem || block instanceof AbstractSkullBlock || block instanceof PumpkinBlock;
+			return item instanceof ArmorItem || item instanceof ElytraItem || block instanceof AbstractSkullBlock || block instanceof CarvedPumpkinBlock;
 		}
 	},
 	CROSSBOW {
 		@Override
 		public boolean canEnchant(Item item) {
 			return item instanceof CrossbowItem;
+		}
+	},
+	AXE {
+		@Override
+		public boolean canEnchant(Item item) {
+			return item instanceof AxeItem;
 		}
 	};
 

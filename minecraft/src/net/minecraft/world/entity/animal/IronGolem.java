@@ -1,5 +1,9 @@
 package net.minecraft.world.entity.animal;
 
+import com.google.common.collect.ImmutableList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Stream;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
@@ -12,6 +16,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -32,6 +37,9 @@ import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.SharedMonsterAttributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.NaturalSpawner;
@@ -78,6 +86,7 @@ public class IronGolem extends AbstractGolem {
 		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(100.0);
 		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.25);
 		this.getAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE).setBaseValue(1.0);
+		this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(15.0);
 	}
 
 	@Override
@@ -106,17 +115,17 @@ public class IronGolem extends AbstractGolem {
 		}
 
 		if (getHorizontalDistanceSqr(this.getDeltaMovement()) > 2.5000003E-7F && this.random.nextInt(5) == 0) {
-			int i = Mth.floor(this.x);
-			int j = Mth.floor(this.y - 0.2F);
-			int k = Mth.floor(this.z);
+			int i = Mth.floor(this.getX());
+			int j = Mth.floor(this.getY() - 0.2F);
+			int k = Mth.floor(this.getZ());
 			BlockState blockState = this.level.getBlockState(new BlockPos(i, j, k));
 			if (!blockState.isAir()) {
 				this.level
 					.addParticle(
 						new BlockParticleOption(ParticleTypes.BLOCK, blockState),
-						this.x + ((double)this.random.nextFloat() - 0.5) * (double)this.getBbWidth(),
-						this.getBoundingBox().minY + 0.1,
-						this.z + ((double)this.random.nextFloat() - 0.5) * (double)this.getBbWidth(),
+						this.getX() + ((double)this.random.nextFloat() - 0.5) * (double)this.getBbWidth(),
+						this.getY() + 0.1,
+						this.getZ() + ((double)this.random.nextFloat() - 0.5) * (double)this.getBbWidth(),
 						4.0 * ((double)this.random.nextFloat() - 0.5),
 						0.5,
 						((double)this.random.nextFloat() - 0.5) * 4.0
@@ -146,11 +155,17 @@ public class IronGolem extends AbstractGolem {
 		this.setPlayerCreated(compoundTag.getBoolean("PlayerCreated"));
 	}
 
+	private float getAttackDamage() {
+		return (float)this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
+	}
+
 	@Override
 	public boolean doHurtTarget(Entity entity) {
 		this.attackAnimationTick = 10;
 		this.level.broadcastEntityEvent(this, (byte)4);
-		boolean bl = entity.hurt(DamageSource.mobAttack(this), (float)(7 + this.random.nextInt(15)));
+		float f = this.getAttackDamage();
+		float g = f > 0.0F ? f / 2.0F + (float)this.random.nextInt((int)f) : 0.0F;
+		boolean bl = entity.hurt(DamageSource.mobAttack(this), g);
 		if (bl) {
 			entity.setDeltaMovement(entity.getDeltaMovement().add(0.0, 0.4F, 0.0));
 			this.doEnchantDamageEffects(this, entity);
@@ -158,6 +173,21 @@ public class IronGolem extends AbstractGolem {
 
 		this.playSound(SoundEvents.IRON_GOLEM_ATTACK, 1.0F, 1.0F);
 		return bl;
+	}
+
+	@Override
+	public boolean hurt(DamageSource damageSource, float f) {
+		IronGolem.Crackiness crackiness = this.getCrackiness();
+		boolean bl = super.hurt(damageSource, f);
+		if (bl && this.getCrackiness() != crackiness) {
+			this.playSound(SoundEvents.IRON_GOLEM_DAMAGE, 1.0F, 1.0F);
+		}
+
+		return bl;
+	}
+
+	public IronGolem.Crackiness getCrackiness() {
+		return IronGolem.Crackiness.byFraction(this.getHealth() / this.getMaxHealth());
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -198,6 +228,29 @@ public class IronGolem extends AbstractGolem {
 	@Override
 	protected SoundEvent getDeathSound() {
 		return SoundEvents.IRON_GOLEM_DEATH;
+	}
+
+	@Override
+	protected boolean mobInteract(Player player, InteractionHand interactionHand) {
+		ItemStack itemStack = player.getItemInHand(interactionHand);
+		Item item = itemStack.getItem();
+		if (item != Items.IRON_INGOT) {
+			return false;
+		} else {
+			float f = this.getHealth();
+			this.heal(25.0F);
+			if (this.getHealth() == f) {
+				return false;
+			} else {
+				float g = 1.0F + (this.random.nextFloat() - this.random.nextFloat()) * 0.2F;
+				this.playSound(SoundEvents.IRON_GOLEM_REPAIR, 1.0F, g);
+				if (!player.abilities.instabuild) {
+					itemStack.shrink(1);
+				}
+
+				return true;
+			}
+		}
 	}
 
 	@Override
@@ -246,6 +299,32 @@ public class IronGolem extends AbstractGolem {
 
 			return NaturalSpawner.isValidEmptySpawnBlock(levelReader, blockPos, levelReader.getBlockState(blockPos), Fluids.EMPTY.defaultFluidState())
 				&& levelReader.isUnobstructed(this);
+		}
+	}
+
+	public static enum Crackiness {
+		NONE(1.0F),
+		LOW(0.75F),
+		MEDIUM(0.5F),
+		HIGH(0.25F);
+
+		private static final List<IronGolem.Crackiness> BY_DAMAGE = (List<IronGolem.Crackiness>)Stream.of(values())
+			.sorted(Comparator.comparingDouble(crackiness -> (double)crackiness.fraction))
+			.collect(ImmutableList.toImmutableList());
+		private final float fraction;
+
+		private Crackiness(float f) {
+			this.fraction = f;
+		}
+
+		public static IronGolem.Crackiness byFraction(float f) {
+			for(IronGolem.Crackiness crackiness : BY_DAMAGE) {
+				if (f < crackiness.fraction) {
+					return crackiness;
+				}
+			}
+
+			return NONE;
 		}
 	}
 }

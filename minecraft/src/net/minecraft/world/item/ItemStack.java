@@ -36,6 +36,7 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.Tag;
@@ -46,7 +47,6 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.monster.SharedMonsterAttributes;
@@ -92,6 +92,10 @@ public final class ItemStack {
 	public ItemStack(ItemLike itemLike, int i) {
 		this.item = itemLike == null ? null : itemLike.asItem();
 		this.count = i;
+		if (this.item != null && this.item.canBeDepleted()) {
+			this.setDamageValue(this.getDamageValue());
+		}
+
 		this.updateEmptyCacheFlag();
 	}
 
@@ -180,7 +184,7 @@ public final class ItemStack {
 		compoundTag.putString("id", resourceLocation == null ? "minecraft:air" : resourceLocation.toString());
 		compoundTag.putByte("Count", (byte)this.count);
 		if (this.tag != null) {
-			compoundTag.put("tag", this.tag);
+			compoundTag.put("tag", this.tag.copy());
 		}
 
 		return compoundTag;
@@ -289,13 +293,17 @@ public final class ItemStack {
 	}
 
 	public ItemStack copy() {
-		ItemStack itemStack = new ItemStack(this.getItem(), this.count);
-		itemStack.setPopTime(this.getPopTime());
-		if (this.tag != null) {
-			itemStack.tag = this.tag.copy();
-		}
+		if (this.isEmpty()) {
+			return EMPTY;
+		} else {
+			ItemStack itemStack = new ItemStack(this.getItem(), this.count);
+			itemStack.setPopTime(this.getPopTime());
+			if (this.tag != null) {
+				itemStack.tag = this.tag.copy();
+			}
 
-		return itemStack;
+			return itemStack;
+		}
 	}
 
 	public static boolean tagMatches(ItemStack itemStack, ItemStack itemStack2) {
@@ -561,12 +569,15 @@ public final class ItemStack {
 					double d = attributeModifier.getAmount();
 					boolean bl = false;
 					if (player != null) {
-						if (attributeModifier.getId() == Item.BASE_ATTACK_DAMAGE_UUID) {
+						if (attributeModifier.getId() == WeaponType.BASE_ATTACK_DAMAGE_UUID) {
 							d += player.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getBaseValue();
-							d += (double)EnchantmentHelper.getDamageBonus(this, MobType.UNDEFINED);
+							d += (double)EnchantmentHelper.getDamageBonus(this, null);
 							bl = true;
-						} else if (attributeModifier.getId() == Item.BASE_ATTACK_SPEED_UUID) {
-							d += player.getAttribute(SharedMonsterAttributes.ATTACK_SPEED).getBaseValue();
+						} else if (attributeModifier.getId() == WeaponType.BASE_ATTACK_SPEED_UUID) {
+							d += player.getAttribute(SharedMonsterAttributes.ATTACK_SPEED).getBaseValue() - 1.5;
+							bl = true;
+						} else if (attributeModifier.getId() == WeaponType.BASE_ATTACK_REACH_UUID) {
+							d += player.getAttribute(SharedMonsterAttributes.ATTACK_REACH).getBaseValue();
 							bl = true;
 						}
 					}
@@ -697,7 +708,6 @@ public final class ItemStack {
 		return Lists.<Component>newArrayList(new TextComponent("missingno").withStyle(ChatFormatting.DARK_GRAY));
 	}
 
-	@Environment(EnvType.CLIENT)
 	public boolean hasFoil() {
 		return this.getItem().isFoil(this);
 	}
@@ -780,6 +790,7 @@ public final class ItemStack {
 			multimap = this.getItem().getDefaultAttributeModifiers(equipmentSlot);
 		}
 
+		multimap.values().forEach(attributeModifierx -> attributeModifierx.setSerialize(false));
 		return multimap;
 	}
 
@@ -912,5 +923,13 @@ public final class ItemStack {
 
 	public boolean isEdible() {
 		return this.getItem().isEdible();
+	}
+
+	public SoundEvent getDrinkingSound() {
+		return this.getItem().getDrinkingSound();
+	}
+
+	public SoundEvent getEatingSound() {
+		return this.getItem().getEatingSound();
 	}
 }

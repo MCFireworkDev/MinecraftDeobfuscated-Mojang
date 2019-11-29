@@ -1,10 +1,15 @@
 package net.minecraft.client.renderer.blockentity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.ShulkerModel;
-import net.minecraft.client.renderer.entity.ShulkerRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.Sheets;
+import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
@@ -15,90 +20,40 @@ import net.minecraft.world.level.block.state.BlockState;
 public class ShulkerBoxRenderer extends BlockEntityRenderer<ShulkerBoxBlockEntity> {
 	private final ShulkerModel<?> model;
 
-	public ShulkerBoxRenderer(ShulkerModel<?> shulkerModel) {
+	public ShulkerBoxRenderer(ShulkerModel<?> shulkerModel, BlockEntityRenderDispatcher blockEntityRenderDispatcher) {
+		super(blockEntityRenderDispatcher);
 		this.model = shulkerModel;
 	}
 
-	public void render(ShulkerBoxBlockEntity shulkerBoxBlockEntity, double d, double e, double f, float g, int i) {
+	public void render(ShulkerBoxBlockEntity shulkerBoxBlockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j) {
 		Direction direction = Direction.UP;
 		if (shulkerBoxBlockEntity.hasLevel()) {
-			BlockState blockState = this.getLevel().getBlockState(shulkerBoxBlockEntity.getBlockPos());
+			BlockState blockState = shulkerBoxBlockEntity.getLevel().getBlockState(shulkerBoxBlockEntity.getBlockPos());
 			if (blockState.getBlock() instanceof ShulkerBoxBlock) {
 				direction = blockState.getValue(ShulkerBoxBlock.FACING);
 			}
 		}
 
-		GlStateManager.enableDepthTest();
-		GlStateManager.depthFunc(515);
-		GlStateManager.depthMask(true);
-		GlStateManager.disableCull();
-		if (i >= 0) {
-			this.bindTexture(BREAKING_LOCATIONS[i]);
-			GlStateManager.matrixMode(5890);
-			GlStateManager.pushMatrix();
-			GlStateManager.scalef(4.0F, 4.0F, 1.0F);
-			GlStateManager.translatef(0.0625F, 0.0625F, 0.0625F);
-			GlStateManager.matrixMode(5888);
+		DyeColor dyeColor = shulkerBoxBlockEntity.getColor();
+		Material material;
+		if (dyeColor == null) {
+			material = Sheets.DEFAULT_SHULKER_TEXTURE_LOCATION;
 		} else {
-			DyeColor dyeColor = shulkerBoxBlockEntity.getColor();
-			if (dyeColor == null) {
-				this.bindTexture(ShulkerRenderer.DEFAULT_TEXTURE_LOCATION);
-			} else {
-				this.bindTexture(ShulkerRenderer.TEXTURE_LOCATION[dyeColor.getId()]);
-			}
+			material = (Material)Sheets.SHULKER_TEXTURE_LOCATION.get(dyeColor.getId());
 		}
 
-		GlStateManager.pushMatrix();
-		GlStateManager.enableRescaleNormal();
-		if (i < 0) {
-			GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		}
-
-		GlStateManager.translatef((float)d + 0.5F, (float)e + 1.5F, (float)f + 0.5F);
-		GlStateManager.scalef(1.0F, -1.0F, -1.0F);
-		GlStateManager.translatef(0.0F, 1.0F, 0.0F);
-		float h = 0.9995F;
-		GlStateManager.scalef(0.9995F, 0.9995F, 0.9995F);
-		GlStateManager.translatef(0.0F, -1.0F, 0.0F);
-		switch(direction) {
-			case DOWN:
-				GlStateManager.translatef(0.0F, 2.0F, 0.0F);
-				GlStateManager.rotatef(180.0F, 1.0F, 0.0F, 0.0F);
-			case UP:
-			default:
-				break;
-			case NORTH:
-				GlStateManager.translatef(0.0F, 1.0F, 1.0F);
-				GlStateManager.rotatef(90.0F, 1.0F, 0.0F, 0.0F);
-				GlStateManager.rotatef(180.0F, 0.0F, 0.0F, 1.0F);
-				break;
-			case SOUTH:
-				GlStateManager.translatef(0.0F, 1.0F, -1.0F);
-				GlStateManager.rotatef(90.0F, 1.0F, 0.0F, 0.0F);
-				break;
-			case WEST:
-				GlStateManager.translatef(-1.0F, 1.0F, 0.0F);
-				GlStateManager.rotatef(90.0F, 1.0F, 0.0F, 0.0F);
-				GlStateManager.rotatef(-90.0F, 0.0F, 0.0F, 1.0F);
-				break;
-			case EAST:
-				GlStateManager.translatef(1.0F, 1.0F, 0.0F);
-				GlStateManager.rotatef(90.0F, 1.0F, 0.0F, 0.0F);
-				GlStateManager.rotatef(90.0F, 0.0F, 0.0F, 1.0F);
-		}
-
-		this.model.getBase().render(0.0625F);
-		GlStateManager.translatef(0.0F, -shulkerBoxBlockEntity.getProgress(g) * 0.5F, 0.0F);
-		GlStateManager.rotatef(270.0F * shulkerBoxBlockEntity.getProgress(g), 0.0F, 1.0F, 0.0F);
-		this.model.getLid().render(0.0625F);
-		GlStateManager.enableCull();
-		GlStateManager.disableRescaleNormal();
-		GlStateManager.popMatrix();
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		if (i >= 0) {
-			GlStateManager.matrixMode(5890);
-			GlStateManager.popMatrix();
-			GlStateManager.matrixMode(5888);
-		}
+		poseStack.pushPose();
+		poseStack.translate(0.5, 0.5, 0.5);
+		float g = 0.9995F;
+		poseStack.scale(0.9995F, 0.9995F, 0.9995F);
+		poseStack.mulPose(direction.getRotation());
+		poseStack.scale(1.0F, -1.0F, -1.0F);
+		poseStack.translate(0.0, -1.0, 0.0);
+		VertexConsumer vertexConsumer = material.buffer(multiBufferSource, RenderType::entityCutoutNoCull);
+		this.model.getBase().render(poseStack, vertexConsumer, i, j);
+		poseStack.translate(0.0, (double)(-shulkerBoxBlockEntity.getProgress(f) * 0.5F), 0.0);
+		poseStack.mulPose(Vector3f.YP.rotationDegrees(270.0F * shulkerBoxBlockEntity.getProgress(f)));
+		this.model.getLid().render(poseStack, vertexConsumer, i, j);
+		poseStack.popPose();
 	}
 }

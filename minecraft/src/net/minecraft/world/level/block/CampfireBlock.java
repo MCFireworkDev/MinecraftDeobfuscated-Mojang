@@ -14,17 +14,19 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.Fireball;
 import net.minecraft.world.item.BlockPlaceContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CampfireCookingRecipe;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.BlockLayer;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -38,7 +40,9 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class CampfireBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
@@ -47,6 +51,7 @@ public class CampfireBlock extends BaseEntityBlock implements SimpleWaterloggedB
 	public static final BooleanProperty SIGNAL_FIRE = BlockStateProperties.SIGNAL_FIRE;
 	public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 	public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+	private static final VoxelShape VIRTUAL_FENCE_POST = Block.box(6.0, 0.0, 6.0, 10.0, 16.0, 10.0);
 
 	public CampfireBlock(Block.Properties properties) {
 		super(properties);
@@ -61,7 +66,9 @@ public class CampfireBlock extends BaseEntityBlock implements SimpleWaterloggedB
 	}
 
 	@Override
-	public boolean use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
+	public InteractionResult use(
+		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	) {
 		if (blockState.getValue(LIT)) {
 			BlockEntity blockEntity = level.getBlockEntity(blockPos);
 			if (blockEntity instanceof CampfireBlockEntity) {
@@ -72,14 +79,15 @@ public class CampfireBlock extends BaseEntityBlock implements SimpleWaterloggedB
 					if (!level.isClientSide
 						&& campfireBlockEntity.placeFood(player.abilities.instabuild ? itemStack.copy() : itemStack, ((CampfireCookingRecipe)optional.get()).getCookingTime())) {
 						player.awardStat(Stats.INTERACT_WITH_CAMPFIRE);
+						return InteractionResult.SUCCESS;
 					}
 
-					return true;
+					return InteractionResult.CONSUME;
 				}
 			}
 		}
 
-		return false;
+		return InteractionResult.PASS;
 	}
 
 	@Override
@@ -148,11 +156,6 @@ public class CampfireBlock extends BaseEntityBlock implements SimpleWaterloggedB
 		return RenderShape.MODEL;
 	}
 
-	@Override
-	public BlockLayer getRenderLayer() {
-		return BlockLayer.CUTOUT;
-	}
-
 	@Environment(EnvType.CLIENT)
 	@Override
 	public void animateTick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
@@ -213,13 +216,26 @@ public class CampfireBlock extends BaseEntityBlock implements SimpleWaterloggedB
 		}
 	}
 
+	@Nullable
+	private Entity getShooter(Entity entity) {
+		if (entity instanceof Fireball) {
+			return ((Fireball)entity).owner;
+		} else {
+			return entity instanceof AbstractArrow ? ((AbstractArrow)entity).getOwner() : null;
+		}
+	}
+
 	@Override
 	public void onProjectileHit(Level level, BlockState blockState, BlockHitResult blockHitResult, Entity entity) {
-		if (!level.isClientSide && entity instanceof AbstractArrow) {
-			AbstractArrow abstractArrow = (AbstractArrow)entity;
-			if (abstractArrow.isOnFire() && !blockState.getValue(LIT) && !blockState.getValue(WATERLOGGED)) {
-				BlockPos blockPos = blockHitResult.getBlockPos();
-				level.setBlock(blockPos, blockState.setValue(BlockStateProperties.LIT, Boolean.valueOf(true)), 11);
+		if (!level.isClientSide) {
+			boolean bl = entity instanceof Fireball || entity instanceof AbstractArrow && entity.isOnFire();
+			if (bl) {
+				Entity entity2 = this.getShooter(entity);
+				boolean bl2 = entity2 == null || entity2 instanceof Player || level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+				if (bl2 && !blockState.getValue(LIT) && !blockState.getValue(WATERLOGGED)) {
+					BlockPos blockPos = blockHitResult.getBlockPos();
+					level.setBlock(blockPos, blockState.setValue(BlockStateProperties.LIT, Boolean.valueOf(true)), 11);
+				}
 			}
 		}
 	}
@@ -248,6 +264,28 @@ public class CampfireBlock extends BaseEntityBlock implements SimpleWaterloggedB
 				0.0
 			);
 		}
+	}
+
+	public static boolean isSmokeyPos(Level level, BlockPos blockPos, int i) {
+		for(int j = 1; j <= i; ++j) {
+			BlockPos blockPos2 = blockPos.below(j);
+			BlockState blockState = level.getBlockState(blockPos2);
+			if (isLitCampfire(blockState)) {
+				return true;
+			}
+
+			boolean bl = Shapes.joinIsNotEmpty(VIRTUAL_FENCE_POST, blockState.getCollisionShape(level, blockPos, CollisionContext.empty()), BooleanOp.AND);
+			if (bl) {
+				BlockState blockState2 = level.getBlockState(blockPos2.below());
+				return isLitCampfire(blockState2);
+			}
+		}
+
+		return false;
+	}
+
+	private static boolean isLitCampfire(BlockState blockState) {
+		return blockState.getBlock() == Blocks.CAMPFIRE && blockState.getValue(LIT);
 	}
 
 	@Override

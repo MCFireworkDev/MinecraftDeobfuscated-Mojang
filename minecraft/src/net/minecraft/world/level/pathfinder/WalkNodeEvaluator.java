@@ -11,7 +11,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.PathNavigationRegion;
 import net.minecraft.world.level.block.BaseRailBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -29,8 +29,8 @@ public class WalkNodeEvaluator extends NodeEvaluator {
 	protected float oldWaterCost;
 
 	@Override
-	public void prepare(LevelReader levelReader, Mob mob) {
-		super.prepare(levelReader, mob);
+	public void prepare(PathNavigationRegion pathNavigationRegion, Mob mob) {
+		super.prepare(pathNavigationRegion, mob);
 		this.oldWaterCost = mob.getPathfindingMalus(BlockPathTypes.WATER);
 	}
 
@@ -44,19 +44,19 @@ public class WalkNodeEvaluator extends NodeEvaluator {
 	public Node getStart() {
 		int i;
 		if (this.canFloat() && this.mob.isInWater()) {
-			i = Mth.floor(this.mob.getBoundingBox().minY);
-			BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos(this.mob.x, (double)i, this.mob.z);
+			i = Mth.floor(this.mob.getY());
+			BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos(this.mob.getX(), (double)i, this.mob.getZ());
 
 			for(BlockState blockState = this.level.getBlockState(mutableBlockPos);
 				blockState.getBlock() == Blocks.WATER || blockState.getFluidState() == Fluids.WATER.getSource(false);
 				blockState = this.level.getBlockState(mutableBlockPos)
 			) {
-				mutableBlockPos.set(this.mob.x, (double)(++i), this.mob.z);
+				mutableBlockPos.set(this.mob.getX(), (double)(++i), this.mob.getZ());
 			}
 
 			--i;
 		} else if (this.mob.onGround) {
-			i = Mth.floor(this.mob.getBoundingBox().minY + 0.5);
+			i = Mth.floor(this.mob.getY() + 0.5);
 		} else {
 			BlockPos blockPos = new BlockPos(this.mob);
 
@@ -101,7 +101,12 @@ public class WalkNodeEvaluator extends NodeEvaluator {
 		int j = 0;
 		BlockPathTypes blockPathTypes = this.getBlockPathType(this.mob, node.x, node.y + 1, node.z);
 		if (this.mob.getPathfindingMalus(blockPathTypes) >= 0.0F) {
-			j = Mth.floor(Math.max(1.0F, this.mob.maxUpStep));
+			BlockPathTypes blockPathTypes2 = this.getBlockPathType(this.mob, node.x, node.y, node.z);
+			if (blockPathTypes2 == BlockPathTypes.STICKY_HONEY) {
+				j = 0;
+			} else {
+				j = Mth.floor(Math.max(1.0F, this.mob.maxUpStep));
+			}
 		}
 
 		double d = getFloorLevel(this.level, new BlockPos(node.x, node.y, node.z));
@@ -372,10 +377,14 @@ public class WalkNodeEvaluator extends NodeEvaluator {
 
 	@Override
 	public BlockPathTypes getBlockPathType(BlockGetter blockGetter, int i, int j, int k) {
-		BlockPathTypes blockPathTypes = this.getBlockPathTypeRaw(blockGetter, i, j, k);
+		return getBlockPathTypeStatic(blockGetter, i, j, k);
+	}
+
+	public static BlockPathTypes getBlockPathTypeStatic(BlockGetter blockGetter, int i, int j, int k) {
+		BlockPathTypes blockPathTypes = getBlockPathTypeRaw(blockGetter, i, j, k);
 		if (blockPathTypes == BlockPathTypes.OPEN && j >= 1) {
 			Block block = blockGetter.getBlockState(new BlockPos(i, j - 1, k)).getBlock();
-			BlockPathTypes blockPathTypes2 = this.getBlockPathTypeRaw(blockGetter, i, j - 1, k);
+			BlockPathTypes blockPathTypes2 = getBlockPathTypeRaw(blockGetter, i, j - 1, k);
 			blockPathTypes = blockPathTypes2 != BlockPathTypes.WALKABLE
 					&& blockPathTypes2 != BlockPathTypes.OPEN
 					&& blockPathTypes2 != BlockPathTypes.WATER
@@ -393,21 +402,29 @@ public class WalkNodeEvaluator extends NodeEvaluator {
 			if (blockPathTypes2 == BlockPathTypes.DAMAGE_OTHER) {
 				blockPathTypes = BlockPathTypes.DAMAGE_OTHER;
 			}
+
+			if (blockPathTypes2 == BlockPathTypes.STICKY_HONEY) {
+				blockPathTypes = BlockPathTypes.STICKY_HONEY;
+			}
 		}
 
-		return this.checkNeighbourBlocks(blockGetter, i, j, k, blockPathTypes);
+		if (blockPathTypes == BlockPathTypes.WALKABLE) {
+			blockPathTypes = checkNeighbourBlocks(blockGetter, i, j, k, blockPathTypes);
+		}
+
+		return blockPathTypes;
 	}
 
-	public BlockPathTypes checkNeighbourBlocks(BlockGetter blockGetter, int i, int j, int k, BlockPathTypes blockPathTypes) {
-		if (blockPathTypes == BlockPathTypes.WALKABLE) {
-			try (BlockPos.PooledMutableBlockPos pooledMutableBlockPos = BlockPos.PooledMutableBlockPos.acquire()) {
-				for(int l = -1; l <= 1; ++l) {
-					for(int m = -1; m <= 1; ++m) {
-						if (l != 0 || m != 0) {
-							Block block = blockGetter.getBlockState(pooledMutableBlockPos.set(l + i, j, m + k)).getBlock();
+	public static BlockPathTypes checkNeighbourBlocks(BlockGetter blockGetter, int i, int j, int k, BlockPathTypes blockPathTypes) {
+		try (BlockPos.PooledMutableBlockPos pooledMutableBlockPos = BlockPos.PooledMutableBlockPos.acquire()) {
+			for(int l = -1; l <= 1; ++l) {
+				for(int m = -1; m <= 1; ++m) {
+					for(int n = -1; n <= 1; ++n) {
+						if (l != 0 || n != 0) {
+							Block block = blockGetter.getBlockState(pooledMutableBlockPos.set(l + i, m + j, n + k)).getBlock();
 							if (block == Blocks.CACTUS) {
 								blockPathTypes = BlockPathTypes.DANGER_CACTUS;
-							} else if (block == Blocks.FIRE) {
+							} else if (block == Blocks.FIRE || block == Blocks.LAVA) {
 								blockPathTypes = BlockPathTypes.DANGER_FIRE;
 							} else if (block == Blocks.SWEET_BERRY_BUSH) {
 								blockPathTypes = BlockPathTypes.DANGER_OTHER;
@@ -421,7 +438,7 @@ public class WalkNodeEvaluator extends NodeEvaluator {
 		return blockPathTypes;
 	}
 
-	protected BlockPathTypes getBlockPathTypeRaw(BlockGetter blockGetter, int i, int j, int k) {
+	protected static BlockPathTypes getBlockPathTypeRaw(BlockGetter blockGetter, int i, int j, int k) {
 		BlockPos blockPos = new BlockPos(i, j, k);
 		BlockState blockState = blockGetter.getBlockState(blockPos);
 		Block block = blockState.getBlock();
@@ -436,6 +453,10 @@ public class WalkNodeEvaluator extends NodeEvaluator {
 			return BlockPathTypes.DAMAGE_CACTUS;
 		} else if (block == Blocks.SWEET_BERRY_BUSH) {
 			return BlockPathTypes.DAMAGE_OTHER;
+		} else if (block == Blocks.HONEY_BLOCK) {
+			return BlockPathTypes.STICKY_HONEY;
+		} else if (block == Blocks.COCOA) {
+			return BlockPathTypes.COCOA;
 		} else if (block instanceof DoorBlock && material == Material.WOOD && !blockState.getValue(DoorBlock.OPEN)) {
 			return BlockPathTypes.DOOR_WOOD_CLOSED;
 		} else if (block instanceof DoorBlock && material == Material.METAL && !blockState.getValue(DoorBlock.OPEN)) {

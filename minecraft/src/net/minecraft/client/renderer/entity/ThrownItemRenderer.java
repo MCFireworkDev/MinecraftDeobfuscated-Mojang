@@ -1,9 +1,12 @@
 package net.minecraft.client.renderer.entity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
@@ -13,45 +16,39 @@ import net.minecraft.world.entity.projectile.ItemSupplier;
 public class ThrownItemRenderer<T extends Entity & ItemSupplier> extends EntityRenderer<T> {
 	private final ItemRenderer itemRenderer;
 	private final float scale;
+	private final boolean fullBright;
 
-	public ThrownItemRenderer(EntityRenderDispatcher entityRenderDispatcher, ItemRenderer itemRenderer, float f) {
+	public ThrownItemRenderer(EntityRenderDispatcher entityRenderDispatcher, ItemRenderer itemRenderer, float f, boolean bl) {
 		super(entityRenderDispatcher);
 		this.itemRenderer = itemRenderer;
 		this.scale = f;
+		this.fullBright = bl;
 	}
 
 	public ThrownItemRenderer(EntityRenderDispatcher entityRenderDispatcher, ItemRenderer itemRenderer) {
-		this(entityRenderDispatcher, itemRenderer, 1.0F);
+		this(entityRenderDispatcher, itemRenderer, 1.0F, false);
 	}
 
 	@Override
-	public void render(T entity, double d, double e, double f, float g, float h) {
-		GlStateManager.pushMatrix();
-		GlStateManager.translatef((float)d, (float)e, (float)f);
-		GlStateManager.enableRescaleNormal();
-		GlStateManager.scalef(this.scale, this.scale, this.scale);
-		GlStateManager.rotatef(-this.entityRenderDispatcher.playerRotY, 0.0F, 1.0F, 0.0F);
-		GlStateManager.rotatef((float)(this.entityRenderDispatcher.options.thirdPersonView == 2 ? -1 : 1) * this.entityRenderDispatcher.playerRotX, 1.0F, 0.0F, 0.0F);
-		GlStateManager.rotatef(180.0F, 0.0F, 1.0F, 0.0F);
-		this.bindTexture(TextureAtlas.LOCATION_BLOCKS);
-		if (this.solidRender) {
-			GlStateManager.enableColorMaterial();
-			GlStateManager.setupSolidRenderingTextureCombine(this.getTeamColor(entity));
-		}
-
-		this.itemRenderer.renderStatic(entity.getItem(), ItemTransforms.TransformType.GROUND);
-		if (this.solidRender) {
-			GlStateManager.tearDownSolidRenderingTextureCombine();
-			GlStateManager.disableColorMaterial();
-		}
-
-		GlStateManager.disableRescaleNormal();
-		GlStateManager.popMatrix();
-		super.render(entity, d, e, f, g, h);
+	protected int getBlockLightLevel(T entity, float f) {
+		return this.fullBright ? 15 : super.getBlockLightLevel(entity, f);
 	}
 
 	@Override
-	protected ResourceLocation getTextureLocation(Entity entity) {
+	public void render(T entity, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+		if (entity.tickCount >= 2) {
+			poseStack.pushPose();
+			poseStack.scale(this.scale, this.scale, this.scale);
+			poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
+			poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
+			this.itemRenderer.renderStatic(entity.getItem(), ItemTransforms.TransformType.GROUND, i, OverlayTexture.NO_OVERLAY, poseStack, multiBufferSource);
+			poseStack.popPose();
+			super.render(entity, f, g, poseStack, multiBufferSource, i);
+		}
+	}
+
+	@Override
+	public ResourceLocation getTextureLocation(Entity entity) {
 		return TextureAtlas.LOCATION_BLOCKS;
 	}
 }

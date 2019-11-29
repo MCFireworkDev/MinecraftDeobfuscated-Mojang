@@ -9,6 +9,7 @@ import com.mojang.blaze3d.audio.Channel;
 import com.mojang.blaze3d.audio.Library;
 import com.mojang.blaze3d.audio.Listener;
 import com.mojang.blaze3d.audio.SoundBuffer;
+import com.mojang.math.Vector3f;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,7 @@ public class SoundEngine {
 	private final Map<SoundInstance, Integer> queuedSounds = Maps.newHashMap();
 	private final Map<SoundInstance, Integer> soundDeleteTime = Maps.newHashMap();
 	private final List<SoundEventListener> listeners = Lists.<SoundEventListener>newArrayList();
+	private final List<TickableSoundInstance> queuedTickableSounds = Lists.<TickableSoundInstance>newArrayList();
 	private final List<Sound> preloadQueue = Lists.<Sound>newArrayList();
 
 	public SoundEngine(SoundManager soundManager, Options options, ResourceManager resourceManager) {
@@ -144,6 +146,7 @@ public class SoundEngine {
 			this.tickingSounds.clear();
 			this.instanceBySource.clear();
 			this.soundDeleteTime.clear();
+			this.queuedTickableSounds.clear();
 		}
 	}
 
@@ -165,6 +168,8 @@ public class SoundEngine {
 
 	private void tickNonPaused() {
 		++this.tickCount;
+		this.queuedTickableSounds.forEach(this::play);
+		this.queuedTickableSounds.clear();
 
 		for(TickableSoundInstance tickableSoundInstance : this.tickingSounds) {
 			tickableSoundInstance.tick();
@@ -321,6 +326,10 @@ public class SoundEngine {
 		}
 	}
 
+	public void queueTickingSound(TickableSoundInstance tickableSoundInstance) {
+		this.queuedTickableSounds.add(tickableSoundInstance);
+	}
+
 	public void requestPreload(Sound sound) {
 		this.preloadQueue.add(sound);
 	}
@@ -352,11 +361,11 @@ public class SoundEngine {
 	public void updateSource(Camera camera) {
 		if (this.loaded && camera.isInitialized()) {
 			Vec3 vec3 = camera.getPosition();
-			Vec3 vec32 = camera.getLookVector();
-			Vec3 vec33 = camera.getUpVector();
+			Vector3f vector3f = camera.getLookVector();
+			Vector3f vector3f2 = camera.getUpVector();
 			this.executor.execute(() -> {
 				this.listener.setListenerPosition(vec3);
-				this.listener.setListenerOrientation(vec32, vec33);
+				this.listener.setListenerOrientation(vector3f, vector3f2);
 			});
 		}
 	}

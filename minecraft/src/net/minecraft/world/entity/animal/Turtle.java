@@ -54,6 +54,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.TurtleEggBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.PathFinder;
 import net.minecraft.world.level.pathfinder.TurtleNodeEvaluator;
 import net.minecraft.world.phys.Vec3;
@@ -70,6 +71,7 @@ public class Turtle extends Animal {
 
 	public Turtle(EntityType<? extends Turtle> entityType, Level level) {
 		super(entityType, level);
+		this.setPathfindingMalus(BlockPathTypes.WATER, 0.0F);
 		this.moveControl = new Turtle.TurtleMoveControl(this);
 		this.maxUpStep = 1.0F;
 	}
@@ -369,7 +371,7 @@ public class Turtle extends Animal {
 			this.partner.resetLove();
 			Random random = this.animal.getRandom();
 			if (this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBLOOT)) {
-				this.level.addFreshEntity(new ExperienceOrb(this.level, this.animal.x, this.animal.y, this.animal.z, random.nextInt(7) + 1));
+				this.level.addFreshEntity(new ExperienceOrb(this.level, this.animal.getX(), this.animal.getY(), this.animal.getZ(), random.nextInt(7) + 1));
 			}
 		}
 	}
@@ -424,23 +426,22 @@ public class Turtle extends Animal {
 			}
 
 			if (this.turtle.getNavigation().isDone()) {
-				Vec3 vec3 = RandomPos.getPosTowards(
-					this.turtle, 16, 3, new Vec3((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ()), (float) (Math.PI / 10)
-				);
-				if (vec3 == null) {
-					vec3 = RandomPos.getPosTowards(this.turtle, 8, 7, new Vec3((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ()));
+				Vec3 vec3 = new Vec3(blockPos);
+				Vec3 vec32 = RandomPos.getPosTowards(this.turtle, 16, 3, vec3, (float) (Math.PI / 10));
+				if (vec32 == null) {
+					vec32 = RandomPos.getPosTowards(this.turtle, 8, 7, vec3);
 				}
 
-				if (vec3 != null && !bl && this.turtle.level.getBlockState(new BlockPos(vec3)).getBlock() != Blocks.WATER) {
-					vec3 = RandomPos.getPosTowards(this.turtle, 16, 5, new Vec3((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ()));
+				if (vec32 != null && !bl && this.turtle.level.getBlockState(new BlockPos(vec32)).getBlock() != Blocks.WATER) {
+					vec32 = RandomPos.getPosTowards(this.turtle, 16, 5, vec3);
 				}
 
-				if (vec3 == null) {
+				if (vec32 == null) {
 					this.stuck = true;
 					return;
 				}
 
-				this.turtle.getNavigation().moveTo(vec3.x, vec3.y, vec3.z, this.speedModifier);
+				this.turtle.getNavigation().moveTo(vec32.x, vec32.y, vec32.z, this.speedModifier);
 			}
 		}
 	}
@@ -560,9 +561,9 @@ public class Turtle extends Animal {
 		public void tick() {
 			this.updateSpeed();
 			if (this.operation == MoveControl.Operation.MOVE_TO && !this.turtle.getNavigation().isDone()) {
-				double d = this.wantedX - this.turtle.x;
-				double e = this.wantedY - this.turtle.y;
-				double f = this.wantedZ - this.turtle.z;
+				double d = this.wantedX - this.turtle.getX();
+				double e = this.wantedY - this.turtle.getY();
+				double f = this.wantedZ - this.turtle.getZ();
 				double g = (double)Mth.sqrt(d * d + e * e + f * f);
 				e /= g;
 				float h = (float)(Mth.atan2(f, d) * 180.0F / (float)Math.PI) - 90.0F;
@@ -612,7 +613,8 @@ public class Turtle extends Animal {
 
 		@Override
 		protected PathFinder createPathFinder(int i) {
-			return new PathFinder(new TurtleNodeEvaluator(), i);
+			this.nodeEvaluator = new TurtleNodeEvaluator();
+			return new PathFinder(this.nodeEvaluator, i);
 		}
 
 		@Override
@@ -722,11 +724,11 @@ public class Turtle extends Animal {
 			int k = random.nextInt(1025) - 512;
 			int l = random.nextInt(9) - 4;
 			int m = random.nextInt(1025) - 512;
-			if ((double)l + this.turtle.y > (double)(this.turtle.level.getSeaLevel() - 1)) {
+			if ((double)l + this.turtle.getY() > (double)(this.turtle.level.getSeaLevel() - 1)) {
 				l = 0;
 			}
 
-			BlockPos blockPos = new BlockPos((double)k + this.turtle.x, (double)l + this.turtle.y, (double)m + this.turtle.z);
+			BlockPos blockPos = new BlockPos((double)k + this.turtle.getX(), (double)l + this.turtle.getY(), (double)m + this.turtle.getZ());
 			this.turtle.setTravelPos(blockPos);
 			this.turtle.setTravelling(true);
 			this.stuck = false;
@@ -735,29 +737,27 @@ public class Turtle extends Animal {
 		@Override
 		public void tick() {
 			if (this.turtle.getNavigation().isDone()) {
-				BlockPos blockPos = this.turtle.getTravelPos();
-				Vec3 vec3 = RandomPos.getPosTowards(
-					this.turtle, 16, 3, new Vec3((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ()), (float) (Math.PI / 10)
-				);
-				if (vec3 == null) {
-					vec3 = RandomPos.getPosTowards(this.turtle, 8, 7, new Vec3((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ()));
+				Vec3 vec3 = new Vec3(this.turtle.getTravelPos());
+				Vec3 vec32 = RandomPos.getPosTowards(this.turtle, 16, 3, vec3, (float) (Math.PI / 10));
+				if (vec32 == null) {
+					vec32 = RandomPos.getPosTowards(this.turtle, 8, 7, vec3);
 				}
 
-				if (vec3 != null) {
-					int i = Mth.floor(vec3.x);
-					int j = Mth.floor(vec3.z);
+				if (vec32 != null) {
+					int i = Mth.floor(vec32.x);
+					int j = Mth.floor(vec32.z);
 					int k = 34;
 					if (!this.turtle.level.hasChunksAt(i - 34, 0, j - 34, i + 34, 0, j + 34)) {
-						vec3 = null;
+						vec32 = null;
 					}
 				}
 
-				if (vec3 == null) {
+				if (vec32 == null) {
 					this.stuck = true;
 					return;
 				}
 
-				this.turtle.getNavigation().moveTo(vec3.x, vec3.y, vec3.z, this.speedModifier);
+				this.turtle.getNavigation().moveTo(vec32.x, vec32.y, vec32.z, this.speedModifier);
 			}
 		}
 

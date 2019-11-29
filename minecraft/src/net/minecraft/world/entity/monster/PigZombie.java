@@ -9,7 +9,6 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -157,20 +156,17 @@ public class PigZombie extends Zombie {
 		} else {
 			Entity entity = damageSource.getEntity();
 			if (entity instanceof Player && !((Player)entity).isCreative() && this.canSee(entity)) {
-				this.makeAngry(entity);
+				this.makeAngry((LivingEntity)entity);
 			}
 
 			return super.hurt(damageSource, f);
 		}
 	}
 
-	private boolean makeAngry(Entity entity) {
+	private boolean makeAngry(LivingEntity livingEntity) {
 		this.angerTime = this.getAngerTime();
 		this.playAngrySoundIn = this.random.nextInt(40);
-		if (entity instanceof LivingEntity) {
-			this.setLastHurtByMob((LivingEntity)entity);
-		}
-
+		this.setLastHurtByMob(livingEntity);
 		return true;
 	}
 
@@ -195,11 +191,6 @@ public class PigZombie extends Zombie {
 	@Override
 	protected SoundEvent getDeathSound() {
 		return SoundEvents.ZOMBIE_PIGMAN_DEATH;
-	}
-
-	@Override
-	public boolean mobInteract(Player player, InteractionHand interactionHand) {
-		return false;
 	}
 
 	@Override

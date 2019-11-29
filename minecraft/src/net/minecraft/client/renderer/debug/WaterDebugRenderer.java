@@ -1,10 +1,11 @@
 package net.minecraft.client.renderer.debug;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.LevelReader;
@@ -20,20 +21,14 @@ public class WaterDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
 	}
 
 	@Override
-	public void render(long l) {
-		Camera camera = this.minecraft.gameRenderer.getMainCamera();
-		double d = camera.getPosition().x;
-		double e = camera.getPosition().y;
-		double f = camera.getPosition().z;
+	public void render(PoseStack poseStack, MultiBufferSource multiBufferSource, double d, double e, double f) {
 		BlockPos blockPos = this.minecraft.player.getCommandSenderBlockPosition();
 		LevelReader levelReader = this.minecraft.player.level;
-		GlStateManager.enableBlend();
-		GlStateManager.blendFuncSeparate(
-			GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO
-		);
-		GlStateManager.color4f(0.0F, 1.0F, 0.0F, 0.75F);
-		GlStateManager.disableTexture();
-		GlStateManager.lineWidth(6.0F);
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+		RenderSystem.color4f(0.0F, 1.0F, 0.0F, 0.75F);
+		RenderSystem.disableTexture();
+		RenderSystem.lineWidth(6.0F);
 
 		for(BlockPos blockPos2 : BlockPos.betweenClosed(blockPos.offset(-10, -10, -10), blockPos.offset(10, 10, 10))) {
 			FluidState fluidState = levelReader.getFluidState(blockPos2);
@@ -70,7 +65,7 @@ public class WaterDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
 			}
 		}
 
-		GlStateManager.enableTexture();
-		GlStateManager.disableBlend();
+		RenderSystem.enableTexture();
+		RenderSystem.disableBlend();
 	}
 }

@@ -7,6 +7,8 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.api.EnvironmentInterface;
+import net.fabricmc.api.EnvironmentInterfaces;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -30,6 +32,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobType;
+import net.minecraft.world.entity.PowerableMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
@@ -52,7 +55,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-public class WitherBoss extends Monster implements RangedAttackMob {
+@EnvironmentInterfaces({@EnvironmentInterface(
+	value = EnvType.CLIENT,
+	itf = PowerableMob.class
+)})
+public class WitherBoss extends Monster implements PowerableMob, RangedAttackMob {
 	private static final EntityDataAccessor<Integer> DATA_TARGET_A = SynchedEntityData.defineId(WitherBoss.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> DATA_TARGET_B = SynchedEntityData.defineId(WitherBoss.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> DATA_TARGET_C = SynchedEntityData.defineId(WitherBoss.class, EntityDataSerializers.INT);
@@ -143,13 +150,13 @@ public class WitherBoss extends Monster implements RangedAttackMob {
 			Entity entity = this.level.getEntity(this.getAlternativeTarget(0));
 			if (entity != null) {
 				double d = vec3.y;
-				if (this.y < entity.y || !this.isPowered() && this.y < entity.y + 5.0) {
+				if (this.getY() < entity.getY() || !this.isPowered() && this.getY() < entity.getY() + 5.0) {
 					d = Math.max(0.0, d);
 					d += 0.3 - d * 0.6F;
 				}
 
 				vec3 = new Vec3(vec3.x, d, vec3.z);
-				Vec3 vec32 = new Vec3(entity.x - this.x, 0.0, entity.z - this.z);
+				Vec3 vec32 = new Vec3(entity.getX() - this.getX(), 0.0, entity.getZ() - this.getZ());
 				if (getHorizontalDistanceSqr(vec32) > 9.0) {
 					Vec3 vec33 = vec32.normalize();
 					vec3 = vec3.add(vec33.x * 0.3 - vec3.x * 0.6, 0.0, vec33.z * 0.3 - vec3.z * 0.6);
@@ -180,9 +187,9 @@ public class WitherBoss extends Monster implements RangedAttackMob {
 				double e = this.getHeadX(i + 1);
 				double f = this.getHeadY(i + 1);
 				double g = this.getHeadZ(i + 1);
-				double h = entity2.x - e;
-				double k = entity2.y + (double)entity2.getEyeHeight() - f;
-				double l = entity2.z - g;
+				double h = entity2.getX() - e;
+				double k = entity2.getEyeY() - f;
+				double l = entity2.getZ() - g;
 				double m = (double)Mth.sqrt(h * h + l * l);
 				float n = (float)(Mth.atan2(l, h) * 180.0F / (float)Math.PI) - 90.0F;
 				float o = (float)(-(Mth.atan2(k, m) * 180.0F / (float)Math.PI));
@@ -222,9 +229,9 @@ public class WitherBoss extends Monster implements RangedAttackMob {
 				this.level
 					.addParticle(
 						ParticleTypes.ENTITY_EFFECT,
-						this.x + this.random.nextGaussian(),
-						this.y + (double)(this.random.nextFloat() * 3.3F),
-						this.z + this.random.nextGaussian(),
+						this.getX() + this.random.nextGaussian(),
+						this.getY() + (double)(this.random.nextFloat() * 3.3F),
+						this.getZ() + this.random.nextGaussian(),
 						0.7F,
 						0.7F,
 						0.9F
@@ -241,7 +248,7 @@ public class WitherBoss extends Monster implements RangedAttackMob {
 				Explosion.BlockInteraction blockInteraction = this.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)
 					? Explosion.BlockInteraction.DESTROY
 					: Explosion.BlockInteraction.NONE;
-				this.level.explode(this, this.x, this.y + (double)this.getEyeHeight(), this.z, 7.0F, false, blockInteraction);
+				this.level.explode(this, this.getX(), this.getEyeY(), this.getZ(), 7.0F, false, blockInteraction);
 				this.level.globalLevelEvent(1023, new BlockPos(this), 0);
 			}
 
@@ -258,9 +265,9 @@ public class WitherBoss extends Monster implements RangedAttackMob {
 					if ((this.level.getDifficulty() == Difficulty.NORMAL || this.level.getDifficulty() == Difficulty.HARD) && this.idleHeadUpdates[i - 1]++ > 15) {
 						float f = 10.0F;
 						float g = 5.0F;
-						double d = Mth.nextDouble(this.random, this.x - 10.0, this.x + 10.0);
-						double e = Mth.nextDouble(this.random, this.y - 5.0, this.y + 5.0);
-						double h = Mth.nextDouble(this.random, this.z - 10.0, this.z + 10.0);
+						double d = Mth.nextDouble(this.random, this.getX() - 10.0, this.getX() + 10.0);
+						double e = Mth.nextDouble(this.random, this.getY() - 5.0, this.getY() + 5.0);
+						double h = Mth.nextDouble(this.random, this.getZ() - 10.0, this.getZ() + 10.0);
 						this.performRangedAttack(i + 1, d, e, h, true);
 						this.idleHeadUpdates[i - 1] = 0;
 					}
@@ -308,9 +315,9 @@ public class WitherBoss extends Monster implements RangedAttackMob {
 			if (this.destroyBlocksTick > 0) {
 				--this.destroyBlocksTick;
 				if (this.destroyBlocksTick == 0 && this.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
-					int i = Mth.floor(this.y);
-					int j = Mth.floor(this.x);
-					int l = Mth.floor(this.z);
+					int i = Mth.floor(this.getY());
+					int j = Mth.floor(this.getX());
+					int l = Mth.floor(this.getZ());
 					boolean bl = false;
 
 					for(int m = -1; m <= 1; ++m) {
@@ -322,7 +329,7 @@ public class WitherBoss extends Monster implements RangedAttackMob {
 								BlockPos blockPos = new BlockPos(p, q, r);
 								BlockState blockState = this.level.getBlockState(blockPos);
 								if (canDestroy(blockState)) {
-									bl = this.level.destroyBlock(blockPos, true) || bl;
+									bl = this.level.destroyBlock(blockPos, true, this) || bl;
 								}
 							}
 						}
@@ -369,25 +376,25 @@ public class WitherBoss extends Monster implements RangedAttackMob {
 
 	private double getHeadX(int i) {
 		if (i <= 0) {
-			return this.x;
+			return this.getX();
 		} else {
 			float f = (this.yBodyRot + (float)(180 * (i - 1))) * (float) (Math.PI / 180.0);
 			float g = Mth.cos(f);
-			return this.x + (double)g * 1.3;
+			return this.getX() + (double)g * 1.3;
 		}
 	}
 
 	private double getHeadY(int i) {
-		return i <= 0 ? this.y + 3.0 : this.y + 2.2;
+		return i <= 0 ? this.getY() + 3.0 : this.getY() + 2.2;
 	}
 
 	private double getHeadZ(int i) {
 		if (i <= 0) {
-			return this.z;
+			return this.getZ();
 		} else {
 			float f = (this.yBodyRot + (float)(180 * (i - 1))) * (float) (Math.PI / 180.0);
 			float g = Mth.sin(f);
-			return this.z + (double)g * 1.3;
+			return this.getZ() + (double)g * 1.3;
 		}
 	}
 
@@ -406,7 +413,7 @@ public class WitherBoss extends Monster implements RangedAttackMob {
 
 	private void performRangedAttack(int i, LivingEntity livingEntity) {
 		this.performRangedAttack(
-			i, livingEntity.x, livingEntity.y + (double)livingEntity.getEyeHeight() * 0.5, livingEntity.z, i == 0 && this.random.nextFloat() < 0.001F
+			i, livingEntity.getX(), livingEntity.getY() + (double)livingEntity.getEyeHeight() * 0.5, livingEntity.getZ(), i == 0 && this.random.nextFloat() < 0.001F
 		);
 	}
 
@@ -423,9 +430,7 @@ public class WitherBoss extends Monster implements RangedAttackMob {
 			witherSkull.setDangerous(true);
 		}
 
-		witherSkull.y = h;
-		witherSkull.x = g;
-		witherSkull.z = j;
+		witherSkull.setPosRaw(g, h, j);
 		this.level.addFreshEntity(witherSkull);
 	}
 
@@ -477,18 +482,17 @@ public class WitherBoss extends Monster implements RangedAttackMob {
 	}
 
 	@Override
-	protected void checkDespawn() {
-		this.noActionTime = 0;
-	}
-
-	@Environment(EnvType.CLIENT)
-	@Override
-	public int getLightColor() {
-		return 15728880;
+	public void checkDespawn() {
+		if (this.level.getDifficulty() == Difficulty.PEACEFUL && this.shouldDespawnInPeaceful()) {
+			this.remove();
+		} else {
+			this.noActionTime = 0;
+		}
 	}
 
 	@Override
-	public void causeFallDamage(float f, float g) {
+	public boolean causeFallDamage(float f, float g) {
+		return false;
 	}
 
 	@Override
@@ -531,6 +535,7 @@ public class WitherBoss extends Monster implements RangedAttackMob {
 		this.entityData.set((EntityDataAccessor)DATA_TARGETS.get(i), j);
 	}
 
+	@Override
 	public boolean isPowered() {
 		return this.getHealth() <= this.getMaxHealth() / 2.0F;
 	}

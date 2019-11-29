@@ -3,6 +3,8 @@ package net.minecraft.world.entity.monster;
 import java.util.Collection;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.api.EnvironmentInterface;
+import net.fabricmc.api.EnvironmentInterfaces;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -16,6 +18,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.AreaEffectCloud;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.PowerableMob;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
@@ -35,7 +38,11 @@ import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 
-public class Creeper extends Monster {
+@EnvironmentInterfaces({@EnvironmentInterface(
+	value = EnvType.CLIENT,
+	itf = PowerableMob.class
+)})
+public class Creeper extends Monster implements PowerableMob {
 	private static final EntityDataAccessor<Integer> DATA_SWELL_DIR = SynchedEntityData.defineId(Creeper.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Boolean> DATA_IS_POWERED = SynchedEntityData.defineId(Creeper.class, EntityDataSerializers.BOOLEAN);
 	private static final EntityDataAccessor<Boolean> DATA_IS_IGNITED = SynchedEntityData.defineId(Creeper.class, EntityDataSerializers.BOOLEAN);
@@ -75,12 +82,14 @@ public class Creeper extends Monster {
 	}
 
 	@Override
-	public void causeFallDamage(float f, float g) {
-		super.causeFallDamage(f, g);
+	public boolean causeFallDamage(float f, float g) {
+		boolean bl = super.causeFallDamage(f, g);
 		this.swell = (int)((float)this.swell + f * 1.5F);
 		if (this.swell > this.maxSwell - 5) {
 			this.swell = this.maxSwell - 5;
 		}
+
+		return bl;
 	}
 
 	@Override
@@ -175,6 +184,7 @@ public class Creeper extends Monster {
 		return true;
 	}
 
+	@Override
 	public boolean isPowered() {
 		return this.entityData.get(DATA_IS_POWERED);
 	}
@@ -202,16 +212,19 @@ public class Creeper extends Monster {
 	protected boolean mobInteract(Player player, InteractionHand interactionHand) {
 		ItemStack itemStack = player.getItemInHand(interactionHand);
 		if (itemStack.getItem() == Items.FLINT_AND_STEEL) {
-			this.level.playSound(player, this.x, this.y, this.z, SoundEvents.FLINTANDSTEEL_USE, this.getSoundSource(), 1.0F, this.random.nextFloat() * 0.4F + 0.8F);
-			player.swing(interactionHand);
+			this.level
+				.playSound(
+					player, this.getX(), this.getY(), this.getZ(), SoundEvents.FLINTANDSTEEL_USE, this.getSoundSource(), 1.0F, this.random.nextFloat() * 0.4F + 0.8F
+				);
 			if (!this.level.isClientSide) {
 				this.ignite();
 				itemStack.hurtAndBreak(1, player, playerx -> playerx.broadcastBreakEvent(interactionHand));
-				return true;
 			}
-		}
 
-		return super.mobInteract(player, interactionHand);
+			return true;
+		} else {
+			return super.mobInteract(player, interactionHand);
+		}
 	}
 
 	private void explodeCreeper() {
@@ -221,7 +234,7 @@ public class Creeper extends Monster {
 				: Explosion.BlockInteraction.NONE;
 			float f = this.isPowered() ? 2.0F : 1.0F;
 			this.dead = true;
-			this.level.explode(this, this.x, this.y, this.z, (float)this.explosionRadius * f, blockInteraction);
+			this.level.explode(this, this.getX(), this.getY(), this.getZ(), (float)this.explosionRadius * f, blockInteraction);
 			this.remove();
 			this.spawnLingeringCloud();
 		}
@@ -230,7 +243,7 @@ public class Creeper extends Monster {
 	private void spawnLingeringCloud() {
 		Collection<MobEffectInstance> collection = this.getActiveEffects();
 		if (!collection.isEmpty()) {
-			AreaEffectCloud areaEffectCloud = new AreaEffectCloud(this.level, this.x, this.y, this.z);
+			AreaEffectCloud areaEffectCloud = new AreaEffectCloud(this.level, this.getX(), this.getY(), this.getZ());
 			areaEffectCloud.setRadius(2.5F);
 			areaEffectCloud.setRadiusOnUse(-0.5F);
 			areaEffectCloud.setWaitTime(10);

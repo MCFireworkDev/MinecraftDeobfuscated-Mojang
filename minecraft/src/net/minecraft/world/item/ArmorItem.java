@@ -8,7 +8,6 @@ import net.minecraft.core.BlockSource;
 import net.minecraft.core.dispenser.DefaultDispenseItemBehavior;
 import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -31,8 +30,7 @@ public class ArmorItem extends Item {
 	public static final DispenseItemBehavior DISPENSE_ITEM_BEHAVIOR = new DefaultDispenseItemBehavior() {
 		@Override
 		protected ItemStack execute(BlockSource blockSource, ItemStack itemStack) {
-			ItemStack itemStack2 = ArmorItem.dispenseArmor(blockSource, itemStack);
-			return itemStack2.isEmpty() ? super.execute(blockSource, itemStack) : itemStack2;
+			return ArmorItem.dispenseArmor(blockSource, itemStack) ? itemStack : super.execute(blockSource, itemStack);
 		}
 	};
 	protected final EquipmentSlot slot;
@@ -40,12 +38,12 @@ public class ArmorItem extends Item {
 	protected final float toughness;
 	protected final ArmorMaterial material;
 
-	public static ItemStack dispenseArmor(BlockSource blockSource, ItemStack itemStack) {
+	public static boolean dispenseArmor(BlockSource blockSource, ItemStack itemStack) {
 		BlockPos blockPos = blockSource.getPos().relative(blockSource.getBlockState().getValue(DispenserBlock.FACING));
 		List<LivingEntity> list = blockSource.getLevel()
 			.getEntitiesOfClass(LivingEntity.class, new AABB(blockPos), EntitySelector.NO_SPECTATORS.and(new EntitySelector.MobCanWearArmourEntitySelector(itemStack)));
 		if (list.isEmpty()) {
-			return ItemStack.EMPTY;
+			return false;
 		} else {
 			LivingEntity livingEntity = (LivingEntity)list.get(0);
 			EquipmentSlot equipmentSlot = Mob.getEquipmentSlotForItem(itemStack);
@@ -56,7 +54,7 @@ public class ArmorItem extends Item {
 				((Mob)livingEntity).setPersistenceRequired();
 			}
 
-			return itemStack;
+			return true;
 		}
 	}
 
@@ -95,9 +93,9 @@ public class ArmorItem extends Item {
 		if (itemStack2.isEmpty()) {
 			player.setItemSlot(equipmentSlot, itemStack.copy());
 			itemStack.setCount(0);
-			return new InteractionResultHolder<>(InteractionResult.SUCCESS, itemStack);
+			return InteractionResultHolder.success(itemStack);
 		} else {
-			return new InteractionResultHolder<>(InteractionResult.FAIL, itemStack);
+			return InteractionResultHolder.fail(itemStack);
 		}
 	}
 

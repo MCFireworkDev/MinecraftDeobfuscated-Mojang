@@ -89,6 +89,8 @@ public class Options {
 	private final Map<SoundSource, Float> sourceVolumes = Maps.newEnumMap(SoundSource.class);
 	public boolean useNativeTransport = true;
 	public AttackIndicatorStatus attackIndicator = AttackIndicatorStatus.CROSSHAIR;
+	public ShieldIndicatorStatus shieldIndicator = ShieldIndicatorStatus.OFF;
+	public boolean useShieldOnCrouch = true;
 	public TutorialSteps tutorialStep = TutorialSteps.MOVEMENT;
 	public int biomeBlendRadius = 2;
 	public double mouseWheelSensitivity = 1.0;
@@ -112,13 +114,15 @@ public class Options {
 	public boolean touchscreen;
 	public boolean fullscreen;
 	public boolean bobView = true;
+	public boolean toggleCrouch;
+	public boolean toggleSprint;
 	public final KeyMapping keyUp = new KeyMapping("key.forward", 87, "key.categories.movement");
 	public final KeyMapping keyLeft = new KeyMapping("key.left", 65, "key.categories.movement");
 	public final KeyMapping keyDown = new KeyMapping("key.back", 83, "key.categories.movement");
 	public final KeyMapping keyRight = new KeyMapping("key.right", 68, "key.categories.movement");
 	public final KeyMapping keyJump = new KeyMapping("key.jump", 32, "key.categories.movement");
-	public final KeyMapping keySneak = new KeyMapping("key.sneak", 340, "key.categories.movement");
-	public final KeyMapping keySprint = new KeyMapping("key.sprint", 341, "key.categories.movement");
+	public final KeyMapping keyShift = new ToggleKeyMapping("key.sneak", 340, "key.categories.movement", () -> this.toggleCrouch);
+	public final KeyMapping keySprint = new ToggleKeyMapping("key.sprint", 341, "key.categories.movement", () -> this.toggleSprint);
 	public final KeyMapping keyInventory = new KeyMapping("key.inventory", 69, "key.categories.inventory");
 	public final KeyMapping keySwapHands = new KeyMapping("key.swapHands", 70, "key.categories.inventory");
 	public final KeyMapping keyDrop = new KeyMapping("key.drop", 81, "key.categories.inventory");
@@ -156,7 +160,7 @@ public class Options {
 			this.keyDown,
 			this.keyRight,
 			this.keyJump,
-			this.keySneak,
+			this.keyShift,
 			this.keySprint,
 			this.keyDrop,
 			this.keyInventory,
@@ -316,6 +320,14 @@ public class Options {
 						Option.VIEW_BOBBING.set(this, string2);
 					}
 
+					if ("toggleCrouch".equals(string)) {
+						this.toggleCrouch = "true".equals(string2);
+					}
+
+					if ("toggleSprint".equals(string)) {
+						this.toggleSprint = "true".equals(string2);
+					}
+
 					if ("mouseSensitivity".equals(string)) {
 						this.sensitivity = (double)readFloat(string2);
 					}
@@ -342,8 +354,8 @@ public class Options {
 
 					if ("maxFps".equals(string)) {
 						this.framerateLimit = Integer.parseInt(string2);
-						if (this.minecraft.window != null) {
-							this.minecraft.window.setFramerateLimit(this.framerateLimit);
+						if (this.minecraft.getWindow() != null) {
+							this.minecraft.getWindow().setFramerateLimit(this.framerateLimit);
 						}
 					}
 
@@ -381,6 +393,14 @@ public class Options {
 
 					if ("attackIndicator".equals(string)) {
 						this.attackIndicator = AttackIndicatorStatus.byId(Integer.parseInt(string2));
+					}
+
+					if ("shieldIndicator".equals(string)) {
+						this.shieldIndicator = ShieldIndicatorStatus.byId(Integer.parseInt(string2));
+					}
+
+					if ("useShieldOnCrouch".equals(string)) {
+						Option.USE_SHIELD_ON_CROUCH.set(this, string2);
 					}
 
 					if ("resourcePacks".equals(string)) {
@@ -568,6 +588,8 @@ public class Options {
 				printWriter.println("touchscreen:" + Option.TOUCHSCREEN.get(this));
 				printWriter.println("fullscreen:" + Option.USE_FULLSCREEN.get(this));
 				printWriter.println("bobView:" + Option.VIEW_BOBBING.get(this));
+				printWriter.println("toggleCrouch:" + this.toggleCrouch);
+				printWriter.println("toggleSprint:" + this.toggleSprint);
 				printWriter.println("mouseSensitivity:" + this.sensitivity);
 				printWriter.println("fov:" + (this.fov - 70.0) / 40.0);
 				printWriter.println("gamma:" + this.gamma);
@@ -598,8 +620,8 @@ public class Options {
 				printWriter.println("chatOpacity:" + this.chatOpacity);
 				printWriter.println("textBackgroundOpacity:" + this.textBackgroundOpacity);
 				printWriter.println("backgroundForChatOnly:" + this.backgroundForChatOnly);
-				if (this.minecraft.window.getPreferredFullscreenVideoMode().isPresent()) {
-					printWriter.println("fullscreenResolution:" + ((VideoMode)this.minecraft.window.getPreferredFullscreenVideoMode().get()).write());
+				if (this.minecraft.getWindow().getPreferredFullscreenVideoMode().isPresent()) {
+					printWriter.println("fullscreenResolution:" + ((VideoMode)this.minecraft.getWindow().getPreferredFullscreenVideoMode().get()).write());
 				}
 
 				printWriter.println("hideServerAddress:" + this.hideServerAddress);
@@ -616,6 +638,8 @@ public class Options {
 				printWriter.println("useNativeTransport:" + this.useNativeTransport);
 				printWriter.println("mainHand:" + (this.mainHand == HumanoidArm.LEFT ? "left" : "right"));
 				printWriter.println("attackIndicator:" + this.attackIndicator.getId());
+				printWriter.println("shieldIndicator:" + this.shieldIndicator.getId());
+				printWriter.println("useShieldOnCrouch:" + Option.USE_SHIELD_ON_CROUCH.get(this));
 				printWriter.println("narrator:" + this.narratorStatus.getId());
 				printWriter.println("tutorialStep:" + this.tutorialStep.getName());
 				printWriter.println("mouseWheelSensitivity:" + this.mouseWheelSensitivity);
@@ -676,7 +700,11 @@ public class Options {
 			this.minecraft
 				.player
 				.connection
-				.send(new ServerboundClientInformationPacket(this.languageCode, this.renderDistance, this.chatVisibility, this.chatColors, i, this.mainHand));
+				.send(
+					new ServerboundClientInformationPacket(
+						this.languageCode, this.renderDistance, this.chatVisibility, this.chatColors, i, this.mainHand, this.useShieldOnCrouch
+					)
+				);
 		}
 	}
 

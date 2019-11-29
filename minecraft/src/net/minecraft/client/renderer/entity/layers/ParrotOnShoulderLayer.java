@@ -1,12 +1,15 @@
 package net.minecraft.client.renderer.entity.layers;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.ParrotModel;
 import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.ParrotRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
@@ -19,27 +22,19 @@ public class ParrotOnShoulderLayer<T extends Player> extends RenderLayer<T, Play
 		super(renderLayerParent);
 	}
 
-	public void render(T player, float f, float g, float h, float i, float j, float k, float l) {
-		GlStateManager.enableRescaleNormal();
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		this.render(player, f, g, h, j, k, l, true);
-		this.render(player, f, g, h, j, k, l, false);
-		GlStateManager.disableRescaleNormal();
+	public void render(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, T player, float f, float g, float h, float j, float k, float l) {
+		this.render(poseStack, multiBufferSource, i, player, f, g, k, l, true);
+		this.render(poseStack, multiBufferSource, i, player, f, g, k, l, false);
 	}
 
-	private void render(T player, float f, float g, float h, float i, float j, float k, boolean bl) {
+	private void render(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, T player, float f, float g, float h, float j, boolean bl) {
 		CompoundTag compoundTag = bl ? player.getShoulderEntityLeft() : player.getShoulderEntityRight();
 		EntityType.byString(compoundTag.getString("id")).filter(entityType -> entityType == EntityType.PARROT).ifPresent(entityType -> {
-			GlStateManager.pushMatrix();
-			GlStateManager.translatef(bl ? 0.4F : -0.4F, player.isVisuallySneaking() ? -1.3F : -1.5F, 0.0F);
-			this.bindTexture(ParrotRenderer.PARROT_LOCATIONS[compoundTag.getInt("Variant")]);
-			this.model.renderOnShoulder(f, g, i, j, k, player.tickCount);
-			GlStateManager.popMatrix();
+			poseStack.pushPose();
+			poseStack.translate(bl ? 0.4F : -0.4F, player.isCrouching() ? -1.3F : -1.5, 0.0);
+			VertexConsumer vertexConsumer = multiBufferSource.getBuffer(this.model.renderType(ParrotRenderer.PARROT_LOCATIONS[compoundTag.getInt("Variant")]));
+			this.model.renderOnShoulder(poseStack, vertexConsumer, i, OverlayTexture.NO_OVERLAY, f, g, h, j, player.tickCount);
+			poseStack.popPose();
 		});
-	}
-
-	@Override
-	public boolean colorsOnDamage() {
-		return false;
 	}
 }

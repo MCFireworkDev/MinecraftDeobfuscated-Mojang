@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
@@ -77,12 +78,14 @@ public class TntBlock extends Block {
 				level, (double)((float)blockPos.getX() + 0.5F), (double)blockPos.getY(), (double)((float)blockPos.getZ() + 0.5F), livingEntity
 			);
 			level.addFreshEntity(primedTnt);
-			level.playSound(null, primedTnt.x, primedTnt.y, primedTnt.z, SoundEvents.TNT_PRIMED, SoundSource.BLOCKS, 1.0F, 1.0F);
+			level.playSound(null, primedTnt.getX(), primedTnt.getY(), primedTnt.getZ(), SoundEvents.TNT_PRIMED, SoundSource.BLOCKS, 1.0F, 1.0F);
 		}
 	}
 
 	@Override
-	public boolean use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
+	public InteractionResult use(
+		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	) {
 		ItemStack itemStack = player.getItemInHand(interactionHand);
 		Item item = itemStack.getItem();
 		if (item != Items.FLINT_AND_STEEL && item != Items.FIRE_CHARGE) {
@@ -90,13 +93,15 @@ public class TntBlock extends Block {
 		} else {
 			explode(level, blockPos, player);
 			level.setBlock(blockPos, Blocks.AIR.defaultBlockState(), 11);
-			if (item == Items.FLINT_AND_STEEL) {
-				itemStack.hurtAndBreak(1, player, playerx -> playerx.broadcastBreakEvent(interactionHand));
-			} else {
-				itemStack.shrink(1);
+			if (!player.isCreative()) {
+				if (item == Items.FLINT_AND_STEEL) {
+					itemStack.hurtAndBreak(1, player, playerx -> playerx.broadcastBreakEvent(interactionHand));
+				} else {
+					itemStack.shrink(1);
+				}
 			}
 
-			return true;
+			return InteractionResult.SUCCESS;
 		}
 	}
 

@@ -1,10 +1,11 @@
 package net.minecraft.client.renderer.entity.layers;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.SheepFurModel;
 import net.minecraft.client.model.SheepModel;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.Sheep;
@@ -19,9 +20,11 @@ public class SheepFurLayer extends RenderLayer<Sheep, SheepModel<Sheep>> {
 		super(renderLayerParent);
 	}
 
-	public void render(Sheep sheep, float f, float g, float h, float i, float j, float k, float l) {
+	public void render(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, Sheep sheep, float f, float g, float h, float j, float k, float l) {
 		if (!sheep.isSheared() && !sheep.isInvisible()) {
-			this.bindTexture(SHEEP_FUR_LOCATION);
+			float s;
+			float t;
+			float u;
 			if (sheep.hasCustomName() && "jeb_".equals(sheep.getName().getContents())) {
 				int m = 25;
 				int n = sheep.tickCount / 25 + sheep.getId();
@@ -31,20 +34,17 @@ public class SheepFurLayer extends RenderLayer<Sheep, SheepModel<Sheep>> {
 				float r = ((float)(sheep.tickCount % 25) + h) / 25.0F;
 				float[] fs = Sheep.getColorArray(DyeColor.byId(p));
 				float[] gs = Sheep.getColorArray(DyeColor.byId(q));
-				GlStateManager.color3f(fs[0] * (1.0F - r) + gs[0] * r, fs[1] * (1.0F - r) + gs[1] * r, fs[2] * (1.0F - r) + gs[2] * r);
+				s = fs[0] * (1.0F - r) + gs[0] * r;
+				t = fs[1] * (1.0F - r) + gs[1] * r;
+				u = fs[2] * (1.0F - r) + gs[2] * r;
 			} else {
 				float[] hs = Sheep.getColorArray(sheep.getColor());
-				GlStateManager.color3f(hs[0], hs[1], hs[2]);
+				s = hs[0];
+				t = hs[1];
+				u = hs[2];
 			}
 
-			this.getParentModel().copyPropertiesTo(this.model);
-			this.model.prepareMobModel(sheep, f, g, h);
-			this.model.render(sheep, f, g, i, j, k, l);
+			coloredCutoutModelCopyLayerRender(this.getParentModel(), this.model, SHEEP_FUR_LOCATION, poseStack, multiBufferSource, i, sheep, f, g, j, k, l, h, s, t, u);
 		}
-	}
-
-	@Override
-	public boolean colorsOnDamage() {
-		return true;
 	}
 }

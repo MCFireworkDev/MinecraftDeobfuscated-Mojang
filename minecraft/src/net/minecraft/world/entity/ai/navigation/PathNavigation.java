@@ -14,7 +14,6 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.monster.SharedMonsterAttributes;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.PathNavigationRegion;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -32,7 +31,7 @@ public abstract class PathNavigation {
 	@Nullable
 	protected Path path;
 	protected double speedModifier;
-	private final AttributeInstance dist;
+	private final AttributeInstance followRange;
 	protected int tick;
 	protected int lastStuckCheck;
 	protected Vec3 lastStuckCheckPos = Vec3.ZERO;
@@ -46,13 +45,23 @@ public abstract class PathNavigation {
 	protected NodeEvaluator nodeEvaluator;
 	private BlockPos targetPos;
 	private int reachRange;
-	private PathFinder pathFinder;
+	private float maxVisitedNodesMultiplier = 1.0F;
+	private final PathFinder pathFinder;
 
 	public PathNavigation(Mob mob, Level level) {
 		this.mob = mob;
 		this.level = level;
-		this.dist = mob.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE);
-		this.pathFinder = this.createPathFinder(Mth.floor(this.dist.getValue() * 16.0));
+		this.followRange = mob.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE);
+		int i = Mth.floor(this.followRange.getValue() * 16.0);
+		this.pathFinder = this.createPathFinder(i);
+	}
+
+	public void resetMaxVisitedNodesMultiplier() {
+		this.maxVisitedNodesMultiplier = 1.0F;
+	}
+
+	public void setMaxVisitedNodesMultiplier(float f) {
+		this.maxVisitedNodesMultiplier = f;
 	}
 
 	public BlockPos getTargetPos() {
@@ -63,10 +72,6 @@ public abstract class PathNavigation {
 
 	public void setSpeedModifier(double d) {
 		this.speedModifier = d;
-	}
-
-	public float getMaxDist() {
-		return (float)this.dist.getValue();
 	}
 
 	public boolean hasDelayedRecomputation() {
@@ -110,7 +115,7 @@ public abstract class PathNavigation {
 	protected Path createPath(Set<BlockPos> set, int i, boolean bl, int j) {
 		if (set.isEmpty()) {
 			return null;
-		} else if (this.mob.y < 0.0) {
+		} else if (this.mob.getY() < 0.0) {
 			return null;
 		} else if (!this.canUpdatePath()) {
 			return null;
@@ -118,11 +123,11 @@ public abstract class PathNavigation {
 			return this.path;
 		} else {
 			this.level.getProfiler().push("pathfind");
-			float f = this.getMaxDist();
+			float f = (float)this.followRange.getValue();
 			BlockPos blockPos = bl ? new BlockPos(this.mob).above() : new BlockPos(this.mob);
 			int k = (int)(f + (float)i);
-			LevelReader levelReader = new PathNavigationRegion(this.level, blockPos.offset(-k, -k, -k), blockPos.offset(k, k, k));
-			Path path = this.pathFinder.findPath(levelReader, this.mob, set, f, j);
+			PathNavigationRegion pathNavigationRegion = new PathNavigationRegion(this.level, blockPos.offset(-k, -k, -k), blockPos.offset(k, k, k));
+			Path path = this.pathFinder.findPath(pathNavigationRegion, this.mob, set, f, j, this.maxVisitedNodesMultiplier);
 			this.level.getProfiler().pop();
 			if (path != null && path.getTarget() != null) {
 				this.targetPos = path.getTarget();
@@ -151,15 +156,19 @@ public abstract class PathNavigation {
 				this.path = path;
 			}
 
-			this.trimPath();
-			if (this.path.getSize() <= 0) {
+			if (this.isDone()) {
 				return false;
 			} else {
-				this.speedModifier = d;
-				Vec3 vec3 = this.getTempMobPos();
-				this.lastStuckCheck = this.tick;
-				this.lastStuckCheckPos = vec3;
-				return true;
+				this.trimPath();
+				if (this.path.getSize() <= 0) {
+					return false;
+				} else {
+					this.speedModifier = d;
+					Vec3 vec3 = this.getTempMobPos();
+					this.lastStuckCheck = this.tick;
+					this.lastStuckCheckPos = vec3;
+					return true;
+				}
 			}
 		}
 	}
@@ -203,9 +212,9 @@ public abstract class PathNavigation {
 		Vec3 vec3 = this.getTempMobPos();
 		this.maxDistanceToWaypoint = this.mob.getBbWidth() > 0.75F ? this.mob.getBbWidth() / 2.0F : 0.75F - this.mob.getBbWidth() / 2.0F;
 		Vec3 vec32 = this.path.currentPos();
-		if (Math.abs(this.mob.x - (vec32.x + 0.5)) < (double)this.maxDistanceToWaypoint
-			&& Math.abs(this.mob.z - (vec32.z + 0.5)) < (double)this.maxDistanceToWaypoint
-			&& Math.abs(this.mob.y - vec32.y) < 1.0) {
+		if (Math.abs(this.mob.getX() - (vec32.x + 0.5)) < (double)this.maxDistanceToWaypoint
+			&& Math.abs(this.mob.getZ() - (vec32.z + 0.5)) < (double)this.maxDistanceToWaypoint
+			&& Math.abs(this.mob.getY() - vec32.y) < 1.0) {
 			this.path.setIndex(this.path.getIndex() + 1);
 		}
 
@@ -245,6 +254,10 @@ public abstract class PathNavigation {
 
 	public boolean isDone() {
 		return this.path == null || this.path.isDone();
+	}
+
+	public boolean isInProgress() {
+		return !this.isDone();
 	}
 
 	public void stop() {
@@ -298,7 +311,7 @@ public abstract class PathNavigation {
 	public void recomputePath(BlockPos blockPos) {
 		if (this.path != null && !this.path.isDone() && this.path.getSize() != 0) {
 			Node node = this.path.last();
-			Vec3 vec3 = new Vec3(((double)node.x + this.mob.x) / 2.0, ((double)node.y + this.mob.y) / 2.0, ((double)node.z + this.mob.z) / 2.0);
+			Vec3 vec3 = new Vec3(((double)node.x + this.mob.getX()) / 2.0, ((double)node.y + this.mob.getY()) / 2.0, ((double)node.z + this.mob.getZ()) / 2.0);
 			if (blockPos.closerThan(vec3, (double)(this.path.getSize() - this.path.getIndex()))) {
 				this.recomputePath();
 			}

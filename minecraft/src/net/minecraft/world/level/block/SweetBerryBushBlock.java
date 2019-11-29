@@ -4,9 +4,11 @@ import java.util.Random;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -51,21 +53,21 @@ public class SweetBerryBushBlock extends BushBlock implements BonemealableBlock 
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
-		super.tick(blockState, level, blockPos, random);
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+		super.tick(blockState, serverLevel, blockPos, random);
 		int i = blockState.getValue(AGE);
-		if (i < 3 && random.nextInt(5) == 0 && level.getRawBrightness(blockPos.above(), 0) >= 9) {
-			level.setBlock(blockPos, blockState.setValue(AGE, Integer.valueOf(i + 1)), 2);
+		if (i < 3 && random.nextInt(5) == 0 && serverLevel.getRawBrightness(blockPos.above(), 0) >= 9) {
+			serverLevel.setBlock(blockPos, blockState.setValue(AGE, Integer.valueOf(i + 1)), 2);
 		}
 	}
 
 	@Override
 	public void entityInside(BlockState blockState, Level level, BlockPos blockPos, Entity entity) {
-		if (entity instanceof LivingEntity && entity.getType() != EntityType.FOX) {
+		if (entity instanceof LivingEntity && entity.getType() != EntityType.FOX && entity.getType() != EntityType.BEE) {
 			entity.makeStuckInBlock(blockState, new Vec3(0.8F, 0.75, 0.8F));
-			if (!level.isClientSide && blockState.getValue(AGE) > 0 && (entity.xOld != entity.x || entity.zOld != entity.z)) {
-				double d = Math.abs(entity.x - entity.xOld);
-				double e = Math.abs(entity.z - entity.zOld);
+			if (!level.isClientSide && blockState.getValue(AGE) > 0 && (entity.xOld != entity.getX() || entity.zOld != entity.getZ())) {
+				double d = Math.abs(entity.getX() - entity.xOld);
+				double e = Math.abs(entity.getZ() - entity.zOld);
 				if (d >= 0.003F || e >= 0.003F) {
 					entity.hurt(DamageSource.SWEET_BERRY_BUSH, 1.0F);
 				}
@@ -74,17 +76,19 @@ public class SweetBerryBushBlock extends BushBlock implements BonemealableBlock 
 	}
 
 	@Override
-	public boolean use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
+	public InteractionResult use(
+		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	) {
 		int i = blockState.getValue(AGE);
 		boolean bl = i == 3;
 		if (!bl && player.getItemInHand(interactionHand).getItem() == Items.BONE_MEAL) {
-			return false;
+			return InteractionResult.PASS;
 		} else if (i > 1) {
 			int j = 1 + level.random.nextInt(2);
 			popResource(level, blockPos, new ItemStack(Items.SWEET_BERRIES, j + (bl ? 1 : 0)));
 			level.playSound(null, blockPos, SoundEvents.SWEET_BERRY_BUSH_PICK_BERRIES, SoundSource.BLOCKS, 1.0F, 0.8F + level.random.nextFloat() * 0.4F);
 			level.setBlock(blockPos, blockState.setValue(AGE, Integer.valueOf(1)), 2);
-			return true;
+			return InteractionResult.SUCCESS;
 		} else {
 			return super.use(blockState, level, blockPos, player, interactionHand, blockHitResult);
 		}
@@ -106,8 +110,8 @@ public class SweetBerryBushBlock extends BushBlock implements BonemealableBlock 
 	}
 
 	@Override
-	public void performBonemeal(Level level, Random random, BlockPos blockPos, BlockState blockState) {
+	public void performBonemeal(ServerLevel serverLevel, Random random, BlockPos blockPos, BlockState blockState) {
 		int i = Math.min(3, blockState.getValue(AGE) + 1);
-		level.setBlock(blockPos, blockState.setValue(AGE, Integer.valueOf(i)), 2);
+		serverLevel.setBlock(blockPos, blockState.setValue(AGE, Integer.valueOf(i)), 2);
 	}
 }

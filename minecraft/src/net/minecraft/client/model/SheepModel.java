@@ -10,12 +10,12 @@ public class SheepModel<T extends Sheep> extends QuadrupedModel<T> {
 	private float headXRot;
 
 	public SheepModel() {
-		super(12, 0.0F);
+		super(12, 0.0F, false, 8.0F, 4.0F, 2.0F, 2.0F, 24);
 		this.head = new ModelPart(this, 0, 0);
-		this.head.addBox(-3.0F, -4.0F, -6.0F, 6, 6, 8, 0.0F);
+		this.head.addBox(-3.0F, -4.0F, -6.0F, 6.0F, 6.0F, 8.0F, 0.0F);
 		this.head.setPos(0.0F, 6.0F, -8.0F);
 		this.body = new ModelPart(this, 28, 8);
-		this.body.addBox(-4.0F, -10.0F, -7.0F, 8, 16, 6, 0.0F);
+		this.body.addBox(-4.0F, -10.0F, -7.0F, 8.0F, 16.0F, 6.0F, 0.0F);
 		this.body.setPos(0.0F, 5.0F, 2.0F);
 	}
 
@@ -25,8 +25,8 @@ public class SheepModel<T extends Sheep> extends QuadrupedModel<T> {
 		this.headXRot = sheep.getHeadEatAngleScale(h);
 	}
 
-	public void setupAnim(T sheep, float f, float g, float h, float i, float j, float k) {
-		super.setupAnim(sheep, f, g, h, i, j, k);
+	public void setupAnim(T sheep, float f, float g, float h, float i, float j) {
+		super.setupAnim(sheep, f, g, h, i, j);
 		this.head.xRot = this.headXRot;
 	}
 }

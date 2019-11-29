@@ -1,9 +1,11 @@
 package net.minecraft.client.gui.screens;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
+import java.util.function.Consumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.Util;
@@ -21,16 +23,16 @@ public class LoadingOverlay extends Overlay {
 	private static final ResourceLocation MOJANG_LOGO_LOCATION = new ResourceLocation("textures/gui/title/mojang.png");
 	private final Minecraft minecraft;
 	private final ReloadInstance reload;
-	private final Runnable onFinish;
+	private final Consumer<Optional<Throwable>> onFinish;
 	private final boolean fadeIn;
 	private float currentProgress;
 	private long fadeOutStart = -1L;
 	private long fadeInStart = -1L;
 
-	public LoadingOverlay(Minecraft minecraft, ReloadInstance reloadInstance, Runnable runnable, boolean bl) {
+	public LoadingOverlay(Minecraft minecraft, ReloadInstance reloadInstance, Consumer<Optional<Throwable>> consumer, boolean bl) {
 		this.minecraft = minecraft;
 		this.reload = reloadInstance;
-		this.onFinish = runnable;
+		this.onFinish = consumer;
 		this.fadeIn = bl;
 	}
 
@@ -40,8 +42,8 @@ public class LoadingOverlay extends Overlay {
 
 	@Override
 	public void render(int i, int j, float f) {
-		int k = this.minecraft.window.getGuiScaledWidth();
-		int l = this.minecraft.window.getGuiScaledHeight();
+		int k = this.minecraft.getWindow().getGuiScaledWidth();
+		int l = this.minecraft.getWindow().getGuiScaledHeight();
 		long m = Util.getMillis();
 		if (this.fadeIn && (this.reload.isApplying() || this.minecraft.screen != null) && this.fadeInStart == -1L) {
 			this.fadeInStart = m;
@@ -71,16 +73,16 @@ public class LoadingOverlay extends Overlay {
 			o = 1.0F;
 		}
 
-		int n = (this.minecraft.window.getGuiScaledWidth() - 256) / 2;
-		int p = (this.minecraft.window.getGuiScaledHeight() - 256) / 2;
+		int n = (this.minecraft.getWindow().getGuiScaledWidth() - 256) / 2;
+		int p = (this.minecraft.getWindow().getGuiScaledHeight() - 256) / 2;
 		this.minecraft.getTextureManager().bind(MOJANG_LOGO_LOCATION);
-		GlStateManager.enableBlend();
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, o);
+		RenderSystem.enableBlend();
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, o);
 		this.blit(n, p, 0, 0, 256, 256);
 		float q = this.reload.getActualProgress();
-		this.currentProgress = this.currentProgress * 0.95F + q * 0.050000012F;
+		this.currentProgress = Mth.clamp(this.currentProgress * 0.95F + q * 0.050000012F, 0.0F, 1.0F);
 		if (g < 1.0F) {
-			this.drawProgressBar(k / 2 - 150, l / 4 * 3, k / 2 + 150, l / 4 * 3 + 10, this.currentProgress, 1.0F - Mth.clamp(g, 0.0F, 1.0F));
+			this.drawProgressBar(k / 2 - 150, l / 4 * 3, k / 2 + 150, l / 4 * 3 + 10, 1.0F - Mth.clamp(g, 0.0F, 1.0F));
 		}
 
 		if (g >= 2.0F) {
@@ -88,25 +90,30 @@ public class LoadingOverlay extends Overlay {
 		}
 
 		if (this.fadeOutStart == -1L && this.reload.isDone() && (!this.fadeIn || h >= 2.0F)) {
-			this.reload.checkExceptions();
+			try {
+				this.reload.checkExceptions();
+				this.onFinish.accept(Optional.empty());
+			} catch (Throwable var15) {
+				this.onFinish.accept(Optional.of(var15));
+			}
+
 			this.fadeOutStart = Util.getMillis();
-			this.onFinish.run();
 			if (this.minecraft.screen != null) {
-				this.minecraft.screen.init(this.minecraft, this.minecraft.window.getGuiScaledWidth(), this.minecraft.window.getGuiScaledHeight());
+				this.minecraft.screen.init(this.minecraft, this.minecraft.getWindow().getGuiScaledWidth(), this.minecraft.getWindow().getGuiScaledHeight());
 			}
 		}
 	}
 
-	private void drawProgressBar(int i, int j, int k, int l, float f, float g) {
-		int m = Mth.ceil((float)(k - i - 2) * f);
-		fill(i - 1, j - 1, k + 1, l + 1, 0xFF000000 | Math.round((1.0F - g) * 255.0F) << 16 | Math.round((1.0F - g) * 255.0F) << 8 | Math.round((1.0F - g) * 255.0F));
+	private void drawProgressBar(int i, int j, int k, int l, float f) {
+		int m = Mth.ceil((float)(k - i - 1) * this.currentProgress);
+		fill(i - 1, j - 1, k + 1, l + 1, 0xFF000000 | Math.round((1.0F - f) * 255.0F) << 16 | Math.round((1.0F - f) * 255.0F) << 8 | Math.round((1.0F - f) * 255.0F));
 		fill(i, j, k, l, -1);
 		fill(
 			i + 1,
 			j + 1,
 			i + m,
 			l - 1,
-			0xFF000000 | (int)Mth.lerp(1.0F - g, 226.0F, 255.0F) << 16 | (int)Mth.lerp(1.0F - g, 40.0F, 255.0F) << 8 | (int)Mth.lerp(1.0F - g, 55.0F, 255.0F)
+			0xFF000000 | (int)Mth.lerp(1.0F - f, 226.0F, 255.0F) << 16 | (int)Mth.lerp(1.0F - f, 40.0F, 255.0F) << 8 | (int)Mth.lerp(1.0F - f, 55.0F, 255.0F)
 		);
 	}
 

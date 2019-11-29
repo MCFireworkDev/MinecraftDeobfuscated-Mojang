@@ -1,69 +1,127 @@
 package net.minecraft.client.renderer;
 
-import com.mojang.blaze3d.platform.GLX;
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.MemoryTracker;
-import java.nio.FloatBuffer;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
 
 @Environment(EnvType.CLIENT)
 public class FogRenderer {
-	private final FloatBuffer blackBuffer = MemoryTracker.createFloatBuffer(16);
-	private final FloatBuffer colorBuffer = MemoryTracker.createFloatBuffer(16);
-	private float fogRed;
-	private float fogGreen;
-	private float fogBlue;
-	private float oldRed = -1.0F;
-	private float oldGreen = -1.0F;
-	private float oldBlue = -1.0F;
-	private int targetBiomeFog = -1;
-	private int previousBiomeFog = -1;
-	private long biomeChangedTime = -1L;
-	private final GameRenderer renderer;
-	private final Minecraft minecraft;
+	private static float fogRed;
+	private static float fogGreen;
+	private static float fogBlue;
+	private static int targetBiomeFog = -1;
+	private static int previousBiomeFog = -1;
+	private static long biomeChangedTime = -1L;
 
-	public FogRenderer(GameRenderer gameRenderer) {
-		this.renderer = gameRenderer;
-		this.minecraft = gameRenderer.getMinecraft();
-		this.blackBuffer.put(0.0F).put(0.0F).put(0.0F).put(1.0F).flip();
-	}
-
-	public void setupClearColor(Camera camera, float f) {
-		Level level = this.minecraft.level;
+	public static void setupColor(Camera camera, float f, ClientLevel clientLevel, int i, float g) {
 		FluidState fluidState = camera.getFluidInCamera();
 		if (fluidState.is(FluidTags.WATER)) {
-			this.setWaterFogColor(camera, level);
+			long l = Util.getMillis();
+			int j = clientLevel.getBiome(new BlockPos(camera.getPosition())).getWaterFogColor();
+			if (biomeChangedTime < 0L) {
+				targetBiomeFog = j;
+				previousBiomeFog = j;
+				biomeChangedTime = l;
+			}
+
+			int k = targetBiomeFog >> 16 & 0xFF;
+			int m = targetBiomeFog >> 8 & 0xFF;
+			int n = targetBiomeFog & 0xFF;
+			int o = previousBiomeFog >> 16 & 0xFF;
+			int p = previousBiomeFog >> 8 & 0xFF;
+			int q = previousBiomeFog & 0xFF;
+			float h = Mth.clamp((float)(l - biomeChangedTime) / 5000.0F, 0.0F, 1.0F);
+			float r = Mth.lerp(h, (float)o, (float)k);
+			float s = Mth.lerp(h, (float)p, (float)m);
+			float t = Mth.lerp(h, (float)q, (float)n);
+			fogRed = r / 255.0F;
+			fogGreen = s / 255.0F;
+			fogBlue = t / 255.0F;
+			if (targetBiomeFog != j) {
+				targetBiomeFog = j;
+				previousBiomeFog = Mth.floor(r) << 16 | Mth.floor(s) << 8 | Mth.floor(t);
+				biomeChangedTime = l;
+			}
 		} else if (fluidState.is(FluidTags.LAVA)) {
-			this.fogRed = 0.6F;
-			this.fogGreen = 0.1F;
-			this.fogBlue = 0.0F;
-			this.biomeChangedTime = -1L;
+			fogRed = 0.6F;
+			fogGreen = 0.1F;
+			fogBlue = 0.0F;
+			biomeChangedTime = -1L;
 		} else {
-			this.setLandFogColor(camera, level, f);
-			this.biomeChangedTime = -1L;
+			float u = 0.25F + 0.75F * (float)i / 32.0F;
+			u = 1.0F - (float)Math.pow((double)u, 0.25);
+			Vec3 vec3 = clientLevel.getSkyColor(camera.getBlockPosition(), f);
+			float v = (float)vec3.x;
+			float w = (float)vec3.y;
+			float x = (float)vec3.z;
+			Vec3 vec32 = clientLevel.getFogColor(f);
+			fogRed = (float)vec32.x;
+			fogGreen = (float)vec32.y;
+			fogBlue = (float)vec32.z;
+			if (i >= 4) {
+				float y = Mth.sin(clientLevel.getSunAngle(f)) > 0.0F ? -1.0F : 1.0F;
+				Vector3f vector3f = new Vector3f(y, 0.0F, 0.0F);
+				float z = camera.getLookVector().dot(vector3f);
+				if (z < 0.0F) {
+					z = 0.0F;
+				}
+
+				if (z > 0.0F) {
+					float[] fs = clientLevel.dimension.getSunriseColor(clientLevel.getTimeOfDay(f), f);
+					if (fs != null) {
+						z *= fs[3];
+						fogRed = fogRed * (1.0F - z) + fs[0] * z;
+						fogGreen = fogGreen * (1.0F - z) + fs[1] * z;
+						fogBlue = fogBlue * (1.0F - z) + fs[2] * z;
+					}
+				}
+			}
+
+			fogRed += (v - fogRed) * u;
+			fogGreen += (w - fogGreen) * u;
+			fogBlue += (x - fogBlue) * u;
+			float y = clientLevel.getRainLevel(f);
+			if (y > 0.0F) {
+				float aa = 1.0F - y * 0.5F;
+				float z = 1.0F - y * 0.4F;
+				fogRed *= aa;
+				fogGreen *= aa;
+				fogBlue *= z;
+			}
+
+			float aa = clientLevel.getThunderLevel(f);
+			if (aa > 0.0F) {
+				float z = 1.0F - aa * 0.5F;
+				fogRed *= z;
+				fogGreen *= z;
+				fogBlue *= z;
+			}
+
+			biomeChangedTime = -1L;
 		}
 
-		double d = camera.getPosition().y * level.dimension.getClearColorScale();
+		double d = camera.getPosition().y * clientLevel.dimension.getClearColorScale();
 		if (camera.getEntity() instanceof LivingEntity && ((LivingEntity)camera.getEntity()).hasEffect(MobEffects.BLINDNESS)) {
-			int i = ((LivingEntity)camera.getEntity()).getEffect(MobEffects.BLINDNESS).getDuration();
-			if (i < 20) {
-				d *= (double)(1.0F - (float)i / 20.0F);
+			int j = ((LivingEntity)camera.getEntity()).getEffect(MobEffects.BLINDNESS).getDuration();
+			if (j < 20) {
+				d *= (double)(1.0F - (float)j / 20.0F);
 			} else {
 				d = 0.0;
 			}
@@ -75,221 +133,104 @@ public class FogRenderer {
 			}
 
 			d *= d;
-			this.fogRed = (float)((double)this.fogRed * d);
-			this.fogGreen = (float)((double)this.fogGreen * d);
-			this.fogBlue = (float)((double)this.fogBlue * d);
+			fogRed = (float)((double)fogRed * d);
+			fogGreen = (float)((double)fogGreen * d);
+			fogBlue = (float)((double)fogBlue * d);
 		}
 
-		if (this.renderer.getDarkenWorldAmount(f) > 0.0F) {
-			float g = this.renderer.getDarkenWorldAmount(f);
-			this.fogRed = this.fogRed * (1.0F - g) + this.fogRed * 0.7F * g;
-			this.fogGreen = this.fogGreen * (1.0F - g) + this.fogGreen * 0.6F * g;
-			this.fogBlue = this.fogBlue * (1.0F - g) + this.fogBlue * 0.6F * g;
+		if (g > 0.0F) {
+			fogRed = fogRed * (1.0F - g) + fogRed * 0.7F * g;
+			fogGreen = fogGreen * (1.0F - g) + fogGreen * 0.6F * g;
+			fogBlue = fogBlue * (1.0F - g) + fogBlue * 0.6F * g;
 		}
 
 		if (fluidState.is(FluidTags.WATER)) {
-			float g = 0.0F;
+			float v = 0.0F;
 			if (camera.getEntity() instanceof LocalPlayer) {
 				LocalPlayer localPlayer = (LocalPlayer)camera.getEntity();
-				g = localPlayer.getWaterVision();
+				v = localPlayer.getWaterVision();
 			}
 
-			float h = 1.0F / this.fogRed;
-			if (h > 1.0F / this.fogGreen) {
-				h = 1.0F / this.fogGreen;
-			}
-
-			if (h > 1.0F / this.fogBlue) {
-				h = 1.0F / this.fogBlue;
-			}
-
-			this.fogRed = this.fogRed * (1.0F - g) + this.fogRed * h * g;
-			this.fogGreen = this.fogGreen * (1.0F - g) + this.fogGreen * h * g;
-			this.fogBlue = this.fogBlue * (1.0F - g) + this.fogBlue * h * g;
+			float w = Math.min(1.0F / fogRed, Math.min(1.0F / fogGreen, 1.0F / fogBlue));
+			fogRed = fogRed * (1.0F - v) + fogRed * w * v;
+			fogGreen = fogGreen * (1.0F - v) + fogGreen * w * v;
+			fogBlue = fogBlue * (1.0F - v) + fogBlue * w * v;
 		} else if (camera.getEntity() instanceof LivingEntity && ((LivingEntity)camera.getEntity()).hasEffect(MobEffects.NIGHT_VISION)) {
-			float g = this.renderer.getNightVisionScale((LivingEntity)camera.getEntity(), f);
-			float h = 1.0F / this.fogRed;
-			if (h > 1.0F / this.fogGreen) {
-				h = 1.0F / this.fogGreen;
-			}
-
-			if (h > 1.0F / this.fogBlue) {
-				h = 1.0F / this.fogBlue;
-			}
-
-			this.fogRed = this.fogRed * (1.0F - g) + this.fogRed * h * g;
-			this.fogGreen = this.fogGreen * (1.0F - g) + this.fogGreen * h * g;
-			this.fogBlue = this.fogBlue * (1.0F - g) + this.fogBlue * h * g;
+			float v = GameRenderer.getNightVisionScale((LivingEntity)camera.getEntity(), f);
+			float w = Math.min(1.0F / fogRed, Math.min(1.0F / fogGreen, 1.0F / fogBlue));
+			fogRed = fogRed * (1.0F - v) + fogRed * w * v;
+			fogGreen = fogGreen * (1.0F - v) + fogGreen * w * v;
+			fogBlue = fogBlue * (1.0F - v) + fogBlue * w * v;
 		}
 
-		GlStateManager.clearColor(this.fogRed, this.fogGreen, this.fogBlue, 0.0F);
+		RenderSystem.clearColor(fogRed, fogGreen, fogBlue, 0.0F);
 	}
 
-	private void setLandFogColor(Camera camera, Level level, float f) {
-		float g = 0.25F + 0.75F * (float)this.minecraft.options.renderDistance / 32.0F;
-		g = 1.0F - (float)Math.pow((double)g, 0.25);
-		Vec3 vec3 = level.getSkyColor(camera.getBlockPosition(), f);
-		float h = (float)vec3.x;
-		float i = (float)vec3.y;
-		float j = (float)vec3.z;
-		Vec3 vec32 = level.getFogColor(f);
-		this.fogRed = (float)vec32.x;
-		this.fogGreen = (float)vec32.y;
-		this.fogBlue = (float)vec32.z;
-		if (this.minecraft.options.renderDistance >= 4) {
-			double d = Mth.sin(level.getSunAngle(f)) > 0.0F ? -1.0 : 1.0;
-			Vec3 vec33 = new Vec3(d, 0.0, 0.0);
-			float k = (float)camera.getLookVector().dot(vec33);
-			if (k < 0.0F) {
-				k = 0.0F;
-			}
-
-			if (k > 0.0F) {
-				float[] fs = level.dimension.getSunriseColor(level.getTimeOfDay(f), f);
-				if (fs != null) {
-					k *= fs[3];
-					this.fogRed = this.fogRed * (1.0F - k) + fs[0] * k;
-					this.fogGreen = this.fogGreen * (1.0F - k) + fs[1] * k;
-					this.fogBlue = this.fogBlue * (1.0F - k) + fs[2] * k;
-				}
-			}
-		}
-
-		this.fogRed += (h - this.fogRed) * g;
-		this.fogGreen += (i - this.fogGreen) * g;
-		this.fogBlue += (j - this.fogBlue) * g;
-		float l = level.getRainLevel(f);
-		if (l > 0.0F) {
-			float m = 1.0F - l * 0.5F;
-			float n = 1.0F - l * 0.4F;
-			this.fogRed *= m;
-			this.fogGreen *= m;
-			this.fogBlue *= n;
-		}
-
-		float m = level.getThunderLevel(f);
-		if (m > 0.0F) {
-			float n = 1.0F - m * 0.5F;
-			this.fogRed *= n;
-			this.fogGreen *= n;
-			this.fogBlue *= n;
-		}
+	public static void setupNoFog() {
+		RenderSystem.fogDensity(0.0F);
+		RenderSystem.fogMode(GlStateManager.FogMode.EXP2);
 	}
 
-	private void setWaterFogColor(Camera camera, LevelReader levelReader) {
-		long l = Util.getMillis();
-		int i = levelReader.getBiome(new BlockPos(camera.getPosition())).getWaterFogColor();
-		if (this.biomeChangedTime < 0L) {
-			this.targetBiomeFog = i;
-			this.previousBiomeFog = i;
-			this.biomeChangedTime = l;
-		}
-
-		int j = this.targetBiomeFog >> 16 & 0xFF;
-		int k = this.targetBiomeFog >> 8 & 0xFF;
-		int m = this.targetBiomeFog & 0xFF;
-		int n = this.previousBiomeFog >> 16 & 0xFF;
-		int o = this.previousBiomeFog >> 8 & 0xFF;
-		int p = this.previousBiomeFog & 0xFF;
-		float f = Mth.clamp((float)(l - this.biomeChangedTime) / 5000.0F, 0.0F, 1.0F);
-		float g = Mth.lerp(f, (float)n, (float)j);
-		float h = Mth.lerp(f, (float)o, (float)k);
-		float q = Mth.lerp(f, (float)p, (float)m);
-		this.fogRed = g / 255.0F;
-		this.fogGreen = h / 255.0F;
-		this.fogBlue = q / 255.0F;
-		if (this.targetBiomeFog != i) {
-			this.targetBiomeFog = i;
-			this.previousBiomeFog = Mth.floor(g) << 16 | Mth.floor(h) << 8 | Mth.floor(q);
-			this.biomeChangedTime = l;
-		}
-	}
-
-	public void setupFog(Camera camera, int i) {
-		this.resetFogColor(false);
-		GlStateManager.normal3f(0.0F, -1.0F, 0.0F);
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+	public static void setupFog(Camera camera, FogRenderer.FogMode fogMode, float f, boolean bl) {
 		FluidState fluidState = camera.getFluidInCamera();
-		if (camera.getEntity() instanceof LivingEntity && ((LivingEntity)camera.getEntity()).hasEffect(MobEffects.BLINDNESS)) {
-			float f = 5.0F;
-			int j = ((LivingEntity)camera.getEntity()).getEffect(MobEffects.BLINDNESS).getDuration();
-			if (j < 20) {
-				f = Mth.lerp(1.0F - (float)j / 20.0F, 5.0F, this.renderer.getRenderDistance());
-			}
-
-			GlStateManager.fogMode(GlStateManager.FogMode.LINEAR);
-			if (i == -1) {
-				GlStateManager.fogStart(0.0F);
-				GlStateManager.fogEnd(f * 0.8F);
-			} else {
-				GlStateManager.fogStart(f * 0.25F);
-				GlStateManager.fogEnd(f);
-			}
-
-			GLX.setupNvFogDistance();
-		} else if (fluidState.is(FluidTags.WATER)) {
-			GlStateManager.fogMode(GlStateManager.FogMode.EXP2);
-			if (camera.getEntity() instanceof LivingEntity) {
-				if (camera.getEntity() instanceof LocalPlayer) {
-					LocalPlayer localPlayer = (LocalPlayer)camera.getEntity();
-					float g = 0.05F - localPlayer.getWaterVision() * localPlayer.getWaterVision() * 0.03F;
+		Entity entity = camera.getEntity();
+		boolean bl2 = fluidState.getType() != Fluids.EMPTY;
+		if (bl2) {
+			float g = 1.0F;
+			if (fluidState.is(FluidTags.WATER)) {
+				g = 0.05F;
+				if (entity instanceof LocalPlayer) {
+					LocalPlayer localPlayer = (LocalPlayer)entity;
+					g -= localPlayer.getWaterVision() * localPlayer.getWaterVision() * 0.03F;
 					Biome biome = localPlayer.level.getBiome(new BlockPos(localPlayer));
 					if (biome == Biomes.SWAMP || biome == Biomes.SWAMP_HILLS) {
 						g += 0.005F;
 					}
-
-					GlStateManager.fogDensity(g);
-				} else {
-					GlStateManager.fogDensity(0.05F);
 				}
-			} else {
-				GlStateManager.fogDensity(0.1F);
+			} else if (fluidState.is(FluidTags.LAVA)) {
+				g = 2.0F;
 			}
-		} else if (fluidState.is(FluidTags.LAVA)) {
-			GlStateManager.fogMode(GlStateManager.FogMode.EXP);
-			GlStateManager.fogDensity(2.0F);
+
+			RenderSystem.fogDensity(g);
+			RenderSystem.fogMode(GlStateManager.FogMode.EXP2);
 		} else {
-			float f = this.renderer.getRenderDistance();
-			GlStateManager.fogMode(GlStateManager.FogMode.LINEAR);
-			if (i == -1) {
-				GlStateManager.fogStart(0.0F);
-				GlStateManager.fogEnd(f);
+			float g;
+			float j;
+			if (entity instanceof LivingEntity && ((LivingEntity)entity).hasEffect(MobEffects.BLINDNESS)) {
+				int i = ((LivingEntity)entity).getEffect(MobEffects.BLINDNESS).getDuration();
+				float h = Mth.lerp(Math.min(1.0F, (float)i / 20.0F), f, 5.0F);
+				if (fogMode == FogRenderer.FogMode.FOG_SKY) {
+					g = 0.0F;
+					j = h * 0.8F;
+				} else {
+					g = h * 0.25F;
+					j = h;
+				}
+			} else if (bl) {
+				g = f * 0.05F;
+				j = Math.min(f, 192.0F) * 0.5F;
+			} else if (fogMode == FogRenderer.FogMode.FOG_SKY) {
+				g = 0.0F;
+				j = f;
 			} else {
-				GlStateManager.fogStart(f * 0.75F);
-				GlStateManager.fogEnd(f);
+				g = f * 0.75F;
+				j = f;
 			}
 
-			GLX.setupNvFogDistance();
-			if (this.minecraft.level.dimension.isFoggyAt(Mth.floor(camera.getPosition().x), Mth.floor(camera.getPosition().z))
-				|| this.minecraft.gui.getBossOverlay().shouldCreateWorldFog()) {
-				GlStateManager.fogStart(f * 0.05F);
-				GlStateManager.fogEnd(Math.min(f, 192.0F) * 0.5F);
-			}
+			RenderSystem.fogStart(g);
+			RenderSystem.fogEnd(j);
+			RenderSystem.fogMode(GlStateManager.FogMode.LINEAR);
+			RenderSystem.setupNvFogDistance();
 		}
-
-		GlStateManager.enableColorMaterial();
-		GlStateManager.enableFog();
-		GlStateManager.colorMaterial(1028, 4608);
 	}
 
-	public void resetFogColor(boolean bl) {
-		if (bl) {
-			GlStateManager.fog(2918, this.blackBuffer);
-		} else {
-			GlStateManager.fog(2918, this.updateColorBuffer());
-		}
+	public static void levelFogColor() {
+		RenderSystem.fog(2918, fogRed, fogGreen, fogBlue, 1.0F);
 	}
 
-	private FloatBuffer updateColorBuffer() {
-		if (this.oldRed != this.fogRed || this.oldGreen != this.fogGreen || this.oldBlue != this.fogBlue) {
-			this.colorBuffer.clear();
-			this.colorBuffer.put(this.fogRed).put(this.fogGreen).put(this.fogBlue).put(1.0F);
-			this.colorBuffer.flip();
-			this.oldRed = this.fogRed;
-			this.oldGreen = this.fogGreen;
-			this.oldBlue = this.fogBlue;
-		}
-
-		return this.colorBuffer;
+	@Environment(EnvType.CLIENT)
+	public static enum FogMode {
+		FOG_SKY,
+		FOG_TERRAIN;
 	}
 }

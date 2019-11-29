@@ -2,13 +2,12 @@ package net.minecraft.world.level.biome;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.FeatureConfiguration;
-import net.minecraft.world.level.levelgen.feature.MineshaftConfiguration;
 import net.minecraft.world.level.levelgen.feature.MineshaftFeature;
+import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.MineshaftConfiguration;
 import net.minecraft.world.level.levelgen.surfacebuilders.SurfaceBuilder;
 
 public final class ModifiedBadlandsPlateauBiome extends Biome {
@@ -26,8 +25,8 @@ public final class ModifiedBadlandsPlateauBiome extends Biome {
 				.waterFogColor(329011)
 				.parent("badlands_plateau")
 		);
-		this.addStructureStart(Feature.MINESHAFT, new MineshaftConfiguration(0.004, MineshaftFeature.Type.MESA));
-		this.addStructureStart(Feature.STRONGHOLD, FeatureConfiguration.NONE);
+		this.addStructureStart(Feature.MINESHAFT.configured(new MineshaftConfiguration(0.004, MineshaftFeature.Type.MESA)));
+		this.addStructureStart(Feature.STRONGHOLD.configured(FeatureConfiguration.NONE));
 		BiomeDefaultFeatures.addDefaultCarvers(this);
 		BiomeDefaultFeatures.addStructureFeaturePlacement(this);
 		BiomeDefaultFeatures.addDefaultLakes(this);
@@ -54,13 +53,13 @@ public final class ModifiedBadlandsPlateauBiome extends Biome {
 
 	@Environment(EnvType.CLIENT)
 	@Override
-	public int getFoliageColor(BlockPos blockPos) {
+	public int getFoliageColor() {
 		return 10387789;
 	}
 
 	@Environment(EnvType.CLIENT)
 	@Override
-	public int getGrassColor(BlockPos blockPos) {
+	public int getGrassColor(double d, double e) {
 		return 9470285;
 	}
 }

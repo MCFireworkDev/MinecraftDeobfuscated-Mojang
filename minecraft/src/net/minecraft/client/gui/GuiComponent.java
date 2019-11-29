@@ -1,9 +1,12 @@
 package net.minecraft.client.gui;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Transformation;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -14,7 +17,7 @@ public abstract class GuiComponent {
 	public static final ResourceLocation BACKGROUND_LOCATION = new ResourceLocation("textures/gui/options_background.png");
 	public static final ResourceLocation STATS_ICON_LOCATION = new ResourceLocation("textures/gui/container/stats_icons.png");
 	public static final ResourceLocation GUI_ICONS_LOCATION = new ResourceLocation("textures/gui/icons.png");
-	protected int blitOffset;
+	private int blitOffset;
 
 	protected void hLine(int i, int j, int k, int l) {
 		if (j < i) {
@@ -37,6 +40,10 @@ public abstract class GuiComponent {
 	}
 
 	public static void fill(int i, int j, int k, int l, int m) {
+		fill(Transformation.identity().getMatrix(), i, j, k, l, m);
+	}
+
+	public static void fill(Matrix4f matrix4f, int i, int j, int k, int l, int m) {
 		if (i < k) {
 			int n = i;
 			i = k;
@@ -53,22 +60,19 @@ public abstract class GuiComponent {
 		float g = (float)(m >> 16 & 0xFF) / 255.0F;
 		float h = (float)(m >> 8 & 0xFF) / 255.0F;
 		float o = (float)(m & 0xFF) / 255.0F;
-		Tesselator tesselator = Tesselator.getInstance();
-		BufferBuilder bufferBuilder = tesselator.getBuilder();
-		GlStateManager.enableBlend();
-		GlStateManager.disableTexture();
-		GlStateManager.blendFuncSeparate(
-			GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO
-		);
-		GlStateManager.color4f(g, h, o, f);
-		bufferBuilder.begin(7, DefaultVertexFormat.POSITION);
-		bufferBuilder.vertex((double)i, (double)l, 0.0).endVertex();
-		bufferBuilder.vertex((double)k, (double)l, 0.0).endVertex();
-		bufferBuilder.vertex((double)k, (double)j, 0.0).endVertex();
-		bufferBuilder.vertex((double)i, (double)j, 0.0).endVertex();
-		tesselator.end();
-		GlStateManager.enableTexture();
-		GlStateManager.disableBlend();
+		BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+		RenderSystem.enableBlend();
+		RenderSystem.disableTexture();
+		RenderSystem.defaultBlendFunc();
+		bufferBuilder.begin(7, DefaultVertexFormat.POSITION_COLOR);
+		bufferBuilder.vertex(matrix4f, (float)i, (float)l, 0.0F).color(g, h, o, f).endVertex();
+		bufferBuilder.vertex(matrix4f, (float)k, (float)l, 0.0F).color(g, h, o, f).endVertex();
+		bufferBuilder.vertex(matrix4f, (float)k, (float)j, 0.0F).color(g, h, o, f).endVertex();
+		bufferBuilder.vertex(matrix4f, (float)i, (float)j, 0.0F).color(g, h, o, f).endVertex();
+		bufferBuilder.end();
+		BufferUploader.end(bufferBuilder);
+		RenderSystem.enableTexture();
+		RenderSystem.disableBlend();
 	}
 
 	protected void fillGradient(int i, int j, int k, int l, int m, int n) {
@@ -80,13 +84,11 @@ public abstract class GuiComponent {
 		float q = (float)(n >> 16 & 0xFF) / 255.0F;
 		float r = (float)(n >> 8 & 0xFF) / 255.0F;
 		float s = (float)(n & 0xFF) / 255.0F;
-		GlStateManager.disableTexture();
-		GlStateManager.enableBlend();
-		GlStateManager.disableAlphaTest();
-		GlStateManager.blendFuncSeparate(
-			GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO
-		);
-		GlStateManager.shadeModel(7425);
+		RenderSystem.disableTexture();
+		RenderSystem.enableBlend();
+		RenderSystem.disableAlphaTest();
+		RenderSystem.defaultBlendFunc();
+		RenderSystem.shadeModel(7425);
 		Tesselator tesselator = Tesselator.getInstance();
 		BufferBuilder bufferBuilder = tesselator.getBuilder();
 		bufferBuilder.begin(7, DefaultVertexFormat.POSITION_COLOR);
@@ -95,10 +97,10 @@ public abstract class GuiComponent {
 		bufferBuilder.vertex((double)i, (double)l, (double)this.blitOffset).color(q, r, s, p).endVertex();
 		bufferBuilder.vertex((double)k, (double)l, (double)this.blitOffset).color(q, r, s, p).endVertex();
 		tesselator.end();
-		GlStateManager.shadeModel(7424);
-		GlStateManager.disableBlend();
-		GlStateManager.enableAlphaTest();
-		GlStateManager.enableTexture();
+		RenderSystem.shadeModel(7424);
+		RenderSystem.disableBlend();
+		RenderSystem.enableAlphaTest();
+		RenderSystem.enableTexture();
 	}
 
 	public void drawCenteredString(Font font, String string, int i, int j, int k) {
@@ -138,13 +140,22 @@ public abstract class GuiComponent {
 	}
 
 	protected static void innerBlit(int i, int j, int k, int l, int m, float f, float g, float h, float n) {
-		Tesselator tesselator = Tesselator.getInstance();
-		BufferBuilder bufferBuilder = tesselator.getBuilder();
+		BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
 		bufferBuilder.begin(7, DefaultVertexFormat.POSITION_TEX);
-		bufferBuilder.vertex((double)i, (double)l, (double)m).uv((double)f, (double)n).endVertex();
-		bufferBuilder.vertex((double)j, (double)l, (double)m).uv((double)g, (double)n).endVertex();
-		bufferBuilder.vertex((double)j, (double)k, (double)m).uv((double)g, (double)h).endVertex();
-		bufferBuilder.vertex((double)i, (double)k, (double)m).uv((double)f, (double)h).endVertex();
-		tesselator.end();
+		bufferBuilder.vertex((double)i, (double)l, (double)m).uv(f, n).endVertex();
+		bufferBuilder.vertex((double)j, (double)l, (double)m).uv(g, n).endVertex();
+		bufferBuilder.vertex((double)j, (double)k, (double)m).uv(g, h).endVertex();
+		bufferBuilder.vertex((double)i, (double)k, (double)m).uv(f, h).endVertex();
+		bufferBuilder.end();
+		RenderSystem.enableAlphaTest();
+		BufferUploader.end(bufferBuilder);
+	}
+
+	public int getBlitOffset() {
+		return this.blitOffset;
+	}
+
+	public void setBlitOffset(int i) {
+		this.blitOffset = i;
 	}
 }

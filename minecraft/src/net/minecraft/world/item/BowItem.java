@@ -6,7 +6,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -49,7 +48,7 @@ public class BowItem extends ProjectileWeaponItem {
 					if (!level.isClientSide) {
 						ArrowItem arrowItem = (ArrowItem)(itemStack2.getItem() instanceof ArrowItem ? itemStack2.getItem() : Items.ARROW);
 						AbstractArrow abstractArrow = arrowItem.createArrow(level, itemStack2, player);
-						abstractArrow.shootFromRotation(player, player.xRot, player.yRot, 0.0F, f * 3.0F, 1.0F);
+						abstractArrow.shootFromRotation(player, player.xRot, player.yRot, 0.0F, f * 3.0F, 0.25F);
 						if (f == 1.0F) {
 							abstractArrow.setCritArrow(true);
 						}
@@ -77,7 +76,14 @@ public class BowItem extends ProjectileWeaponItem {
 					}
 
 					level.playSound(
-						null, player.x, player.y, player.z, SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 1.2F) + f * 0.5F
+						null,
+						player.getX(),
+						player.getY(),
+						player.getZ(),
+						SoundEvents.ARROW_SHOOT,
+						SoundSource.PLAYERS,
+						1.0F,
+						1.0F / (random.nextFloat() * 0.4F + 1.2F) + f * 0.5F
 					);
 					if (!bl2 && !player.abilities.instabuild) {
 						itemStack2.shrink(1);
@@ -116,11 +122,11 @@ public class BowItem extends ProjectileWeaponItem {
 	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand interactionHand) {
 		ItemStack itemStack = player.getItemInHand(interactionHand);
 		boolean bl = !player.getProjectile(itemStack).isEmpty();
-		if (player.abilities.instabuild || bl) {
-			player.startUsingItem(interactionHand);
-			return new InteractionResultHolder<>(InteractionResult.SUCCESS, itemStack);
+		if (!player.abilities.instabuild && !bl) {
+			return InteractionResultHolder.fail(itemStack);
 		} else {
-			return bl ? new InteractionResultHolder<>(InteractionResult.PASS, itemStack) : new InteractionResultHolder<>(InteractionResult.FAIL, itemStack);
+			player.startUsingItem(interactionHand);
+			return InteractionResultHolder.consume(itemStack);
 		}
 	}
 

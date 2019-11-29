@@ -2,6 +2,7 @@ package net.minecraft.world.entity.raid;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -13,7 +14,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.CriteriaTriggers;
@@ -429,15 +429,16 @@ public class Raid {
 	private void playSound(BlockPos blockPos) {
 		float f = 13.0F;
 		int i = 64;
+		Collection<ServerPlayer> collection = this.raidEvent.getPlayers();
 
-		for(Player player : this.level.players()) {
-			Vec3 vec3 = new Vec3(player.x, player.y, player.z);
-			Vec3 vec32 = new Vec3((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ());
+		for(ServerPlayer serverPlayer : this.level.players()) {
+			Vec3 vec3 = serverPlayer.position();
+			Vec3 vec32 = new Vec3(blockPos);
 			float g = Mth.sqrt((vec32.x - vec3.x) * (vec32.x - vec3.x) + (vec32.z - vec3.z) * (vec32.z - vec3.z));
 			double d = vec3.x + (double)(13.0F / g) * (vec32.x - vec3.x);
 			double e = vec3.z + (double)(13.0F / g) * (vec32.z - vec3.z);
-			if (g <= 64.0F || this.level.isVillage(new BlockPos(player))) {
-				((ServerPlayer)player).connection.send(new ClientboundSoundPacket(SoundEvents.RAID_HORN, SoundSource.NEUTRAL, d, player.y, e, 64.0F, 1.0F));
+			if (g <= 64.0F || collection.contains(serverPlayer)) {
+				serverPlayer.connection.send(new ClientboundSoundPacket(SoundEvents.RAID_HORN, SoundSource.NEUTRAL, d, serverPlayer.getY(), e, 64.0F, 1.0F));
 			}
 		}
 	}
@@ -531,7 +532,7 @@ public class Raid {
 		return this.groupRaiderMap.values().stream().mapToInt(Set::size).sum();
 	}
 
-	public void removeFromRaid(@Nonnull Raider raider, boolean bl) {
+	public void removeFromRaid(Raider raider, boolean bl) {
 		Set<Raider> set = (Set)this.groupRaiderMap.get(raider.getWave());
 		if (set != null) {
 			boolean bl2 = set.remove(raider);

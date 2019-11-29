@@ -1,8 +1,7 @@
 package net.minecraft.client.gui.screens.recipebook;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -126,12 +125,11 @@ public class OverlayRecipeComponent extends GuiComponent implements Widget, GuiE
 	public void render(int i, int j, float f) {
 		if (this.isVisible) {
 			this.time += f;
-			Lighting.turnOnGui();
-			GlStateManager.enableBlend();
-			GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+			RenderSystem.enableBlend();
+			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 			this.minecraft.getTextureManager().bind(RECIPE_BOOK_LOCATION);
-			GlStateManager.pushMatrix();
-			GlStateManager.translatef(0.0F, 0.0F, 170.0F);
+			RenderSystem.pushMatrix();
+			RenderSystem.translatef(0.0F, 0.0F, 170.0F);
 			int k = this.recipeButtons.size() <= 16 ? 4 : 5;
 			int l = Math.min(this.recipeButtons.size(), k);
 			int m = Mth.ceil((float)this.recipeButtons.size() / (float)k);
@@ -140,14 +138,13 @@ public class OverlayRecipeComponent extends GuiComponent implements Widget, GuiE
 			int p = 82;
 			int q = 208;
 			this.nineInchSprite(l, m, 24, 4, 82, 208);
-			GlStateManager.disableBlend();
-			Lighting.turnOff();
+			RenderSystem.disableBlend();
 
 			for(OverlayRecipeComponent.OverlayRecipeButton overlayRecipeButton : this.recipeButtons) {
 				overlayRecipeButton.render(i, j, f);
 			}
 
-			GlStateManager.popMatrix();
+			RenderSystem.popMatrix();
 		}
 	}
 
@@ -219,8 +216,7 @@ public class OverlayRecipeComponent extends GuiComponent implements Widget, GuiE
 
 		@Override
 		public void renderButton(int i, int j, float f) {
-			Lighting.turnOnGui();
-			GlStateManager.enableAlphaTest();
+			RenderSystem.enableAlphaTest();
 			OverlayRecipeComponent.this.minecraft.getTextureManager().bind(OverlayRecipeComponent.RECIPE_BOOK_LOCATION);
 			int k = 152;
 			if (!this.isCraftable) {
@@ -235,21 +231,18 @@ public class OverlayRecipeComponent extends GuiComponent implements Widget, GuiE
 			this.blit(this.x, this.y, k, l, this.width, this.height);
 
 			for(OverlayRecipeComponent.OverlayRecipeButton.Pos pos : this.ingredientPos) {
-				GlStateManager.pushMatrix();
+				RenderSystem.pushMatrix();
 				float g = 0.42F;
 				int m = (int)((float)(this.x + pos.x) / 0.42F - 3.0F);
 				int n = (int)((float)(this.y + pos.y) / 0.42F - 3.0F);
-				GlStateManager.scalef(0.42F, 0.42F, 1.0F);
-				GlStateManager.enableLighting();
+				RenderSystem.scalef(0.42F, 0.42F, 1.0F);
 				OverlayRecipeComponent.this.minecraft
 					.getItemRenderer()
 					.renderAndDecorateItem(pos.ingredients[Mth.floor(OverlayRecipeComponent.this.time / 30.0F) % pos.ingredients.length], m, n);
-				GlStateManager.disableLighting();
-				GlStateManager.popMatrix();
+				RenderSystem.popMatrix();
 			}
 
-			GlStateManager.disableAlphaTest();
-			Lighting.turnOff();
+			RenderSystem.disableAlphaTest();
 		}
 
 		@Environment(EnvType.CLIENT)

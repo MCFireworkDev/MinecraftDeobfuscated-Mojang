@@ -1,95 +1,76 @@
 package net.minecraft.client.renderer.culling;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.MemoryTracker;
-import java.nio.FloatBuffer;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector4f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.util.Mth;
+import net.minecraft.world.phys.AABB;
 
 @Environment(EnvType.CLIENT)
-public class Frustum extends FrustumData {
-	private static final Frustum FRUSTUM = new Frustum();
-	private final FloatBuffer _proj = MemoryTracker.createFloatBuffer(16);
-	private final FloatBuffer _modl = MemoryTracker.createFloatBuffer(16);
-	private final FloatBuffer _clip = MemoryTracker.createFloatBuffer(16);
+public class Frustum {
+	private final Vector4f[] frustumData = new Vector4f[6];
+	private double camX;
+	private double camY;
+	private double camZ;
 
-	public static FrustumData getFrustum() {
-		FRUSTUM.calculateFrustum();
-		return FRUSTUM;
+	public Frustum(Matrix4f matrix4f, Matrix4f matrix4f2) {
+		this.calculateFrustum(matrix4f, matrix4f2);
 	}
 
-	private void normalizePlane(float[] fs) {
-		float f = Mth.sqrt(fs[0] * fs[0] + fs[1] * fs[1] + fs[2] * fs[2]);
-		fs[0] /= f;
-		fs[1] /= f;
-		fs[2] /= f;
-		fs[3] /= f;
+	public void prepare(double d, double e, double f) {
+		this.camX = d;
+		this.camY = e;
+		this.camZ = f;
 	}
 
-	public void calculateFrustum() {
-		this._proj.clear();
-		this._modl.clear();
-		this._clip.clear();
-		GlStateManager.getMatrix(2983, this._proj);
-		GlStateManager.getMatrix(2982, this._modl);
-		float[] fs = this.projectionMatrix;
-		float[] gs = this.modelViewMatrix;
-		this._proj.flip().limit(16);
-		this._proj.get(fs);
-		this._modl.flip().limit(16);
-		this._modl.get(gs);
-		this.clip[0] = gs[0] * fs[0] + gs[1] * fs[4] + gs[2] * fs[8] + gs[3] * fs[12];
-		this.clip[1] = gs[0] * fs[1] + gs[1] * fs[5] + gs[2] * fs[9] + gs[3] * fs[13];
-		this.clip[2] = gs[0] * fs[2] + gs[1] * fs[6] + gs[2] * fs[10] + gs[3] * fs[14];
-		this.clip[3] = gs[0] * fs[3] + gs[1] * fs[7] + gs[2] * fs[11] + gs[3] * fs[15];
-		this.clip[4] = gs[4] * fs[0] + gs[5] * fs[4] + gs[6] * fs[8] + gs[7] * fs[12];
-		this.clip[5] = gs[4] * fs[1] + gs[5] * fs[5] + gs[6] * fs[9] + gs[7] * fs[13];
-		this.clip[6] = gs[4] * fs[2] + gs[5] * fs[6] + gs[6] * fs[10] + gs[7] * fs[14];
-		this.clip[7] = gs[4] * fs[3] + gs[5] * fs[7] + gs[6] * fs[11] + gs[7] * fs[15];
-		this.clip[8] = gs[8] * fs[0] + gs[9] * fs[4] + gs[10] * fs[8] + gs[11] * fs[12];
-		this.clip[9] = gs[8] * fs[1] + gs[9] * fs[5] + gs[10] * fs[9] + gs[11] * fs[13];
-		this.clip[10] = gs[8] * fs[2] + gs[9] * fs[6] + gs[10] * fs[10] + gs[11] * fs[14];
-		this.clip[11] = gs[8] * fs[3] + gs[9] * fs[7] + gs[10] * fs[11] + gs[11] * fs[15];
-		this.clip[12] = gs[12] * fs[0] + gs[13] * fs[4] + gs[14] * fs[8] + gs[15] * fs[12];
-		this.clip[13] = gs[12] * fs[1] + gs[13] * fs[5] + gs[14] * fs[9] + gs[15] * fs[13];
-		this.clip[14] = gs[12] * fs[2] + gs[13] * fs[6] + gs[14] * fs[10] + gs[15] * fs[14];
-		this.clip[15] = gs[12] * fs[3] + gs[13] * fs[7] + gs[14] * fs[11] + gs[15] * fs[15];
-		float[] hs = this.frustumData[0];
-		hs[0] = this.clip[3] - this.clip[0];
-		hs[1] = this.clip[7] - this.clip[4];
-		hs[2] = this.clip[11] - this.clip[8];
-		hs[3] = this.clip[15] - this.clip[12];
-		this.normalizePlane(hs);
-		float[] is = this.frustumData[1];
-		is[0] = this.clip[3] + this.clip[0];
-		is[1] = this.clip[7] + this.clip[4];
-		is[2] = this.clip[11] + this.clip[8];
-		is[3] = this.clip[15] + this.clip[12];
-		this.normalizePlane(is);
-		float[] js = this.frustumData[2];
-		js[0] = this.clip[3] + this.clip[1];
-		js[1] = this.clip[7] + this.clip[5];
-		js[2] = this.clip[11] + this.clip[9];
-		js[3] = this.clip[15] + this.clip[13];
-		this.normalizePlane(js);
-		float[] ks = this.frustumData[3];
-		ks[0] = this.clip[3] - this.clip[1];
-		ks[1] = this.clip[7] - this.clip[5];
-		ks[2] = this.clip[11] - this.clip[9];
-		ks[3] = this.clip[15] - this.clip[13];
-		this.normalizePlane(ks);
-		float[] ls = this.frustumData[4];
-		ls[0] = this.clip[3] - this.clip[2];
-		ls[1] = this.clip[7] - this.clip[6];
-		ls[2] = this.clip[11] - this.clip[10];
-		ls[3] = this.clip[15] - this.clip[14];
-		this.normalizePlane(ls);
-		float[] ms = this.frustumData[5];
-		ms[0] = this.clip[3] + this.clip[2];
-		ms[1] = this.clip[7] + this.clip[6];
-		ms[2] = this.clip[11] + this.clip[10];
-		ms[3] = this.clip[15] + this.clip[14];
-		this.normalizePlane(ms);
+	private void calculateFrustum(Matrix4f matrix4f, Matrix4f matrix4f2) {
+		Matrix4f matrix4f3 = matrix4f2.copy();
+		matrix4f3.multiply(matrix4f);
+		matrix4f3.transpose();
+		this.getPlane(matrix4f3, -1, 0, 0, 0);
+		this.getPlane(matrix4f3, 1, 0, 0, 1);
+		this.getPlane(matrix4f3, 0, -1, 0, 2);
+		this.getPlane(matrix4f3, 0, 1, 0, 3);
+		this.getPlane(matrix4f3, 0, 0, -1, 4);
+		this.getPlane(matrix4f3, 0, 0, 1, 5);
+	}
+
+	private void getPlane(Matrix4f matrix4f, int i, int j, int k, int l) {
+		Vector4f vector4f = new Vector4f((float)i, (float)j, (float)k, 1.0F);
+		vector4f.transform(matrix4f);
+		vector4f.normalize();
+		this.frustumData[l] = vector4f;
+	}
+
+	public boolean isVisible(AABB aABB) {
+		return this.cubeInFrustum(aABB.minX, aABB.minY, aABB.minZ, aABB.maxX, aABB.maxY, aABB.maxZ);
+	}
+
+	private boolean cubeInFrustum(double d, double e, double f, double g, double h, double i) {
+		float j = (float)(d - this.camX);
+		float k = (float)(e - this.camY);
+		float l = (float)(f - this.camZ);
+		float m = (float)(g - this.camX);
+		float n = (float)(h - this.camY);
+		float o = (float)(i - this.camZ);
+		return this.cubeInFrustum(j, k, l, m, n, o);
+	}
+
+	private boolean cubeInFrustum(float f, float g, float h, float i, float j, float k) {
+		for(int l = 0; l < 6; ++l) {
+			Vector4f vector4f = this.frustumData[l];
+			if (!(vector4f.dot(new Vector4f(f, g, h, 1.0F)) > 0.0F)
+				&& !(vector4f.dot(new Vector4f(i, g, h, 1.0F)) > 0.0F)
+				&& !(vector4f.dot(new Vector4f(f, j, h, 1.0F)) > 0.0F)
+				&& !(vector4f.dot(new Vector4f(i, j, h, 1.0F)) > 0.0F)
+				&& !(vector4f.dot(new Vector4f(f, g, k, 1.0F)) > 0.0F)
+				&& !(vector4f.dot(new Vector4f(i, g, k, 1.0F)) > 0.0F)
+				&& !(vector4f.dot(new Vector4f(f, j, k, 1.0F)) > 0.0F)
+				&& !(vector4f.dot(new Vector4f(i, j, k, 1.0F)) > 0.0F)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 }

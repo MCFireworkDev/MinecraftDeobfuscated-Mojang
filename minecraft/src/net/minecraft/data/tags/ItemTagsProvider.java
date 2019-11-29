@@ -57,6 +57,8 @@ public class ItemTagsProvider extends TagsProvider<Item> {
 		this.copy(BlockTags.SMALL_FLOWERS, ItemTags.SMALL_FLOWERS);
 		this.copy(BlockTags.BEDS, ItemTags.BEDS);
 		this.copy(BlockTags.FENCES, ItemTags.FENCES);
+		this.copy(BlockTags.TALL_FLOWERS, ItemTags.TALL_FLOWERS);
+		this.copy(BlockTags.FLOWERS, ItemTags.FLOWERS);
 		this.tag(ItemTags.BANNERS)
 			.add(
 				Items.WHITE_BANNER,
@@ -96,6 +98,7 @@ public class ItemTagsProvider extends TagsProvider<Item> {
 			);
 		this.tag(ItemTags.COALS).add(Items.COAL, Items.CHARCOAL);
 		this.tag(ItemTags.ARROWS).add(Items.ARROW, Items.TIPPED_ARROW, Items.SPECTRAL_ARROW);
+		this.tag(ItemTags.LECTERN_BOOKS).add(Items.WRITTEN_BOOK, Items.WRITABLE_BOOK);
 	}
 
 	protected void copy(Tag<Block> tag, Tag<Item> tag2) {

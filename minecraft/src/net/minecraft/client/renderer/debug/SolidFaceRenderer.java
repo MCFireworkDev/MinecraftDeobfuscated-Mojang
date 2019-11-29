@@ -1,13 +1,14 @@
 package net.minecraft.client.renderer.debug;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
@@ -25,20 +26,14 @@ public class SolidFaceRenderer implements DebugRenderer.SimpleDebugRenderer {
 	}
 
 	@Override
-	public void render(long l) {
-		Camera camera = this.minecraft.gameRenderer.getMainCamera();
-		double d = camera.getPosition().x;
-		double e = camera.getPosition().y;
-		double f = camera.getPosition().z;
+	public void render(PoseStack poseStack, MultiBufferSource multiBufferSource, double d, double e, double f) {
 		BlockGetter blockGetter = this.minecraft.player.level;
-		GlStateManager.enableBlend();
-		GlStateManager.blendFuncSeparate(
-			GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO
-		);
-		GlStateManager.lineWidth(2.0F);
-		GlStateManager.disableTexture();
-		GlStateManager.depthMask(false);
-		BlockPos blockPos = new BlockPos(camera.getPosition());
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+		RenderSystem.lineWidth(2.0F);
+		RenderSystem.disableTexture();
+		RenderSystem.depthMask(false);
+		BlockPos blockPos = new BlockPos(d, e, f);
 
 		for(BlockPos blockPos2 : BlockPos.betweenClosed(blockPos.offset(-6, -6, -6), blockPos.offset(6, 6, 6))) {
 			BlockState blockState = blockGetter.getBlockState(blockPos2);
@@ -52,19 +47,19 @@ public class SolidFaceRenderer implements DebugRenderer.SimpleDebugRenderer {
 					double i = aABB2.minZ;
 					double j = aABB2.maxX;
 					double k = aABB2.maxY;
-					double m = aABB2.maxZ;
-					float n = 1.0F;
+					double l = aABB2.maxZ;
+					float m = 1.0F;
+					float n = 0.0F;
 					float o = 0.0F;
-					float p = 0.0F;
-					float q = 0.5F;
+					float p = 0.5F;
 					if (blockState.isFaceSturdy(blockGetter, blockPos2, Direction.WEST)) {
 						Tesselator tesselator = Tesselator.getInstance();
 						BufferBuilder bufferBuilder = tesselator.getBuilder();
 						bufferBuilder.begin(5, DefaultVertexFormat.POSITION_COLOR);
 						bufferBuilder.vertex(g, h, i).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
-						bufferBuilder.vertex(g, h, m).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+						bufferBuilder.vertex(g, h, l).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
 						bufferBuilder.vertex(g, k, i).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
-						bufferBuilder.vertex(g, k, m).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+						bufferBuilder.vertex(g, k, l).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
 						tesselator.end();
 					}
 
@@ -72,10 +67,10 @@ public class SolidFaceRenderer implements DebugRenderer.SimpleDebugRenderer {
 						Tesselator tesselator = Tesselator.getInstance();
 						BufferBuilder bufferBuilder = tesselator.getBuilder();
 						bufferBuilder.begin(5, DefaultVertexFormat.POSITION_COLOR);
-						bufferBuilder.vertex(g, k, m).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
-						bufferBuilder.vertex(g, h, m).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
-						bufferBuilder.vertex(j, k, m).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
-						bufferBuilder.vertex(j, h, m).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+						bufferBuilder.vertex(g, k, l).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+						bufferBuilder.vertex(g, h, l).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+						bufferBuilder.vertex(j, k, l).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+						bufferBuilder.vertex(j, h, l).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
 						tesselator.end();
 					}
 
@@ -83,9 +78,9 @@ public class SolidFaceRenderer implements DebugRenderer.SimpleDebugRenderer {
 						Tesselator tesselator = Tesselator.getInstance();
 						BufferBuilder bufferBuilder = tesselator.getBuilder();
 						bufferBuilder.begin(5, DefaultVertexFormat.POSITION_COLOR);
-						bufferBuilder.vertex(j, h, m).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+						bufferBuilder.vertex(j, h, l).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
 						bufferBuilder.vertex(j, h, i).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
-						bufferBuilder.vertex(j, k, m).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+						bufferBuilder.vertex(j, k, l).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
 						bufferBuilder.vertex(j, k, i).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
 						tesselator.end();
 					}
@@ -107,8 +102,8 @@ public class SolidFaceRenderer implements DebugRenderer.SimpleDebugRenderer {
 						bufferBuilder.begin(5, DefaultVertexFormat.POSITION_COLOR);
 						bufferBuilder.vertex(g, h, i).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
 						bufferBuilder.vertex(j, h, i).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
-						bufferBuilder.vertex(g, h, m).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
-						bufferBuilder.vertex(j, h, m).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+						bufferBuilder.vertex(g, h, l).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+						bufferBuilder.vertex(j, h, l).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
 						tesselator.end();
 					}
 
@@ -117,17 +112,17 @@ public class SolidFaceRenderer implements DebugRenderer.SimpleDebugRenderer {
 						BufferBuilder bufferBuilder = tesselator.getBuilder();
 						bufferBuilder.begin(5, DefaultVertexFormat.POSITION_COLOR);
 						bufferBuilder.vertex(g, k, i).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
-						bufferBuilder.vertex(g, k, m).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+						bufferBuilder.vertex(g, k, l).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
 						bufferBuilder.vertex(j, k, i).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
-						bufferBuilder.vertex(j, k, m).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
+						bufferBuilder.vertex(j, k, l).color(1.0F, 0.0F, 0.0F, 0.5F).endVertex();
 						tesselator.end();
 					}
 				}
 			}
 		}
 
-		GlStateManager.depthMask(true);
-		GlStateManager.enableTexture();
-		GlStateManager.disableBlend();
+		RenderSystem.depthMask(true);
+		RenderSystem.enableTexture();
+		RenderSystem.disableBlend();
 	}
 }

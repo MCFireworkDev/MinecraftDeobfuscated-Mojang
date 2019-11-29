@@ -9,6 +9,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -19,6 +20,8 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.EnderChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -32,26 +35,26 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class EnderChestBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
+public class EnderChestBlock extends AbstractChestBlock<EnderChestBlockEntity> implements SimpleWaterloggedBlock {
 	public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 	public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 	protected static final VoxelShape SHAPE = Block.box(1.0, 0.0, 1.0, 15.0, 14.0, 15.0);
 	public static final TranslatableComponent CONTAINER_TITLE = new TranslatableComponent("container.enderchest");
 
 	protected EnderChestBlock(Block.Properties properties) {
-		super(properties);
+		super(properties, () -> BlockEntityType.ENDER_CHEST);
 		this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(WATERLOGGED, Boolean.valueOf(false)));
+	}
+
+	@Environment(EnvType.CLIENT)
+	@Override
+	public DoubleBlockCombiner.NeighborCombineResult<? extends ChestBlockEntity> combine(BlockState blockState, Level level, BlockPos blockPos, boolean bl) {
+		return DoubleBlockCombiner.Combiner::acceptNone;
 	}
 
 	@Override
 	public VoxelShape getShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
 		return SHAPE;
-	}
-
-	@Environment(EnvType.CLIENT)
-	@Override
-	public boolean hasCustomBreakingProgress(BlockState blockState) {
-		return true;
 	}
 
 	@Override
@@ -68,24 +71,26 @@ public class EnderChestBlock extends BaseEntityBlock implements SimpleWaterlogge
 	}
 
 	@Override
-	public boolean use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
+	public InteractionResult use(
+		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	) {
 		PlayerEnderChestContainer playerEnderChestContainer = player.getEnderChestInventory();
 		BlockEntity blockEntity = level.getBlockEntity(blockPos);
 		if (playerEnderChestContainer != null && blockEntity instanceof EnderChestBlockEntity) {
 			BlockPos blockPos2 = blockPos.above();
 			if (level.getBlockState(blockPos2).isRedstoneConductor(level, blockPos2)) {
-				return true;
+				return InteractionResult.SUCCESS;
 			} else if (level.isClientSide) {
-				return true;
+				return InteractionResult.SUCCESS;
 			} else {
 				EnderChestBlockEntity enderChestBlockEntity = (EnderChestBlockEntity)blockEntity;
 				playerEnderChestContainer.setActiveChest(enderChestBlockEntity);
 				player.openMenu(new SimpleMenuProvider((i, inventory, playerx) -> ChestMenu.threeRows(i, inventory, playerEnderChestContainer), CONTAINER_TITLE));
 				player.awardStat(Stats.OPEN_ENDERCHEST);
-				return true;
+				return InteractionResult.SUCCESS;
 			}
 		} else {
-			return true;
+			return InteractionResult.SUCCESS;
 		}
 	}
 

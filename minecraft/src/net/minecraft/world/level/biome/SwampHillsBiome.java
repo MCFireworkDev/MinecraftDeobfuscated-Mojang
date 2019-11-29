@@ -2,12 +2,11 @@ package net.minecraft.world.level.biome;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.MineshaftConfiguration;
 import net.minecraft.world.level.levelgen.feature.MineshaftFeature;
+import net.minecraft.world.level.levelgen.feature.configurations.MineshaftConfiguration;
 import net.minecraft.world.level.levelgen.surfacebuilders.SurfaceBuilder;
 
 public final class SwampHillsBiome extends Biome {
@@ -25,7 +24,7 @@ public final class SwampHillsBiome extends Biome {
 				.waterFogColor(2302743)
 				.parent("swamp")
 		);
-		this.addStructureStart(Feature.MINESHAFT, new MineshaftConfiguration(0.004, MineshaftFeature.Type.NORMAL));
+		this.addStructureStart(Feature.MINESHAFT.configured(new MineshaftConfiguration(0.004, MineshaftFeature.Type.NORMAL)));
 		BiomeDefaultFeatures.addDefaultCarvers(this);
 		BiomeDefaultFeatures.addStructureFeaturePlacement(this);
 		BiomeDefaultFeatures.addDefaultLakes(this);
@@ -57,14 +56,14 @@ public final class SwampHillsBiome extends Biome {
 
 	@Environment(EnvType.CLIENT)
 	@Override
-	public int getGrassColor(BlockPos blockPos) {
-		double d = BIOME_INFO_NOISE.getValue((double)blockPos.getX() * 0.0225, (double)blockPos.getZ() * 0.0225);
-		return d < -0.1 ? 5011004 : 6975545;
+	public int getGrassColor(double d, double e) {
+		double f = BIOME_INFO_NOISE.getValue(d * 0.0225, e * 0.0225, false);
+		return f < -0.1 ? 5011004 : 6975545;
 	}
 
 	@Environment(EnvType.CLIENT)
 	@Override
-	public int getFoliageColor(BlockPos blockPos) {
+	public int getFoliageColor() {
 		return 6975545;
 	}
 }

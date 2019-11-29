@@ -51,18 +51,21 @@ public class MinecartFurnace extends AbstractMinecart {
 	@Override
 	public void tick() {
 		super.tick();
-		if (this.fuel > 0) {
-			--this.fuel;
+		if (!this.level.isClientSide()) {
+			if (this.fuel > 0) {
+				--this.fuel;
+			}
+
+			if (this.fuel <= 0) {
+				this.xPush = 0.0;
+				this.zPush = 0.0;
+			}
+
+			this.setHasFuel(this.fuel > 0);
 		}
 
-		if (this.fuel <= 0) {
-			this.xPush = 0.0;
-			this.zPush = 0.0;
-		}
-
-		this.setHasFuel(this.fuel > 0);
 		if (this.hasFuel() && this.random.nextInt(4) == 0) {
-			this.level.addParticle(ParticleTypes.LARGE_SMOKE, this.x, this.y + 0.8, this.z, 0.0, 0.0, 0.0);
+			this.level.addParticle(ParticleTypes.LARGE_SMOKE, this.getX(), this.getY() + 0.8, this.getZ(), 0.0, 0.0, 0.0);
 		}
 	}
 
@@ -125,8 +128,11 @@ public class MinecartFurnace extends AbstractMinecart {
 			this.fuel += 3600;
 		}
 
-		this.xPush = this.x - player.x;
-		this.zPush = this.z - player.z;
+		if (this.fuel > 0) {
+			this.xPush = this.getX() - player.getX();
+			this.zPush = this.getZ() - player.getZ();
+		}
+
 		return true;
 	}
 

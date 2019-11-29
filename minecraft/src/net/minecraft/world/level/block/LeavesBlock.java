@@ -6,11 +6,11 @@ import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.BlockLayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
@@ -22,7 +22,6 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 public class LeavesBlock extends Block {
 	public static final IntegerProperty DISTANCE = BlockStateProperties.DISTANCE;
 	public static final BooleanProperty PERSISTENT = BlockStateProperties.PERSISTENT;
-	protected static boolean renderCutout;
 
 	public LeavesBlock(Block.Properties properties) {
 		super(properties);
@@ -35,16 +34,16 @@ public class LeavesBlock extends Block {
 	}
 
 	@Override
-	public void randomTick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
+	public void randomTick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
 		if (!blockState.getValue(PERSISTENT) && blockState.getValue(DISTANCE) == 7) {
-			dropResources(blockState, level, blockPos);
-			level.removeBlock(blockPos, false);
+			dropResources(blockState, serverLevel, blockPos);
+			serverLevel.removeBlock(blockPos, false);
 		}
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
-		level.setBlock(blockPos, updateDistance(blockState, level, blockPos), 3);
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+		serverLevel.setBlock(blockPos, updateDistance(blockState, serverLevel, blockPos), 3);
 	}
 
 	@Override
@@ -103,21 +102,6 @@ public class LeavesBlock extends Block {
 				}
 			}
 		}
-	}
-
-	@Environment(EnvType.CLIENT)
-	public static void setFancy(boolean bl) {
-		renderCutout = bl;
-	}
-
-	@Override
-	public boolean canOcclude(BlockState blockState) {
-		return false;
-	}
-
-	@Override
-	public BlockLayer getRenderLayer() {
-		return renderCutout ? BlockLayer.CUTOUT_MIPPED : BlockLayer.SOLID;
 	}
 
 	@Override

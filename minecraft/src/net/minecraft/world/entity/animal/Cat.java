@@ -55,6 +55,7 @@ import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -101,7 +102,7 @@ public class Cat extends TamableAnimal {
 	}
 
 	public ResourceLocation getResourceLocation() {
-		return (ResourceLocation)TEXTURE_BY_TYPE.get(this.getCatType());
+		return (ResourceLocation)TEXTURE_BY_TYPE.getOrDefault(this.getCatType(), TEXTURE_BY_TYPE.get(0));
 	}
 
 	@Override
@@ -113,7 +114,7 @@ public class Cat extends TamableAnimal {
 		this.goalSelector.addGoal(2, this.sitGoal);
 		this.goalSelector.addGoal(3, this.temptGoal);
 		this.goalSelector.addGoal(5, new CatLieOnBedGoal(this, 1.1, 8));
-		this.goalSelector.addGoal(6, new FollowOwnerGoal(this, 1.0, 10.0F, 5.0F));
+		this.goalSelector.addGoal(6, new FollowOwnerGoal(this, 1.0, 10.0F, 5.0F, false));
 		this.goalSelector.addGoal(7, new CatSitOnBlockGoal(this, 0.8));
 		this.goalSelector.addGoal(8, new LeapAtTargetGoal(this, 0.3F));
 		this.goalSelector.addGoal(9, new OcelotAttackGoal(this));
@@ -190,17 +191,17 @@ public class Cat extends TamableAnimal {
 		if (this.getMoveControl().hasWanted()) {
 			double d = this.getMoveControl().getSpeedModifier();
 			if (d == 0.6) {
-				this.setSneaking(true);
+				this.setPose(Pose.CROUCHING);
 				this.setSprinting(false);
 			} else if (d == 1.33) {
-				this.setSneaking(false);
+				this.setPose(Pose.STANDING);
 				this.setSprinting(true);
 			} else {
-				this.setSneaking(false);
+				this.setPose(Pose.STANDING);
 				this.setSprinting(false);
 			}
 		} else {
-			this.setSneaking(false);
+			this.setPose(Pose.STANDING);
 			this.setSprinting(false);
 		}
 	}
@@ -243,10 +244,12 @@ public class Cat extends TamableAnimal {
 		super.registerAttributes();
 		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(10.0);
 		this.getAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.3F);
+		this.getAttributes().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(3.0);
 	}
 
 	@Override
-	public void causeFallDamage(float f, float g) {
+	public boolean causeFallDamage(float f, float g) {
+		return false;
 	}
 
 	@Override
@@ -258,9 +261,13 @@ public class Cat extends TamableAnimal {
 		super.usePlayerItem(player, itemStack);
 	}
 
+	private float getAttackDamage() {
+		return (float)this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
+	}
+
 	@Override
 	public boolean doHurtTarget(Entity entity) {
-		return entity.hurt(DamageSource.mobAttack(this), 3.0F);
+		return entity.hurt(DamageSource.mobAttack(this), this.getAttackDamage());
 	}
 
 	@Override
@@ -381,9 +388,28 @@ public class Cat extends TamableAnimal {
 	public boolean mobInteract(Player player, InteractionHand interactionHand) {
 		ItemStack itemStack = player.getItemInHand(interactionHand);
 		Item item = itemStack.getItem();
-		if (this.isTame()) {
-			if (this.isOwnedBy(player)) {
-				if (item instanceof DyeItem) {
+		if (itemStack.getItem() instanceof SpawnEggItem) {
+			return super.mobInteract(player, interactionHand);
+		} else if (this.level.isClientSide) {
+			return this.isTame() && this.isOwnedBy(player) || this.isFood(itemStack);
+		} else {
+			if (this.isTame()) {
+				if (this.isOwnedBy(player)) {
+					if (!(item instanceof DyeItem)) {
+						if (item.isEdible() && this.isFood(itemStack) && this.getHealth() < this.getMaxHealth()) {
+							this.usePlayerItem(player, itemStack);
+							this.heal((float)item.getFoodProperties().getNutrition());
+							return true;
+						}
+
+						boolean bl = super.mobInteract(player, interactionHand);
+						if (!bl || this.isBaby()) {
+							this.sitGoal.wantToSit(!this.isSitting());
+						}
+
+						return bl;
+					}
+
 					DyeColor dyeColor = ((DyeItem)item).getDyeColor();
 					if (dyeColor != this.getCollarColor()) {
 						this.setCollarColor(dyeColor);
@@ -394,40 +420,28 @@ public class Cat extends TamableAnimal {
 						this.setPersistenceRequired();
 						return true;
 					}
-				} else if (this.isFood(itemStack)) {
-					if (this.getHealth() < this.getMaxHealth() && item.isEdible()) {
-						this.usePlayerItem(player, itemStack);
-						this.heal((float)item.getFoodProperties().getNutrition());
-						return true;
-					}
-				} else if (!this.level.isClientSide) {
-					this.sitGoal.wantToSit(!this.isSitting());
 				}
-			}
-		} else if (this.isFood(itemStack)) {
-			this.usePlayerItem(player, itemStack);
-			if (!this.level.isClientSide) {
+			} else if (this.isFood(itemStack)) {
+				this.usePlayerItem(player, itemStack);
 				if (this.random.nextInt(3) == 0) {
 					this.tame(player);
-					this.spawnTamingParticles(true);
 					this.sitGoal.wantToSit(true);
 					this.level.broadcastEntityEvent(this, (byte)7);
 				} else {
-					this.spawnTamingParticles(false);
 					this.level.broadcastEntityEvent(this, (byte)6);
 				}
+
+				this.setPersistenceRequired();
+				return true;
 			}
 
-			this.setPersistenceRequired();
-			return true;
-		}
+			boolean bl = super.mobInteract(player, interactionHand);
+			if (bl) {
+				this.setPersistenceRequired();
+			}
 
-		boolean bl = super.mobInteract(player, interactionHand);
-		if (bl) {
-			this.setPersistenceRequired();
+			return bl;
 		}
-
-		return bl;
 	}
 
 	@Override

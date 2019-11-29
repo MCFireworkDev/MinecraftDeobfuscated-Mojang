@@ -4,10 +4,13 @@ import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -174,10 +177,8 @@ public class LecternBlock extends BaseEntityBlock {
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
-		if (!level.isClientSide) {
-			changePowered(level, blockPos, blockState, false);
-		}
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+		changePowered(serverLevel, blockPos, blockState, false);
 	}
 
 	@Override
@@ -245,15 +246,18 @@ public class LecternBlock extends BaseEntityBlock {
 	}
 
 	@Override
-	public boolean use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
+	public InteractionResult use(
+		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	) {
 		if (blockState.getValue(HAS_BOOK)) {
 			if (!level.isClientSide) {
 				this.openScreen(level, blockPos, player);
 			}
 
-			return true;
+			return InteractionResult.SUCCESS;
 		} else {
-			return false;
+			ItemStack itemStack = player.getItemInHand(interactionHand);
+			return !itemStack.isEmpty() && !itemStack.getItem().is(ItemTags.LECTERN_BOOKS) ? InteractionResult.CONSUME : InteractionResult.PASS;
 		}
 	}
 

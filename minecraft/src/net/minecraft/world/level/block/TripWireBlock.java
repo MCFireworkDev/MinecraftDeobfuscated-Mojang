@@ -5,12 +5,12 @@ import java.util.Map;
 import java.util.Random;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockPlaceContext;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.BlockLayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
@@ -76,11 +76,6 @@ public class TripWireBlock extends Block {
 	}
 
 	@Override
-	public BlockLayer getRenderLayer() {
-		return BlockLayer.TRANSLUCENT;
-	}
-
-	@Override
 	public void onPlace(BlockState blockState, Level level, BlockPos blockPos, BlockState blockState2, boolean bl) {
 		if (blockState2.getBlock() != blockState.getBlock()) {
 			this.updateSource(level, blockPos, blockState);
@@ -132,11 +127,9 @@ public class TripWireBlock extends Block {
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
-		if (!level.isClientSide) {
-			if (level.getBlockState(blockPos).getValue(POWERED)) {
-				this.checkPressed(level, blockPos);
-			}
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+		if (serverLevel.getBlockState(blockPos).getValue(POWERED)) {
+			this.checkPressed(serverLevel, blockPos);
 		}
 	}
 

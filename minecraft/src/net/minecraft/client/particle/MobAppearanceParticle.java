@@ -1,23 +1,26 @@
 package net.minecraft.client.particle;
 
-import com.mojang.blaze3d.platform.GLX;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.model.GuardianModel;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.ElderGuardianRenderer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.monster.ElderGuardian;
 import net.minecraft.world.level.Level;
 
 @Environment(EnvType.CLIENT)
 public class MobAppearanceParticle extends Particle {
-	private LivingEntity displayEntity;
+	private final Model model = new GuardianModel();
+	private final RenderType renderType = RenderType.entityTranslucent(ElderGuardianRenderer.GUARDIAN_ELDER_LOCATION);
 
 	private MobAppearanceParticle(Level level, double d, double e, double f) {
 		super(level, d, e, f);
@@ -31,44 +34,18 @@ public class MobAppearanceParticle extends Particle {
 	}
 
 	@Override
-	public void tick() {
-		super.tick();
-		if (this.displayEntity == null) {
-			ElderGuardian elderGuardian = EntityType.ELDER_GUARDIAN.create(this.level);
-			elderGuardian.setGhost();
-			this.displayEntity = elderGuardian;
-		}
-	}
-
-	@Override
-	public void render(BufferBuilder bufferBuilder, Camera camera, float f, float g, float h, float i, float j, float k) {
-		if (this.displayEntity != null) {
-			EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-			entityRenderDispatcher.setPosition(Particle.xOff, Particle.yOff, Particle.zOff);
-			float l = 1.0F / ElderGuardian.ELDER_SIZE_SCALE;
-			float m = ((float)this.age + f) / (float)this.lifetime;
-			GlStateManager.depthMask(true);
-			GlStateManager.enableBlend();
-			GlStateManager.enableDepthTest();
-			GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-			float n = 240.0F;
-			GLX.glMultiTexCoord2f(GLX.GL_TEXTURE1, 240.0F, 240.0F);
-			GlStateManager.pushMatrix();
-			float o = 0.05F + 0.5F * Mth.sin(m * (float) Math.PI);
-			GlStateManager.color4f(1.0F, 1.0F, 1.0F, o);
-			GlStateManager.translatef(0.0F, 1.8F, 0.0F);
-			GlStateManager.rotatef(180.0F - camera.getYRot(), 0.0F, 1.0F, 0.0F);
-			GlStateManager.rotatef(60.0F - 150.0F * m - camera.getXRot(), 1.0F, 0.0F, 0.0F);
-			GlStateManager.translatef(0.0F, -0.4F, -1.5F);
-			GlStateManager.scalef(l, l, l);
-			this.displayEntity.yRot = 0.0F;
-			this.displayEntity.yHeadRot = 0.0F;
-			this.displayEntity.yRotO = 0.0F;
-			this.displayEntity.yHeadRotO = 0.0F;
-			entityRenderDispatcher.render(this.displayEntity, 0.0, 0.0, 0.0, 0.0F, f, false);
-			GlStateManager.popMatrix();
-			GlStateManager.enableDepthTest();
-		}
+	public void render(VertexConsumer vertexConsumer, Camera camera, float f) {
+		float g = ((float)this.age + f) / (float)this.lifetime;
+		float h = 0.05F + 0.5F * Mth.sin(g * (float) Math.PI);
+		PoseStack poseStack = new PoseStack();
+		poseStack.mulPose(camera.rotation());
+		poseStack.mulPose(Vector3f.XP.rotationDegrees(150.0F * g - 60.0F));
+		poseStack.scale(-1.0F, -1.0F, 1.0F);
+		poseStack.translate(0.0, -1.101F, 1.5);
+		MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+		VertexConsumer vertexConsumer2 = bufferSource.getBuffer(this.renderType);
+		this.model.renderToBuffer(poseStack, vertexConsumer2, 15728880, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, h);
+		bufferSource.endBatch();
 	}
 
 	@Environment(EnvType.CLIENT)

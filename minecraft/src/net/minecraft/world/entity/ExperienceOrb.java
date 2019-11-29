@@ -9,7 +9,6 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAddExperienceOrbPacket;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -40,28 +39,12 @@ public class ExperienceOrb extends Entity {
 	}
 
 	@Override
-	protected boolean makeStepSound() {
+	protected boolean isMovementNoisy() {
 		return false;
 	}
 
 	@Override
 	protected void defineSynchedData() {
-	}
-
-	@Environment(EnvType.CLIENT)
-	@Override
-	public int getLightColor() {
-		float f = 0.5F;
-		f = Mth.clamp(f, 0.0F, 1.0F);
-		int i = super.getLightColor();
-		int j = i & 0xFF;
-		int k = i >> 16 & 0xFF;
-		j += (int)(f * 15.0F * 16.0F);
-		if (j > 240) {
-			j = 240;
-		}
-
-		return j | k << 16;
 	}
 
 	@Override
@@ -71,9 +54,9 @@ public class ExperienceOrb extends Entity {
 			--this.throwTime;
 		}
 
-		this.xo = this.x;
-		this.yo = this.y;
-		this.zo = this.z;
+		this.xo = this.getX();
+		this.yo = this.getY();
+		this.zo = this.getZ();
 		if (this.isUnderLiquid(FluidTags.WATER)) {
 			this.setUnderwaterMovement();
 		} else if (!this.isNoGravity()) {
@@ -88,7 +71,7 @@ public class ExperienceOrb extends Entity {
 		}
 
 		if (!this.level.noCollision(this.getBoundingBox())) {
-			this.checkInBlock(this.x, (this.getBoundingBox().minY + this.getBoundingBox().maxY) / 2.0, this.z);
+			this.checkInBlock(this.getX(), (this.getBoundingBox().minY + this.getBoundingBox().maxY) / 2.0, this.getZ());
 		}
 
 		double d = 8.0;
@@ -106,7 +89,9 @@ public class ExperienceOrb extends Entity {
 
 		if (this.followingPlayer != null) {
 			Vec3 vec3 = new Vec3(
-				this.followingPlayer.x - this.x, this.followingPlayer.y + (double)this.followingPlayer.getEyeHeight() / 2.0 - this.y, this.followingPlayer.z - this.z
+				this.followingPlayer.getX() - this.getX(),
+				this.followingPlayer.getY() + (double)this.followingPlayer.getEyeHeight() / 2.0 - this.getY(),
+				this.followingPlayer.getZ() - this.getZ()
 			);
 			double e = vec3.lengthSqr();
 			if (e < 64.0) {
@@ -118,7 +103,7 @@ public class ExperienceOrb extends Entity {
 		this.move(MoverType.SELF, this.getDeltaMovement());
 		float g = 0.98F;
 		if (this.onGround) {
-			g = this.level.getBlockState(new BlockPos(this.x, this.getBoundingBox().minY - 1.0, this.z)).getBlock().getFriction() * 0.98F;
+			g = this.level.getBlockState(new BlockPos(this.getX(), this.getY() - 1.0, this.getZ())).getBlock().getFriction() * 0.98F;
 		}
 
 		this.setDeltaMovement(this.getDeltaMovement().multiply((double)g, 0.98, (double)g));

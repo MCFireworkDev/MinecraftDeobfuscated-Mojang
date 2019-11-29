@@ -1,11 +1,12 @@
 package net.minecraft.client.particle;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.Random;
 import java.util.stream.Stream;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RewindableStream;
@@ -31,6 +32,7 @@ public abstract class Particle {
 	private AABB bb = INITIAL_AABB;
 	protected boolean onGround;
 	protected boolean hasPhysics = true;
+	private boolean stoppedByCollision;
 	protected boolean removed;
 	protected float bbWidth = 0.6F;
 	protected float bbHeight = 1.8F;
@@ -44,9 +46,6 @@ public abstract class Particle {
 	protected float alpha = 1.0F;
 	protected float roll;
 	protected float oRoll;
-	public static double xOff;
-	public static double yOff;
-	public static double zOff;
 
 	protected Particle(Level level, double d, double e, double f) {
 		this.level = level;
@@ -119,7 +118,7 @@ public abstract class Particle {
 		}
 	}
 
-	public abstract void render(BufferBuilder bufferBuilder, Camera camera, float f, float g, float h, float i, float j, float k);
+	public abstract void render(VertexConsumer vertexConsumer, Camera camera, float f);
 
 	public abstract ParticleRenderType getRenderType();
 
@@ -168,30 +167,36 @@ public abstract class Particle {
 	}
 
 	public void move(double d, double e, double f) {
-		double g = d;
-		double h = e;
-		double i = f;
-		if (this.hasPhysics && (d != 0.0 || e != 0.0 || f != 0.0)) {
-			Vec3 vec3 = Entity.collideBoundingBoxHeuristically(
-				null, new Vec3(d, e, f), this.getBoundingBox(), this.level, CollisionContext.empty(), new RewindableStream<>(Stream.empty())
-			);
-			d = vec3.x;
-			e = vec3.y;
-			f = vec3.z;
-		}
+		if (!this.stoppedByCollision) {
+			double g = d;
+			double h = e;
+			double i = f;
+			if (this.hasPhysics && (d != 0.0 || e != 0.0 || f != 0.0)) {
+				Vec3 vec3 = Entity.collideBoundingBoxHeuristically(
+					null, new Vec3(d, e, f), this.getBoundingBox(), this.level, CollisionContext.empty(), new RewindableStream<>(Stream.empty())
+				);
+				d = vec3.x;
+				e = vec3.y;
+				f = vec3.z;
+			}
 
-		if (d != 0.0 || e != 0.0 || f != 0.0) {
-			this.setBoundingBox(this.getBoundingBox().move(d, e, f));
-			this.setLocationFromBoundingbox();
-		}
+			if (d != 0.0 || e != 0.0 || f != 0.0) {
+				this.setBoundingBox(this.getBoundingBox().move(d, e, f));
+				this.setLocationFromBoundingbox();
+			}
 
-		this.onGround = h != e && h < 0.0;
-		if (g != d) {
-			this.xd = 0.0;
-		}
+			if (Math.abs(h) >= 1.0E-5F && Math.abs(e) < 1.0E-5F) {
+				this.stoppedByCollision = true;
+			}
 
-		if (i != f) {
-			this.zd = 0.0;
+			this.onGround = h != e && h < 0.0;
+			if (g != d) {
+				this.xd = 0.0;
+			}
+
+			if (i != f) {
+				this.zd = 0.0;
+			}
 		}
 	}
 
@@ -204,7 +209,7 @@ public abstract class Particle {
 
 	protected int getLightColor(float f) {
 		BlockPos blockPos = new BlockPos(this.x, this.y, this.z);
-		return this.level.hasChunkAt(blockPos) ? this.level.getLightColor(blockPos, 0) : 0;
+		return this.level.hasChunkAt(blockPos) ? LevelRenderer.getLightColor(this.level, blockPos) : 0;
 	}
 
 	public boolean isAlive() {

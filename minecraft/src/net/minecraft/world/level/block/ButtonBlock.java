@@ -5,9 +5,11 @@ import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
@@ -91,16 +93,22 @@ public abstract class ButtonBlock extends FaceAttachedHorizontalDirectionalBlock
 	}
 
 	@Override
-	public boolean use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
+	public InteractionResult use(
+		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	) {
 		if (blockState.getValue(POWERED)) {
-			return true;
+			return InteractionResult.CONSUME;
 		} else {
-			level.setBlock(blockPos, blockState.setValue(POWERED, Boolean.valueOf(true)), 3);
+			this.press(blockState, level, blockPos);
 			this.playSound(player, level, blockPos, true);
-			this.updateNeighbours(blockState, level, blockPos);
-			level.getBlockTicks().scheduleTick(blockPos, this, this.getTickDelay(level));
-			return true;
+			return InteractionResult.SUCCESS;
 		}
+	}
+
+	public void press(BlockState blockState, Level level, BlockPos blockPos) {
+		level.setBlock(blockPos, blockState.setValue(POWERED, Boolean.valueOf(true)), 3);
+		this.updateNeighbours(blockState, level, blockPos);
+		level.getBlockTicks().scheduleTick(blockPos, this, this.getTickDelay(level));
 	}
 
 	protected void playSound(@Nullable Player player, LevelAccessor levelAccessor, BlockPos blockPos, boolean bl) {
@@ -136,14 +144,14 @@ public abstract class ButtonBlock extends FaceAttachedHorizontalDirectionalBlock
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
-		if (!level.isClientSide && blockState.getValue(POWERED)) {
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+		if (blockState.getValue(POWERED)) {
 			if (this.sensitive) {
-				this.checkPressed(blockState, level, blockPos);
+				this.checkPressed(blockState, serverLevel, blockPos);
 			} else {
-				level.setBlock(blockPos, blockState.setValue(POWERED, Boolean.valueOf(false)), 3);
-				this.updateNeighbours(blockState, level, blockPos);
-				this.playSound(null, level, blockPos, false);
+				serverLevel.setBlock(blockPos, blockState.setValue(POWERED, Boolean.valueOf(false)), 3);
+				this.updateNeighbours(blockState, serverLevel, blockPos);
+				this.playSound(null, serverLevel, blockPos, false);
 			}
 		}
 	}

@@ -136,7 +136,7 @@ public abstract class AbstractFurnaceBlockEntity
 		add(map, Items.WOODEN_AXE, 200);
 		add(map, Items.WOODEN_PICKAXE, 200);
 		add(map, ItemTags.WOODEN_DOORS, 200);
-		add(map, ItemTags.BOATS, 200);
+		add(map, ItemTags.BOATS, 1200);
 		add(map, ItemTags.WOOL, 100);
 		add(map, ItemTags.WOODEN_BUTTONS, 100);
 		add(map, Items.STICK, 100);
@@ -147,7 +147,7 @@ public abstract class AbstractFurnaceBlockEntity
 		add(map, Items.CROSSBOW, 300);
 		add(map, Blocks.BAMBOO, 50);
 		add(map, Blocks.DEAD_BUSH, 100);
-		add(map, Blocks.SCAFFOLDING, 50);
+		add(map, Blocks.SCAFFOLDING, 400);
 		add(map, Blocks.LOOM, 300);
 		add(map, Blocks.BARREL, 300);
 		add(map, Blocks.CARTOGRAPHY_TABLE, 300);
@@ -470,7 +470,7 @@ public abstract class AbstractFurnaceBlockEntity
 		while(i > 0) {
 			int j = ExperienceOrb.getExperienceValue(i);
 			i -= j;
-			player.level.addFreshEntity(new ExperienceOrb(player.level, player.x, player.y + 0.5, player.z + 0.5, j));
+			player.level.addFreshEntity(new ExperienceOrb(player.level, player.getX(), player.getY() + 0.5, player.getZ() + 0.5, j));
 		}
 	}
 

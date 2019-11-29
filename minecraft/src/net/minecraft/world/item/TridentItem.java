@@ -1,8 +1,6 @@
 package net.minecraft.world.item;
 
 import com.google.common.collect.Multimap;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
@@ -11,13 +9,11 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.monster.SharedMonsterAttributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.ThrownTrident;
@@ -48,12 +44,6 @@ public class TridentItem extends Item {
 	@Override
 	public int getUseDuration(ItemStack itemStack) {
 		return 72000;
-	}
-
-	@Environment(EnvType.CLIENT)
-	@Override
-	public boolean isFoil(ItemStack itemStack) {
-		return false;
 	}
 
 	@Override
@@ -119,13 +109,13 @@ public class TridentItem extends Item {
 	@Override
 	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand interactionHand) {
 		ItemStack itemStack = player.getItemInHand(interactionHand);
-		if (itemStack.getDamageValue() >= itemStack.getMaxDamage()) {
-			return new InteractionResultHolder<>(InteractionResult.FAIL, itemStack);
+		if (itemStack.getDamageValue() >= itemStack.getMaxDamage() - 1) {
+			return InteractionResultHolder.fail(itemStack);
 		} else if (EnchantmentHelper.getRiptide(itemStack) > 0 && !player.isInWaterOrRain()) {
-			return new InteractionResultHolder<>(InteractionResult.FAIL, itemStack);
+			return InteractionResultHolder.fail(itemStack);
 		} else {
 			player.startUsingItem(interactionHand);
-			return new InteractionResultHolder<>(InteractionResult.SUCCESS, itemStack);
+			return InteractionResultHolder.consume(itemStack);
 		}
 	}
 
@@ -148,14 +138,7 @@ public class TridentItem extends Item {
 	public Multimap<String, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlot equipmentSlot) {
 		Multimap<String, AttributeModifier> multimap = super.getDefaultAttributeModifiers(equipmentSlot);
 		if (equipmentSlot == EquipmentSlot.MAINHAND) {
-			multimap.put(
-				SharedMonsterAttributes.ATTACK_DAMAGE.getName(),
-				new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "Tool modifier", 8.0, AttributeModifier.Operation.ADDITION)
-			);
-			multimap.put(
-				SharedMonsterAttributes.ATTACK_SPEED.getName(),
-				new AttributeModifier(BASE_ATTACK_SPEED_UUID, "Tool modifier", -2.9F, AttributeModifier.Operation.ADDITION)
-			);
+			WeaponType.TRIDENT.addCombatAttributes(Tiers.IRON, multimap);
 		}
 
 		return multimap;

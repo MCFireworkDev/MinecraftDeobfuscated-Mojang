@@ -1,5 +1,6 @@
 package net.minecraft.server.level;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
@@ -29,11 +30,13 @@ import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.CrashReport;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
@@ -115,9 +118,10 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.dimension.Dimension;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.levelgen.feature.BonusChestFeature;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.FeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -200,6 +204,11 @@ public class ServerLevel extends Level {
 		}
 
 		this.wanderingTraderSpawner = this.dimension.getType() == DimensionType.OVERWORLD ? new WanderingTraderSpawner(this) : null;
+	}
+
+	@Override
+	public Biome getUncachedNoiseBiome(int i, int j, int k) {
+		return this.getChunkSource().getGenerator().getBiomeSource().getNoiseBiome(i, j, k);
 	}
 
 	public void tick(BooleanSupplier booleanSupplier) {
@@ -299,7 +308,7 @@ public class ServerLevel extends Level {
 				this.setDayTime(l - l % 24000L);
 			}
 
-			this.players.stream().filter(LivingEntity::isSleeping).forEach(serverPlayer -> serverPlayer.stopSleepInBed(false, false, true));
+			this.wakeUpAllPlayers();
 			if (this.getGameRules().getBoolean(GameRules.RULE_WEATHER_CYCLE)) {
 				this.stopWeather();
 			}
@@ -315,8 +324,6 @@ public class ServerLevel extends Level {
 			this.liquidTicks.tick();
 		}
 
-		profilerFiller.popPush("portalForcer");
-		this.portalForcer.tick(this.getGameTime());
 		profilerFiller.popPush("raid");
 		this.raids.tick();
 		if (this.wanderingTraderSpawner != null) {
@@ -363,6 +370,12 @@ public class ServerLevel extends Level {
 					entity2.remove();
 				}
 
+				profilerFiller.push("checkDespawn");
+				if (!entity2.removed) {
+					entity2.checkDespawn();
+				}
+
+				profilerFiller.pop();
 				if (entity3 != null) {
 					if (!entity3.removed && entity3.hasPassenger(entity2)) {
 						continue;
@@ -399,6 +412,11 @@ public class ServerLevel extends Level {
 		}
 
 		profilerFiller.pop();
+	}
+
+	private void wakeUpAllPlayers() {
+		((List)this.players.stream().filter(LivingEntity::isSleeping).collect(Collectors.toList()))
+			.forEach(serverPlayer -> serverPlayer.stopSleepInBed(false, false));
 	}
 
 	public void tickChunk(LevelChunk levelChunk, int i) {
@@ -565,9 +583,7 @@ public class ServerLevel extends Level {
 
 	public void tickNonPassenger(Entity entity) {
 		if (entity instanceof Player || this.getChunkSource().isEntityTickingChunk(entity)) {
-			entity.xOld = entity.x;
-			entity.yOld = entity.y;
-			entity.zOld = entity.z;
+			entity.setPosAndOldPos(entity.getX(), entity.getY(), entity.getZ());
 			entity.yRotO = entity.yRot;
 			entity.xRotO = entity.xRot;
 			if (entity.inChunk) {
@@ -590,9 +606,7 @@ public class ServerLevel extends Level {
 		if (entity2.removed || entity2.getVehicle() != entity) {
 			entity2.stopRiding();
 		} else if (entity2 instanceof Player || this.getChunkSource().isEntityTickingChunk(entity2)) {
-			entity2.xOld = entity2.x;
-			entity2.yOld = entity2.y;
-			entity2.zOld = entity2.z;
+			entity2.setPosAndOldPos(entity2.getX(), entity2.getY(), entity2.getZ());
 			entity2.yRotO = entity2.yRot;
 			entity2.xRotO = entity2.xRot;
 			if (entity2.inChunk) {
@@ -611,9 +625,9 @@ public class ServerLevel extends Level {
 
 	public void updateChunkPos(Entity entity) {
 		this.getProfiler().push("chunkCheck");
-		int i = Mth.floor(entity.x / 16.0);
-		int j = Mth.floor(entity.y / 16.0);
-		int k = Mth.floor(entity.z / 16.0);
+		int i = Mth.floor(entity.getX() / 16.0);
+		int j = Mth.floor(entity.getY() / 16.0);
+		int k = Mth.floor(entity.getZ() / 16.0);
 		if (!entity.inChunk || entity.xChunk != i || entity.yChunk != j || entity.zChunk != k) {
 			if (entity.inChunk && this.hasChunk(entity.xChunk, entity.zChunk)) {
 				this.getChunk(entity.xChunk, entity.zChunk).removeEntity(entity, entity.yChunk);
@@ -636,14 +650,14 @@ public class ServerLevel extends Level {
 
 	public void setInitialSpawn(LevelSettings levelSettings) {
 		if (!this.dimension.mayRespawn()) {
-			this.levelData.setSpawn(BlockPos.ZERO.above(this.chunkSource.getGenerator().getSpawnHeight()));
+			this.levelData.setSpawn(BlockPos.ZERO.above(this.getChunkSource().getGenerator().getSpawnHeight()));
 		} else if (this.levelData.getGeneratorType() == LevelType.DEBUG_ALL_BLOCK_STATES) {
 			this.levelData.setSpawn(BlockPos.ZERO.above());
 		} else {
-			BiomeSource biomeSource = this.chunkSource.getGenerator().getBiomeSource();
+			BiomeSource biomeSource = this.getChunkSource().getGenerator().getBiomeSource();
 			List<Biome> list = biomeSource.getPlayerSpawnBiomes();
 			Random random = new Random(this.getSeed());
-			BlockPos blockPos = biomeSource.findBiome(0, 0, 256, list, random);
+			BlockPos blockPos = biomeSource.findBiomeHorizontal(0, this.getSeaLevel(), 0, 256, list, random);
 			ChunkPos chunkPos = blockPos == null ? new ChunkPos(0, 0) : new ChunkPos(blockPos);
 			if (blockPos == null) {
 				LOGGER.warn("Unable to find spawn biome");
@@ -658,7 +672,7 @@ public class ServerLevel extends Level {
 				}
 			}
 
-			this.levelData.setSpawn(chunkPos.getWorldPosition().offset(8, this.chunkSource.getGenerator().getSpawnHeight(), 8));
+			this.levelData.setSpawn(chunkPos.getWorldPosition().offset(8, this.getChunkSource().getGenerator().getSpawnHeight(), 8));
 			int i = 0;
 			int j = 0;
 			int k = 0;
@@ -691,16 +705,10 @@ public class ServerLevel extends Level {
 	}
 
 	protected void generateBonusItemsNearSpawn() {
-		BonusChestFeature bonusChestFeature = Feature.BONUS_CHEST;
-
-		for(int i = 0; i < 10; ++i) {
-			int j = this.levelData.getXSpawn() + this.random.nextInt(6) - this.random.nextInt(6);
-			int k = this.levelData.getZSpawn() + this.random.nextInt(6) - this.random.nextInt(6);
-			BlockPos blockPos = this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(j, 0, k)).above();
-			if (bonusChestFeature.place(this, this.chunkSource.getGenerator(), this.random, blockPos, FeatureConfiguration.NONE)) {
-				break;
-			}
-		}
+		ConfiguredFeature<?, ?> configuredFeature = Feature.BONUS_CHEST.configured(FeatureConfiguration.NONE);
+		configuredFeature.place(
+			this, this.getChunkSource().getGenerator(), this.random, new BlockPos(this.levelData.getXSpawn(), this.levelData.getYSpawn(), this.levelData.getZSpawn())
+		);
 	}
 
 	@Nullable
@@ -736,7 +744,7 @@ public class ServerLevel extends Level {
 
 		for(Entity entity : this.entitiesById.values()) {
 			if ((entityType == null || entity.getType() == entityType)
-				&& serverChunkCache.hasChunk(Mth.floor(entity.x) >> 4, Mth.floor(entity.z) >> 4)
+				&& serverChunkCache.hasChunk(Mth.floor(entity.getX()) >> 4, Mth.floor(entity.getZ()) >> 4)
 				&& predicate.test(entity)) {
 				list.add(entity);
 			}
@@ -840,7 +848,7 @@ public class ServerLevel extends Level {
 
 		this.players.add(serverPlayer);
 		this.updateSleepingPlayerList();
-		ChunkAccess chunkAccess = this.getChunk(Mth.floor(serverPlayer.x / 16.0), Mth.floor(serverPlayer.z / 16.0), ChunkStatus.FULL, true);
+		ChunkAccess chunkAccess = this.getChunk(Mth.floor(serverPlayer.getX() / 16.0), Mth.floor(serverPlayer.getZ() / 16.0), ChunkStatus.FULL, true);
 		if (chunkAccess instanceof LevelChunk) {
 			chunkAccess.addEntity(serverPlayer);
 		}
@@ -855,7 +863,7 @@ public class ServerLevel extends Level {
 		} else if (this.isUUIDUsed(entity)) {
 			return false;
 		} else {
-			ChunkAccess chunkAccess = this.getChunk(Mth.floor(entity.x / 16.0), Mth.floor(entity.z / 16.0), ChunkStatus.FULL, entity.forcedLoading);
+			ChunkAccess chunkAccess = this.getChunk(Mth.floor(entity.getX() / 16.0), Mth.floor(entity.getZ() / 16.0), ChunkStatus.FULL, entity.forcedLoading);
 			if (!(chunkAccess instanceof LevelChunk)) {
 				return false;
 			} else {
@@ -894,7 +902,7 @@ public class ServerLevel extends Level {
 			for(Entity entity : var2[var4]) {
 				if (!(entity instanceof ServerPlayer)) {
 					if (this.tickingEntities) {
-						throw new IllegalStateException("Removing entity while ticking!");
+						throw (IllegalStateException)Util.pauseInIde(new IllegalStateException("Removing entity while ticking!"));
 					}
 
 					this.entitiesById.remove(entity.getId());
@@ -945,7 +953,7 @@ public class ServerLevel extends Level {
 
 	public void despawn(Entity entity) {
 		if (this.tickingEntities) {
-			throw new IllegalStateException("Removing entity while ticking!");
+			throw (IllegalStateException)Util.pauseInIde(new IllegalStateException("Removing entity while ticking!"));
 		} else {
 			this.removeFromChunk(entity);
 			this.entitiesById.remove(entity.getId());
@@ -970,16 +978,24 @@ public class ServerLevel extends Level {
 		this.globalEntities.add(lightningBolt);
 		this.server
 			.getPlayerList()
-			.broadcast(null, lightningBolt.x, lightningBolt.y, lightningBolt.z, 512.0, this.dimension.getType(), new ClientboundAddGlobalEntityPacket(lightningBolt));
+			.broadcast(
+				null,
+				lightningBolt.getX(),
+				lightningBolt.getY(),
+				lightningBolt.getZ(),
+				512.0,
+				this.dimension.getType(),
+				new ClientboundAddGlobalEntityPacket(lightningBolt)
+			);
 	}
 
 	@Override
 	public void destroyBlockProgress(int i, BlockPos blockPos, int j) {
 		for(ServerPlayer serverPlayer : this.server.getPlayerList().getPlayers()) {
 			if (serverPlayer != null && serverPlayer.level == this && serverPlayer.getId() != i) {
-				double d = (double)blockPos.getX() - serverPlayer.x;
-				double e = (double)blockPos.getY() - serverPlayer.y;
-				double f = (double)blockPos.getZ() - serverPlayer.z;
+				double d = (double)blockPos.getX() - serverPlayer.getX();
+				double e = (double)blockPos.getY() - serverPlayer.getY();
+				double f = (double)blockPos.getZ() - serverPlayer.getZ();
 				if (d * d + e * e + f * f < 1024.0) {
 					serverPlayer.connection.send(new ClientboundBlockDestructionPacket(i, blockPos, j));
 				}
@@ -1002,9 +1018,9 @@ public class ServerLevel extends Level {
 			.getPlayerList()
 			.broadcast(
 				player,
-				entity.x,
-				entity.y,
-				entity.z,
+				entity.getX(),
+				entity.getY(),
+				entity.getZ(),
 				f > 1.0F ? (double)(16.0F * f) : 16.0,
 				this.dimension.getType(),
 				new ClientboundSoundEntityPacket(soundEvent, soundSource, entity, f, g)
@@ -1056,7 +1072,7 @@ public class ServerLevel extends Level {
 
 	@Override
 	public Explosion explode(
-		@Nullable Entity entity, DamageSource damageSource, double d, double e, double f, float g, boolean bl, Explosion.BlockInteraction blockInteraction
+		@Nullable Entity entity, @Nullable DamageSource damageSource, double d, double e, double f, float g, boolean bl, Explosion.BlockInteraction blockInteraction
 	) {
 		Explosion explosion = new Explosion(this, entity, d, e, f, g, bl, blockInteraction);
 		if (damageSource != null) {
@@ -1180,7 +1196,6 @@ public class ServerLevel extends Level {
 	}
 
 	@Nullable
-	@Override
 	public BlockPos findNearestMapFeature(String string, BlockPos blockPos, int i, boolean bl) {
 		return this.getChunkSource().getGenerator().findNearestMapFeature(this, string, blockPos, i, bl);
 	}
@@ -1500,9 +1515,9 @@ public class ServerLevel extends Level {
 			Component component = entity.getCustomName();
 			Component component2 = entity.getDisplayName();
 			csvOutput.writeRow(
-				entity.x,
-				entity.y,
-				entity.z,
+				entity.getX(),
+				entity.getY(),
+				entity.getZ(),
 				entity.getUUID(),
 				Registry.ENTITY_TYPE.getKey(entity.getType()),
 				entity.isAlive(),
@@ -1519,5 +1534,10 @@ public class ServerLevel extends Level {
 			BlockPos blockPos = blockEntity.getBlockPos();
 			csvOutput.writeRow(blockPos.getX(), blockPos.getY(), blockPos.getZ(), Registry.BLOCK_ENTITY_TYPE.getKey(blockEntity.getType()));
 		}
+	}
+
+	@VisibleForTesting
+	public void clearBlockEvents(BoundingBox boundingBox) {
+		this.blockEvents.removeIf(blockEventData -> boundingBox.isInside(blockEventData.getPos()));
 	}
 }

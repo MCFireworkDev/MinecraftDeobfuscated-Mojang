@@ -2,13 +2,18 @@ package net.minecraft.core;
 
 import com.google.common.base.MoreObjects;
 import javax.annotation.concurrent.Immutable;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.util.Mth;
 
 @Immutable
 public class Vec3i implements Comparable<Vec3i> {
 	public static final Vec3i ZERO = new Vec3i(0, 0, 0);
+	@Deprecated
 	private final int x;
+	@Deprecated
 	private final int y;
+	@Deprecated
 	private final int z;
 
 	public Vec3i(int i, int j, int k) {
@@ -62,6 +67,18 @@ public class Vec3i implements Comparable<Vec3i> {
 		return this.z;
 	}
 
+	public Vec3i below() {
+		return this.below(1);
+	}
+
+	public Vec3i below(int i) {
+		return this.relative(Direction.DOWN, i);
+	}
+
+	public Vec3i relative(Direction direction, int i) {
+		return i == 0 ? this : new Vec3i(this.getX() + direction.getStepX() * i, this.getY() + direction.getStepY() * i, this.getZ() + direction.getStepZ() * i);
+	}
+
 	public Vec3i cross(Vec3i vec3i) {
 		return new Vec3i(
 			this.getY() * vec3i.getZ() - this.getZ() * vec3i.getY(),
@@ -71,7 +88,7 @@ public class Vec3i implements Comparable<Vec3i> {
 	}
 
 	public boolean closerThan(Vec3i vec3i, double d) {
-		return this.distSqr((double)vec3i.x, (double)vec3i.y, (double)vec3i.z, false) < d * d;
+		return this.distSqr((double)vec3i.getX(), (double)vec3i.getY(), (double)vec3i.getZ(), false) < d * d;
 	}
 
 	public boolean closerThan(Position position, double d) {
@@ -95,13 +112,18 @@ public class Vec3i implements Comparable<Vec3i> {
 	}
 
 	public int distManhattan(Vec3i vec3i) {
-		float f = (float)Math.abs(vec3i.getX() - this.x);
-		float g = (float)Math.abs(vec3i.getY() - this.y);
-		float h = (float)Math.abs(vec3i.getZ() - this.z);
+		float f = (float)Math.abs(vec3i.getX() - this.getX());
+		float g = (float)Math.abs(vec3i.getY() - this.getY());
+		float h = (float)Math.abs(vec3i.getZ() - this.getZ());
 		return (int)(f + g + h);
 	}
 
 	public String toString() {
 		return MoreObjects.toStringHelper(this).add("x", this.getX()).add("y", this.getY()).add("z", this.getZ()).toString();
+	}
+
+	@Environment(EnvType.CLIENT)
+	public String toShortString() {
+		return "" + this.getX() + ", " + this.getY() + ", " + this.getZ();
 	}
 }

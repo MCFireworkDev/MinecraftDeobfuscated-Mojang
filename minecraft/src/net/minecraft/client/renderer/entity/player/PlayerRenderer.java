@@ -1,14 +1,19 @@
 package net.minecraft.client.renderer.entity.player;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.layers.ArrowLayer;
+import net.minecraft.client.renderer.entity.layers.BeeStingerLayer;
 import net.minecraft.client.renderer.entity.layers.CapeLayer;
 import net.minecraft.client.renderer.entity.layers.CustomHeadLayer;
 import net.minecraft.client.renderer.entity.layers.Deadmau5EarsLayer;
@@ -17,6 +22,7 @@ import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.renderer.entity.layers.ParrotOnShoulderLayer;
 import net.minecraft.client.renderer.entity.layers.SpinAttackEffectLayer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
@@ -49,20 +55,16 @@ public class PlayerRenderer extends LivingEntityRenderer<AbstractClientPlayer, P
 		this.addLayer(new ElytraLayer<>(this));
 		this.addLayer(new ParrotOnShoulderLayer<>(this));
 		this.addLayer(new SpinAttackEffectLayer<>(this));
+		this.addLayer(new BeeStingerLayer<>(this));
 	}
 
-	public void render(AbstractClientPlayer abstractClientPlayer, double d, double e, double f, float g, float h) {
-		if (!abstractClientPlayer.isLocalPlayer() || this.entityRenderDispatcher.camera.getEntity() == abstractClientPlayer) {
-			double i = e;
-			if (abstractClientPlayer.isVisuallySneaking()) {
-				i = e - 0.125;
-			}
+	public void render(AbstractClientPlayer abstractClientPlayer, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+		this.setModelProperties(abstractClientPlayer);
+		super.render(abstractClientPlayer, f, g, poseStack, multiBufferSource, i);
+	}
 
-			this.setModelProperties(abstractClientPlayer);
-			GlStateManager.setProfile(GlStateManager.Profile.PLAYER_SKIN);
-			super.render(abstractClientPlayer, d, i, f, g, h);
-			GlStateManager.unsetProfile(GlStateManager.Profile.PLAYER_SKIN);
-		}
+	public Vec3 getRenderOffset(AbstractClientPlayer abstractClientPlayer, float f) {
+		return abstractClientPlayer.isCrouching() ? new Vec3(0.0, -0.125, 0.0) : super.getRenderOffset(abstractClientPlayer, f);
 	}
 
 	private void setModelProperties(AbstractClientPlayer abstractClientPlayer) {
@@ -81,7 +83,7 @@ public class PlayerRenderer extends LivingEntityRenderer<AbstractClientPlayer, P
 			playerModel.rightPants.visible = abstractClientPlayer.isModelPartShown(PlayerModelPart.RIGHT_PANTS_LEG);
 			playerModel.leftSleeve.visible = abstractClientPlayer.isModelPartShown(PlayerModelPart.LEFT_SLEEVE);
 			playerModel.rightSleeve.visible = abstractClientPlayer.isModelPartShown(PlayerModelPart.RIGHT_SLEEVE);
-			playerModel.sneaking = abstractClientPlayer.isVisuallySneaking();
+			playerModel.crouching = abstractClientPlayer.isCrouching();
 			HumanoidModel.ArmPose armPose = this.getArmPose(abstractClientPlayer, itemStack, itemStack2, InteractionHand.MAIN_HAND);
 			HumanoidModel.ArmPose armPose2 = this.getArmPose(abstractClientPlayer, itemStack, itemStack2, InteractionHand.OFF_HAND);
 			if (abstractClientPlayer.getMainArm() == HumanoidArm.RIGHT) {
@@ -101,7 +103,21 @@ public class PlayerRenderer extends LivingEntityRenderer<AbstractClientPlayer, P
 		ItemStack itemStack3 = interactionHand == InteractionHand.MAIN_HAND ? itemStack : itemStack2;
 		if (!itemStack3.isEmpty()) {
 			armPose = HumanoidModel.ArmPose.ITEM;
-			if (abstractClientPlayer.getUseItemRemainingTicks() > 0) {
+			boolean bl = abstractClientPlayer.isUsingItem() && itemStack3 == abstractClientPlayer.getUseItem();
+			boolean bl2 = !bl && interactionHand == InteractionHand.OFF_HAND && abstractClientPlayer.isBlocking();
+			if (!bl && !bl2) {
+				boolean bl3 = itemStack.getItem() == Items.CROSSBOW;
+				boolean bl4 = CrossbowItem.isCharged(itemStack);
+				boolean bl5 = itemStack2.getItem() == Items.CROSSBOW;
+				boolean bl6 = CrossbowItem.isCharged(itemStack2);
+				if (bl3 && bl4) {
+					armPose = HumanoidModel.ArmPose.CROSSBOW_HOLD;
+				}
+
+				if (bl5 && bl6 && itemStack.getItem().getUseAnimation(itemStack) == UseAnim.NONE) {
+					armPose = HumanoidModel.ArmPose.CROSSBOW_HOLD;
+				}
+			} else {
 				UseAnim useAnim = itemStack3.getUseAnimation();
 				if (useAnim == UseAnim.BLOCK) {
 					armPose = HumanoidModel.ArmPose.BLOCK;
@@ -111,18 +127,6 @@ public class PlayerRenderer extends LivingEntityRenderer<AbstractClientPlayer, P
 					armPose = HumanoidModel.ArmPose.THROW_SPEAR;
 				} else if (useAnim == UseAnim.CROSSBOW && interactionHand == abstractClientPlayer.getUsedItemHand()) {
 					armPose = HumanoidModel.ArmPose.CROSSBOW_CHARGE;
-				}
-			} else {
-				boolean bl = itemStack.getItem() == Items.CROSSBOW;
-				boolean bl2 = CrossbowItem.isCharged(itemStack);
-				boolean bl3 = itemStack2.getItem() == Items.CROSSBOW;
-				boolean bl4 = CrossbowItem.isCharged(itemStack2);
-				if (bl && bl2) {
-					armPose = HumanoidModel.ArmPose.CROSSBOW_HOLD;
-				}
-
-				if (bl3 && bl4 && itemStack.getItem().getUseAnimation(itemStack) == UseAnim.NONE) {
-					armPose = HumanoidModel.ArmPose.CROSSBOW_HOLD;
 				}
 			}
 		}
@@ -134,69 +138,61 @@ public class PlayerRenderer extends LivingEntityRenderer<AbstractClientPlayer, P
 		return abstractClientPlayer.getSkinTextureLocation();
 	}
 
-	protected void scale(AbstractClientPlayer abstractClientPlayer, float f) {
+	protected void scale(AbstractClientPlayer abstractClientPlayer, PoseStack poseStack, float f) {
 		float g = 0.9375F;
-		GlStateManager.scalef(0.9375F, 0.9375F, 0.9375F);
+		poseStack.scale(0.9375F, 0.9375F, 0.9375F);
 	}
 
-	protected void renderNameTags(AbstractClientPlayer abstractClientPlayer, double d, double e, double f, String string, double g) {
-		if (g < 100.0) {
+	protected void renderNameTag(AbstractClientPlayer abstractClientPlayer, String string, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+		double d = this.entityRenderDispatcher.distanceToSqr(abstractClientPlayer);
+		poseStack.pushPose();
+		if (d < 100.0) {
 			Scoreboard scoreboard = abstractClientPlayer.getScoreboard();
 			Objective objective = scoreboard.getDisplayObjective(2);
 			if (objective != null) {
 				Score score = scoreboard.getOrCreatePlayerScore(abstractClientPlayer.getScoreboardName(), objective);
-				this.renderNameTag(abstractClientPlayer, score.getScore() + " " + objective.getDisplayName().getColoredString(), d, e, f, 64);
-				e += (double)(9.0F * 1.15F * 0.025F);
+				super.renderNameTag(abstractClientPlayer, score.getScore() + " " + objective.getDisplayName().getColoredString(), poseStack, multiBufferSource, i);
+				poseStack.translate(0.0, (double)(9.0F * 1.15F * 0.025F), 0.0);
 			}
 		}
 
-		super.renderNameTags(abstractClientPlayer, d, e, f, string, g);
+		super.renderNameTag(abstractClientPlayer, string, poseStack, multiBufferSource, i);
+		poseStack.popPose();
 	}
 
-	public void renderRightHand(AbstractClientPlayer abstractClientPlayer) {
-		float f = 1.0F;
-		GlStateManager.color3f(1.0F, 1.0F, 1.0F);
-		float g = 0.0625F;
+	public void renderRightHand(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, AbstractClientPlayer abstractClientPlayer) {
+		this.renderHand(poseStack, multiBufferSource, i, abstractClientPlayer, this.model.rightArm, this.model.rightSleeve);
+	}
+
+	public void renderLeftHand(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, AbstractClientPlayer abstractClientPlayer) {
+		this.renderHand(poseStack, multiBufferSource, i, abstractClientPlayer, this.model.leftArm, this.model.leftSleeve);
+	}
+
+	private void renderHand(
+		PoseStack poseStack, MultiBufferSource multiBufferSource, int i, AbstractClientPlayer abstractClientPlayer, ModelPart modelPart, ModelPart modelPart2
+	) {
 		PlayerModel<AbstractClientPlayer> playerModel = this.getModel();
 		this.setModelProperties(abstractClientPlayer);
-		GlStateManager.enableBlend();
 		playerModel.attackTime = 0.0F;
-		playerModel.sneaking = false;
+		playerModel.crouching = false;
 		playerModel.swimAmount = 0.0F;
-		playerModel.setupAnim(abstractClientPlayer, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
-		playerModel.rightArm.xRot = 0.0F;
-		playerModel.rightArm.render(0.0625F);
-		playerModel.rightSleeve.xRot = 0.0F;
-		playerModel.rightSleeve.render(0.0625F);
-		GlStateManager.disableBlend();
+		playerModel.setupAnim(abstractClientPlayer, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F);
+		modelPart.xRot = 0.0F;
+		modelPart.render(poseStack, multiBufferSource.getBuffer(RenderType.entitySolid(abstractClientPlayer.getSkinTextureLocation())), i, OverlayTexture.NO_OVERLAY);
+		modelPart2.xRot = 0.0F;
+		modelPart2.render(
+			poseStack, multiBufferSource.getBuffer(RenderType.entityTranslucent(abstractClientPlayer.getSkinTextureLocation())), i, OverlayTexture.NO_OVERLAY
+		);
 	}
 
-	public void renderLeftHand(AbstractClientPlayer abstractClientPlayer) {
-		float f = 1.0F;
-		GlStateManager.color3f(1.0F, 1.0F, 1.0F);
-		float g = 0.0625F;
-		PlayerModel<AbstractClientPlayer> playerModel = this.getModel();
-		this.setModelProperties(abstractClientPlayer);
-		GlStateManager.enableBlend();
-		playerModel.sneaking = false;
-		playerModel.attackTime = 0.0F;
-		playerModel.swimAmount = 0.0F;
-		playerModel.setupAnim(abstractClientPlayer, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
-		playerModel.leftArm.xRot = 0.0F;
-		playerModel.leftArm.render(0.0625F);
-		playerModel.leftSleeve.xRot = 0.0F;
-		playerModel.leftSleeve.render(0.0625F);
-		GlStateManager.disableBlend();
-	}
-
-	protected void setupRotations(AbstractClientPlayer abstractClientPlayer, float f, float g, float h) {
+	protected void setupRotations(AbstractClientPlayer abstractClientPlayer, PoseStack poseStack, float f, float g, float h) {
 		float i = abstractClientPlayer.getSwimAmount(h);
 		if (abstractClientPlayer.isFallFlying()) {
-			super.setupRotations(abstractClientPlayer, f, g, h);
+			super.setupRotations(abstractClientPlayer, poseStack, f, g, h);
 			float j = (float)abstractClientPlayer.getFallFlyingTicks() + h;
 			float k = Mth.clamp(j * j / 100.0F, 0.0F, 1.0F);
 			if (!abstractClientPlayer.isAutoSpinAttack()) {
-				GlStateManager.rotatef(k * (-90.0F - abstractClientPlayer.xRot), 1.0F, 0.0F, 0.0F);
+				poseStack.mulPose(Vector3f.XP.rotationDegrees(k * (-90.0F - abstractClientPlayer.xRot)));
 			}
 
 			Vec3 vec3 = abstractClientPlayer.getViewVector(h);
@@ -206,18 +202,18 @@ public class PlayerRenderer extends LivingEntityRenderer<AbstractClientPlayer, P
 			if (d > 0.0 && e > 0.0) {
 				double l = (vec32.x * vec3.x + vec32.z * vec3.z) / (Math.sqrt(d) * Math.sqrt(e));
 				double m = vec32.x * vec3.z - vec32.z * vec3.x;
-				GlStateManager.rotatef((float)(Math.signum(m) * Math.acos(l)) * 180.0F / (float) Math.PI, 0.0F, 1.0F, 0.0F);
+				poseStack.mulPose(Vector3f.YP.rotation((float)(Math.signum(m) * Math.acos(l))));
 			}
 		} else if (i > 0.0F) {
-			super.setupRotations(abstractClientPlayer, f, g, h);
+			super.setupRotations(abstractClientPlayer, poseStack, f, g, h);
 			float j = abstractClientPlayer.isInWater() ? -90.0F - abstractClientPlayer.xRot : -90.0F;
 			float k = Mth.lerp(i, 0.0F, j);
-			GlStateManager.rotatef(k, 1.0F, 0.0F, 0.0F);
+			poseStack.mulPose(Vector3f.XP.rotationDegrees(k));
 			if (abstractClientPlayer.isVisuallySwimming()) {
-				GlStateManager.translatef(0.0F, -1.0F, 0.3F);
+				poseStack.translate(0.0, -1.0, 0.3F);
 			}
 		} else {
-			super.setupRotations(abstractClientPlayer, f, g, h);
+			super.setupRotations(abstractClientPlayer, poseStack, f, g, h);
 		}
 	}
 }

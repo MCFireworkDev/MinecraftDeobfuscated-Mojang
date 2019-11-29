@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.Brain;
@@ -65,6 +66,7 @@ public class MakeLove extends Behavior<Villager> {
 				this.giveBedToChild(serverLevel, (Villager)optional2.get(), (BlockPos)optional.get());
 			} else {
 				serverLevel.getPoiManager().release((BlockPos)optional.get());
+				DebugPackets.sendPoiTicketCountPacket(serverLevel, (BlockPos)optional.get());
 			}
 		}
 	}
@@ -104,7 +106,7 @@ public class MakeLove extends Behavior<Villager> {
 			villager.setAge(6000);
 			villager2.setAge(6000);
 			villager3.setAge(-24000);
-			villager3.moveTo(villager.x, villager.y, villager.z, 0.0F, 0.0F);
+			villager3.moveTo(villager.getX(), villager.getY(), villager.getZ(), 0.0F, 0.0F);
 			villager.level.addFreshEntity(villager3);
 			villager.level.broadcastEntityEvent(villager3, (byte)12);
 			return Optional.of(villager3);

@@ -9,16 +9,18 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import net.minecraft.world.level.levelgen.structure.BeardedStructureStart;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.PillagerOutpostPieces;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 
-public class PillagerOutpostFeature extends RandomScatteredFeature<PillagerOutpostConfiguration> {
+public class PillagerOutpostFeature extends RandomScatteredFeature<NoneFeatureConfiguration> {
 	private static final List<Biome.SpawnerData> OUTPOST_ENEMIES = Lists.<Biome.SpawnerData>newArrayList(new Biome.SpawnerData(EntityType.PILLAGER, 1, 1, 1));
 
-	public PillagerOutpostFeature(Function<Dynamic<?>, ? extends PillagerOutpostConfiguration> function) {
+	public PillagerOutpostFeature(Function<Dynamic<?>, ? extends NoneFeatureConfiguration> function) {
 		super(function);
 	}
 
@@ -38,7 +40,7 @@ public class PillagerOutpostFeature extends RandomScatteredFeature<PillagerOutpo
 	}
 
 	@Override
-	public boolean isFeatureChunk(ChunkGenerator<?> chunkGenerator, Random random, int i, int j) {
+	public boolean isFeatureChunk(BiomeManager biomeManager, ChunkGenerator<?> chunkGenerator, Random random, int i, int j, Biome biome) {
 		ChunkPos chunkPos = this.getPotentialFeatureChunkFromLocationWithOffset(chunkGenerator, random, i, j, 0, 0);
 		if (i == chunkPos.x && j == chunkPos.z) {
 			int k = i >> 4;
@@ -49,11 +51,10 @@ public class PillagerOutpostFeature extends RandomScatteredFeature<PillagerOutpo
 				return false;
 			}
 
-			Biome biome = chunkGenerator.getBiomeSource().getBiome(new BlockPos((i << 4) + 9, 0, (j << 4) + 9));
-			if (chunkGenerator.isBiomeValidStartForStructure(biome, Feature.PILLAGER_OUTPOST)) {
+			if (chunkGenerator.isBiomeValidStartForStructure(biome, this)) {
 				for(int m = i - 10; m <= i + 10; ++m) {
 					for(int n = j - 10; n <= j + 10; ++n) {
-						if (Feature.VILLAGE.isFeatureChunk(chunkGenerator, random, m, n)) {
+						if (Feature.VILLAGE.isFeatureChunk(biomeManager, chunkGenerator, random, m, n, biomeManager.getBiome(new BlockPos((m << 4) + 9, 0, (n << 4) + 9)))) {
 							return false;
 						}
 					}
@@ -77,8 +78,8 @@ public class PillagerOutpostFeature extends RandomScatteredFeature<PillagerOutpo
 	}
 
 	public static class FeatureStart extends BeardedStructureStart {
-		public FeatureStart(StructureFeature<?> structureFeature, int i, int j, Biome biome, BoundingBox boundingBox, int k, long l) {
-			super(structureFeature, i, j, biome, boundingBox, k, l);
+		public FeatureStart(StructureFeature<?> structureFeature, int i, int j, BoundingBox boundingBox, int k, long l) {
+			super(structureFeature, i, j, boundingBox, k, l);
 		}
 
 		@Override

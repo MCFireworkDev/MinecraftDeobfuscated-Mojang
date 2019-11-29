@@ -3,11 +3,11 @@ package net.minecraft.world.level.block;
 import java.util.Random;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.BlockLayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
@@ -31,27 +31,27 @@ public class CactusBlock extends Block {
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
-		if (!blockState.canSurvive(level, blockPos)) {
-			level.destroyBlock(blockPos, true);
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+		if (!blockState.canSurvive(serverLevel, blockPos)) {
+			serverLevel.destroyBlock(blockPos, true);
 		} else {
 			BlockPos blockPos2 = blockPos.above();
-			if (level.isEmptyBlock(blockPos2)) {
+			if (serverLevel.isEmptyBlock(blockPos2)) {
 				int i = 1;
 
-				while(level.getBlockState(blockPos.below(i)).getBlock() == this) {
+				while(serverLevel.getBlockState(blockPos.below(i)).getBlock() == this) {
 					++i;
 				}
 
 				if (i < 3) {
 					int j = blockState.getValue(AGE);
 					if (j == 15) {
-						level.setBlockAndUpdate(blockPos2, this.defaultBlockState());
+						serverLevel.setBlockAndUpdate(blockPos2, this.defaultBlockState());
 						BlockState blockState2 = blockState.setValue(AGE, Integer.valueOf(0));
-						level.setBlock(blockPos, blockState2, 4);
-						blockState2.neighborChanged(level, blockPos2, this, blockPos, false);
+						serverLevel.setBlock(blockPos, blockState2, 4);
+						blockState2.neighborChanged(serverLevel, blockPos2, this, blockPos, false);
 					} else {
-						level.setBlock(blockPos, blockState.setValue(AGE, Integer.valueOf(j + 1)), 4);
+						serverLevel.setBlock(blockPos, blockState.setValue(AGE, Integer.valueOf(j + 1)), 4);
 					}
 				}
 			}
@@ -66,11 +66,6 @@ public class CactusBlock extends Block {
 	@Override
 	public VoxelShape getShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
 		return OUTLINE_SHAPE;
-	}
-
-	@Override
-	public boolean canOcclude(BlockState blockState) {
-		return true;
 	}
 
 	@Override
@@ -101,11 +96,6 @@ public class CactusBlock extends Block {
 	@Override
 	public void entityInside(BlockState blockState, Level level, BlockPos blockPos, Entity entity) {
 		entity.hurt(DamageSource.CACTUS, 1.0F);
-	}
-
-	@Override
-	public BlockLayer getRenderLayer() {
-		return BlockLayer.CUTOUT;
 	}
 
 	@Override

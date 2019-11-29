@@ -26,6 +26,7 @@ public class BannerBlockEntity extends BlockEntity implements Nameable {
 	private List<BannerPattern> patterns;
 	private List<DyeColor> colors;
 	private String textureHashName;
+	private boolean onlyRenderPattern = false;
 
 	public BannerBlockEntity() {
 		super(BlockEntityType.BANNER);
@@ -130,12 +131,6 @@ public class BannerBlockEntity extends BlockEntity implements Nameable {
 	}
 
 	@Environment(EnvType.CLIENT)
-	public String getTextureHashName() {
-		this.createPatternList();
-		return this.textureHashName;
-	}
-
-	@Environment(EnvType.CLIENT)
 	private void createPatternList() {
 		if (this.patterns == null || this.colors == null || this.textureHashName == null) {
 			if (!this.receivedData) {
@@ -200,5 +195,15 @@ public class BannerBlockEntity extends BlockEntity implements Nameable {
 		}
 
 		return this.baseColor;
+	}
+
+	@Environment(EnvType.CLIENT)
+	public void setOnlyRenderPattern(boolean bl) {
+		this.onlyRenderPattern = bl;
+	}
+
+	@Environment(EnvType.CLIENT)
+	public boolean onlyRenderPattern() {
+		return this.onlyRenderPattern;
 	}
 }

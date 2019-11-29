@@ -1,5 +1,7 @@
 package net.minecraft.client.model;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.geom.ModelPart;
@@ -10,15 +12,20 @@ public class HumanoidHeadModel extends SkullModel {
 
 	public HumanoidHeadModel() {
 		super(0, 0, 64, 64);
-		this.hat.addBox(-4.0F, -8.0F, -4.0F, 8, 8, 8, 0.25F);
+		this.hat.addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, 0.25F);
 		this.hat.setPos(0.0F, 0.0F, 0.0F);
 	}
 
 	@Override
-	public void render(float f, float g, float h, float i, float j, float k) {
-		super.render(f, g, h, i, j, k);
+	public void setupAnim(float f, float g, float h) {
+		super.setupAnim(f, g, h);
 		this.hat.yRot = this.head.yRot;
 		this.hat.xRot = this.head.xRot;
-		this.hat.render(k);
+	}
+
+	@Override
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int i, int j, float f, float g, float h, float k) {
+		super.renderToBuffer(poseStack, vertexConsumer, i, j, f, g, h, k);
+		this.hat.render(poseStack, vertexConsumer, i, j, f, g, h, k);
 	}
 }

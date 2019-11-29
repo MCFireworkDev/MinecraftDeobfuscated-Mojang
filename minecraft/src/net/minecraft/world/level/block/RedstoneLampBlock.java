@@ -3,7 +3,10 @@ package net.minecraft.world.level.block;
 import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -48,16 +51,19 @@ public class RedstoneLampBlock extends Block {
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
-		if (!level.isClientSide) {
-			if (blockState.getValue(LIT) && !level.hasNeighborSignal(blockPos)) {
-				level.setBlock(blockPos, blockState.cycle(LIT), 2);
-			}
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+		if (blockState.getValue(LIT) && !serverLevel.hasNeighborSignal(blockPos)) {
+			serverLevel.setBlock(blockPos, blockState.cycle(LIT), 2);
 		}
 	}
 
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(LIT);
+	}
+
+	@Override
+	public boolean isValidSpawn(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, EntityType<?> entityType) {
+		return true;
 	}
 }

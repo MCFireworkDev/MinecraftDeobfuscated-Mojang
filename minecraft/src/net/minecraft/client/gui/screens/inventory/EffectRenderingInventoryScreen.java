@@ -1,11 +1,11 @@
 package net.minecraft.client.gui.screens.inventory;
 
 import com.google.common.collect.Ordering;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.Collection;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.MobEffectTextureManager;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -51,8 +51,7 @@ public abstract class EffectRenderingInventoryScreen<T extends AbstractContainer
 		int i = this.leftPos - 124;
 		Collection<MobEffectInstance> collection = this.minecraft.player.getActiveEffects();
 		if (!collection.isEmpty()) {
-			GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-			GlStateManager.disableLighting();
+			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 			int j = 33;
 			if (collection.size() > 5) {
 				j = 132 / (collection.size() - 1);
@@ -70,20 +69,21 @@ public abstract class EffectRenderingInventoryScreen<T extends AbstractContainer
 		int k = this.topPos;
 
 		for(MobEffectInstance mobEffectInstance : iterable) {
-			GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 			this.blit(i, k, 0, 166, 140, 32);
 			k += j;
 		}
 	}
 
 	private void renderIcons(int i, int j, Iterable<MobEffectInstance> iterable) {
-		this.minecraft.getTextureManager().bind(TextureAtlas.LOCATION_MOB_EFFECTS);
 		MobEffectTextureManager mobEffectTextureManager = this.minecraft.getMobEffectTextures();
 		int k = this.topPos;
 
 		for(MobEffectInstance mobEffectInstance : iterable) {
 			MobEffect mobEffect = mobEffectInstance.getEffect();
-			blit(i + 6, k + 7, this.blitOffset, 18, 18, mobEffectTextureManager.get(mobEffect));
+			TextureAtlasSprite textureAtlasSprite = mobEffectTextureManager.get(mobEffect);
+			this.minecraft.getTextureManager().bind(textureAtlasSprite.atlas().location());
+			blit(i + 6, k + 7, this.getBlitOffset(), 18, 18, textureAtlasSprite);
 			k += j;
 		}
 	}

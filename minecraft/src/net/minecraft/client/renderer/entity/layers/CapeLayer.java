@@ -1,11 +1,16 @@
 package net.minecraft.client.renderer.entity.layers;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.PlayerModelPart;
@@ -18,23 +23,32 @@ public class CapeLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
 		super(renderLayerParent);
 	}
 
-	public void render(AbstractClientPlayer abstractClientPlayer, float f, float g, float h, float i, float j, float k, float l) {
+	public void render(
+		PoseStack poseStack,
+		MultiBufferSource multiBufferSource,
+		int i,
+		AbstractClientPlayer abstractClientPlayer,
+		float f,
+		float g,
+		float h,
+		float j,
+		float k,
+		float l
+	) {
 		if (abstractClientPlayer.isCapeLoaded()
 			&& !abstractClientPlayer.isInvisible()
 			&& abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE)
 			&& abstractClientPlayer.getCloakTextureLocation() != null) {
 			ItemStack itemStack = abstractClientPlayer.getItemBySlot(EquipmentSlot.CHEST);
 			if (itemStack.getItem() != Items.ELYTRA) {
-				GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-				this.bindTexture(abstractClientPlayer.getCloakTextureLocation());
-				GlStateManager.pushMatrix();
-				GlStateManager.translatef(0.0F, 0.0F, 0.125F);
+				poseStack.pushPose();
+				poseStack.translate(0.0, 0.0, 0.125);
 				double d = Mth.lerp((double)h, abstractClientPlayer.xCloakO, abstractClientPlayer.xCloak)
-					- Mth.lerp((double)h, abstractClientPlayer.xo, abstractClientPlayer.x);
+					- Mth.lerp((double)h, abstractClientPlayer.xo, abstractClientPlayer.getX());
 				double e = Mth.lerp((double)h, abstractClientPlayer.yCloakO, abstractClientPlayer.yCloak)
-					- Mth.lerp((double)h, abstractClientPlayer.yo, abstractClientPlayer.y);
+					- Mth.lerp((double)h, abstractClientPlayer.yo, abstractClientPlayer.getY());
 				double m = Mth.lerp((double)h, abstractClientPlayer.zCloakO, abstractClientPlayer.zCloak)
-					- Mth.lerp((double)h, abstractClientPlayer.zo, abstractClientPlayer.z);
+					- Mth.lerp((double)h, abstractClientPlayer.zo, abstractClientPlayer.getZ());
 				float n = abstractClientPlayer.yBodyRotO + (abstractClientPlayer.yBodyRot - abstractClientPlayer.yBodyRotO);
 				double o = (double)Mth.sin(n * (float) (Math.PI / 180.0));
 				double p = (double)(-Mth.cos(n * (float) (Math.PI / 180.0)));
@@ -50,22 +64,17 @@ public class CapeLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
 
 				float t = Mth.lerp(h, abstractClientPlayer.oBob, abstractClientPlayer.bob);
 				q += Mth.sin(Mth.lerp(h, abstractClientPlayer.walkDistO, abstractClientPlayer.walkDist) * 6.0F) * 32.0F * t;
-				if (abstractClientPlayer.isVisuallySneaking()) {
+				if (abstractClientPlayer.isCrouching()) {
 					q += 25.0F;
 				}
 
-				GlStateManager.rotatef(6.0F + r / 2.0F + q, 1.0F, 0.0F, 0.0F);
-				GlStateManager.rotatef(s / 2.0F, 0.0F, 0.0F, 1.0F);
-				GlStateManager.rotatef(-s / 2.0F, 0.0F, 1.0F, 0.0F);
-				GlStateManager.rotatef(180.0F, 0.0F, 1.0F, 0.0F);
-				this.getParentModel().renderCloak(0.0625F);
-				GlStateManager.popMatrix();
+				poseStack.mulPose(Vector3f.XP.rotationDegrees(6.0F + r / 2.0F + q));
+				poseStack.mulPose(Vector3f.ZP.rotationDegrees(s / 2.0F));
+				poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - s / 2.0F));
+				VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.entitySolid(abstractClientPlayer.getCloakTextureLocation()));
+				this.getParentModel().renderCloak(poseStack, vertexConsumer, i, OverlayTexture.NO_OVERLAY);
+				poseStack.popPose();
 			}
 		}
-	}
-
-	@Override
-	public boolean colorsOnDamage() {
-		return false;
 	}
 }

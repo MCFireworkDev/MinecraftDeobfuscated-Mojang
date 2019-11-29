@@ -1,10 +1,9 @@
 package net.minecraft.client.gui.screens.inventory;
 
 import com.google.common.collect.Sets;
-import com.mojang.blaze3d.platform.GLX;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.datafixers.util.Pair;
 import java.util.Set;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -12,7 +11,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -74,21 +72,18 @@ public abstract class AbstractContainerScreen<T extends AbstractContainerMenu> e
 		int k = this.leftPos;
 		int l = this.topPos;
 		this.renderBg(f, i, j);
-		GlStateManager.disableRescaleNormal();
-		Lighting.turnOff();
-		GlStateManager.disableLighting();
-		GlStateManager.disableDepthTest();
+		RenderSystem.disableRescaleNormal();
+		RenderSystem.disableDepthTest();
 		super.render(i, j, f);
-		Lighting.turnOnGui();
-		GlStateManager.pushMatrix();
-		GlStateManager.translatef((float)k, (float)l, 0.0F);
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		GlStateManager.enableRescaleNormal();
+		RenderSystem.pushMatrix();
+		RenderSystem.translatef((float)k, (float)l, 0.0F);
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderSystem.enableRescaleNormal();
 		this.hoveredSlot = null;
 		int m = 240;
 		int n = 240;
-		GLX.glMultiTexCoord2f(GLX.GL_TEXTURE1, 240.0F, 240.0F);
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderSystem.glMultiTexCoord2f(33986, 240.0F, 240.0F);
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
 		for(int o = 0; o < this.menu.slots.size(); ++o) {
 			Slot slot = (Slot)this.menu.slots.get(o);
@@ -98,21 +93,17 @@ public abstract class AbstractContainerScreen<T extends AbstractContainerMenu> e
 
 			if (this.isHovering(slot, (double)i, (double)j) && slot.isActive()) {
 				this.hoveredSlot = slot;
-				GlStateManager.disableLighting();
-				GlStateManager.disableDepthTest();
+				RenderSystem.disableDepthTest();
 				int p = slot.x;
 				int q = slot.y;
-				GlStateManager.colorMask(true, true, true, false);
+				RenderSystem.colorMask(true, true, true, false);
 				this.fillGradient(p, q, p + 16, q + 16, -2130706433, -2130706433);
-				GlStateManager.colorMask(true, true, true, true);
-				GlStateManager.enableLighting();
-				GlStateManager.enableDepthTest();
+				RenderSystem.colorMask(true, true, true, true);
+				RenderSystem.enableDepthTest();
 			}
 		}
 
-		Lighting.turnOff();
 		this.renderLabels(i, j);
-		Lighting.turnOnGui();
 		Inventory inventory = this.minecraft.player.inventory;
 		ItemStack itemStack = this.draggingItem.isEmpty() ? inventory.getCarried() : this.draggingItem;
 		if (!itemStack.isEmpty()) {
@@ -147,10 +138,8 @@ public abstract class AbstractContainerScreen<T extends AbstractContainerMenu> e
 			this.renderFloatingItem(this.snapbackItem, s, t, null);
 		}
 
-		GlStateManager.popMatrix();
-		GlStateManager.enableLighting();
-		GlStateManager.enableDepthTest();
-		Lighting.turnOn();
+		RenderSystem.popMatrix();
+		RenderSystem.enableDepthTest();
 	}
 
 	protected void renderTooltip(int i, int j) {
@@ -160,12 +149,12 @@ public abstract class AbstractContainerScreen<T extends AbstractContainerMenu> e
 	}
 
 	private void renderFloatingItem(ItemStack itemStack, int i, int j, String string) {
-		GlStateManager.translatef(0.0F, 0.0F, 32.0F);
-		this.blitOffset = 200;
+		RenderSystem.translatef(0.0F, 0.0F, 32.0F);
+		this.setBlitOffset(200);
 		this.itemRenderer.blitOffset = 200.0F;
 		this.itemRenderer.renderAndDecorateItem(itemStack, i, j);
 		this.itemRenderer.renderGuiItemDecorations(this.font, itemStack, i, j - (this.draggingItem.isEmpty() ? 0 : 8), string);
-		this.blitOffset = 0;
+		this.setBlitOffset(0);
 		this.itemRenderer.blitOffset = 0.0F;
 	}
 
@@ -207,16 +196,14 @@ public abstract class AbstractContainerScreen<T extends AbstractContainerMenu> e
 			}
 		}
 
-		this.blitOffset = 100;
+		this.setBlitOffset(100);
 		this.itemRenderer.blitOffset = 100.0F;
 		if (itemStack.isEmpty() && slot.isActive()) {
-			String string2 = slot.getNoItemIcon();
-			if (string2 != null) {
-				TextureAtlasSprite textureAtlasSprite = this.minecraft.getTextureAtlas().getTexture(string2);
-				GlStateManager.disableLighting();
-				this.minecraft.getTextureManager().bind(TextureAtlas.LOCATION_BLOCKS);
-				blit(i, j, this.blitOffset, 16, 16, textureAtlasSprite);
-				GlStateManager.enableLighting();
+			Pair<ResourceLocation, ResourceLocation> pair = slot.getNoItemIcon();
+			if (pair != null) {
+				TextureAtlasSprite textureAtlasSprite = (TextureAtlasSprite)this.minecraft.getTextureAtlas(pair.getFirst()).apply(pair.getSecond());
+				this.minecraft.getTextureManager().bind(textureAtlasSprite.atlas().location());
+				blit(i, j, this.getBlitOffset(), 16, 16, textureAtlasSprite);
 				bl2 = true;
 			}
 		}
@@ -226,13 +213,13 @@ public abstract class AbstractContainerScreen<T extends AbstractContainerMenu> e
 				fill(i, j, i + 16, j + 16, -2130706433);
 			}
 
-			GlStateManager.enableDepthTest();
+			RenderSystem.enableDepthTest();
 			this.itemRenderer.renderAndDecorateItem(this.minecraft.player, itemStack, i, j);
 			this.itemRenderer.renderGuiItemDecorations(this.font, itemStack, i, j, string);
 		}
 
 		this.itemRenderer.blitOffset = 0.0F;
-		this.blitOffset = 0;
+		this.setBlitOffset(0);
 	}
 
 	private void recalculateQuickCraftRemaining() {
@@ -314,8 +301,8 @@ public abstract class AbstractContainerScreen<T extends AbstractContainerMenu> e
 							} else {
 								boolean bl3 = m != -999
 									&& (
-										InputConstants.isKeyDown(Minecraft.getInstance().window.getWindow(), 340)
-											|| InputConstants.isKeyDown(Minecraft.getInstance().window.getWindow(), 344)
+										InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 340)
+											|| InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 344)
 									);
 								ClickType clickType = ClickType.PICKUP;
 								if (bl3) {
@@ -488,7 +475,8 @@ public abstract class AbstractContainerScreen<T extends AbstractContainerMenu> e
 				} else {
 					boolean bl2 = l != -999
 						&& (
-							InputConstants.isKeyDown(Minecraft.getInstance().window.getWindow(), 340) || InputConstants.isKeyDown(Minecraft.getInstance().window.getWindow(), 344)
+							InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 340)
+								|| InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 344)
 						);
 					if (bl2) {
 						this.lastQuickMoved = slot != null && slot.hasItem() ? slot.getItem().copy() : ItemStack.EMPTY;

@@ -1,8 +1,9 @@
 package net.minecraft.client.gui.screens.inventory;
 
-import com.mojang.blaze3d.platform.GLX;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -10,6 +11,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
 import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -92,51 +94,51 @@ public class InventoryScreen extends EffectRenderingInventoryScreen<InventoryMen
 
 	@Override
 	protected void renderBg(float f, int i, int j) {
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		this.minecraft.getTextureManager().bind(INVENTORY_LOCATION);
 		int k = this.leftPos;
 		int l = this.topPos;
 		this.blit(k, l, 0, 0, this.imageWidth, this.imageHeight);
-		renderPlayerModel(k + 51, l + 75, 30, (float)(k + 51) - this.xMouse, (float)(l + 75 - 50) - this.yMouse, this.minecraft.player);
+		renderEntityInInventory(k + 51, l + 75, 30, (float)(k + 51) - this.xMouse, (float)(l + 75 - 50) - this.yMouse, this.minecraft.player);
 	}
 
-	public static void renderPlayerModel(int i, int j, int k, float f, float g, LivingEntity livingEntity) {
-		GlStateManager.enableColorMaterial();
-		GlStateManager.pushMatrix();
-		GlStateManager.translatef((float)i, (float)j, 50.0F);
-		GlStateManager.scalef((float)(-k), (float)k, (float)k);
-		GlStateManager.rotatef(180.0F, 0.0F, 0.0F, 1.0F);
-		float h = livingEntity.yBodyRot;
-		float l = livingEntity.yRot;
-		float m = livingEntity.xRot;
-		float n = livingEntity.yHeadRotO;
-		float o = livingEntity.yHeadRot;
-		GlStateManager.rotatef(135.0F, 0.0F, 1.0F, 0.0F);
-		Lighting.turnOn();
-		GlStateManager.rotatef(-135.0F, 0.0F, 1.0F, 0.0F);
-		GlStateManager.rotatef(-((float)Math.atan((double)(g / 40.0F))) * 20.0F, 1.0F, 0.0F, 0.0F);
-		livingEntity.yBodyRot = (float)Math.atan((double)(f / 40.0F)) * 20.0F;
-		livingEntity.yRot = (float)Math.atan((double)(f / 40.0F)) * 40.0F;
-		livingEntity.xRot = -((float)Math.atan((double)(g / 40.0F))) * 20.0F;
+	public static void renderEntityInInventory(int i, int j, int k, float f, float g, LivingEntity livingEntity) {
+		float h = (float)Math.atan((double)(f / 40.0F));
+		float l = (float)Math.atan((double)(g / 40.0F));
+		RenderSystem.pushMatrix();
+		RenderSystem.translatef((float)i, (float)j, 1050.0F);
+		RenderSystem.scalef(1.0F, 1.0F, -1.0F);
+		PoseStack poseStack = new PoseStack();
+		poseStack.translate(0.0, 0.0, 1000.0);
+		poseStack.scale((float)k, (float)k, (float)k);
+		Quaternion quaternion = Vector3f.ZP.rotationDegrees(180.0F);
+		Quaternion quaternion2 = Vector3f.XP.rotationDegrees(l * 20.0F);
+		quaternion.mul(quaternion2);
+		poseStack.mulPose(quaternion);
+		float m = livingEntity.yBodyRot;
+		float n = livingEntity.yRot;
+		float o = livingEntity.xRot;
+		float p = livingEntity.yHeadRotO;
+		float q = livingEntity.yHeadRot;
+		livingEntity.yBodyRot = 180.0F + h * 20.0F;
+		livingEntity.yRot = 180.0F + h * 40.0F;
+		livingEntity.xRot = -l * 20.0F;
 		livingEntity.yHeadRot = livingEntity.yRot;
 		livingEntity.yHeadRotO = livingEntity.yRot;
-		GlStateManager.translatef(0.0F, 0.0F, 0.0F);
 		EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-		entityRenderDispatcher.setPlayerRotY(180.0F);
+		quaternion2.conj();
+		entityRenderDispatcher.overrideCameraOrientation(quaternion2);
 		entityRenderDispatcher.setRenderShadow(false);
-		entityRenderDispatcher.render(livingEntity, 0.0, 0.0, 0.0, 0.0F, 1.0F, false);
+		MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+		entityRenderDispatcher.render(livingEntity, 0.0, 0.0, 0.0, 0.0F, 1.0F, poseStack, bufferSource, 15728880);
+		bufferSource.endBatch();
 		entityRenderDispatcher.setRenderShadow(true);
-		livingEntity.yBodyRot = h;
-		livingEntity.yRot = l;
-		livingEntity.xRot = m;
-		livingEntity.yHeadRotO = n;
-		livingEntity.yHeadRot = o;
-		GlStateManager.popMatrix();
-		Lighting.turnOff();
-		GlStateManager.disableRescaleNormal();
-		GlStateManager.activeTexture(GLX.GL_TEXTURE1);
-		GlStateManager.disableTexture();
-		GlStateManager.activeTexture(GLX.GL_TEXTURE0);
+		livingEntity.yBodyRot = m;
+		livingEntity.yRot = n;
+		livingEntity.xRot = o;
+		livingEntity.yHeadRotO = p;
+		livingEntity.yHeadRot = q;
+		RenderSystem.popMatrix();
 	}
 
 	@Override

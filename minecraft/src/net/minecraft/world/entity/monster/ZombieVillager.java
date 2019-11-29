@@ -24,6 +24,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.village.ReputationEventType;
@@ -35,6 +36,7 @@ import net.minecraft.world.entity.npc.VillagerType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -132,11 +134,12 @@ public class ZombieVillager extends Zombie implements VillagerDataHolder {
 
 			if (!this.level.isClientSide) {
 				this.startConverting(player.getUUID(), this.random.nextInt(2401) + 3600);
+				player.swing(interactionHand, true);
 			}
 
 			return true;
 		} else {
-			return false;
+			return super.mobInteract(player, interactionHand);
 		}
 	}
 
@@ -170,9 +173,9 @@ public class ZombieVillager extends Zombie implements VillagerDataHolder {
 			if (!this.isSilent()) {
 				this.level
 					.playLocalSound(
-						this.x + 0.5,
-						this.y + 0.5,
-						this.z + 0.5,
+						this.getX(),
+						this.getEyeY(),
+						this.getZ(),
 						SoundEvents.ZOMBIE_VILLAGER_CURE,
 						this.getSoundSource(),
 						1.0F + this.random.nextFloat(),
@@ -187,6 +190,21 @@ public class ZombieVillager extends Zombie implements VillagerDataHolder {
 
 	private void finishConversion(ServerLevel serverLevel) {
 		Villager villager = EntityType.VILLAGER.create(serverLevel);
+
+		for(EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
+			ItemStack itemStack = this.getItemBySlot(equipmentSlot);
+			if (!itemStack.isEmpty()) {
+				if (EnchantmentHelper.hasBindingCurse(itemStack)) {
+					villager.setSlot(equipmentSlot.getIndex() + 300, itemStack);
+				} else {
+					double d = (double)this.getEquipmentDropChance(equipmentSlot);
+					if (d > 1.0) {
+						this.spawnAtLocation(itemStack);
+					}
+				}
+			}
+		}
+
 		villager.copyPosition(this);
 		villager.setVillagerData(this.getVillagerData());
 		if (this.gossips != null) {
@@ -210,6 +228,11 @@ public class ZombieVillager extends Zombie implements VillagerDataHolder {
 			villager.setCustomNameVisible(this.isCustomNameVisible());
 		}
 
+		if (this.isPersistenceRequired()) {
+			villager.setPersistenceRequired();
+		}
+
+		villager.setInvulnerable(this.isInvulnerable());
 		serverLevel.addFreshEntity(villager);
 		if (this.conversionStarter != null) {
 			Player player = serverLevel.getPlayerByUUID(this.conversionStarter);
@@ -229,9 +252,9 @@ public class ZombieVillager extends Zombie implements VillagerDataHolder {
 			int j = 0;
 			BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
 
-			for(int k = (int)this.x - 4; k < (int)this.x + 4 && j < 14; ++k) {
-				for(int l = (int)this.y - 4; l < (int)this.y + 4 && j < 14; ++l) {
-					for(int m = (int)this.z - 4; m < (int)this.z + 4 && j < 14; ++m) {
+			for(int k = (int)this.getX() - 4; k < (int)this.getX() + 4 && j < 14; ++k) {
+				for(int l = (int)this.getY() - 4; l < (int)this.getY() + 4 && j < 14; ++l) {
+					for(int m = (int)this.getZ() - 4; m < (int)this.getZ() + 4 && j < 14; ++m) {
 						Block block = this.level.getBlockState(mutableBlockPos.set(k, l, m)).getBlock();
 						if (block == Blocks.IRON_BARS || block instanceof BedBlock) {
 							if (this.random.nextFloat() < 0.3F) {

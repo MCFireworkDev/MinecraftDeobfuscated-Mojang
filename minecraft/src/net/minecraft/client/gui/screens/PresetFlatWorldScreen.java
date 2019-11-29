@@ -2,8 +2,7 @@ package net.minecraft.client.gui.screens;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -76,6 +75,11 @@ public class PresetFlatWorldScreen extends Screen {
 	}
 
 	@Override
+	public void onClose() {
+		this.minecraft.setScreen(this.parent);
+	}
+
+	@Override
 	public void removed() {
 		this.minecraft.keyboardHandler.setSendRepeatsToGui(false);
 	}
@@ -84,9 +88,12 @@ public class PresetFlatWorldScreen extends Screen {
 	public void render(int i, int j, float f) {
 		this.renderBackground();
 		this.list.render(i, j, f);
+		RenderSystem.pushMatrix();
+		RenderSystem.translatef(0.0F, 0.0F, 400.0F);
 		this.drawCenteredString(this.font, this.title.getColoredString(), this.width / 2, 8, 16777215);
 		this.drawString(this.font, this.shareText, 50, 30, 10526880);
 		this.drawString(this.font, this.listText, 50, 70, 10526880);
+		RenderSystem.popMatrix();
 		this.export.render(i, j, f);
 		super.render(i, j, f);
 	}
@@ -289,17 +296,15 @@ public class PresetFlatWorldScreen extends Screen {
 
 			private void blitSlot(int i, int j, Item item) {
 				this.blitSlotBg(i + 1, j + 1);
-				GlStateManager.enableRescaleNormal();
-				Lighting.turnOnGui();
+				RenderSystem.enableRescaleNormal();
 				PresetFlatWorldScreen.this.itemRenderer.renderGuiItem(new ItemStack(item), i + 2, j + 2);
-				Lighting.turnOff();
-				GlStateManager.disableRescaleNormal();
+				RenderSystem.disableRescaleNormal();
 			}
 
 			private void blitSlotBg(int i, int j) {
-				GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+				RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 				PresetsList.this.minecraft.getTextureManager().bind(GuiComponent.STATS_ICON_LOCATION);
-				GuiComponent.blit(i, j, PresetFlatWorldScreen.this.blitOffset, 0.0F, 0.0F, 18, 18, 128, 128);
+				GuiComponent.blit(i, j, PresetFlatWorldScreen.this.getBlitOffset(), 0.0F, 0.0F, 18, 18, 128, 128);
 			}
 		}
 	}

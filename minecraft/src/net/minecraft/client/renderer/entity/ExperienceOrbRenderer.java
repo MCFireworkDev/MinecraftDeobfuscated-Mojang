@@ -1,14 +1,15 @@
 package net.minecraft.client.renderer.entity;
 
-import com.mojang.blaze3d.platform.GLX;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Matrix3f;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ExperienceOrb;
@@ -16,6 +17,7 @@ import net.minecraft.world.entity.ExperienceOrb;
 @Environment(EnvType.CLIENT)
 public class ExperienceOrbRenderer extends EntityRenderer<ExperienceOrb> {
 	private static final ResourceLocation EXPERIENCE_ORB_LOCATION = new ResourceLocation("textures/entity/experience_orb.png");
+	private static final RenderType RENDER_TYPE = RenderType.entityTranslucent(EXPERIENCE_ORB_LOCATION);
 
 	public ExperienceOrbRenderer(EntityRenderDispatcher entityRenderDispatcher) {
 		super(entityRenderDispatcher);
@@ -23,53 +25,55 @@ public class ExperienceOrbRenderer extends EntityRenderer<ExperienceOrb> {
 		this.shadowStrength = 0.75F;
 	}
 
-	public void render(ExperienceOrb experienceOrb, double d, double e, double f, float g, float h) {
-		if (!this.solidRender && Minecraft.getInstance().getEntityRenderDispatcher().options != null) {
-			GlStateManager.pushMatrix();
-			GlStateManager.translatef((float)d, (float)e, (float)f);
-			this.bindTexture(experienceOrb);
-			Lighting.turnOn();
-			int i = experienceOrb.getIcon();
-			float j = (float)(i % 4 * 16 + 0) / 64.0F;
-			float k = (float)(i % 4 * 16 + 16) / 64.0F;
-			float l = (float)(i / 4 * 16 + 0) / 64.0F;
-			float m = (float)(i / 4 * 16 + 16) / 64.0F;
-			float n = 1.0F;
-			float o = 0.5F;
-			float p = 0.25F;
-			int q = experienceOrb.getLightColor();
-			int r = q % 65536;
-			int s = q / 65536;
-			GLX.glMultiTexCoord2f(GLX.GL_TEXTURE1, (float)r, (float)s);
-			GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-			float t = 255.0F;
-			float u = ((float)experienceOrb.tickCount + h) / 2.0F;
-			int v = (int)((Mth.sin(u + 0.0F) + 1.0F) * 0.5F * 255.0F);
-			int w = 255;
-			int x = (int)((Mth.sin(u + (float) (Math.PI * 4.0 / 3.0)) + 1.0F) * 0.1F * 255.0F);
-			GlStateManager.translatef(0.0F, 0.1F, 0.0F);
-			GlStateManager.rotatef(180.0F - this.entityRenderDispatcher.playerRotY, 0.0F, 1.0F, 0.0F);
-			GlStateManager.rotatef(
-				(float)(this.entityRenderDispatcher.options.thirdPersonView == 2 ? -1 : 1) * -this.entityRenderDispatcher.playerRotX, 1.0F, 0.0F, 0.0F
-			);
-			float y = 0.3F;
-			GlStateManager.scalef(0.3F, 0.3F, 0.3F);
-			Tesselator tesselator = Tesselator.getInstance();
-			BufferBuilder bufferBuilder = tesselator.getBuilder();
-			bufferBuilder.begin(7, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
-			bufferBuilder.vertex(-0.5, -0.25, 0.0).uv((double)j, (double)m).color(v, 255, x, 128).normal(0.0F, 1.0F, 0.0F).endVertex();
-			bufferBuilder.vertex(0.5, -0.25, 0.0).uv((double)k, (double)m).color(v, 255, x, 128).normal(0.0F, 1.0F, 0.0F).endVertex();
-			bufferBuilder.vertex(0.5, 0.75, 0.0).uv((double)k, (double)l).color(v, 255, x, 128).normal(0.0F, 1.0F, 0.0F).endVertex();
-			bufferBuilder.vertex(-0.5, 0.75, 0.0).uv((double)j, (double)l).color(v, 255, x, 128).normal(0.0F, 1.0F, 0.0F).endVertex();
-			tesselator.end();
-			GlStateManager.disableBlend();
-			GlStateManager.disableRescaleNormal();
-			GlStateManager.popMatrix();
-			super.render(experienceOrb, d, e, f, g, h);
-		}
+	protected int getBlockLightLevel(ExperienceOrb experienceOrb, float f) {
+		return Mth.clamp(super.getBlockLightLevel(experienceOrb, f) + 7, 0, 15);
 	}
 
-	protected ResourceLocation getTextureLocation(ExperienceOrb experienceOrb) {
+	public void render(ExperienceOrb experienceOrb, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+		poseStack.pushPose();
+		int j = experienceOrb.getIcon();
+		float h = (float)(j % 4 * 16 + 0) / 64.0F;
+		float k = (float)(j % 4 * 16 + 16) / 64.0F;
+		float l = (float)(j / 4 * 16 + 0) / 64.0F;
+		float m = (float)(j / 4 * 16 + 16) / 64.0F;
+		float n = 1.0F;
+		float o = 0.5F;
+		float p = 0.25F;
+		float q = 255.0F;
+		float r = ((float)experienceOrb.tickCount + g) / 2.0F;
+		int s = (int)((Mth.sin(r + 0.0F) + 1.0F) * 0.5F * 255.0F);
+		int t = 255;
+		int u = (int)((Mth.sin(r + (float) (Math.PI * 4.0 / 3.0)) + 1.0F) * 0.1F * 255.0F);
+		poseStack.translate(0.0, 0.1F, 0.0);
+		poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
+		poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
+		float v = 0.3F;
+		poseStack.scale(0.3F, 0.3F, 0.3F);
+		VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RENDER_TYPE);
+		PoseStack.Pose pose = poseStack.last();
+		Matrix4f matrix4f = pose.pose();
+		Matrix3f matrix3f = pose.normal();
+		vertex(vertexConsumer, matrix4f, matrix3f, -0.5F, -0.25F, s, 255, u, h, m, i);
+		vertex(vertexConsumer, matrix4f, matrix3f, 0.5F, -0.25F, s, 255, u, k, m, i);
+		vertex(vertexConsumer, matrix4f, matrix3f, 0.5F, 0.75F, s, 255, u, k, l, i);
+		vertex(vertexConsumer, matrix4f, matrix3f, -0.5F, 0.75F, s, 255, u, h, l, i);
+		poseStack.popPose();
+		super.render(experienceOrb, f, g, poseStack, multiBufferSource, i);
+	}
+
+	private static void vertex(
+		VertexConsumer vertexConsumer, Matrix4f matrix4f, Matrix3f matrix3f, float f, float g, int i, int j, int k, float h, float l, int m
+	) {
+		vertexConsumer.vertex(matrix4f, f, g, 0.0F)
+			.color(i, j, k, 128)
+			.uv(h, l)
+			.overlayCoords(OverlayTexture.NO_OVERLAY)
+			.uv2(m)
+			.normal(matrix3f, 0.0F, 1.0F, 0.0F)
+			.endVertex();
+	}
+
+	public ResourceLocation getTextureLocation(ExperienceOrb experienceOrb) {
 		return EXPERIENCE_ORB_LOCATION;
 	}
 }

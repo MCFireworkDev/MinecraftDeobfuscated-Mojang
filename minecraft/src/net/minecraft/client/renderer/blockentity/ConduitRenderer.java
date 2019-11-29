@@ -1,188 +1,100 @@
 package net.minecraft.client.renderer.blockentity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Camera;
-import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.resources.model.Material;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.ConduitBlockEntity;
 
 @Environment(EnvType.CLIENT)
 public class ConduitRenderer extends BlockEntityRenderer<ConduitBlockEntity> {
-	private static final ResourceLocation SHELL_TEXTURE = new ResourceLocation("textures/entity/conduit/base.png");
-	private static final ResourceLocation ACTIVE_SHELL_TEXTURE = new ResourceLocation("textures/entity/conduit/cage.png");
-	private static final ResourceLocation WIND_TEXTURE = new ResourceLocation("textures/entity/conduit/wind.png");
-	private static final ResourceLocation VERTICAL_WIND_TEXTURE = new ResourceLocation("textures/entity/conduit/wind_vertical.png");
-	private static final ResourceLocation OPEN_EYE_TEXTURE = new ResourceLocation("textures/entity/conduit/open_eye.png");
-	private static final ResourceLocation CLOSED_EYE_TEXTURE = new ResourceLocation("textures/entity/conduit/closed_eye.png");
-	private final ConduitRenderer.ShellModel shellModel = new ConduitRenderer.ShellModel();
-	private final ConduitRenderer.CageModel cageModel = new ConduitRenderer.CageModel();
-	private final ConduitRenderer.WindModel windModel = new ConduitRenderer.WindModel();
-	private final ConduitRenderer.EyeModel eyeModel = new ConduitRenderer.EyeModel();
+	public static final Material SHELL_TEXTURE = new Material(TextureAtlas.LOCATION_BLOCKS, new ResourceLocation("entity/conduit/base"));
+	public static final Material ACTIVE_SHELL_TEXTURE = new Material(TextureAtlas.LOCATION_BLOCKS, new ResourceLocation("entity/conduit/cage"));
+	public static final Material WIND_TEXTURE = new Material(TextureAtlas.LOCATION_BLOCKS, new ResourceLocation("entity/conduit/wind"));
+	public static final Material VERTICAL_WIND_TEXTURE = new Material(TextureAtlas.LOCATION_BLOCKS, new ResourceLocation("entity/conduit/wind_vertical"));
+	public static final Material OPEN_EYE_TEXTURE = new Material(TextureAtlas.LOCATION_BLOCKS, new ResourceLocation("entity/conduit/open_eye"));
+	public static final Material CLOSED_EYE_TEXTURE = new Material(TextureAtlas.LOCATION_BLOCKS, new ResourceLocation("entity/conduit/closed_eye"));
+	private final ModelPart eye = new ModelPart(16, 16, 0, 0);
+	private final ModelPart wind;
+	private final ModelPart shell;
+	private final ModelPart cage;
 
-	public void render(ConduitBlockEntity conduitBlockEntity, double d, double e, double f, float g, int i) {
-		float h = (float)conduitBlockEntity.tickCount + g;
+	public ConduitRenderer(BlockEntityRenderDispatcher blockEntityRenderDispatcher) {
+		super(blockEntityRenderDispatcher);
+		this.eye.addBox(-4.0F, -4.0F, 0.0F, 8.0F, 8.0F, 0.0F, 0.01F);
+		this.wind = new ModelPart(64, 32, 0, 0);
+		this.wind.addBox(-8.0F, -8.0F, -8.0F, 16.0F, 16.0F, 16.0F);
+		this.shell = new ModelPart(32, 16, 0, 0);
+		this.shell.addBox(-3.0F, -3.0F, -3.0F, 6.0F, 6.0F, 6.0F);
+		this.cage = new ModelPart(32, 16, 0, 0);
+		this.cage.addBox(-4.0F, -4.0F, -4.0F, 8.0F, 8.0F, 8.0F);
+	}
+
+	public void render(ConduitBlockEntity conduitBlockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j) {
+		float g = (float)conduitBlockEntity.tickCount + f;
 		if (!conduitBlockEntity.isActive()) {
-			float j = conduitBlockEntity.getActiveRotation(0.0F);
-			this.bindTexture(SHELL_TEXTURE);
-			GlStateManager.pushMatrix();
-			GlStateManager.translatef((float)d + 0.5F, (float)e + 0.5F, (float)f + 0.5F);
-			GlStateManager.rotatef(j, 0.0F, 1.0F, 0.0F);
-			this.shellModel.render(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
-			GlStateManager.popMatrix();
-		} else if (conduitBlockEntity.isActive()) {
-			float j = conduitBlockEntity.getActiveRotation(g) * (180.0F / (float)Math.PI);
-			float k = Mth.sin(h * 0.1F) / 2.0F + 0.5F;
+			float h = conduitBlockEntity.getActiveRotation(0.0F);
+			VertexConsumer vertexConsumer = SHELL_TEXTURE.buffer(multiBufferSource, RenderType::entitySolid);
+			poseStack.pushPose();
+			poseStack.translate(0.5, 0.5, 0.5);
+			poseStack.mulPose(Vector3f.YP.rotationDegrees(h));
+			this.shell.render(poseStack, vertexConsumer, i, j);
+			poseStack.popPose();
+		} else {
+			float h = conduitBlockEntity.getActiveRotation(f) * (180.0F / (float)Math.PI);
+			float k = Mth.sin(g * 0.1F) / 2.0F + 0.5F;
 			k = k * k + k;
-			this.bindTexture(ACTIVE_SHELL_TEXTURE);
-			GlStateManager.disableCull();
-			GlStateManager.pushMatrix();
-			GlStateManager.translatef((float)d + 0.5F, (float)e + 0.3F + k * 0.2F, (float)f + 0.5F);
-			GlStateManager.rotatef(j, 0.5F, 1.0F, 0.5F);
-			this.cageModel.render(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
-			GlStateManager.popMatrix();
-			int l = 3;
-			int m = conduitBlockEntity.tickCount / 3 % 22;
-			this.windModel.setActiveAnim(m);
-			int n = conduitBlockEntity.tickCount / 66 % 3;
-			switch(n) {
-				case 0:
-					this.bindTexture(WIND_TEXTURE);
-					GlStateManager.pushMatrix();
-					GlStateManager.translatef((float)d + 0.5F, (float)e + 0.5F, (float)f + 0.5F);
-					this.windModel.render(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
-					GlStateManager.popMatrix();
-					GlStateManager.pushMatrix();
-					GlStateManager.translatef((float)d + 0.5F, (float)e + 0.5F, (float)f + 0.5F);
-					GlStateManager.scalef(0.875F, 0.875F, 0.875F);
-					GlStateManager.rotatef(180.0F, 1.0F, 0.0F, 0.0F);
-					GlStateManager.rotatef(180.0F, 0.0F, 0.0F, 1.0F);
-					this.windModel.render(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
-					GlStateManager.popMatrix();
-					break;
-				case 1:
-					this.bindTexture(VERTICAL_WIND_TEXTURE);
-					GlStateManager.pushMatrix();
-					GlStateManager.translatef((float)d + 0.5F, (float)e + 0.5F, (float)f + 0.5F);
-					GlStateManager.rotatef(90.0F, 1.0F, 0.0F, 0.0F);
-					this.windModel.render(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
-					GlStateManager.popMatrix();
-					GlStateManager.pushMatrix();
-					GlStateManager.translatef((float)d + 0.5F, (float)e + 0.5F, (float)f + 0.5F);
-					GlStateManager.scalef(0.875F, 0.875F, 0.875F);
-					GlStateManager.rotatef(180.0F, 1.0F, 0.0F, 0.0F);
-					GlStateManager.rotatef(180.0F, 0.0F, 0.0F, 1.0F);
-					this.windModel.render(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
-					GlStateManager.popMatrix();
-					break;
-				case 2:
-					this.bindTexture(WIND_TEXTURE);
-					GlStateManager.pushMatrix();
-					GlStateManager.translatef((float)d + 0.5F, (float)e + 0.5F, (float)f + 0.5F);
-					GlStateManager.rotatef(90.0F, 0.0F, 0.0F, 1.0F);
-					this.windModel.render(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
-					GlStateManager.popMatrix();
-					GlStateManager.pushMatrix();
-					GlStateManager.translatef((float)d + 0.5F, (float)e + 0.5F, (float)f + 0.5F);
-					GlStateManager.scalef(0.875F, 0.875F, 0.875F);
-					GlStateManager.rotatef(180.0F, 1.0F, 0.0F, 0.0F);
-					GlStateManager.rotatef(180.0F, 0.0F, 0.0F, 1.0F);
-					this.windModel.render(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
-					GlStateManager.popMatrix();
+			poseStack.pushPose();
+			poseStack.translate(0.5, (double)(0.3F + k * 0.2F), 0.5);
+			Vector3f vector3f = new Vector3f(0.5F, 1.0F, 0.5F);
+			vector3f.normalize();
+			poseStack.mulPose(new Quaternion(vector3f, h, true));
+			this.cage.render(poseStack, ACTIVE_SHELL_TEXTURE.buffer(multiBufferSource, RenderType::entityCutoutNoCull), i, j);
+			poseStack.popPose();
+			int l = conduitBlockEntity.tickCount / 66 % 3;
+			poseStack.pushPose();
+			poseStack.translate(0.5, 0.5, 0.5);
+			if (l == 1) {
+				poseStack.mulPose(Vector3f.XP.rotationDegrees(90.0F));
+			} else if (l == 2) {
+				poseStack.mulPose(Vector3f.ZP.rotationDegrees(90.0F));
 			}
 
-			Camera camera = this.blockEntityRenderDispatcher.camera;
-			if (conduitBlockEntity.isHunting()) {
-				this.bindTexture(OPEN_EYE_TEXTURE);
-			} else {
-				this.bindTexture(CLOSED_EYE_TEXTURE);
-			}
-
-			GlStateManager.pushMatrix();
-			GlStateManager.translatef((float)d + 0.5F, (float)e + 0.3F + k * 0.2F, (float)f + 0.5F);
-			GlStateManager.scalef(0.5F, 0.5F, 0.5F);
-			GlStateManager.rotatef(-camera.getYRot(), 0.0F, 1.0F, 0.0F);
-			GlStateManager.rotatef(camera.getXRot(), 1.0F, 0.0F, 0.0F);
-			GlStateManager.rotatef(180.0F, 0.0F, 0.0F, 1.0F);
-			this.eyeModel.render(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.083333336F);
-			GlStateManager.popMatrix();
-		}
-
-		super.render(conduitBlockEntity, d, e, f, g, i);
-	}
-
-	@Environment(EnvType.CLIENT)
-	static class CageModel extends Model {
-		private final ModelPart box;
-
-		public CageModel() {
-			this.texWidth = 32;
-			this.texHeight = 16;
-			this.box = new ModelPart(this, 0, 0);
-			this.box.addBox(-4.0F, -4.0F, -4.0F, 8, 8, 8);
-		}
-
-		public void render(float f, float g, float h, float i, float j, float k) {
-			this.box.render(k);
-		}
-	}
-
-	@Environment(EnvType.CLIENT)
-	static class EyeModel extends Model {
-		private final ModelPart eye;
-
-		public EyeModel() {
-			this.texWidth = 8;
-			this.texHeight = 8;
-			this.eye = new ModelPart(this, 0, 0);
-			this.eye.addBox(-4.0F, -4.0F, 0.0F, 8, 8, 0, 0.01F);
-		}
-
-		public void render(float f, float g, float h, float i, float j, float k) {
-			this.eye.render(k);
-		}
-	}
-
-	@Environment(EnvType.CLIENT)
-	static class ShellModel extends Model {
-		private final ModelPart box;
-
-		public ShellModel() {
-			this.texWidth = 32;
-			this.texHeight = 16;
-			this.box = new ModelPart(this, 0, 0);
-			this.box.addBox(-3.0F, -3.0F, -3.0F, 6, 6, 6);
-		}
-
-		public void render(float f, float g, float h, float i, float j, float k) {
-			this.box.render(k);
-		}
-	}
-
-	@Environment(EnvType.CLIENT)
-	static class WindModel extends Model {
-		private final ModelPart[] box = new ModelPart[22];
-		private int activeAnim;
-
-		public WindModel() {
-			this.texWidth = 64;
-			this.texHeight = 1024;
-
-			for(int i = 0; i < 22; ++i) {
-				this.box[i] = new ModelPart(this, 0, 32 * i);
-				this.box[i].addBox(-8.0F, -8.0F, -8.0F, 16, 16, 16);
-			}
-		}
-
-		public void render(float f, float g, float h, float i, float j, float k) {
-			this.box[this.activeAnim].render(k);
-		}
-
-		public void setActiveAnim(int i) {
-			this.activeAnim = i;
+			VertexConsumer vertexConsumer2 = (l == 1 ? VERTICAL_WIND_TEXTURE : WIND_TEXTURE).buffer(multiBufferSource, RenderType::entityCutoutNoCull);
+			this.wind.render(poseStack, vertexConsumer2, i, j);
+			poseStack.popPose();
+			poseStack.pushPose();
+			poseStack.translate(0.5, 0.5, 0.5);
+			poseStack.scale(0.875F, 0.875F, 0.875F);
+			poseStack.mulPose(Vector3f.XP.rotationDegrees(180.0F));
+			poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
+			this.wind.render(poseStack, vertexConsumer2, i, j);
+			poseStack.popPose();
+			Camera camera = this.renderer.camera;
+			poseStack.pushPose();
+			poseStack.translate(0.5, (double)(0.3F + k * 0.2F), 0.5);
+			poseStack.scale(0.5F, 0.5F, 0.5F);
+			float m = -camera.getYRot();
+			poseStack.mulPose(Vector3f.YP.rotationDegrees(m));
+			poseStack.mulPose(Vector3f.XP.rotationDegrees(camera.getXRot()));
+			poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
+			float n = 1.3333334F;
+			poseStack.scale(1.3333334F, 1.3333334F, 1.3333334F);
+			this.eye
+				.render(
+					poseStack, (conduitBlockEntity.isHunting() ? OPEN_EYE_TEXTURE : CLOSED_EYE_TEXTURE).buffer(multiBufferSource, RenderType::entityCutoutNoCull), i, j
+				);
+			poseStack.popPose();
 		}
 	}
 }

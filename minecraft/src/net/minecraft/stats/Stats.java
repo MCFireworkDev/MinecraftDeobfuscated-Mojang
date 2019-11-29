@@ -20,7 +20,7 @@ public class Stats {
 	public static final ResourceLocation PLAY_ONE_MINUTE = makeCustomStat("play_one_minute", StatFormatter.TIME);
 	public static final ResourceLocation TIME_SINCE_DEATH = makeCustomStat("time_since_death", StatFormatter.TIME);
 	public static final ResourceLocation TIME_SINCE_REST = makeCustomStat("time_since_rest", StatFormatter.TIME);
-	public static final ResourceLocation SNEAK_TIME = makeCustomStat("sneak_time", StatFormatter.TIME);
+	public static final ResourceLocation CROUCH_TIME = makeCustomStat("sneak_time", StatFormatter.TIME);
 	public static final ResourceLocation WALK_ONE_CM = makeCustomStat("walk_one_cm", StatFormatter.DISTANCE);
 	public static final ResourceLocation CROUCH_ONE_CM = makeCustomStat("crouch_one_cm", StatFormatter.DISTANCE);
 	public static final ResourceLocation SPRINT_ONE_CM = makeCustomStat("sprint_one_cm", StatFormatter.DISTANCE);
@@ -85,6 +85,8 @@ public class Stats {
 	public static final ResourceLocation BELL_RING = makeCustomStat("bell_ring", StatFormatter.DEFAULT);
 	public static final ResourceLocation RAID_TRIGGER = makeCustomStat("raid_trigger", StatFormatter.DEFAULT);
 	public static final ResourceLocation RAID_WIN = makeCustomStat("raid_win", StatFormatter.DEFAULT);
+	public static final ResourceLocation INTERACT_WITH_ANVIL = makeCustomStat("interact_with_anvil", StatFormatter.DEFAULT);
+	public static final ResourceLocation INTERACT_WITH_GRINDSTONE = makeCustomStat("interact_with_grindstone", StatFormatter.DEFAULT);
 
 	private static ResourceLocation makeCustomStat(String string, StatFormatter statFormatter) {
 		ResourceLocation resourceLocation = new ResourceLocation(string);

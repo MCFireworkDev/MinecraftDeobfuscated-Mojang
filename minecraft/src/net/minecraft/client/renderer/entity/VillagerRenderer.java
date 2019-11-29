@@ -1,11 +1,12 @@
 package net.minecraft.client.renderer.entity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.VillagerModel;
+import net.minecraft.client.renderer.entity.layers.CrossedArmsItemLayer;
 import net.minecraft.client.renderer.entity.layers.CustomHeadLayer;
-import net.minecraft.client.renderer.entity.layers.VillagerTradeItemLayer;
+import net.minecraft.client.renderer.entity.layers.VillagerProfessionLayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.world.entity.npc.Villager;
@@ -18,14 +19,14 @@ public class VillagerRenderer extends MobRenderer<Villager, VillagerModel<Villag
 		super(entityRenderDispatcher, new VillagerModel<>(0.0F), 0.5F);
 		this.addLayer(new CustomHeadLayer<>(this));
 		this.addLayer(new VillagerProfessionLayer<>(this, reloadableResourceManager, "villager"));
-		this.addLayer(new VillagerTradeItemLayer<>(this));
+		this.addLayer(new CrossedArmsItemLayer<>(this));
 	}
 
-	protected ResourceLocation getTextureLocation(Villager villager) {
+	public ResourceLocation getTextureLocation(Villager villager) {
 		return VILLAGER_BASE_SKIN;
 	}
 
-	protected void scale(Villager villager, float f) {
+	protected void scale(Villager villager, PoseStack poseStack, float f) {
 		float g = 0.9375F;
 		if (villager.isBaby()) {
 			g = (float)((double)g * 0.5);
@@ -34,6 +35,6 @@ public class VillagerRenderer extends MobRenderer<Villager, VillagerModel<Villag
 			this.shadowRadius = 0.5F;
 		}
 
-		GlStateManager.scalef(g, g, g);
+		poseStack.scale(g, g, g);
 	}
 }

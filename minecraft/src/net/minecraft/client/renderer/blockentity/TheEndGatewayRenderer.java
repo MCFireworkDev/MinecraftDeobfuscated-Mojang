@@ -1,36 +1,35 @@
 package net.minecraft.client.renderer.blockentity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.entity.TheEndGatewayBlockEntity;
-import net.minecraft.world.level.block.entity.TheEndPortalBlockEntity;
 
 @Environment(EnvType.CLIENT)
-public class TheEndGatewayRenderer extends TheEndPortalRenderer {
+public class TheEndGatewayRenderer extends TheEndPortalRenderer<TheEndGatewayBlockEntity> {
 	private static final ResourceLocation BEAM_LOCATION = new ResourceLocation("textures/entity/end_gateway_beam.png");
 
-	@Override
-	public void render(TheEndPortalBlockEntity theEndPortalBlockEntity, double d, double e, double f, float g, int i) {
-		GlStateManager.disableFog();
-		TheEndGatewayBlockEntity theEndGatewayBlockEntity = (TheEndGatewayBlockEntity)theEndPortalBlockEntity;
+	public TheEndGatewayRenderer(BlockEntityRenderDispatcher blockEntityRenderDispatcher) {
+		super(blockEntityRenderDispatcher);
+	}
+
+	public void render(TheEndGatewayBlockEntity theEndGatewayBlockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j) {
 		if (theEndGatewayBlockEntity.isSpawning() || theEndGatewayBlockEntity.isCoolingDown()) {
-			GlStateManager.alphaFunc(516, 0.1F);
-			this.bindTexture(BEAM_LOCATION);
-			float h = theEndGatewayBlockEntity.isSpawning() ? theEndGatewayBlockEntity.getSpawnPercent(g) : theEndGatewayBlockEntity.getCooldownPercent(g);
-			double j = theEndGatewayBlockEntity.isSpawning() ? 256.0 - e : 50.0;
-			h = Mth.sin(h * (float) Math.PI);
-			int k = Mth.floor((double)h * j);
+			float g = theEndGatewayBlockEntity.isSpawning() ? theEndGatewayBlockEntity.getSpawnPercent(f) : theEndGatewayBlockEntity.getCooldownPercent(f);
+			double d = theEndGatewayBlockEntity.isSpawning() ? 256.0 : 50.0;
+			g = Mth.sin(g * (float) Math.PI);
+			int k = Mth.floor((double)g * d);
 			float[] fs = theEndGatewayBlockEntity.isSpawning() ? DyeColor.MAGENTA.getTextureDiffuseColors() : DyeColor.PURPLE.getTextureDiffuseColors();
-			BeaconRenderer.renderBeaconBeam(d, e, f, (double)g, (double)h, theEndGatewayBlockEntity.getLevel().getGameTime(), 0, k, fs, 0.15, 0.175);
-			BeaconRenderer.renderBeaconBeam(d, e, f, (double)g, (double)h, theEndGatewayBlockEntity.getLevel().getGameTime(), 0, -k, fs, 0.15, 0.175);
+			long l = theEndGatewayBlockEntity.getLevel().getGameTime();
+			BeaconRenderer.renderBeaconBeam(poseStack, multiBufferSource, BEAM_LOCATION, f, g, l, 0, k, fs, 0.15F, 0.175F);
+			BeaconRenderer.renderBeaconBeam(poseStack, multiBufferSource, BEAM_LOCATION, f, g, l, 0, -k, fs, 0.15F, 0.175F);
 		}
 
-		super.render(theEndPortalBlockEntity, d, e, f, g, i);
-		GlStateManager.enableFog();
+		super.render(theEndGatewayBlockEntity, f, poseStack, multiBufferSource, i, j);
 	}
 
 	@Override

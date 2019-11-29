@@ -1,9 +1,15 @@
 package net.minecraft.client.renderer.entity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.BoatModel;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.vehicle.Boat;
@@ -25,65 +31,37 @@ public class BoatRenderer extends EntityRenderer<Boat> {
 		this.shadowRadius = 0.8F;
 	}
 
-	public void render(Boat boat, double d, double e, double f, float g, float h) {
-		GlStateManager.pushMatrix();
-		this.setupTranslation(d, e, f);
-		this.setupRotation(boat, g, h);
-		this.bindTexture(boat);
-		if (this.solidRender) {
-			GlStateManager.enableColorMaterial();
-			GlStateManager.setupSolidRenderingTextureCombine(this.getTeamColor(boat));
-		}
-
-		this.model.render(boat, h, 0.0F, -0.1F, 0.0F, 0.0F, 0.0625F);
-		if (this.solidRender) {
-			GlStateManager.tearDownSolidRenderingTextureCombine();
-			GlStateManager.disableColorMaterial();
-		}
-
-		GlStateManager.popMatrix();
-		super.render(boat, d, e, f, g, h);
-	}
-
-	public void setupRotation(Boat boat, float f, float g) {
-		GlStateManager.rotatef(180.0F - f, 0.0F, 1.0F, 0.0F);
+	public void render(Boat boat, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+		poseStack.pushPose();
+		poseStack.translate(0.0, 0.375, 0.0);
+		poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - f));
 		float h = (float)boat.getHurtTime() - g;
-		float i = boat.getDamage() - g;
-		if (i < 0.0F) {
-			i = 0.0F;
+		float j = boat.getDamage() - g;
+		if (j < 0.0F) {
+			j = 0.0F;
 		}
 
 		if (h > 0.0F) {
-			GlStateManager.rotatef(Mth.sin(h) * h * i / 10.0F * (float)boat.getHurtDir(), 1.0F, 0.0F, 0.0F);
+			poseStack.mulPose(Vector3f.XP.rotationDegrees(Mth.sin(h) * h * j / 10.0F * (float)boat.getHurtDir()));
 		}
 
-		float j = boat.getBubbleAngle(g);
-		if (!Mth.equal(j, 0.0F)) {
-			GlStateManager.rotatef(boat.getBubbleAngle(g), 1.0F, 0.0F, 1.0F);
+		float k = boat.getBubbleAngle(g);
+		if (!Mth.equal(k, 0.0F)) {
+			poseStack.mulPose(new Quaternion(new Vector3f(1.0F, 0.0F, 1.0F), boat.getBubbleAngle(g), true));
 		}
 
-		GlStateManager.scalef(-1.0F, -1.0F, 1.0F);
+		poseStack.scale(-1.0F, -1.0F, 1.0F);
+		poseStack.mulPose(Vector3f.YP.rotationDegrees(90.0F));
+		this.model.setupAnim(boat, g, 0.0F, -0.1F, 0.0F, 0.0F);
+		VertexConsumer vertexConsumer = multiBufferSource.getBuffer(this.model.renderType(this.getTextureLocation(boat)));
+		this.model.renderToBuffer(poseStack, vertexConsumer, i, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+		VertexConsumer vertexConsumer2 = multiBufferSource.getBuffer(RenderType.waterMask());
+		this.model.waterPatch().render(poseStack, vertexConsumer2, i, OverlayTexture.NO_OVERLAY);
+		poseStack.popPose();
+		super.render(boat, f, g, poseStack, multiBufferSource, i);
 	}
 
-	public void setupTranslation(double d, double e, double f) {
-		GlStateManager.translatef((float)d, (float)e + 0.375F, (float)f);
-	}
-
-	protected ResourceLocation getTextureLocation(Boat boat) {
+	public ResourceLocation getTextureLocation(Boat boat) {
 		return BOAT_TEXTURE_LOCATIONS[boat.getBoatType().ordinal()];
-	}
-
-	@Override
-	public boolean hasSecondPass() {
-		return true;
-	}
-
-	public void renderSecondPass(Boat boat, double d, double e, double f, float g, float h) {
-		GlStateManager.pushMatrix();
-		this.setupTranslation(d, e, f);
-		this.setupRotation(boat, g, h);
-		this.bindTexture(boat);
-		this.model.renderSecondPass(boat, h, 0.0F, -0.1F, 0.0F, 0.0F, 0.0625F);
-		GlStateManager.popMatrix();
 	}
 }

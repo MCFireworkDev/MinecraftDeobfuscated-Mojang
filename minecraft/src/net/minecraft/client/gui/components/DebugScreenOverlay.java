@@ -2,8 +2,8 @@ package net.minecraft.client.gui.components;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.platform.GLX;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.GlUtil;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.datafixers.DataFixUtils;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -26,6 +26,7 @@ import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -86,15 +87,15 @@ public class DebugScreenOverlay extends GuiComponent {
 
 	public void render() {
 		this.minecraft.getProfiler().push("debug");
-		GlStateManager.pushMatrix();
+		RenderSystem.pushMatrix();
 		Entity entity = this.minecraft.getCameraEntity();
 		this.block = entity.pick(20.0, 0.0F, false);
 		this.liquid = entity.pick(20.0, 0.0F, true);
 		this.drawGameInformation();
 		this.drawSystemInformation();
-		GlStateManager.popMatrix();
+		RenderSystem.popMatrix();
 		if (this.minecraft.options.renderFpsChart) {
-			int i = this.minecraft.window.getGuiScaledWidth();
+			int i = this.minecraft.getWindow().getGuiScaledWidth();
 			this.drawChart(this.minecraft.getFrameTimer(), 0, i / 2, true);
 			IntegratedServer integratedServer = this.minecraft.getSingleplayerServer();
 			if (integratedServer != null) {
@@ -139,7 +140,7 @@ public class DebugScreenOverlay extends GuiComponent {
 			if (!Strings.isNullOrEmpty(string)) {
 				int j = 9;
 				int k = this.font.width(string);
-				int l = this.minecraft.window.getGuiScaledWidth() - 2 - k;
+				int l = this.minecraft.getWindow().getGuiScaledWidth() - 2 - k;
 				int m = 2 + j * i;
 				fill(l - 1, m - 1, l + k + 1, m + j - 1, -1873784752);
 				this.font.draw(string, (float)l, (float)m, 14737632);
@@ -159,9 +160,7 @@ public class DebugScreenOverlay extends GuiComponent {
 			string = String.format("\"%s\" server, %.0f tx, %.0f rx", this.minecraft.player.getServerBrand(), f, g);
 		}
 
-		BlockPos blockPos = new BlockPos(
-			this.minecraft.getCameraEntity().x, this.minecraft.getCameraEntity().getBoundingBox().minY, this.minecraft.getCameraEntity().z
-		);
+		BlockPos blockPos = new BlockPos(this.minecraft.getCameraEntity());
 		if (this.minecraft.showOnlyReducedInfo()) {
 			return Lists.newArrayList(
 				"Minecraft "
@@ -236,9 +235,9 @@ public class DebugScreenOverlay extends GuiComponent {
 				String.format(
 					Locale.ROOT,
 					"XYZ: %.3f / %.5f / %.3f",
-					this.minecraft.getCameraEntity().x,
-					this.minecraft.getCameraEntity().getBoundingBox().minY,
-					this.minecraft.getCameraEntity().z
+					this.minecraft.getCameraEntity().getX(),
+					this.minecraft.getCameraEntity().getY(),
+					this.minecraft.getCameraEntity().getZ()
 				)
 			);
 			list.add(String.format("Block: %d %d %d", blockPos.getX(), blockPos.getY(), blockPos.getZ()));
@@ -260,15 +259,10 @@ public class DebugScreenOverlay extends GuiComponent {
 					if (levelChunk.isEmpty()) {
 						list.add("Waiting for chunk...");
 					} else {
-						list.add(
-							"Client Light: "
-								+ levelChunk.getRawBrightness(blockPos, 0)
-								+ " ("
-								+ this.minecraft.level.getBrightness(LightLayer.SKY, blockPos)
-								+ " sky, "
-								+ this.minecraft.level.getBrightness(LightLayer.BLOCK, blockPos)
-								+ " block)"
-						);
+						int i = this.minecraft.level.getChunkSource().getLightEngine().getRawBrightness(blockPos, 0);
+						int j = this.minecraft.level.getBrightness(LightLayer.SKY, blockPos);
+						int k = this.minecraft.level.getBrightness(LightLayer.BLOCK, blockPos);
+						list.add("Client Light: " + i + " (" + j + " sky, " + k + " block)");
 						LevelChunk levelChunk2 = this.getServerChunk();
 						if (levelChunk2 != null) {
 							LevelLightEngine levelLightEngine = level.getChunkSource().getLightEngine();
@@ -310,7 +304,7 @@ public class DebugScreenOverlay extends GuiComponent {
 						}
 
 						if (blockPos.getY() >= 0 && blockPos.getY() < 256) {
-							list.add("Biome: " + Registry.BIOME.getKey(levelChunk.getBiome(blockPos)));
+							list.add("Biome: " + Registry.BIOME.getKey(this.minecraft.level.getBiome(blockPos)));
 							long l = 0L;
 							float h = 0.0F;
 							if (levelChunk2 != null) {
@@ -337,8 +331,9 @@ public class DebugScreenOverlay extends GuiComponent {
 				list.add("Outside of world...");
 			}
 
-			if (this.minecraft.gameRenderer != null && this.minecraft.gameRenderer.postEffectActive()) {
-				list.add("Shader: " + this.minecraft.gameRenderer.currentEffect().getName());
+			PostChain postChain = this.minecraft.gameRenderer.currentEffect();
+			if (postChain != null) {
+				list.add("Shader: " + postChain.getName());
 			}
 
 			if (this.block.getType() == HitResult.Type.BLOCK) {
@@ -415,11 +410,11 @@ public class DebugScreenOverlay extends GuiComponent {
 			String.format("Mem: % 2d%% %03d/%03dMB", o * 100L / l, bytesToMegabytes(o), bytesToMegabytes(l)),
 			String.format("Allocated: % 2d%% %03dMB", m * 100L / l, bytesToMegabytes(m)),
 			"",
-			String.format("CPU: %s", GLX.getCpuInfo()),
+			String.format("CPU: %s", GlUtil.getCpuInfo()),
 			"",
-			String.format("Display: %dx%d (%s)", Minecraft.getInstance().window.getWidth(), Minecraft.getInstance().window.getHeight(), GLX.getVendor()),
-			GLX.getRenderer(),
-			GLX.getOpenGLVersion()
+			String.format("Display: %dx%d (%s)", Minecraft.getInstance().getWindow().getWidth(), Minecraft.getInstance().getWindow().getHeight(), GlUtil.getVendor()),
+			GlUtil.getRenderer(),
+			GlUtil.getOpenGLVersion()
 		);
 		if (this.minecraft.showOnlyReducedInfo()) {
 			return list;
@@ -481,7 +476,7 @@ public class DebugScreenOverlay extends GuiComponent {
 	}
 
 	private void drawChart(FrameTimer frameTimer, int i, int j, boolean bl) {
-		GlStateManager.disableDepthTest();
+		RenderSystem.disableDepthTest();
 		int k = frameTimer.getLogStart();
 		int l = frameTimer.getLogEnd();
 		long[] ls = frameTimer.getLog();
@@ -500,7 +495,7 @@ public class DebugScreenOverlay extends GuiComponent {
 			q += (long)u;
 		}
 
-		int t = this.minecraft.window.getGuiScaledHeight();
+		int t = this.minecraft.getWindow().getGuiScaledHeight();
 		fill(i, t - 60, i + p, t, -1873784752);
 
 		while(m != l) {
@@ -538,7 +533,7 @@ public class DebugScreenOverlay extends GuiComponent {
 		this.font.drawShadow(string, (float)(i + 2), (float)(t - 60 - 9), 14737632);
 		this.font.drawShadow(string2, (float)(i + p / 2 - this.font.width(string2) / 2), (float)(t - 60 - 9), 14737632);
 		this.font.drawShadow(string3, (float)(i + p - this.font.width(string3)), (float)(t - 60 - 9), 14737632);
-		GlStateManager.enableDepthTest();
+		RenderSystem.enableDepthTest();
 	}
 
 	private int getSampleColor(int i, int j, int k, int l) {

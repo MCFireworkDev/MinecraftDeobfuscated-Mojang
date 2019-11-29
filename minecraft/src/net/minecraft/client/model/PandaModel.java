@@ -1,6 +1,5 @@
 package net.minecraft.client.model;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.geom.ModelPart;
@@ -14,31 +13,31 @@ public class PandaModel<T extends Panda> extends QuadrupedModel<T> {
 	private float rollAmount;
 
 	public PandaModel(int i, float f) {
-		super(i, f);
+		super(i, f, true, 23.0F, 4.8F, 2.7F, 3.0F, 49);
 		this.texWidth = 64;
 		this.texHeight = 64;
 		this.head = new ModelPart(this, 0, 6);
-		this.head.addBox(-6.5F, -5.0F, -4.0F, 13, 10, 9);
+		this.head.addBox(-6.5F, -5.0F, -4.0F, 13.0F, 10.0F, 9.0F);
 		this.head.setPos(0.0F, 11.5F, -17.0F);
-		this.head.texOffs(45, 16).addBox(-3.5F, 0.0F, -6.0F, 7, 5, 2);
-		this.head.texOffs(52, 25).addBox(-8.5F, -8.0F, -1.0F, 5, 4, 1);
-		this.head.texOffs(52, 25).addBox(3.5F, -8.0F, -1.0F, 5, 4, 1);
+		this.head.texOffs(45, 16).addBox(-3.5F, 0.0F, -6.0F, 7.0F, 5.0F, 2.0F);
+		this.head.texOffs(52, 25).addBox(-8.5F, -8.0F, -1.0F, 5.0F, 4.0F, 1.0F);
+		this.head.texOffs(52, 25).addBox(3.5F, -8.0F, -1.0F, 5.0F, 4.0F, 1.0F);
 		this.body = new ModelPart(this, 0, 25);
-		this.body.addBox(-9.5F, -13.0F, -6.5F, 19, 26, 13);
+		this.body.addBox(-9.5F, -13.0F, -6.5F, 19.0F, 26.0F, 13.0F);
 		this.body.setPos(0.0F, 10.0F, 0.0F);
 		int j = 9;
 		int k = 6;
 		this.leg0 = new ModelPart(this, 40, 0);
-		this.leg0.addBox(-3.0F, 0.0F, -3.0F, 6, 9, 6);
+		this.leg0.addBox(-3.0F, 0.0F, -3.0F, 6.0F, 9.0F, 6.0F);
 		this.leg0.setPos(-5.5F, 15.0F, 9.0F);
 		this.leg1 = new ModelPart(this, 40, 0);
-		this.leg1.addBox(-3.0F, 0.0F, -3.0F, 6, 9, 6);
+		this.leg1.addBox(-3.0F, 0.0F, -3.0F, 6.0F, 9.0F, 6.0F);
 		this.leg1.setPos(5.5F, 15.0F, 9.0F);
 		this.leg2 = new ModelPart(this, 40, 0);
-		this.leg2.addBox(-3.0F, 0.0F, -3.0F, 6, 9, 6);
+		this.leg2.addBox(-3.0F, 0.0F, -3.0F, 6.0F, 9.0F, 6.0F);
 		this.leg2.setPos(-5.5F, 15.0F, -9.0F);
 		this.leg3 = new ModelPart(this, 40, 0);
-		this.leg3.addBox(-3.0F, 0.0F, -3.0F, 6, 9, 6);
+		this.leg3.addBox(-3.0F, 0.0F, -3.0F, 6.0F, 9.0F, 6.0F);
 		this.leg3.setPos(5.5F, 15.0F, -9.0F);
 	}
 
@@ -49,11 +48,11 @@ public class PandaModel<T extends Panda> extends QuadrupedModel<T> {
 		this.rollAmount = panda.isBaby() ? 0.0F : panda.getRollAmount(h);
 	}
 
-	public void setupAnim(T panda, float f, float g, float h, float i, float j, float k) {
-		super.setupAnim(panda, f, g, h, i, j, k);
+	public void setupAnim(T panda, float f, float g, float h, float i, float j) {
+		super.setupAnim(panda, f, g, h, i, j);
 		boolean bl = panda.getUnhappyCounter() > 0;
 		boolean bl2 = panda.isSneezing();
-		int l = panda.getSneezeCounter();
+		int k = panda.getSneezeCounter();
 		boolean bl3 = panda.isEating();
 		boolean bl4 = panda.isScared();
 		if (bl) {
@@ -66,17 +65,17 @@ public class PandaModel<T extends Panda> extends QuadrupedModel<T> {
 		}
 
 		if (bl2) {
-			if (l < 15) {
-				this.head.xRot = (float) (-Math.PI / 4) * (float)l / 14.0F;
-			} else if (l < 20) {
-				float m = (float)((l - 15) / 5);
-				this.head.xRot = (float) (-Math.PI / 4) + (float) (Math.PI / 4) * m;
+			if (k < 15) {
+				this.head.xRot = (float) (-Math.PI / 4) * (float)k / 14.0F;
+			} else if (k < 20) {
+				float l = (float)((k - 15) / 5);
+				this.head.xRot = (float) (-Math.PI / 4) + (float) (Math.PI / 4) * l;
 			}
 		}
 
 		if (this.sitAmount > 0.0F) {
-			this.body.xRot = this.rotlerpRad(this.body.xRot, 1.7407963F, this.sitAmount);
-			this.head.xRot = this.rotlerpRad(this.head.xRot, (float) (Math.PI / 2), this.sitAmount);
+			this.body.xRot = ModelUtils.rotlerpRad(this.body.xRot, 1.7407963F, this.sitAmount);
+			this.head.xRot = ModelUtils.rotlerpRad(this.head.xRot, (float) (Math.PI / 2), this.sitAmount);
 			this.leg2.zRot = -0.27079642F;
 			this.leg3.zRot = 0.27079642F;
 			this.leg0.zRot = 0.5707964F;
@@ -104,61 +103,15 @@ public class PandaModel<T extends Panda> extends QuadrupedModel<T> {
 			this.leg1.xRot = 0.6F * Mth.sin(h * 0.15F);
 			this.leg2.xRot = 0.3F * Mth.sin(h * 0.25F);
 			this.leg3.xRot = -0.3F * Mth.sin(h * 0.25F);
-			this.head.xRot = this.rotlerpRad(this.head.xRot, (float) (Math.PI / 2), this.lieOnBackAmount);
+			this.head.xRot = ModelUtils.rotlerpRad(this.head.xRot, (float) (Math.PI / 2), this.lieOnBackAmount);
 		}
 
 		if (this.rollAmount > 0.0F) {
-			this.head.xRot = this.rotlerpRad(this.head.xRot, 2.0561945F, this.rollAmount);
+			this.head.xRot = ModelUtils.rotlerpRad(this.head.xRot, 2.0561945F, this.rollAmount);
 			this.leg0.xRot = -0.5F * Mth.sin(h * 0.5F);
 			this.leg1.xRot = 0.5F * Mth.sin(h * 0.5F);
 			this.leg2.xRot = 0.5F * Mth.sin(h * 0.5F);
 			this.leg3.xRot = -0.5F * Mth.sin(h * 0.5F);
-		}
-	}
-
-	protected float rotlerpRad(float f, float g, float h) {
-		float i = g - f;
-
-		while(i < (float) -Math.PI) {
-			i += (float) (Math.PI * 2);
-		}
-
-		while(i >= (float) Math.PI) {
-			i -= (float) (Math.PI * 2);
-		}
-
-		return f + h * i;
-	}
-
-	public void render(T panda, float f, float g, float h, float i, float j, float k) {
-		this.setupAnim(panda, f, g, h, i, j, k);
-		if (this.young) {
-			float l = 3.0F;
-			GlStateManager.pushMatrix();
-			GlStateManager.translatef(0.0F, this.yHeadOffs * k, this.zHeadOffs * k);
-			GlStateManager.popMatrix();
-			GlStateManager.pushMatrix();
-			float m = 0.6F;
-			GlStateManager.scalef(0.5555555F, 0.5555555F, 0.5555555F);
-			GlStateManager.translatef(0.0F, 23.0F * k, 0.3F);
-			this.head.render(k);
-			GlStateManager.popMatrix();
-			GlStateManager.pushMatrix();
-			GlStateManager.scalef(0.33333334F, 0.33333334F, 0.33333334F);
-			GlStateManager.translatef(0.0F, 49.0F * k, 0.0F);
-			this.body.render(k);
-			this.leg0.render(k);
-			this.leg1.render(k);
-			this.leg2.render(k);
-			this.leg3.render(k);
-			GlStateManager.popMatrix();
-		} else {
-			this.head.render(k);
-			this.body.render(k);
-			this.leg0.render(k);
-			this.leg1.render(k);
-			this.leg2.render(k);
-			this.leg3.render(k);
 		}
 	}
 }

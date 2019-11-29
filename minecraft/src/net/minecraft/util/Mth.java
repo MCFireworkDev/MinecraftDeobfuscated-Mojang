@@ -91,6 +91,15 @@ public class Mth {
 		}
 	}
 
+	@Environment(EnvType.CLIENT)
+	public static long clamp(long l, long m, long n) {
+		if (l < m) {
+			return m;
+		} else {
+			return l > n ? n : l;
+		}
+	}
+
 	public static float clamp(float f, float g, float h) {
 		if (f < g) {
 			return g;
@@ -314,17 +323,8 @@ public class Mth {
 	}
 
 	@Environment(EnvType.CLIENT)
-	public static int colorMultiply(int i, int j) {
-		int k = (i & 0xFF0000) >> 16;
-		int l = (j & 0xFF0000) >> 16;
-		int m = (i & 0xFF00) >> 8;
-		int n = (j & 0xFF00) >> 8;
-		int o = (i & 0xFF) >> 0;
-		int p = (j & 0xFF) >> 0;
-		int q = (int)((float)k * (float)l / 255.0F);
-		int r = (int)((float)m * (float)n / 255.0F);
-		int s = (int)((float)o * (float)p / 255.0F);
-		return i & 0xFF000000 | q << 16 | r << 8 | s;
+	public static float frac(float f) {
+		return f - (float)floor(f);
 	}
 
 	public static double frac(double d) {
@@ -404,12 +404,30 @@ public class Mth {
 		}
 	}
 
+	@Environment(EnvType.CLIENT)
+	public static float fastInvSqrt(float f) {
+		float g = 0.5F * f;
+		int i = Float.floatToIntBits(f);
+		i = 1597463007 - (i >> 1);
+		f = Float.intBitsToFloat(i);
+		return f * (1.5F - g * f * f);
+	}
+
 	public static double fastInvSqrt(double d) {
 		double e = 0.5 * d;
 		long l = Double.doubleToRawLongBits(d);
 		l = 6910469410427058090L - (l >> 1);
 		d = Double.longBitsToDouble(l);
 		return d * (1.5 - e * d * d);
+	}
+
+	@Environment(EnvType.CLIENT)
+	public static float fastInvCubeRoot(float f) {
+		int i = Float.floatToIntBits(f);
+		i = 1419967116 - i / 3;
+		float g = Float.intBitsToFloat(i);
+		g = 0.6666667F * g + 1.0F / (3.0F * g * g * f);
+		return 0.6666667F * g + 1.0F / (3.0F * g * g * f);
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -519,6 +537,35 @@ public class Mth {
 	@Environment(EnvType.CLIENT)
 	public static float rotLerp(float f, float g, float h) {
 		return g + f * wrapDegrees(h - g);
+	}
+
+	@Deprecated
+	public static float rotlerp(float f, float g, float h) {
+		float i = g - f;
+
+		while(i < -180.0F) {
+			i += 360.0F;
+		}
+
+		while(i >= 180.0F) {
+			i -= 360.0F;
+		}
+
+		return f + h * i;
+	}
+
+	@Deprecated
+	@Environment(EnvType.CLIENT)
+	public static float rotWrap(double d) {
+		while(d >= 180.0) {
+			d -= 360.0;
+		}
+
+		while(d < -180.0) {
+			d += 360.0;
+		}
+
+		return (float)d;
 	}
 
 	static {

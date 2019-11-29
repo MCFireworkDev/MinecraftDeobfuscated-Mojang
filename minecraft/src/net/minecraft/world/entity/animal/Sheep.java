@@ -226,9 +226,11 @@ public class Sheep extends Animal {
 			if (!this.level.isClientSide) {
 				itemStack.hurtAndBreak(1, player, playerx -> playerx.broadcastBreakEvent(interactionHand));
 			}
-		}
 
-		return super.mobInteract(player, interactionHand);
+			return true;
+		} else {
+			return super.mobInteract(player, interactionHand);
+		}
 	}
 
 	public void shear() {
@@ -349,9 +351,8 @@ public class Sheep extends Animal {
 		@Nullable SpawnGroupData spawnGroupData,
 		@Nullable CompoundTag compoundTag
 	) {
-		spawnGroupData = super.finalizeSpawn(levelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
 		this.setColor(getRandomSheepColor(levelAccessor.getRandom()));
-		return spawnGroupData;
+		return super.finalizeSpawn(levelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
 	}
 
 	private DyeColor getOffspringColor(Animal animal, Animal animal2) {

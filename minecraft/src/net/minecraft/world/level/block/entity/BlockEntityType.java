@@ -7,10 +7,12 @@ import java.util.Set;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.minecraft.SharedConstants;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.datafix.DataFixers;
 import net.minecraft.util.datafix.fixes.References;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.piston.PistonMovingBlockEntity;
@@ -191,9 +193,12 @@ public class BlockEntityType<T extends BlockEntity> {
 	);
 	public static final BlockEntityType<LecternBlockEntity> LECTERN = register("lectern", BlockEntityType.Builder.of(LecternBlockEntity::new, Blocks.LECTERN));
 	public static final BlockEntityType<BellBlockEntity> BELL = register("bell", BlockEntityType.Builder.of(BellBlockEntity::new, Blocks.BELL));
-	public static final BlockEntityType<JigsawBlockEntity> JIGSAW = register("jigsaw", BlockEntityType.Builder.of(JigsawBlockEntity::new, Blocks.JIGSAW_BLOCK));
+	public static final BlockEntityType<JigsawBlockEntity> JIGSAW = register("jigsaw", BlockEntityType.Builder.of(JigsawBlockEntity::new, Blocks.JIGSAW));
 	public static final BlockEntityType<CampfireBlockEntity> CAMPFIRE = register(
 		"campfire", BlockEntityType.Builder.of(CampfireBlockEntity::new, Blocks.CAMPFIRE)
+	);
+	public static final BlockEntityType<BeehiveBlockEntity> BEEHIVE = register(
+		"beehive", BlockEntityType.Builder.of(BeehiveBlockEntity::new, Blocks.BEE_NEST, Blocks.BEEHIVE)
 	);
 	private final Supplier<? extends T> factory;
 	private final Set<Block> validBlocks;
@@ -211,12 +216,11 @@ public class BlockEntityType<T extends BlockEntity> {
 			type = DataFixers.getDataFixer()
 				.getSchema(DataFixUtils.makeKey(SharedConstants.getCurrentVersion().getWorldVersion()))
 				.getChoiceType(References.BLOCK_ENTITY, string);
-		} catch (IllegalStateException var4) {
+		} catch (IllegalArgumentException var4) {
+			LOGGER.error("No data fixer registered for block entity {}", string);
 			if (SharedConstants.IS_RUNNING_IN_IDE) {
 				throw var4;
 			}
-
-			LOGGER.warn("No data fixer registered for block entity {}", string);
 		}
 
 		if (builder.validBlocks.isEmpty()) {
@@ -239,6 +243,12 @@ public class BlockEntityType<T extends BlockEntity> {
 
 	public boolean isValid(Block block) {
 		return this.validBlocks.contains(block);
+	}
+
+	@Nullable
+	public T getBlockEntity(BlockGetter blockGetter, BlockPos blockPos) {
+		BlockEntity blockEntity = blockGetter.getBlockEntity(blockPos);
+		return (T)(blockEntity != null && blockEntity.getType() == this ? blockEntity : null);
 	}
 
 	public static final class Builder<T extends BlockEntity> {

@@ -46,7 +46,6 @@ import net.minecraft.world.entity.monster.SharedMonsterAttributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.Item;
@@ -254,16 +253,7 @@ public abstract class Mob extends LivingEntity {
 				double e = this.random.nextGaussian() * 0.02;
 				double f = this.random.nextGaussian() * 0.02;
 				double g = 10.0;
-				this.level
-					.addParticle(
-						ParticleTypes.POOF,
-						this.x + (double)(this.random.nextFloat() * this.getBbWidth() * 2.0F) - (double)this.getBbWidth() - d * 10.0,
-						this.y + (double)(this.random.nextFloat() * this.getBbHeight()) - e * 10.0,
-						this.z + (double)(this.random.nextFloat() * this.getBbWidth() * 2.0F) - (double)this.getBbWidth() - f * 10.0,
-						d,
-						e,
-						f
-					);
+				this.level.addParticle(ParticleTypes.POOF, this.getX(1.0) - d * 10.0, this.getRandomY() - e * 10.0, this.getRandomZ(1.0) - f * 10.0, d, e, f);
 			}
 		} else {
 			this.level.broadcastEntityEvent(this, (byte)20);
@@ -342,14 +332,14 @@ public abstract class Mob extends LivingEntity {
 		ListTag listTag3 = new ListTag();
 
 		for(float f : this.armorDropChances) {
-			listTag3.add(new FloatTag(f));
+			listTag3.add(FloatTag.valueOf(f));
 		}
 
 		compoundTag.put("ArmorDropChances", listTag3);
 		ListTag listTag4 = new ListTag();
 
 		for(float g : this.handDropChances) {
-			listTag4.add(new FloatTag(g));
+			listTag4.add(FloatTag.valueOf(g));
 		}
 
 		compoundTag.put("HandDropChances", listTag4);
@@ -366,6 +356,8 @@ public abstract class Mob extends LivingEntity {
 			}
 
 			compoundTag.put("Leash", compoundTag3);
+		} else if (this.leashInfoTag != null) {
+			compoundTag.put("Leash", this.leashInfoTag.copy());
 		}
 
 		compoundTag.putBoolean("LeftHanded", this.isLeftHanded());
@@ -494,7 +486,7 @@ public abstract class Mob extends LivingEntity {
 		boolean bl = this.canReplaceCurrentItem(itemStack, itemStack2, equipmentSlot);
 		if (bl && this.canHoldItem(itemStack)) {
 			double d = (double)this.getEquipmentDropChance(equipmentSlot);
-			if (!itemStack2.isEmpty() && (double)(this.random.nextFloat() - 0.1F) < d) {
+			if (!itemStack2.isEmpty() && (double)Math.max(this.random.nextFloat() - 0.1F, 0.0F) < d) {
 				this.spawnAtLocation(itemStack2);
 			}
 
@@ -562,8 +554,15 @@ public abstract class Mob extends LivingEntity {
 		return false;
 	}
 
-	protected void checkDespawn() {
-		if (!this.isPersistenceRequired() && !this.requiresCustomPersistence()) {
+	protected boolean shouldDespawnInPeaceful() {
+		return false;
+	}
+
+	@Override
+	public void checkDespawn() {
+		if (this.level.getDifficulty() == Difficulty.PEACEFUL && this.shouldDespawnInPeaceful()) {
+			this.remove();
+		} else if (!this.isPersistenceRequired() && !this.requiresCustomPersistence()) {
 			Entity entity = this.level.getNearestPlayer(this, -1.0);
 			if (entity != null) {
 				double d = entity.distanceToSqr(this);
@@ -585,9 +584,6 @@ public abstract class Mob extends LivingEntity {
 	@Override
 	protected final void serverAiStep() {
 		++this.noActionTime;
-		this.level.getProfiler().push("checkDespawn");
-		this.checkDespawn();
-		this.level.getProfiler().pop();
 		this.level.getProfiler().push("sensing");
 		this.sensing.tick();
 		this.level.getProfiler().pop();
@@ -635,14 +631,14 @@ public abstract class Mob extends LivingEntity {
 	}
 
 	public void lookAt(Entity entity, float f, float g) {
-		double d = entity.x - this.x;
-		double e = entity.z - this.z;
+		double d = entity.getX() - this.getX();
+		double e = entity.getZ() - this.getZ();
 		double h;
 		if (entity instanceof LivingEntity) {
 			LivingEntity livingEntity = (LivingEntity)entity;
-			h = livingEntity.y + (double)livingEntity.getEyeHeight() - (this.y + (double)this.getEyeHeight());
+			h = livingEntity.getEyeY() - this.getEyeY();
 		} else {
-			h = (entity.getBoundingBox().minY + entity.getBoundingBox().maxY) / 2.0 - (this.y + (double)this.getEyeHeight());
+			h = (entity.getBoundingBox().minY + entity.getBoundingBox().maxY) / 2.0 - this.getEyeY();
 		}
 
 		double i = (double)Mth.sqrt(d * d + e * e);
@@ -744,7 +740,10 @@ public abstract class Mob extends LivingEntity {
 			ItemStack itemStack = this.getItemBySlot(equipmentSlot);
 			float f = this.getEquipmentDropChance(equipmentSlot);
 			boolean bl2 = f > 1.0F;
-			if (!itemStack.isEmpty() && !EnchantmentHelper.hasVanishingCurse(itemStack) && (bl || bl2) && this.random.nextFloat() - (float)i * 0.01F < f) {
+			if (!itemStack.isEmpty()
+				&& !EnchantmentHelper.hasVanishingCurse(itemStack)
+				&& (bl || bl2)
+				&& Math.max(this.random.nextFloat() - (float)i * 0.01F, 0.0F) < f) {
 				if (!bl2 && itemStack.isDamageableItem()) {
 					itemStack.setDamageValue(itemStack.getMaxDamage() - this.random.nextInt(1 + this.random.nextInt(Math.max(itemStack.getMaxDamage() - 3, 1))));
 				}
@@ -1189,7 +1188,7 @@ public abstract class Mob extends LivingEntity {
 		float f = (float)this.getAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getValue();
 		float g = (float)this.getAttribute(SharedMonsterAttributes.ATTACK_KNOCKBACK).getValue();
 		if (entity instanceof LivingEntity) {
-			f += EnchantmentHelper.getDamageBonus(this.getMainHandItem(), ((LivingEntity)entity).getMobType());
+			f += EnchantmentHelper.getDamageBonus(this.getMainHandItem(), (LivingEntity)entity);
 			g += (float)EnchantmentHelper.getKnockbackBonus(this);
 		}
 
@@ -1206,20 +1205,8 @@ public abstract class Mob extends LivingEntity {
 				this.setDeltaMovement(this.getDeltaMovement().multiply(0.6, 1.0, 0.6));
 			}
 
-			if (entity instanceof Player) {
-				Player player = (Player)entity;
-				ItemStack itemStack = this.getMainHandItem();
-				ItemStack itemStack2 = player.isUsingItem() ? player.getUseItem() : ItemStack.EMPTY;
-				if (!itemStack.isEmpty() && !itemStack2.isEmpty() && itemStack.getItem() instanceof AxeItem && itemStack2.getItem() == Items.SHIELD) {
-					float h = 0.25F + (float)EnchantmentHelper.getBlockEfficiency(this) * 0.05F;
-					if (this.random.nextFloat() < h) {
-						player.getCooldowns().addCooldown(Items.SHIELD, 100);
-						this.level.broadcastEntityEvent(player, (byte)30);
-					}
-				}
-			}
-
 			this.doEnchantDamageEffects(this, entity);
+			this.setLastHurtMob(entity);
 		}
 
 		return bl;
@@ -1229,8 +1216,8 @@ public abstract class Mob extends LivingEntity {
 		if (this.level.isDay() && !this.level.isClientSide) {
 			float f = this.getBrightness();
 			BlockPos blockPos = this.getVehicle() instanceof Boat
-				? new BlockPos(this.x, (double)Math.round(this.y), this.z).above()
-				: new BlockPos(this.x, (double)Math.round(this.y), this.z);
+				? new BlockPos(this.getX(), (double)Math.round(this.getY()), this.getZ()).above()
+				: new BlockPos(this.getX(), (double)Math.round(this.getY()), this.getZ());
 			if (f > 0.5F && this.random.nextFloat() * 30.0F < (f - 0.4F) * 2.0F && this.level.canSeeSky(blockPos)) {
 				return true;
 			}

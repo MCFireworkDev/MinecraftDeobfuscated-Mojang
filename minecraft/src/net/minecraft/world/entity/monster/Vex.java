@@ -2,8 +2,6 @@ package net.minecraft.world.entity.monster;
 
 import java.util.EnumSet;
 import javax.annotation.Nullable;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -183,12 +181,6 @@ public class Vex extends Monster {
 		return SoundEvents.VEX_HURT;
 	}
 
-	@Environment(EnvType.CLIENT)
-	@Override
-	public int getLightColor() {
-		return 15728880;
-	}
-
 	@Override
 	public float getBrightness() {
 		return 1.0F;
@@ -290,7 +282,7 @@ public class Vex extends Monster {
 		@Override
 		public void tick() {
 			if (this.operation == MoveControl.Operation.MOVE_TO) {
-				Vec3 vec3 = new Vec3(this.wantedX - Vex.this.x, this.wantedY - Vex.this.y, this.wantedZ - Vex.this.z);
+				Vec3 vec3 = new Vec3(this.wantedX - Vex.this.getX(), this.wantedY - Vex.this.getY(), this.wantedZ - Vex.this.getZ());
 				double d = vec3.length();
 				if (d < Vex.this.getBoundingBox().getSize()) {
 					this.operation = MoveControl.Operation.WAIT;
@@ -302,8 +294,8 @@ public class Vex extends Monster {
 						Vex.this.yRot = -((float)Mth.atan2(vec32.x, vec32.z)) * (180.0F / (float)Math.PI);
 						Vex.this.yBodyRot = Vex.this.yRot;
 					} else {
-						double e = Vex.this.getTarget().x - Vex.this.x;
-						double f = Vex.this.getTarget().z - Vex.this.z;
+						double e = Vex.this.getTarget().getX() - Vex.this.getX();
+						double f = Vex.this.getTarget().getZ() - Vex.this.getZ();
 						Vex.this.yRot = -((float)Mth.atan2(e, f)) * (180.0F / (float)Math.PI);
 						Vex.this.yBodyRot = Vex.this.yRot;
 					}

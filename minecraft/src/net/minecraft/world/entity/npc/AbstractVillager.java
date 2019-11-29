@@ -15,19 +15,23 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgableMob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.trading.Merchant;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.dimension.DimensionType;
 
 public abstract class AbstractVillager extends AgableMob implements Npc, Merchant {
@@ -40,6 +44,22 @@ public abstract class AbstractVillager extends AgableMob implements Npc, Merchan
 
 	public AbstractVillager(EntityType<? extends AbstractVillager> entityType, Level level) {
 		super(entityType, level);
+	}
+
+	@Override
+	public SpawnGroupData finalizeSpawn(
+		LevelAccessor levelAccessor,
+		DifficultyInstance difficultyInstance,
+		MobSpawnType mobSpawnType,
+		@Nullable SpawnGroupData spawnGroupData,
+		@Nullable CompoundTag compoundTag
+	) {
+		if (spawnGroupData == null) {
+			spawnGroupData = new AgableMob.AgableMobGroupData();
+			((AgableMob.AgableMobGroupData)spawnGroupData).setShouldSpawnBaby(false);
+		}
+
+		return super.finalizeSpawn(levelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
 	}
 
 	public int getUnhappyCounter() {
@@ -198,16 +218,7 @@ public abstract class AbstractVillager extends AgableMob implements Npc, Merchan
 			double d = this.random.nextGaussian() * 0.02;
 			double e = this.random.nextGaussian() * 0.02;
 			double f = this.random.nextGaussian() * 0.02;
-			this.level
-				.addParticle(
-					particleOptions,
-					this.x + (double)(this.random.nextFloat() * this.getBbWidth() * 2.0F) - (double)this.getBbWidth(),
-					this.y + 1.0 + (double)(this.random.nextFloat() * this.getBbHeight()),
-					this.z + (double)(this.random.nextFloat() * this.getBbWidth() * 2.0F) - (double)this.getBbWidth(),
-					d,
-					e,
-					f
-				);
+			this.level.addParticle(particleOptions, this.getRandomX(1.0), this.getRandomY() + 1.0, this.getRandomZ(1.0), d, e, f);
 		}
 	}
 

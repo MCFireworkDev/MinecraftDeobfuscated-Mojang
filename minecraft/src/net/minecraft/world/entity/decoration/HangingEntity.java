@@ -65,9 +65,7 @@ public abstract class HangingEntity extends Entity {
 			Direction direction = this.direction.getCounterClockWise();
 			d += h * (double)direction.getStepX();
 			f += h * (double)direction.getStepZ();
-			this.x = d;
-			this.y = e;
-			this.z = f;
+			this.setPosRaw(d, e, f);
 			double j = (double)this.getWidth();
 			double k = (double)this.getHeight();
 			double l = (double)this.getWidth();
@@ -90,9 +88,6 @@ public abstract class HangingEntity extends Entity {
 
 	@Override
 	public void tick() {
-		this.xo = this.x;
-		this.yo = this.y;
-		this.zo = this.z;
 		if (this.checkInterval++ == 100 && !this.level.isClientSide) {
 			this.checkInterval = 0;
 			if (!this.removed && !this.survives()) {
@@ -201,9 +196,9 @@ public abstract class HangingEntity extends Entity {
 	public ItemEntity spawnAtLocation(ItemStack itemStack, float f) {
 		ItemEntity itemEntity = new ItemEntity(
 			this.level,
-			this.x + (double)((float)this.direction.getStepX() * 0.15F),
-			this.y + (double)f,
-			this.z + (double)((float)this.direction.getStepZ() * 0.15F),
+			this.getX() + (double)((float)this.direction.getStepX() * 0.15F),
+			this.getY() + (double)f,
+			this.getZ() + (double)((float)this.direction.getStepZ() * 0.15F),
 			itemStack
 		);
 		itemEntity.setDefaultPickUpDelay();

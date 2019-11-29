@@ -1,15 +1,17 @@
 package net.minecraft.client.gui;
 
 import com.google.common.collect.Maps;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 import java.util.Map;
 import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
@@ -20,7 +22,10 @@ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 
 @Environment(EnvType.CLIENT)
 public class MapRenderer implements AutoCloseable {
+	public static final ResourceLocation MAP_BACKGROUND_LOCATION = new ResourceLocation("textures/map/map_background.png");
+	public static final RenderType MAP_BACKGROUND = RenderType.text(MAP_BACKGROUND_LOCATION);
 	private static final ResourceLocation MAP_ICONS_LOCATION = new ResourceLocation("textures/map/map_icons.png");
+	private static final RenderType MAP_ICONS = RenderType.text(MAP_ICONS_LOCATION);
 	private final TextureManager textureManager;
 	private final Map<String, MapRenderer.MapInstance> maps = Maps.newHashMap();
 
@@ -32,8 +37,8 @@ public class MapRenderer implements AutoCloseable {
 		this.getMapInstance(mapItemSavedData).updateTexture();
 	}
 
-	public void render(MapItemSavedData mapItemSavedData, boolean bl) {
-		this.getMapInstance(mapItemSavedData).draw(bl);
+	public void render(PoseStack poseStack, MultiBufferSource multiBufferSource, MapItemSavedData mapItemSavedData, boolean bl, int i) {
+		this.getMapInstance(mapItemSavedData).draw(poseStack, multiBufferSource, bl, i);
 	}
 
 	private MapRenderer.MapInstance getMapInstance(MapItemSavedData mapItemSavedData) {
@@ -72,12 +77,13 @@ public class MapRenderer implements AutoCloseable {
 	class MapInstance implements AutoCloseable {
 		private final MapItemSavedData data;
 		private final DynamicTexture texture;
-		private final ResourceLocation location;
+		private final RenderType renderType;
 
 		private MapInstance(MapItemSavedData mapItemSavedData) {
 			this.data = mapItemSavedData;
 			this.texture = new DynamicTexture(128, 128, true);
-			this.location = MapRenderer.this.textureManager.register("map/" + mapItemSavedData.getId(), this.texture);
+			ResourceLocation resourceLocation = MapRenderer.this.textureManager.register("map/" + mapItemSavedData.getId(), this.texture);
+			this.renderType = RenderType.text(resourceLocation);
 		}
 
 		private void updateTexture() {
@@ -96,74 +102,56 @@ public class MapRenderer implements AutoCloseable {
 			this.texture.upload();
 		}
 
-		private void draw(boolean bl) {
-			int i = 0;
+		private void draw(PoseStack poseStack, MultiBufferSource multiBufferSource, boolean bl, int i) {
 			int j = 0;
-			Tesselator tesselator = Tesselator.getInstance();
-			BufferBuilder bufferBuilder = tesselator.getBuilder();
-			float f = 0.0F;
-			MapRenderer.this.textureManager.bind(this.location);
-			GlStateManager.enableBlend();
-			GlStateManager.blendFuncSeparate(
-				GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE
-			);
-			GlStateManager.disableAlphaTest();
-			bufferBuilder.begin(7, DefaultVertexFormat.POSITION_TEX);
-			bufferBuilder.vertex(0.0, 128.0, -0.01F).uv(0.0, 1.0).endVertex();
-			bufferBuilder.vertex(128.0, 128.0, -0.01F).uv(1.0, 1.0).endVertex();
-			bufferBuilder.vertex(128.0, 0.0, -0.01F).uv(1.0, 0.0).endVertex();
-			bufferBuilder.vertex(0.0, 0.0, -0.01F).uv(0.0, 0.0).endVertex();
-			tesselator.end();
-			GlStateManager.enableAlphaTest();
-			GlStateManager.disableBlend();
 			int k = 0;
+			float f = 0.0F;
+			Matrix4f matrix4f = poseStack.last().pose();
+			VertexConsumer vertexConsumer = multiBufferSource.getBuffer(this.renderType);
+			vertexConsumer.vertex(matrix4f, 0.0F, 128.0F, -0.01F).color(255, 255, 255, 255).uv(0.0F, 1.0F).uv2(i).endVertex();
+			vertexConsumer.vertex(matrix4f, 128.0F, 128.0F, -0.01F).color(255, 255, 255, 255).uv(1.0F, 1.0F).uv2(i).endVertex();
+			vertexConsumer.vertex(matrix4f, 128.0F, 0.0F, -0.01F).color(255, 255, 255, 255).uv(1.0F, 0.0F).uv2(i).endVertex();
+			vertexConsumer.vertex(matrix4f, 0.0F, 0.0F, -0.01F).color(255, 255, 255, 255).uv(0.0F, 0.0F).uv2(i).endVertex();
+			int l = 0;
 
 			for(MapDecoration mapDecoration : this.data.decorations.values()) {
 				if (!bl || mapDecoration.renderOnFrame()) {
-					MapRenderer.this.textureManager.bind(MapRenderer.MAP_ICONS_LOCATION);
-					GlStateManager.pushMatrix();
-					GlStateManager.translatef(0.0F + (float)mapDecoration.getX() / 2.0F + 64.0F, 0.0F + (float)mapDecoration.getY() / 2.0F + 64.0F, -0.02F);
-					GlStateManager.rotatef((float)(mapDecoration.getRot() * 360) / 16.0F, 0.0F, 0.0F, 1.0F);
-					GlStateManager.scalef(4.0F, 4.0F, 3.0F);
-					GlStateManager.translatef(-0.125F, 0.125F, 0.0F);
+					poseStack.pushPose();
+					poseStack.translate((double)(0.0F + (float)mapDecoration.getX() / 2.0F + 64.0F), (double)(0.0F + (float)mapDecoration.getY() / 2.0F + 64.0F), -0.02F);
+					poseStack.mulPose(Vector3f.ZP.rotationDegrees((float)(mapDecoration.getRot() * 360) / 16.0F));
+					poseStack.scale(4.0F, 4.0F, 3.0F);
+					poseStack.translate(-0.125, 0.125, 0.0);
 					byte b = mapDecoration.getImage();
 					float g = (float)(b % 16 + 0) / 16.0F;
 					float h = (float)(b / 16 + 0) / 16.0F;
-					float l = (float)(b % 16 + 1) / 16.0F;
-					float m = (float)(b / 16 + 1) / 16.0F;
-					bufferBuilder.begin(7, DefaultVertexFormat.POSITION_TEX);
-					GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-					float n = -0.001F;
-					bufferBuilder.vertex(-1.0, 1.0, (double)((float)k * -0.001F)).uv((double)g, (double)h).endVertex();
-					bufferBuilder.vertex(1.0, 1.0, (double)((float)k * -0.001F)).uv((double)l, (double)h).endVertex();
-					bufferBuilder.vertex(1.0, -1.0, (double)((float)k * -0.001F)).uv((double)l, (double)m).endVertex();
-					bufferBuilder.vertex(-1.0, -1.0, (double)((float)k * -0.001F)).uv((double)g, (double)m).endVertex();
-					tesselator.end();
-					GlStateManager.popMatrix();
+					float m = (float)(b % 16 + 1) / 16.0F;
+					float n = (float)(b / 16 + 1) / 16.0F;
+					Matrix4f matrix4f2 = poseStack.last().pose();
+					float o = -0.001F;
+					VertexConsumer vertexConsumer2 = multiBufferSource.getBuffer(MapRenderer.MAP_ICONS);
+					vertexConsumer2.vertex(matrix4f2, -1.0F, 1.0F, (float)l * -0.001F).color(255, 255, 255, 255).uv(g, h).uv2(i).endVertex();
+					vertexConsumer2.vertex(matrix4f2, 1.0F, 1.0F, (float)l * -0.001F).color(255, 255, 255, 255).uv(m, h).uv2(i).endVertex();
+					vertexConsumer2.vertex(matrix4f2, 1.0F, -1.0F, (float)l * -0.001F).color(255, 255, 255, 255).uv(m, n).uv2(i).endVertex();
+					vertexConsumer2.vertex(matrix4f2, -1.0F, -1.0F, (float)l * -0.001F).color(255, 255, 255, 255).uv(g, n).uv2(i).endVertex();
+					poseStack.popPose();
 					if (mapDecoration.getName() != null) {
 						Font font = Minecraft.getInstance().font;
 						String string = mapDecoration.getName().getColoredString();
-						float o = (float)font.width(string);
-						float p = Mth.clamp(25.0F / o, 0.0F, 6.0F / 9.0F);
-						GlStateManager.pushMatrix();
-						GlStateManager.translatef(
-							0.0F + (float)mapDecoration.getX() / 2.0F + 64.0F - o * p / 2.0F, 0.0F + (float)mapDecoration.getY() / 2.0F + 64.0F + 4.0F, -0.025F
+						float p = (float)font.width(string);
+						float q = Mth.clamp(25.0F / p, 0.0F, 6.0F / 9.0F);
+						poseStack.pushPose();
+						poseStack.translate(
+							(double)(0.0F + (float)mapDecoration.getX() / 2.0F + 64.0F - p * q / 2.0F), (double)(0.0F + (float)mapDecoration.getY() / 2.0F + 64.0F + 4.0F), -0.025F
 						);
-						GlStateManager.scalef(p, p, 1.0F);
-						GuiComponent.fill(-1, -1, (int)o, 9 - 1, Integer.MIN_VALUE);
-						GlStateManager.translatef(0.0F, 0.0F, -0.1F);
-						font.draw(string, 0.0F, 0.0F, -1);
-						GlStateManager.popMatrix();
+						poseStack.scale(q, q, 1.0F);
+						poseStack.translate(0.0, 0.0, -0.1F);
+						font.drawInBatch(string, 0.0F, 0.0F, -1, false, poseStack.last().pose(), multiBufferSource, false, Integer.MIN_VALUE, i);
+						poseStack.popPose();
 					}
 
-					++k;
+					++l;
 				}
 			}
-
-			GlStateManager.pushMatrix();
-			GlStateManager.translatef(0.0F, 0.0F, -0.04F);
-			GlStateManager.scalef(1.0F, 1.0F, 1.0F);
-			GlStateManager.popMatrix();
 		}
 
 		public void close() {

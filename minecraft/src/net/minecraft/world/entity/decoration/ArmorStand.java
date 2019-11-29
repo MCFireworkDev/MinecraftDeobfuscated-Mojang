@@ -80,10 +80,15 @@ public class ArmorStand extends LivingEntity {
 	}
 
 	@Override
+	public boolean isGlowing() {
+		return !this.isMarker() && super.isGlowing();
+	}
+
+	@Override
 	public void refreshDimensions() {
-		double d = this.x;
-		double e = this.y;
-		double f = this.z;
+		double d = this.getX();
+		double e = this.getY();
+		double f = this.getZ();
 		super.refreshDimensions();
 		this.setPos(d, e, f);
 	}
@@ -318,13 +323,15 @@ public class ArmorStand extends LivingEntity {
 		ItemStack itemStack = player.getItemInHand(interactionHand);
 		if (this.isMarker() || itemStack.getItem() == Items.NAME_TAG) {
 			return InteractionResult.PASS;
-		} else if (!this.level.isClientSide && !player.isSpectator()) {
+		} else if (player.isSpectator()) {
+			return InteractionResult.SUCCESS;
+		} else {
 			EquipmentSlot equipmentSlot = Mob.getEquipmentSlotForItem(itemStack);
 			if (itemStack.isEmpty()) {
 				EquipmentSlot equipmentSlot2 = this.getClickedSlot(vec3);
 				EquipmentSlot equipmentSlot3 = this.isDisabled(equipmentSlot2) ? equipmentSlot : equipmentSlot2;
-				if (this.hasItemInSlot(equipmentSlot3)) {
-					this.swapItem(player, equipmentSlot3, itemStack, interactionHand);
+				if (this.hasItemInSlot(equipmentSlot3) && this.swapItem(player, equipmentSlot3, itemStack, interactionHand)) {
+					return InteractionResult.SUCCESS;
 				}
 			} else {
 				if (this.isDisabled(equipmentSlot)) {
@@ -335,12 +342,12 @@ public class ArmorStand extends LivingEntity {
 					return InteractionResult.FAIL;
 				}
 
-				this.swapItem(player, equipmentSlot, itemStack, interactionHand);
+				if (this.swapItem(player, equipmentSlot, itemStack, interactionHand)) {
+					return InteractionResult.SUCCESS;
+				}
 			}
 
-			return InteractionResult.SUCCESS;
-		} else {
-			return InteractionResult.SUCCESS;
+			return InteractionResult.CONSUME;
 		}
 	}
 
@@ -368,24 +375,29 @@ public class ArmorStand extends LivingEntity {
 		return (this.disabledSlots & 1 << equipmentSlot.getFilterFlag()) != 0 || equipmentSlot.getType() == EquipmentSlot.Type.HAND && !this.isShowArms();
 	}
 
-	private void swapItem(Player player, EquipmentSlot equipmentSlot, ItemStack itemStack, InteractionHand interactionHand) {
+	private boolean swapItem(Player player, EquipmentSlot equipmentSlot, ItemStack itemStack, InteractionHand interactionHand) {
 		ItemStack itemStack2 = this.getItemBySlot(equipmentSlot);
-		if (itemStack2.isEmpty() || (this.disabledSlots & 1 << equipmentSlot.getFilterFlag() + 8) == 0) {
-			if (!itemStack2.isEmpty() || (this.disabledSlots & 1 << equipmentSlot.getFilterFlag() + 16) == 0) {
-				if (player.abilities.instabuild && itemStack2.isEmpty() && !itemStack.isEmpty()) {
-					ItemStack itemStack3 = itemStack.copy();
-					itemStack3.setCount(1);
-					this.setItemSlot(equipmentSlot, itemStack3);
-				} else if (itemStack.isEmpty() || itemStack.getCount() <= 1) {
-					this.setItemSlot(equipmentSlot, itemStack);
-					player.setItemInHand(interactionHand, itemStack2);
-				} else if (itemStack2.isEmpty()) {
-					ItemStack itemStack3 = itemStack.copy();
-					itemStack3.setCount(1);
-					this.setItemSlot(equipmentSlot, itemStack3);
-					itemStack.shrink(1);
-				}
-			}
+		if (!itemStack2.isEmpty() && (this.disabledSlots & 1 << equipmentSlot.getFilterFlag() + 8) != 0) {
+			return false;
+		} else if (itemStack2.isEmpty() && (this.disabledSlots & 1 << equipmentSlot.getFilterFlag() + 16) != 0) {
+			return false;
+		} else if (player.abilities.instabuild && itemStack2.isEmpty() && !itemStack.isEmpty()) {
+			ItemStack itemStack3 = itemStack.copy();
+			itemStack3.setCount(1);
+			this.setItemSlot(equipmentSlot, itemStack3);
+			return true;
+		} else if (itemStack.isEmpty() || itemStack.getCount() <= 1) {
+			this.setItemSlot(equipmentSlot, itemStack);
+			player.setItemInHand(interactionHand, itemStack2);
+			return true;
+		} else if (!itemStack2.isEmpty()) {
+			return false;
+		} else {
+			ItemStack itemStack3 = itemStack.copy();
+			itemStack3.setCount(1);
+			this.setItemSlot(equipmentSlot, itemStack3);
+			itemStack.shrink(1);
+			return true;
 		}
 	}
 
@@ -447,7 +459,7 @@ public class ArmorStand extends LivingEntity {
 	public void handleEntityEvent(byte b) {
 		if (b == 32) {
 			if (this.level.isClientSide) {
-				this.level.playLocalSound(this.x, this.y, this.z, SoundEvents.ARMOR_STAND_HIT, this.getSoundSource(), 0.3F, 1.0F, false);
+				this.level.playLocalSound(this.getX(), this.getY(), this.getZ(), SoundEvents.ARMOR_STAND_HIT, this.getSoundSource(), 0.3F, 1.0F, false);
 				this.lastHit = this.level.getGameTime();
 			}
 		} else {
@@ -472,9 +484,9 @@ public class ArmorStand extends LivingEntity {
 			((ServerLevel)this.level)
 				.sendParticles(
 					new BlockParticleOption(ParticleTypes.BLOCK, Blocks.OAK_PLANKS.defaultBlockState()),
-					this.x,
-					this.y + (double)this.getBbHeight() / 1.5,
-					this.z,
+					this.getX(),
+					this.getY(0.6666666666666666),
+					this.getZ(),
 					10,
 					(double)(this.getBbWidth() / 4.0F),
 					(double)(this.getBbHeight() / 4.0F),
@@ -522,7 +534,7 @@ public class ArmorStand extends LivingEntity {
 	}
 
 	private void playBrokenSound() {
-		this.level.playSound(null, this.x, this.y, this.z, SoundEvents.ARMOR_STAND_BREAK, this.getSoundSource(), 1.0F, 1.0F);
+		this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ARMOR_STAND_BREAK, this.getSoundSource(), 1.0F, 1.0F);
 	}
 
 	@Override

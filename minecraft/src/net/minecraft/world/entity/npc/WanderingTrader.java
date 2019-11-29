@@ -82,7 +82,7 @@ public class WanderingTrader extends AbstractVillager {
 		this.goalSelector.addGoal(1, new PanicGoal(this, 0.5));
 		this.goalSelector.addGoal(1, new LookAtTradingPlayerGoal(this));
 		this.goalSelector.addGoal(2, new WanderingTrader.WanderToPositionGoal(this, 2.0, 0.35));
-		this.goalSelector.addGoal(4, new MoveTowardsRestrictionGoal(this, 1.0));
+		this.goalSelector.addGoal(4, new MoveTowardsRestrictionGoal(this, 0.35));
 		this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 0.35));
 		this.goalSelector.addGoal(9, new InteractGoal(this, Player.class, 3.0F, 1.0F));
 		this.goalSelector.addGoal(10, new LookAtPlayerGoal(this, Mob.class, 8.0F));
@@ -174,7 +174,7 @@ public class WanderingTrader extends AbstractVillager {
 	protected void rewardTradeXp(MerchantOffer merchantOffer) {
 		if (merchantOffer.shouldRewardExp()) {
 			int i = 3 + this.random.nextInt(4);
-			this.level.addFreshEntity(new ExperienceOrb(this.level, this.x, this.y + 0.5, this.z, i));
+			this.level.addFreshEntity(new ExperienceOrb(this.level, this.getX(), this.getY() + 0.5, this.getZ(), i));
 		}
 	}
 
@@ -269,9 +269,11 @@ public class WanderingTrader extends AbstractVillager {
 			BlockPos blockPos = this.trader.getWanderTarget();
 			if (blockPos != null && WanderingTrader.this.navigation.isDone()) {
 				if (this.isTooFarAway(blockPos, 10.0)) {
-					Vec3 vec3 = new Vec3((double)blockPos.getX() - this.trader.x, (double)blockPos.getY() - this.trader.y, (double)blockPos.getZ() - this.trader.z)
+					Vec3 vec3 = new Vec3(
+							(double)blockPos.getX() - this.trader.getX(), (double)blockPos.getY() - this.trader.getY(), (double)blockPos.getZ() - this.trader.getZ()
+						)
 						.normalize();
-					Vec3 vec32 = vec3.scale(10.0).add(this.trader.x, this.trader.y, this.trader.z);
+					Vec3 vec32 = vec3.scale(10.0).add(this.trader.getX(), this.trader.getY(), this.trader.getZ());
 					WanderingTrader.this.navigation.moveTo(vec32.x, vec32.y, vec32.z, this.speedModifier);
 				} else {
 					WanderingTrader.this.navigation.moveTo((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ(), this.speedModifier);

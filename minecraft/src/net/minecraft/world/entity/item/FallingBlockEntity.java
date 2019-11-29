@@ -83,7 +83,7 @@ public class FallingBlockEntity extends Entity {
 	}
 
 	@Override
-	protected boolean makeStepSound() {
+	protected boolean isMovementNoisy() {
 		return false;
 	}
 
@@ -102,9 +102,6 @@ public class FallingBlockEntity extends Entity {
 		if (this.blockState.isAir()) {
 			this.remove();
 		} else {
-			this.xo = this.x;
-			this.yo = this.y;
-			this.zo = this.z;
 			Block block = this.blockState.getBlock();
 			if (this.time++ == 0) {
 				BlockPos blockPos = new BlockPos(this);
@@ -128,9 +125,7 @@ public class FallingBlockEntity extends Entity {
 				double d = this.getDeltaMovement().lengthSqr();
 				if (bl && d > 1.0) {
 					BlockHitResult blockHitResult = this.level
-						.clip(
-							new ClipContext(new Vec3(this.xo, this.yo, this.zo), new Vec3(this.x, this.y, this.z), ClipContext.Block.COLLIDER, ClipContext.Fluid.SOURCE_ONLY, this)
-						);
+						.clip(new ClipContext(new Vec3(this.xo, this.yo, this.zo), this.position(), ClipContext.Block.COLLIDER, ClipContext.Fluid.SOURCE_ONLY, this));
 					if (blockHitResult.getType() != HitResult.Type.MISS && this.level.getFluidState(blockHitResult.getBlockPos()).is(FluidTags.WATER)) {
 						blockPos = blockHitResult.getBlockPos();
 						bl2 = true;
@@ -144,7 +139,7 @@ public class FallingBlockEntity extends Entity {
 						this.remove();
 						if (!this.cancelDrop) {
 							boolean bl3 = blockState.canBeReplaced(new DirectionalPlaceContext(this.level, blockPos, Direction.DOWN, ItemStack.EMPTY, Direction.UP));
-							boolean bl4 = this.blockState.canSurvive(this.level, blockPos);
+							boolean bl4 = this.blockState.canSurvive(this.level, blockPos) && !FallingBlock.isFree(this.level.getBlockState(blockPos.below()));
 							if (bl3 && bl4) {
 								if (this.blockState.hasProperty(BlockStateProperties.WATERLOGGED) && this.level.getFluidState(blockPos).getType() == Fluids.WATER) {
 									this.blockState = this.blockState.setValue(BlockStateProperties.WATERLOGGED, Boolean.valueOf(true));
@@ -195,7 +190,7 @@ public class FallingBlockEntity extends Entity {
 	}
 
 	@Override
-	public void causeFallDamage(float f, float g) {
+	public boolean causeFallDamage(float f, float g) {
 		if (this.hurtEntities) {
 			int i = Mth.ceil(f - 1.0F);
 			if (i > 0) {
@@ -217,6 +212,8 @@ public class FallingBlockEntity extends Entity {
 				}
 			}
 		}
+
+		return false;
 	}
 
 	@Override

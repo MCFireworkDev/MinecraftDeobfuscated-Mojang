@@ -1,6 +1,6 @@
 package net.minecraft.world.entity.item;
 
-import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
@@ -57,7 +57,7 @@ public class ItemEntity extends Entity {
 	}
 
 	@Override
-	protected boolean makeStepSound() {
+	protected boolean isMovementNoisy() {
 		return false;
 	}
 
@@ -76,9 +76,9 @@ public class ItemEntity extends Entity {
 				--this.pickupDelay;
 			}
 
-			this.xo = this.x;
-			this.yo = this.y;
-			this.zo = this.z;
+			this.xo = this.getX();
+			this.yo = this.getY();
+			this.zo = this.getZ();
 			Vec3 vec3 = this.getDeltaMovement();
 			if (this.isUnderLiquid(FluidTags.WATER)) {
 				this.setUnderwaterMovement();
@@ -91,7 +91,7 @@ public class ItemEntity extends Entity {
 			} else {
 				this.noPhysics = !this.level.noCollision(this);
 				if (this.noPhysics) {
-					this.checkInBlock(this.x, (this.getBoundingBox().minY + this.getBoundingBox().maxY) / 2.0, this.z);
+					this.checkInBlock(this.getX(), (this.getBoundingBox().minY + this.getBoundingBox().maxY) / 2.0, this.getZ());
 				}
 			}
 
@@ -99,7 +99,7 @@ public class ItemEntity extends Entity {
 				this.move(MoverType.SELF, this.getDeltaMovement());
 				float f = 0.98F;
 				if (this.onGround) {
-					f = this.level.getBlockState(new BlockPos(this.x, this.getBoundingBox().minY - 1.0, this.z)).getBlock().getFriction() * 0.98F;
+					f = this.level.getBlockState(new BlockPos(this.getX(), this.getY() - 1.0, this.getZ())).getBlock().getFriction() * 0.98F;
 				}
 
 				this.setDeltaMovement(this.getDeltaMovement().multiply((double)f, 0.98, (double)f));
@@ -108,7 +108,7 @@ public class ItemEntity extends Entity {
 				}
 			}
 
-			boolean bl = Mth.floor(this.xo) != Mth.floor(this.x) || Mth.floor(this.yo) != Mth.floor(this.y) || Mth.floor(this.zo) != Mth.floor(this.z);
+			boolean bl = Mth.floor(this.xo) != Mth.floor(this.getX()) || Mth.floor(this.yo) != Mth.floor(this.getY()) || Mth.floor(this.zo) != Mth.floor(this.getZ());
 			int i = bl ? 2 : 40;
 			if (this.tickCount % i == 0) {
 				if (this.level.getFluidState(new BlockPos(this)).is(FluidTags.LAVA)) {
@@ -147,15 +147,15 @@ public class ItemEntity extends Entity {
 	}
 
 	private void mergeWithNeighbours() {
-		List<ItemEntity> list = this.level
-			.getEntitiesOfClass(ItemEntity.class, this.getBoundingBox().inflate(0.5, 0.0, 0.5), itemEntityx -> itemEntityx != this && itemEntityx.isMergable());
-		if (!list.isEmpty()) {
-			for(ItemEntity itemEntity : list) {
-				if (!this.isMergable()) {
-					return;
+		if (this.isMergable()) {
+			for(ItemEntity itemEntity : this.level
+				.getEntitiesOfClass(ItemEntity.class, this.getBoundingBox().inflate(0.5, 0.0, 0.5), itemEntityx -> itemEntityx != this && itemEntityx.isMergable())) {
+				if (itemEntity.isMergable()) {
+					this.tryToMerge(itemEntity);
+					if (this.removed) {
+						break;
+					}
 				}
-
-				this.merge(itemEntity);
 			}
 		}
 	}
@@ -165,40 +165,50 @@ public class ItemEntity extends Entity {
 		return this.isAlive() && this.pickupDelay != 32767 && this.age != -32768 && this.age < 6000 && itemStack.getCount() < itemStack.getMaxStackSize();
 	}
 
-	private void merge(ItemEntity itemEntity) {
+	private void tryToMerge(ItemEntity itemEntity) {
 		ItemStack itemStack = this.getItem();
 		ItemStack itemStack2 = itemEntity.getItem();
-		if (itemStack2.getItem() == itemStack.getItem()) {
-			if (itemStack2.getCount() + itemStack.getCount() <= itemStack2.getMaxStackSize()) {
-				if (!(itemStack2.hasTag() ^ itemStack.hasTag())) {
-					if (!itemStack2.hasTag() || itemStack2.getTag().equals(itemStack.getTag())) {
-						if (itemStack2.getCount() < itemStack.getCount()) {
-							merge(this, itemStack, itemEntity, itemStack2);
-						} else {
-							merge(itemEntity, itemStack2, this, itemStack);
-						}
-					}
-				}
+		if (Objects.equals(this.getOwner(), itemEntity.getOwner()) && areMergable(itemStack, itemStack2)) {
+			if (itemStack2.getCount() < itemStack.getCount()) {
+				merge(this, itemStack, itemEntity, itemStack2);
+			} else {
+				merge(itemEntity, itemStack2, this, itemStack);
 			}
 		}
 	}
 
-	private static void merge(ItemEntity itemEntity, ItemStack itemStack, ItemEntity itemEntity2, ItemStack itemStack2) {
-		int i = Math.min(itemStack.getMaxStackSize() - itemStack.getCount(), itemStack2.getCount());
+	public static boolean areMergable(ItemStack itemStack, ItemStack itemStack2) {
+		if (itemStack2.getItem() != itemStack.getItem()) {
+			return false;
+		} else if (itemStack2.getCount() + itemStack.getCount() > itemStack2.getMaxStackSize()) {
+			return false;
+		} else if (itemStack2.hasTag() ^ itemStack.hasTag()) {
+			return false;
+		} else {
+			return !itemStack2.hasTag() || itemStack2.getTag().equals(itemStack.getTag());
+		}
+	}
+
+	public static ItemStack merge(ItemStack itemStack, ItemStack itemStack2, int i) {
+		int j = Math.min(Math.min(itemStack.getMaxStackSize(), i) - itemStack.getCount(), itemStack2.getCount());
 		ItemStack itemStack3 = itemStack.copy();
-		itemStack3.grow(i);
+		itemStack3.grow(j);
+		itemStack2.shrink(j);
+		return itemStack3;
+	}
+
+	private static void merge(ItemEntity itemEntity, ItemStack itemStack, ItemStack itemStack2) {
+		ItemStack itemStack3 = merge(itemStack, itemStack2, 64);
 		itemEntity.setItem(itemStack3);
-		itemStack2.shrink(i);
-		itemEntity2.setItem(itemStack2);
+	}
+
+	private static void merge(ItemEntity itemEntity, ItemStack itemStack, ItemEntity itemEntity2, ItemStack itemStack2) {
+		merge(itemEntity, itemStack, itemStack2);
 		itemEntity.pickupDelay = Math.max(itemEntity.pickupDelay, itemEntity2.pickupDelay);
 		itemEntity.age = Math.min(itemEntity.age, itemEntity2.age);
 		if (itemStack2.isEmpty()) {
 			itemEntity2.remove();
 		}
-	}
-
-	public void setShortLifeTime() {
-		this.age = 4800;
 	}
 
 	@Override
@@ -270,7 +280,7 @@ public class ItemEntity extends Entity {
 			ItemStack itemStack = this.getItem();
 			Item item = itemStack.getItem();
 			int i = itemStack.getCount();
-			if (this.pickupDelay == 0 && (this.owner == null || 6000 - this.age <= 200 || this.owner.equals(player.getUUID())) && player.inventory.add(itemStack)) {
+			if (this.pickupDelay == 0 && (this.owner == null || this.owner.equals(player.getUUID())) && player.inventory.add(itemStack)) {
 				player.take(this, i);
 				if (itemStack.isEmpty()) {
 					this.remove();

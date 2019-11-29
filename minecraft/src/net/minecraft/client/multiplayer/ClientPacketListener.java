@@ -52,11 +52,15 @@ import net.minecraft.client.particle.ItemPickupParticle;
 import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.player.RemotePlayer;
+import net.minecraft.client.renderer.debug.BeeDebugRenderer;
 import net.minecraft.client.renderer.debug.GoalSelectorDebugRenderer;
 import net.minecraft.client.renderer.debug.NeighborsUpdateRenderer;
 import net.minecraft.client.renderer.debug.VillageDebugRenderer;
 import net.minecraft.client.renderer.debug.WorldGenAttemptRenderer;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.client.resources.sounds.BeeAggressiveSoundInstance;
+import net.minecraft.client.resources.sounds.BeeFlyingSoundInstance;
+import net.minecraft.client.resources.sounds.BeeSoundInstance;
 import net.minecraft.client.resources.sounds.GuardianAttackSoundInstance;
 import net.minecraft.client.resources.sounds.MinecartSoundInstance;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -176,7 +180,6 @@ import net.minecraft.network.protocol.game.ServerboundKeepAlivePacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket;
 import net.minecraft.network.protocol.game.ServerboundResourcePackPacket;
-import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.realms.DisconnectedRealmsScreen;
 import net.minecraft.realms.RealmsScreenProxy;
 import net.minecraft.resources.ResourceLocation;
@@ -204,6 +207,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.BaseAttributeMap;
 import net.minecraft.world.entity.ai.attributes.RangedAttribute;
+import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.boss.EnderDragonPart;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
@@ -266,6 +270,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BannerBlockEntity;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.BedBlockEntity;
+import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 import net.minecraft.world.level.block.entity.CommandBlockEntity;
@@ -300,7 +305,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 	private final GameProfile localGameProfile;
 	private final Screen callbackScreen;
 	private Minecraft minecraft;
-	private MultiPlayerLevel level;
+	private ClientLevel level;
 	private boolean started;
 	private final Map<UUID, PlayerInfo> playerInfoMap = Maps.newHashMap();
 	private final ClientAdvancements advancements;
@@ -339,9 +344,11 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		PacketUtils.ensureRunningOnSameThread(clientboundLoginPacket, this, this.minecraft);
 		this.minecraft.gameMode = new MultiPlayerGameMode(this.minecraft, this);
 		this.serverChunkRadius = clientboundLoginPacket.getChunkRadius();
-		this.level = new MultiPlayerLevel(
+		this.level = new ClientLevel(
 			this,
-			new LevelSettings(0L, clientboundLoginPacket.getGameType(), false, clientboundLoginPacket.isHardcore(), clientboundLoginPacket.getLevelType()),
+			new LevelSettings(
+				clientboundLoginPacket.getSeed(), clientboundLoginPacket.getGameType(), false, clientboundLoginPacket.isHardcore(), clientboundLoginPacket.getLevelType()
+			),
 			clientboundLoginPacket.getDimension(),
 			this.serverChunkRadius,
 			this.minecraft.getProfiler(),
@@ -367,6 +374,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		this.minecraft.setScreen(new ReceivingLevelScreen());
 		this.minecraft.player.setId(i);
 		this.minecraft.player.setReducedDebugInfo(clientboundLoginPacket.isReducedDebugInfo());
+		this.minecraft.player.setShowDeathScreen(clientboundLoginPacket.shouldShowDeathScreen());
 		this.minecraft.gameMode.setLocalMode(clientboundLoginPacket.getGameType());
 		this.minecraft.options.broadcastOptions();
 		this.connection
@@ -563,19 +571,10 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		int i = clientboundAddPlayerPacket.getEntityId();
 		RemotePlayer remotePlayer = new RemotePlayer(this.minecraft.level, this.getPlayerInfo(clientboundAddPlayerPacket.getPlayerId()).getProfile());
 		remotePlayer.setId(i);
-		remotePlayer.xo = d;
-		remotePlayer.xOld = d;
-		remotePlayer.yo = e;
-		remotePlayer.yOld = e;
-		remotePlayer.zo = f;
-		remotePlayer.zOld = f;
+		remotePlayer.setPosAndOldPos(d, e, f);
 		remotePlayer.setPacketCoordinates(d, e, f);
 		remotePlayer.absMoveTo(d, e, f, g, h);
 		this.level.addPlayer(i, remotePlayer);
-		List<SynchedEntityData.DataItem<?>> list = clientboundAddPlayerPacket.getUnpackedData();
-		if (list != null) {
-			remotePlayer.getEntityData().assignValues(list);
-		}
 	}
 
 	@Override
@@ -590,8 +589,8 @@ public class ClientPacketListener implements ClientGamePacketListener {
 			if (!entity.isControlledByLocalInstance()) {
 				float g = (float)(clientboundTeleportEntityPacket.getyRot() * 360) / 256.0F;
 				float h = (float)(clientboundTeleportEntityPacket.getxRot() * 360) / 256.0F;
-				if (!(Math.abs(entity.x - d) >= 0.03125) && !(Math.abs(entity.y - e) >= 0.015625) && !(Math.abs(entity.z - f) >= 0.03125)) {
-					entity.lerpTo(entity.x, entity.y, entity.z, g, h, 0, true);
+				if (!(Math.abs(entity.getX() - d) >= 0.03125) && !(Math.abs(entity.getY() - e) >= 0.015625) && !(Math.abs(entity.getZ() - f) >= 0.03125)) {
+					entity.lerpTo(entity.getX(), entity.getY(), entity.getZ(), g, h, 0, true);
 				} else {
 					entity.lerpTo(d, e, f, g, h, 3, true);
 				}
@@ -614,14 +613,21 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		PacketUtils.ensureRunningOnSameThread(clientboundMoveEntityPacket, this, this.minecraft);
 		Entity entity = clientboundMoveEntityPacket.getEntity(this.level);
 		if (entity != null) {
-			entity.xp += (long)clientboundMoveEntityPacket.getXa();
-			entity.yp += (long)clientboundMoveEntityPacket.getYa();
-			entity.zp += (long)clientboundMoveEntityPacket.getZa();
-			Vec3 vec3 = ClientboundMoveEntityPacket.packetToEntity(entity.xp, entity.yp, entity.zp);
 			if (!entity.isControlledByLocalInstance()) {
-				float f = clientboundMoveEntityPacket.hasRotation() ? (float)(clientboundMoveEntityPacket.getyRot() * 360) / 256.0F : entity.yRot;
-				float g = clientboundMoveEntityPacket.hasRotation() ? (float)(clientboundMoveEntityPacket.getxRot() * 360) / 256.0F : entity.xRot;
-				entity.lerpTo(vec3.x, vec3.y, vec3.z, f, g, 3, false);
+				if (clientboundMoveEntityPacket.hasPosition()) {
+					entity.xp += (long)clientboundMoveEntityPacket.getXa();
+					entity.yp += (long)clientboundMoveEntityPacket.getYa();
+					entity.zp += (long)clientboundMoveEntityPacket.getZa();
+					Vec3 vec3 = ClientboundMoveEntityPacket.packetToEntity(entity.xp, entity.yp, entity.zp);
+					float f = clientboundMoveEntityPacket.hasRotation() ? (float)(clientboundMoveEntityPacket.getyRot() * 360) / 256.0F : entity.yRot;
+					float g = clientboundMoveEntityPacket.hasRotation() ? (float)(clientboundMoveEntityPacket.getxRot() * 360) / 256.0F : entity.xRot;
+					entity.lerpTo(vec3.x, vec3.y, vec3.z, f, g, 3, false);
+				} else if (clientboundMoveEntityPacket.hasRotation()) {
+					float h = (float)(clientboundMoveEntityPacket.getyRot() * 360) / 256.0F;
+					float f = (float)(clientboundMoveEntityPacket.getxRot() * 360) / 256.0F;
+					entity.lerpTo(entity.getX(), entity.getY(), entity.getZ(), h, f, 3, false);
+				}
+
 				entity.onGround = clientboundMoveEntityPacket.isOnGround();
 			}
 		}
@@ -651,55 +657,65 @@ public class ClientPacketListener implements ClientGamePacketListener {
 	public void handleMovePlayer(ClientboundPlayerPositionPacket clientboundPlayerPositionPacket) {
 		PacketUtils.ensureRunningOnSameThread(clientboundPlayerPositionPacket, this, this.minecraft);
 		Player player = this.minecraft.player;
-		double d = clientboundPlayerPositionPacket.getX();
-		double e = clientboundPlayerPositionPacket.getY();
-		double f = clientboundPlayerPositionPacket.getZ();
-		float g = clientboundPlayerPositionPacket.getYRot();
-		float h = clientboundPlayerPositionPacket.getXRot();
 		Vec3 vec3 = player.getDeltaMovement();
-		double i = vec3.x;
-		double j = vec3.y;
-		double k = vec3.z;
-		if (clientboundPlayerPositionPacket.getRelativeArguments().contains(ClientboundPlayerPositionPacket.RelativeArgument.X)) {
-			player.xOld += d;
-			d += player.x;
+		boolean bl = clientboundPlayerPositionPacket.getRelativeArguments().contains(ClientboundPlayerPositionPacket.RelativeArgument.X);
+		boolean bl2 = clientboundPlayerPositionPacket.getRelativeArguments().contains(ClientboundPlayerPositionPacket.RelativeArgument.Y);
+		boolean bl3 = clientboundPlayerPositionPacket.getRelativeArguments().contains(ClientboundPlayerPositionPacket.RelativeArgument.Z);
+		double d;
+		double e;
+		if (bl) {
+			d = vec3.x();
+			e = player.getX() + clientboundPlayerPositionPacket.getX();
+			player.xOld += clientboundPlayerPositionPacket.getX();
 		} else {
-			player.xOld = d;
-			i = 0.0;
+			d = 0.0;
+			e = clientboundPlayerPositionPacket.getX();
+			player.xOld = e;
 		}
 
-		if (clientboundPlayerPositionPacket.getRelativeArguments().contains(ClientboundPlayerPositionPacket.RelativeArgument.Y)) {
-			player.yOld += e;
-			e += player.y;
+		double f;
+		double g;
+		if (bl2) {
+			f = vec3.y();
+			g = player.getY() + clientboundPlayerPositionPacket.getY();
+			player.yOld += clientboundPlayerPositionPacket.getY();
 		} else {
-			player.yOld = e;
-			j = 0.0;
+			f = 0.0;
+			g = clientboundPlayerPositionPacket.getY();
+			player.yOld = g;
 		}
 
-		if (clientboundPlayerPositionPacket.getRelativeArguments().contains(ClientboundPlayerPositionPacket.RelativeArgument.Z)) {
-			player.zOld += f;
-			f += player.z;
+		double h;
+		double i;
+		if (bl3) {
+			h = vec3.z();
+			i = player.getZ() + clientboundPlayerPositionPacket.getZ();
+			player.zOld += clientboundPlayerPositionPacket.getZ();
 		} else {
-			player.zOld = f;
-			k = 0.0;
+			h = 0.0;
+			i = clientboundPlayerPositionPacket.getZ();
+			player.zOld = i;
 		}
 
-		player.setDeltaMovement(i, j, k);
+		player.setPosRaw(e, g, i);
+		player.xo = e;
+		player.yo = g;
+		player.zo = i;
+		player.setDeltaMovement(d, f, h);
+		float j = clientboundPlayerPositionPacket.getYRot();
+		float k = clientboundPlayerPositionPacket.getXRot();
 		if (clientboundPlayerPositionPacket.getRelativeArguments().contains(ClientboundPlayerPositionPacket.RelativeArgument.X_ROT)) {
-			h += player.xRot;
+			k += player.xRot;
 		}
 
 		if (clientboundPlayerPositionPacket.getRelativeArguments().contains(ClientboundPlayerPositionPacket.RelativeArgument.Y_ROT)) {
-			g += player.yRot;
+			j += player.yRot;
 		}
 
-		player.absMoveTo(d, e, f, g, h);
+		player.absMoveTo(e, g, i, j, k);
 		this.connection.send(new ServerboundAcceptTeleportationPacket(clientboundPlayerPositionPacket.getId()));
-		this.connection.send(new ServerboundMovePlayerPacket.PosRot(player.x, player.getBoundingBox().minY, player.z, player.yRot, player.xRot, false));
+		this.connection.send(new ServerboundMovePlayerPacket.PosRot(player.getX(), player.getY(), player.getZ(), player.yRot, player.xRot, false));
 		if (!this.started) {
-			this.minecraft.player.xo = this.minecraft.player.x;
-			this.minecraft.player.yo = this.minecraft.player.y;
-			this.minecraft.player.zo = this.minecraft.player.z;
 			this.started = true;
 			this.minecraft.setScreen(null);
 		}
@@ -722,13 +738,12 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		LevelChunk levelChunk = this.level
 			.getChunkSource()
 			.replaceWithPacketData(
-				this.level,
 				i,
 				j,
+				clientboundLevelChunkPacket.getBiomes(),
 				clientboundLevelChunkPacket.getReadBuffer(),
 				clientboundLevelChunkPacket.getHeightmaps(),
-				clientboundLevelChunkPacket.getAvailableSections(),
-				clientboundLevelChunkPacket.isFullChunk()
+				clientboundLevelChunkPacket.getAvailableSections()
 			);
 		if (levelChunk != null && clientboundLevelChunkPacket.isFullChunk()) {
 			this.level.reAddEntitiesToChunk(levelChunk);
@@ -806,9 +821,9 @@ public class ClientPacketListener implements ClientGamePacketListener {
 			if (entity instanceof ExperienceOrb) {
 				this.level
 					.playLocalSound(
-						entity.x,
-						entity.y,
-						entity.z,
+						entity.getX(),
+						entity.getY(),
+						entity.getZ(),
 						SoundEvents.EXPERIENCE_ORB_PICKUP,
 						SoundSource.PLAYERS,
 						0.1F,
@@ -818,9 +833,9 @@ public class ClientPacketListener implements ClientGamePacketListener {
 			} else {
 				this.level
 					.playLocalSound(
-						entity.x,
-						entity.y,
-						entity.z,
+						entity.getX(),
+						entity.getY(),
+						entity.getZ(),
 						SoundEvents.ITEM_PICKUP,
 						SoundSource.PLAYERS,
 						0.2F,
@@ -833,7 +848,9 @@ public class ClientPacketListener implements ClientGamePacketListener {
 				((ItemEntity)entity).getItem().setCount(clientboundTakeItemEntityPacket.getAmount());
 			}
 
-			this.minecraft.particleEngine.add(new ItemPickupParticle(this.level, entity, livingEntity, 0.5F));
+			this.minecraft
+				.particleEngine
+				.add(new ItemPickupParticle(this.minecraft.getEntityRenderDispatcher(), this.minecraft.renderBuffers(), this.level, entity, livingEntity));
 			this.level.removeEntity(clientboundTakeItemEntityPacket.getItemId());
 		}
 	}
@@ -859,7 +876,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 				entity.animateHurt();
 			} else if (clientboundAnimatePacket.getAction() == 2) {
 				Player player = (Player)entity;
-				player.stopSleepInBed(false, false, false);
+				player.stopSleepInBed(false, false);
 			} else if (clientboundAnimatePacket.getAction() == 4) {
 				this.minecraft.particleEngine.createTrackingEmitter(entity, ParticleTypes.CRIT);
 			} else if (clientboundAnimatePacket.getAction() == 5) {
@@ -898,9 +915,16 @@ public class ClientPacketListener implements ClientGamePacketListener {
 				(double)((float)clientboundAddMobPacket.getZd() / 8000.0F)
 			);
 			this.level.putNonPlayerEntity(clientboundAddMobPacket.getId(), livingEntity);
-			List<SynchedEntityData.DataItem<?>> list = clientboundAddMobPacket.getUnpackedData();
-			if (list != null) {
-				livingEntity.getEntityData().assignValues(list);
+			if (livingEntity instanceof Bee) {
+				boolean bl = ((Bee)livingEntity).isAngry();
+				BeeSoundInstance beeSoundInstance;
+				if (bl) {
+					beeSoundInstance = new BeeAggressiveSoundInstance((Bee)livingEntity);
+				} else {
+					beeSoundInstance = new BeeFlyingSoundInstance((Bee)livingEntity);
+				}
+
+				this.minecraft.getSoundManager().play(beeSoundInstance);
 			}
 		} else {
 			LOGGER.warn("Skipping Entity with id {}", clientboundAddMobPacket.getType());
@@ -917,7 +941,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 	@Override
 	public void handleSetSpawn(ClientboundSetSpawnPositionPacket clientboundSetSpawnPositionPacket) {
 		PacketUtils.ensureRunningOnSameThread(clientboundSetSpawnPositionPacket, this, this.minecraft);
-		this.minecraft.player.setRespawnPosition(clientboundSetSpawnPositionPacket.getPos(), true);
+		this.minecraft.player.setRespawnPosition(clientboundSetSpawnPositionPacket.getPos(), true, false);
 		this.minecraft.level.getLevelData().setSpawn(clientboundSetSpawnPositionPacket.getPos());
 	}
 
@@ -936,7 +960,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 				if (entity2 != null) {
 					entity2.startRiding(entity, true);
 					if (entity2 == this.minecraft.player && !bl) {
-						this.minecraft.gui.setOverlayMessage(I18n.get("mount.onboard", this.minecraft.options.keySneak.getTranslatedKeyMessage()), false);
+						this.minecraft.gui.setOverlayMessage(I18n.get("mount.onboard", this.minecraft.options.keyShift.getTranslatedKeyMessage()), false);
 					}
 				}
 			}
@@ -973,7 +997,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 			} else if (clientboundEntityEventPacket.getEventId() == 35) {
 				int i = 40;
 				this.minecraft.particleEngine.createTrackingEmitter(entity, ParticleTypes.TOTEM_OF_UNDYING, 30);
-				this.level.playLocalSound(entity.x, entity.y, entity.z, SoundEvents.TOTEM_USE, entity.getSoundSource(), 1.0F, 1.0F, false);
+				this.level.playLocalSound(entity.getX(), entity.getY(), entity.getZ(), SoundEvents.TOTEM_USE, entity.getSoundSource(), 1.0F, 1.0F, false);
 				if (entity == this.minecraft.player) {
 					this.minecraft.gameRenderer.displayItemActivation(findTotem(this.minecraft.player));
 				}
@@ -1012,10 +1036,14 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		if (dimensionType != localPlayer.dimension) {
 			this.started = false;
 			Scoreboard scoreboard = this.level.getScoreboard();
-			this.level = new MultiPlayerLevel(
+			this.level = new ClientLevel(
 				this,
 				new LevelSettings(
-					0L, clientboundRespawnPacket.getPlayerGameType(), false, this.minecraft.level.getLevelData().isHardcore(), clientboundRespawnPacket.getLevelType()
+					clientboundRespawnPacket.getSeed(),
+					clientboundRespawnPacket.getPlayerGameType(),
+					false,
+					this.minecraft.level.getLevelData().isHardcore(),
+					clientboundRespawnPacket.getLevelType()
 				),
 				clientboundRespawnPacket.getDimension(),
 				this.serverChunkRadius,
@@ -1037,6 +1065,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		this.minecraft.player = localPlayer2;
 		this.minecraft.cameraEntity = localPlayer2;
 		localPlayer2.getEntityData().assignValues(localPlayer.getEntityData().getAll());
+		localPlayer2.getAttributes().assignValues(localPlayer.getAttributes());
 		localPlayer2.resetPos();
 		localPlayer2.setServerBrand(string);
 		this.level.addPlayer(i, localPlayer2);
@@ -1044,6 +1073,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		localPlayer2.input = new KeyboardInput(this.minecraft.options);
 		this.minecraft.gameMode.adjustPlayer(localPlayer2);
 		localPlayer2.setReducedDebugInfo(localPlayer.isReducedDebugInfo());
+		localPlayer2.setShowDeathScreen(localPlayer.shouldShowDeathScreen());
 		if (this.minecraft.screen instanceof DeathScreen) {
 			this.minecraft.setScreen(null);
 		}
@@ -1167,8 +1197,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		BlockEntity blockEntity = this.level.getBlockEntity(clientboundOpenSignEditorPacket.getPos());
 		if (!(blockEntity instanceof SignBlockEntity)) {
 			blockEntity = new SignBlockEntity();
-			blockEntity.setLevel(this.level);
-			blockEntity.setPosition(clientboundOpenSignEditorPacket.getPos());
+			blockEntity.setLevelAndPosition(this.level, clientboundOpenSignEditorPacket.getPos());
 		}
 
 		this.minecraft.player.openTextEdit((SignBlockEntity)blockEntity);
@@ -1192,7 +1221,8 @@ public class ClientPacketListener implements ClientGamePacketListener {
 				|| i == 11 && blockEntity instanceof BedBlockEntity
 				|| i == 5 && blockEntity instanceof ConduitBlockEntity
 				|| i == 12 && blockEntity instanceof JigsawBlockEntity
-				|| i == 13 && blockEntity instanceof CampfireBlockEntity) {
+				|| i == 13 && blockEntity instanceof CampfireBlockEntity
+				|| i == 14 && blockEntity instanceof BeehiveBlockEntity) {
 				blockEntity.load(clientboundBlockEntityDataPacket.getTag());
 			}
 
@@ -1302,16 +1332,18 @@ public class ClientPacketListener implements ClientGamePacketListener {
 				this.minecraft.gui.getChat().addMessage(new TranslatableComponent("demo.day.6", options.keyScreenshot.getTranslatedKeyMessage()));
 			}
 		} else if (i == 6) {
-			this.level.playSound(player, player.x, player.y + (double)player.getEyeHeight(), player.z, SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.18F, 0.45F);
+			this.level.playSound(player, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.18F, 0.45F);
 		} else if (i == 7) {
 			this.level.setRainLevel(f);
 		} else if (i == 8) {
 			this.level.setThunderLevel(f);
 		} else if (i == 9) {
-			this.level.playSound(player, player.x, player.y, player.z, SoundEvents.PUFFER_FISH_STING, SoundSource.NEUTRAL, 1.0F, 1.0F);
+			this.level.playSound(player, player.getX(), player.getY(), player.getZ(), SoundEvents.PUFFER_FISH_STING, SoundSource.NEUTRAL, 1.0F, 1.0F);
 		} else if (i == 10) {
-			this.level.addParticle(ParticleTypes.ELDER_GUARDIAN, player.x, player.y, player.z, 0.0, 0.0, 0.0);
-			this.level.playSound(player, player.x, player.y, player.z, SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.HOSTILE, 1.0F, 1.0F);
+			this.level.addParticle(ParticleTypes.ELDER_GUARDIAN, player.getX(), player.getY(), player.getZ(), 0.0, 0.0, 0.0);
+			this.level.playSound(player, player.getX(), player.getY(), player.getZ(), SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.HOSTILE, 1.0F, 1.0F);
+		} else if (i == 11) {
+			this.minecraft.player.setShowDeathScreen(f == 0.0F);
 		}
 	}
 
@@ -1508,7 +1540,11 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		if (clientboundPlayerCombatPacket.event == ClientboundPlayerCombatPacket.Event.ENTITY_DIED) {
 			Entity entity = this.level.getEntity(clientboundPlayerCombatPacket.playerId);
 			if (entity == this.minecraft.player) {
-				this.minecraft.setScreen(new DeathScreen(clientboundPlayerCombatPacket.message, this.level.getLevelData().isHardcore()));
+				if (this.minecraft.player.shouldShowDeathScreen()) {
+					this.minecraft.setScreen(new DeathScreen(clientboundPlayerCombatPacket.message, this.level.getLevelData().isHardcore()));
+				} else {
+					this.minecraft.player.respawn();
+				}
 			}
 		}
 	}
@@ -1988,6 +2024,64 @@ public class ClientPacketListener implements ClientGamePacketListener {
 				}
 
 				this.minecraft.debugRenderer.villageDebugRenderer.addOrUpdateBrainDump(brainDump);
+			} else if (ClientboundCustomPayloadPacket.DEBUG_BEE.equals(resourceLocation)) {
+				double d = friendlyByteBuf.readDouble();
+				double e = friendlyByteBuf.readDouble();
+				double g = friendlyByteBuf.readDouble();
+				Position position = new PositionImpl(d, e, g);
+				UUID uUID = friendlyByteBuf.readUUID();
+				int o = friendlyByteBuf.readInt();
+				boolean bl4 = friendlyByteBuf.readBoolean();
+				BlockPos blockPos4 = null;
+				if (bl4) {
+					blockPos4 = friendlyByteBuf.readBlockPos();
+				}
+
+				boolean bl5 = friendlyByteBuf.readBoolean();
+				BlockPos blockPos5 = null;
+				if (bl5) {
+					blockPos5 = friendlyByteBuf.readBlockPos();
+				}
+
+				int w = friendlyByteBuf.readInt();
+				boolean bl6 = friendlyByteBuf.readBoolean();
+				Path path3 = null;
+				if (bl6) {
+					path3 = Path.createFromStream(friendlyByteBuf);
+				}
+
+				BeeDebugRenderer.BeeInfo beeInfo = new BeeDebugRenderer.BeeInfo(uUID, o, position, path3, blockPos4, blockPos5, w);
+				int q = friendlyByteBuf.readInt();
+
+				for(int r = 0; r < q; ++r) {
+					String string6 = friendlyByteBuf.readUtf();
+					beeInfo.goals.add(string6);
+				}
+
+				int r = friendlyByteBuf.readInt();
+
+				for(int s = 0; s < r; ++s) {
+					BlockPos blockPos6 = friendlyByteBuf.readBlockPos();
+					beeInfo.blacklistedHives.add(blockPos6);
+				}
+
+				this.minecraft.debugRenderer.beeDebugRenderer.addOrUpdateBeeInfo(beeInfo);
+			} else if (ClientboundCustomPayloadPacket.DEBUG_HIVE.equals(resourceLocation)) {
+				BlockPos blockPos2 = friendlyByteBuf.readBlockPos();
+				String string = friendlyByteBuf.readUtf();
+				int m = friendlyByteBuf.readInt();
+				int x = friendlyByteBuf.readInt();
+				boolean bl7 = friendlyByteBuf.readBoolean();
+				BeeDebugRenderer.HiveInfo hiveInfo = new BeeDebugRenderer.HiveInfo(blockPos2, string, m, x, bl7, this.level.getGameTime());
+				this.minecraft.debugRenderer.beeDebugRenderer.addOrUpdateHiveInfo(hiveInfo);
+			} else if (ClientboundCustomPayloadPacket.DEBUG_GAME_TEST_CLEAR.equals(resourceLocation)) {
+				this.minecraft.debugRenderer.gameTestDebugRenderer.clear();
+			} else if (ClientboundCustomPayloadPacket.DEBUG_GAME_TEST_ADD_MARKER.equals(resourceLocation)) {
+				BlockPos blockPos2 = friendlyByteBuf.readBlockPos();
+				int j = friendlyByteBuf.readInt();
+				String string10 = friendlyByteBuf.readUtf();
+				int x = friendlyByteBuf.readInt();
+				this.minecraft.debugRenderer.gameTestDebugRenderer.addMarker(blockPos2, j, string10, x);
 			} else {
 				LOGGER.warn("Unknown custom packed identifier: {}", resourceLocation);
 			}
@@ -2285,7 +2379,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		return this.commands;
 	}
 
-	public MultiPlayerLevel getLevel() {
+	public ClientLevel getLevel() {
 		return this.level;
 	}
 

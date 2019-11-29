@@ -1,10 +1,14 @@
 package net.minecraft.client.renderer.entity.layers;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.HorseModel;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.item.DyeableHorseArmorItem;
 import net.minecraft.world.item.HorseArmorItem;
@@ -18,30 +22,29 @@ public class HorseArmorLayer extends RenderLayer<Horse, HorseModel<Horse>> {
 		super(renderLayerParent);
 	}
 
-	public void render(Horse horse, float f, float g, float h, float i, float j, float k, float l) {
+	public void render(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, Horse horse, float f, float g, float h, float j, float k, float l) {
 		ItemStack itemStack = horse.getArmor();
 		if (itemStack.getItem() instanceof HorseArmorItem) {
 			HorseArmorItem horseArmorItem = (HorseArmorItem)itemStack.getItem();
 			this.getParentModel().copyPropertiesTo(this.model);
 			this.model.prepareMobModel(horse, f, g, h);
-			this.bindTexture(horseArmorItem.getTexture());
+			this.model.setupAnim(horse, f, g, j, k, l);
+			float n;
+			float o;
+			float p;
 			if (horseArmorItem instanceof DyeableHorseArmorItem) {
 				int m = ((DyeableHorseArmorItem)horseArmorItem).getColor(itemStack);
-				float n = (float)(m >> 16 & 0xFF) / 255.0F;
-				float o = (float)(m >> 8 & 0xFF) / 255.0F;
-				float p = (float)(m & 0xFF) / 255.0F;
-				GlStateManager.color4f(n, o, p, 1.0F);
-				this.model.render(horse, f, g, i, j, k, l);
-				return;
+				n = (float)(m >> 16 & 0xFF) / 255.0F;
+				o = (float)(m >> 8 & 0xFF) / 255.0F;
+				p = (float)(m & 0xFF) / 255.0F;
+			} else {
+				n = 1.0F;
+				o = 1.0F;
+				p = 1.0F;
 			}
 
-			GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-			this.model.render(horse, f, g, i, j, k, l);
+			VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.entityCutoutNoCull(horseArmorItem.getTexture()));
+			this.model.renderToBuffer(poseStack, vertexConsumer, i, OverlayTexture.NO_OVERLAY, n, o, p, 1.0F);
 		}
-	}
-
-	@Override
-	public boolean colorsOnDamage() {
-		return false;
 	}
 }

@@ -17,6 +17,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
@@ -135,7 +136,7 @@ public class ServerChunkCache extends ChunkSource {
 			this.mainThreadProcessor.managedBlock(completableFuture::isDone);
 			ChunkAccess chunkAccess = ((Either)completableFuture.join()).map(chunkAccessx -> chunkAccessx, chunkLoadingFailure -> {
 				if (bl) {
-					throw new IllegalStateException("Chunk not there when requested: " + chunkLoadingFailure);
+					throw (IllegalStateException)Util.pauseInIde(new IllegalStateException("Chunk not there when requested: " + chunkLoadingFailure));
 				} else {
 					return null;
 				}
@@ -217,7 +218,7 @@ public class ServerChunkCache extends ChunkSource {
 				chunkHolder = this.getVisibleChunkIfPresent(l);
 				profilerFiller.pop();
 				if (this.chunkAbsent(chunkHolder, k)) {
-					throw new IllegalStateException("No chunk holder after ticket has been added");
+					throw (IllegalStateException)Util.pauseInIde(new IllegalStateException("No chunk holder after ticket has been added"));
 				}
 			}
 		}
@@ -282,7 +283,7 @@ public class ServerChunkCache extends ChunkSource {
 
 	@Override
 	public boolean isEntityTickingChunk(Entity entity) {
-		long l = ChunkPos.asLong(Mth.floor(entity.x) >> 4, Mth.floor(entity.z) >> 4);
+		long l = ChunkPos.asLong(Mth.floor(entity.getX()) >> 4, Mth.floor(entity.getZ()) >> 4);
 		return this.checkChunkFuture(l, ChunkHolder::getEntityTickingChunkFuture);
 	}
 
@@ -298,7 +299,7 @@ public class ServerChunkCache extends ChunkSource {
 	}
 
 	public boolean isInAccessibleChunk(Entity entity) {
-		long l = ChunkPos.asLong(Mth.floor(entity.x) >> 4, Mth.floor(entity.z) >> 4);
+		long l = ChunkPos.asLong(Mth.floor(entity.getX()) >> 4, Mth.floor(entity.getZ()) >> 4);
 		return this.checkChunkFuture(l, ChunkHolder::getFullChunkFuture);
 	}
 
@@ -413,7 +414,6 @@ public class ServerChunkCache extends ChunkSource {
 		return this.mainThreadProcessor.getPendingTasksCount();
 	}
 
-	@Override
 	public ChunkGenerator<?> getGenerator() {
 		return this.generator;
 	}

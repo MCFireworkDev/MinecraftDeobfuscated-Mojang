@@ -38,6 +38,7 @@ public class ShulkerBoxBlockEntity extends RandomizableContainerBlockEntity impl
 	private ShulkerBoxBlockEntity.AnimationStatus animationStatus = ShulkerBoxBlockEntity.AnimationStatus.CLOSED;
 	private float progress;
 	private float progressOld;
+	@Nullable
 	private DyeColor color;
 	private boolean loadColorFromBlock;
 
@@ -257,17 +258,6 @@ public class ShulkerBoxBlockEntity extends RandomizableContainerBlockEntity impl
 	}
 
 	@Override
-	public boolean isEmpty() {
-		for(ItemStack itemStack : this.itemStacks) {
-			if (!itemStack.isEmpty()) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	@Override
 	public int[] getSlotsForFace(Direction direction) {
 		return SLOTS;
 	}
@@ -286,6 +276,7 @@ public class ShulkerBoxBlockEntity extends RandomizableContainerBlockEntity impl
 		return Mth.lerp(f, this.progressOld, this.progress);
 	}
 
+	@Nullable
 	@Environment(EnvType.CLIENT)
 	public DyeColor getColor() {
 		if (this.loadColorFromBlock) {

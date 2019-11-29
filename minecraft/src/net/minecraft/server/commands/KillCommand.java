@@ -1,5 +1,6 @@
 package net.minecraft.server.commands;
 
+import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import java.util.Collection;
@@ -14,6 +15,7 @@ public class KillCommand {
 		commandDispatcher.register(
 			Commands.literal("kill")
 				.requires(commandSourceStack -> commandSourceStack.hasPermission(2))
+				.executes(commandContext -> kill(commandContext.getSource(), ImmutableList.of(commandContext.getSource().getEntityOrException())))
 				.then(
 					Commands.argument("targets", EntityArgument.entities())
 						.executes(commandContext -> kill(commandContext.getSource(), EntityArgument.getEntities(commandContext, "targets")))

@@ -1,9 +1,13 @@
 package net.minecraft.client.renderer.entity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.EvokerFangsModel;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.projectile.EvokerFangs;
 
@@ -16,31 +20,29 @@ public class EvokerFangsRenderer extends EntityRenderer<EvokerFangs> {
 		super(entityRenderDispatcher);
 	}
 
-	public void render(EvokerFangs evokerFangs, double d, double e, double f, float g, float h) {
-		float i = evokerFangs.getAnimationProgress(h);
-		if (i != 0.0F) {
+	public void render(EvokerFangs evokerFangs, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+		float h = evokerFangs.getAnimationProgress(g);
+		if (h != 0.0F) {
 			float j = 2.0F;
-			if (i > 0.9F) {
-				j = (float)((double)j * ((1.0 - (double)i) / 0.1F));
+			if (h > 0.9F) {
+				j = (float)((double)j * ((1.0 - (double)h) / 0.1F));
 			}
 
-			GlStateManager.pushMatrix();
-			GlStateManager.disableCull();
-			GlStateManager.enableAlphaTest();
-			this.bindTexture(evokerFangs);
-			GlStateManager.translatef((float)d, (float)e, (float)f);
-			GlStateManager.rotatef(90.0F - evokerFangs.yRot, 0.0F, 1.0F, 0.0F);
-			GlStateManager.scalef(-j, -j, j);
+			poseStack.pushPose();
+			poseStack.mulPose(Vector3f.YP.rotationDegrees(90.0F - evokerFangs.yRot));
+			poseStack.scale(-j, -j, j);
 			float k = 0.03125F;
-			GlStateManager.translatef(0.0F, -0.626F, 0.0F);
-			this.model.render(evokerFangs, i, 0.0F, 0.0F, evokerFangs.yRot, evokerFangs.xRot, 0.03125F);
-			GlStateManager.popMatrix();
-			GlStateManager.enableCull();
-			super.render(evokerFangs, d, e, f, g, h);
+			poseStack.translate(0.0, -0.626F, 0.0);
+			poseStack.scale(0.5F, 0.5F, 0.5F);
+			this.model.setupAnim(evokerFangs, h, 0.0F, 0.0F, evokerFangs.yRot, evokerFangs.xRot);
+			VertexConsumer vertexConsumer = multiBufferSource.getBuffer(this.model.renderType(TEXTURE_LOCATION));
+			this.model.renderToBuffer(poseStack, vertexConsumer, i, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+			poseStack.popPose();
+			super.render(evokerFangs, f, g, poseStack, multiBufferSource, i);
 		}
 	}
 
-	protected ResourceLocation getTextureLocation(EvokerFangs evokerFangs) {
+	public ResourceLocation getTextureLocation(EvokerFangs evokerFangs) {
 		return TEXTURE_LOCATION;
 	}
 }

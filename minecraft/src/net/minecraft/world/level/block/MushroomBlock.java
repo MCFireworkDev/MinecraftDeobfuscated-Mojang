@@ -2,13 +2,15 @@ package net.minecraft.world.level.block;
 
 import java.util.Random;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.biome.BiomeDefaultFeatures;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.HugeMushroomFeatureConfig;
+import net.minecraft.world.level.levelgen.feature.configurations.HugeMushroomFeatureConfiguration;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -25,13 +27,13 @@ public class MushroomBlock extends BushBlock implements BonemealableBlock {
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
 		if (random.nextInt(25) == 0) {
 			int i = 5;
 			int j = 4;
 
 			for(BlockPos blockPos2 : BlockPos.betweenClosed(blockPos.offset(-4, -1, -4), blockPos.offset(4, 1, 4))) {
-				if (level.getBlockState(blockPos2).getBlock() == this) {
+				if (serverLevel.getBlockState(blockPos2).getBlock() == this) {
 					if (--i <= 0) {
 						return;
 					}
@@ -41,15 +43,15 @@ public class MushroomBlock extends BushBlock implements BonemealableBlock {
 			BlockPos blockPos3 = blockPos.offset(random.nextInt(3) - 1, random.nextInt(2) - random.nextInt(2), random.nextInt(3) - 1);
 
 			for(int k = 0; k < 4; ++k) {
-				if (level.isEmptyBlock(blockPos3) && blockState.canSurvive(level, blockPos3)) {
+				if (serverLevel.isEmptyBlock(blockPos3) && blockState.canSurvive(serverLevel, blockPos3)) {
 					blockPos = blockPos3;
 				}
 
 				blockPos3 = blockPos.offset(random.nextInt(3) - 1, random.nextInt(2) - random.nextInt(2), random.nextInt(3) - 1);
 			}
 
-			if (level.isEmptyBlock(blockPos3) && blockState.canSurvive(level, blockPos3)) {
-				level.setBlock(blockPos3, blockState, 2);
+			if (serverLevel.isEmptyBlock(blockPos3) && blockState.canSurvive(serverLevel, blockPos3)) {
+				serverLevel.setBlock(blockPos3, blockState, 2);
 			}
 		}
 	}
@@ -71,19 +73,24 @@ public class MushroomBlock extends BushBlock implements BonemealableBlock {
 		}
 	}
 
-	public boolean growMushroom(LevelAccessor levelAccessor, BlockPos blockPos, BlockState blockState, Random random) {
-		levelAccessor.removeBlock(blockPos, false);
-		Feature<HugeMushroomFeatureConfig> feature = null;
+	public boolean growMushroom(ServerLevel serverLevel, BlockPos blockPos, BlockState blockState, Random random) {
+		serverLevel.removeBlock(blockPos, false);
+		ConfiguredFeature<HugeMushroomFeatureConfiguration, ?> configuredFeature;
 		if (this == Blocks.BROWN_MUSHROOM) {
-			feature = Feature.HUGE_BROWN_MUSHROOM;
-		} else if (this == Blocks.RED_MUSHROOM) {
-			feature = Feature.HUGE_RED_MUSHROOM;
+			configuredFeature = Feature.HUGE_BROWN_MUSHROOM.configured(BiomeDefaultFeatures.HUGE_BROWN_MUSHROOM_CONFIG);
+		} else {
+			if (this != Blocks.RED_MUSHROOM) {
+				serverLevel.setBlock(blockPos, blockState, 3);
+				return false;
+			}
+
+			configuredFeature = Feature.HUGE_RED_MUSHROOM.configured(BiomeDefaultFeatures.HUGE_RED_MUSHROOM_CONFIG);
 		}
 
-		if (feature != null && feature.place(levelAccessor, levelAccessor.getChunkSource().getGenerator(), random, blockPos, new HugeMushroomFeatureConfig(true))) {
+		if (configuredFeature.place(serverLevel, serverLevel.getChunkSource().getGenerator(), random, blockPos)) {
 			return true;
 		} else {
-			levelAccessor.setBlock(blockPos, blockState, 3);
+			serverLevel.setBlock(blockPos, blockState, 3);
 			return false;
 		}
 	}
@@ -99,8 +106,8 @@ public class MushroomBlock extends BushBlock implements BonemealableBlock {
 	}
 
 	@Override
-	public void performBonemeal(Level level, Random random, BlockPos blockPos, BlockState blockState) {
-		this.growMushroom(level, blockPos, blockState, random);
+	public void performBonemeal(ServerLevel serverLevel, Random random, BlockPos blockPos, BlockState blockState) {
+		this.growMushroom(serverLevel, blockPos, blockState, random);
 	}
 
 	@Override

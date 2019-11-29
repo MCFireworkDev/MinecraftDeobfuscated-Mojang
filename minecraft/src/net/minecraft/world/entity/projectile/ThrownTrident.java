@@ -27,6 +27,7 @@ import net.minecraft.world.phys.Vec3;
 
 public class ThrownTrident extends AbstractArrow {
 	private static final EntityDataAccessor<Byte> ID_LOYALTY = SynchedEntityData.defineId(ThrownTrident.class, EntityDataSerializers.BYTE);
+	private static final EntityDataAccessor<Boolean> ID_FOIL = SynchedEntityData.defineId(ThrownTrident.class, EntityDataSerializers.BOOLEAN);
 	private ItemStack tridentItem = new ItemStack(Items.TRIDENT);
 	private boolean dealtDamage;
 	public int clientSideReturnTridentTickCount;
@@ -39,9 +40,9 @@ public class ThrownTrident extends AbstractArrow {
 		super(EntityType.TRIDENT, livingEntity, level);
 		this.tridentItem = itemStack.copy();
 		this.entityData.set(ID_LOYALTY, (byte)EnchantmentHelper.getLoyalty(itemStack));
+		this.entityData.set(ID_FOIL, itemStack.hasFoil());
 	}
 
-	@Environment(EnvType.CLIENT)
 	public ThrownTrident(Level level, double d, double e, double f) {
 		super(EntityType.TRIDENT, d, e, f, level);
 	}
@@ -50,6 +51,13 @@ public class ThrownTrident extends AbstractArrow {
 	protected void defineSynchedData() {
 		super.defineSynchedData();
 		this.entityData.define(ID_LOYALTY, (byte)0);
+		this.entityData.define(ID_FOIL, false);
+	}
+
+	public void setTridentItem(ItemStack itemStack) {
+		if (itemStack.getItem() == Items.TRIDENT || itemStack.isEmpty()) {
+			this.tridentItem = itemStack.copy();
+		}
 	}
 
 	@Override
@@ -69,10 +77,10 @@ public class ThrownTrident extends AbstractArrow {
 				this.remove();
 			} else if (i > 0) {
 				this.setNoPhysics(true);
-				Vec3 vec3 = new Vec3(entity.x - this.x, entity.y + (double)entity.getEyeHeight() - this.y, entity.z - this.z);
-				this.y += vec3.y * 0.015 * (double)i;
+				Vec3 vec3 = new Vec3(entity.getX() - this.getX(), entity.getEyeY() - this.getY(), entity.getZ() - this.getZ());
+				this.setPosRaw(this.getX(), this.getY() + vec3.y * 0.015 * (double)i, this.getZ());
 				if (this.level.isClientSide) {
-					this.yOld = this.y;
+					this.yOld = this.getY();
 				}
 
 				double d = 0.05 * (double)i;
@@ -102,6 +110,11 @@ public class ThrownTrident extends AbstractArrow {
 		return this.tridentItem.copy();
 	}
 
+	@Environment(EnvType.CLIENT)
+	public boolean isFoil() {
+		return this.entityData.get(ID_FOIL);
+	}
+
 	@Nullable
 	@Override
 	protected EntityHitResult findHitEntity(Vec3 vec3, Vec3 vec32) {
@@ -114,21 +127,27 @@ public class ThrownTrident extends AbstractArrow {
 		float f = 8.0F;
 		if (entity instanceof LivingEntity) {
 			LivingEntity livingEntity = (LivingEntity)entity;
-			f += EnchantmentHelper.getDamageBonus(this.tridentItem, livingEntity.getMobType());
+			f += EnchantmentHelper.getDamageBonus(this.tridentItem, livingEntity);
 		}
 
 		Entity entity2 = this.getOwner();
 		DamageSource damageSource = DamageSource.trident(this, (Entity)(entity2 == null ? this : entity2));
 		this.dealtDamage = true;
 		SoundEvent soundEvent = SoundEvents.TRIDENT_HIT;
-		if (entity.hurt(damageSource, f) && entity instanceof LivingEntity) {
-			LivingEntity livingEntity2 = (LivingEntity)entity;
-			if (entity2 instanceof LivingEntity) {
-				EnchantmentHelper.doPostHurtEffects(livingEntity2, entity2);
-				EnchantmentHelper.doPostDamageEffects((LivingEntity)entity2, livingEntity2);
+		if (entity.hurt(damageSource, f)) {
+			if (entity.getType() == EntityType.ENDERMAN) {
+				return;
 			}
 
-			this.doPostHurtEffects(livingEntity2);
+			if (entity instanceof LivingEntity) {
+				LivingEntity livingEntity2 = (LivingEntity)entity;
+				if (entity2 instanceof LivingEntity) {
+					EnchantmentHelper.doPostHurtEffects(livingEntity2, entity2);
+					EnchantmentHelper.doPostDamageEffects((LivingEntity)entity2, livingEntity2);
+				}
+
+				this.doPostHurtEffects(livingEntity2);
+			}
 		}
 
 		this.setDeltaMovement(this.getDeltaMovement().multiply(-0.01, -0.1, -0.01));
@@ -179,10 +198,10 @@ public class ThrownTrident extends AbstractArrow {
 	}
 
 	@Override
-	protected void checkDespawn() {
+	public void tickDespawn() {
 		int i = this.entityData.get(ID_LOYALTY);
 		if (this.pickup != AbstractArrow.Pickup.ALLOWED || i <= 0) {
-			super.checkDespawn();
+			super.tickDespawn();
 		}
 	}
 
@@ -195,5 +214,15 @@ public class ThrownTrident extends AbstractArrow {
 	@Override
 	public boolean shouldRender(double d, double e, double f) {
 		return true;
+	}
+
+	@Override
+	protected void outOfWorld() {
+		int i = this.entityData.get(ID_LOYALTY);
+		if (i > 0) {
+			this.setNoPhysics(true);
+		} else {
+			super.outOfWorld();
+		}
 	}
 }

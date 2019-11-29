@@ -5,9 +5,11 @@ import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
@@ -53,12 +55,15 @@ public class ComparatorBlock extends DiodeBlock implements EntityBlock {
 	@Override
 	protected boolean shouldTurnOn(Level level, BlockPos blockPos, BlockState blockState) {
 		int i = this.getInputSignal(level, blockPos, blockState);
-		if (i >= 15) {
-			return true;
-		} else if (i == 0) {
+		if (i == 0) {
 			return false;
 		} else {
-			return i >= this.getAlternateSignal(level, blockPos, blockState);
+			int j = this.getAlternateSignal(level, blockPos, blockState);
+			if (i > j) {
+				return true;
+			} else {
+				return i == j && blockState.getValue(MODE) == ComparatorMode.COMPARE;
+			}
 		}
 	}
 
@@ -104,16 +109,18 @@ public class ComparatorBlock extends DiodeBlock implements EntityBlock {
 	}
 
 	@Override
-	public boolean use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
+	public InteractionResult use(
+		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	) {
 		if (!player.abilities.mayBuild) {
-			return false;
+			return InteractionResult.PASS;
 		} else {
 			blockState = blockState.cycle(MODE);
 			float f = blockState.getValue(MODE) == ComparatorMode.SUBTRACT ? 0.55F : 0.5F;
 			level.playSound(player, blockPos, SoundEvents.COMPARATOR_CLICK, SoundSource.BLOCKS, 0.3F, f);
 			level.setBlock(blockPos, blockState, 2);
 			this.refreshOutputState(level, blockPos, blockState);
-			return true;
+			return InteractionResult.SUCCESS;
 		}
 	}
 
@@ -154,8 +161,8 @@ public class ComparatorBlock extends DiodeBlock implements EntityBlock {
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
-		this.refreshOutputState(level, blockPos, blockState);
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+		this.refreshOutputState(serverLevel, blockPos, blockState);
 	}
 
 	@Override

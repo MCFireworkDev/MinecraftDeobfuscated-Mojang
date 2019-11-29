@@ -41,12 +41,15 @@ public class ItemTags {
 	public static final Tag<Item> SMALL_FLOWERS = bind("small_flowers");
 	public static final Tag<Item> BEDS = bind("beds");
 	public static final Tag<Item> FENCES = bind("fences");
+	public static final Tag<Item> TALL_FLOWERS = bind("tall_flowers");
+	public static final Tag<Item> FLOWERS = bind("flowers");
 	public static final Tag<Item> BOATS = bind("boats");
 	public static final Tag<Item> FISHES = bind("fishes");
 	public static final Tag<Item> SIGNS = bind("signs");
 	public static final Tag<Item> MUSIC_DISCS = bind("music_discs");
 	public static final Tag<Item> COALS = bind("coals");
 	public static final Tag<Item> ARROWS = bind("arrows");
+	public static final Tag<Item> LECTERN_BOOKS = bind("lectern_books");
 
 	public static void reset(TagCollection<Item> tagCollection) {
 		source = tagCollection;

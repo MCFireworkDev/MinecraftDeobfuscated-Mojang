@@ -2,6 +2,7 @@ package net.minecraft.world.item;
 
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -64,13 +65,13 @@ public class EnderEyeItem extends Item {
 		ItemStack itemStack = player.getItemInHand(interactionHand);
 		HitResult hitResult = getPlayerPOVHitResult(level, player, ClipContext.Fluid.NONE);
 		if (hitResult.getType() == HitResult.Type.BLOCK && level.getBlockState(((BlockHitResult)hitResult).getBlockPos()).getBlock() == Blocks.END_PORTAL_FRAME) {
-			return new InteractionResultHolder<>(InteractionResult.PASS, itemStack);
+			return InteractionResultHolder.pass(itemStack);
 		} else {
 			player.startUsingItem(interactionHand);
-			if (!level.isClientSide) {
-				BlockPos blockPos = level.getChunkSource().getGenerator().findNearestMapFeature(level, "Stronghold", new BlockPos(player), 100, false);
+			if (level instanceof ServerLevel) {
+				BlockPos blockPos = ((ServerLevel)level).getChunkSource().getGenerator().findNearestMapFeature(level, "Stronghold", new BlockPos(player), 100, false);
 				if (blockPos != null) {
-					EyeOfEnder eyeOfEnder = new EyeOfEnder(level, player.x, player.y + (double)(player.getBbHeight() / 2.0F), player.z);
+					EyeOfEnder eyeOfEnder = new EyeOfEnder(level, player.getX(), player.getY(0.5), player.getZ());
 					eyeOfEnder.setItem(itemStack);
 					eyeOfEnder.signalTo(blockPos);
 					level.addFreshEntity(eyeOfEnder);
@@ -78,18 +79,21 @@ public class EnderEyeItem extends Item {
 						CriteriaTriggers.USED_ENDER_EYE.trigger((ServerPlayer)player, blockPos);
 					}
 
-					level.playSound(null, player.x, player.y, player.z, SoundEvents.ENDER_EYE_LAUNCH, SoundSource.NEUTRAL, 0.5F, 0.4F / (random.nextFloat() * 0.4F + 0.8F));
+					level.playSound(
+						null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENDER_EYE_LAUNCH, SoundSource.NEUTRAL, 0.5F, 0.4F / (random.nextFloat() * 0.4F + 0.8F)
+					);
 					level.levelEvent(null, 1003, new BlockPos(player), 0);
 					if (!player.abilities.instabuild) {
 						itemStack.shrink(1);
 					}
 
 					player.awardStat(Stats.ITEM_USED.get(this));
-					return new InteractionResultHolder<>(InteractionResult.SUCCESS, itemStack);
+					player.swing(interactionHand, true);
+					return InteractionResultHolder.success(itemStack);
 				}
 			}
 
-			return new InteractionResultHolder<>(InteractionResult.SUCCESS, itemStack);
+			return InteractionResultHolder.consume(itemStack);
 		}
 	}
 }

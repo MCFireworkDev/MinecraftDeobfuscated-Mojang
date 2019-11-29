@@ -35,9 +35,10 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -47,32 +48,30 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.predicate.BlockMaterialPredicate;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.Dimension;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoCloseable {
+public abstract class Level implements LevelAccessor, AutoCloseable {
 	protected static final Logger LOGGER = LogManager.getLogger();
 	private static final Direction[] DIRECTIONS = Direction.values();
 	public final List<BlockEntity> blockEntityList = Lists.<BlockEntity>newArrayList();
 	public final List<BlockEntity> tickableBlockEntities = Lists.<BlockEntity>newArrayList();
 	protected final List<BlockEntity> pendingBlockEntities = Lists.<BlockEntity>newArrayList();
 	protected final List<BlockEntity> blockEntitiesToUnload = Lists.<BlockEntity>newArrayList();
-	private final long cloudColor = 16777215L;
 	private final Thread thread;
 	private int skyDarken;
 	protected int randValue = new Random().nextInt();
@@ -81,7 +80,6 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 	protected float rainLevel;
 	protected float oThunderLevel;
 	protected float thunderLevel;
-	private int skyFlashTime;
 	public final Random random = new Random();
 	public final Dimension dimension;
 	protected final ChunkSource chunkSource;
@@ -90,6 +88,7 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 	public final boolean isClientSide;
 	protected boolean updatingBlockEntities;
 	private final WorldBorder worldBorder;
+	private final BiomeManager biomeManager;
 
 	protected Level(
 		LevelData levelData, DimensionType dimensionType, BiFunction<Level, Dimension, ChunkSource> biFunction, ProfilerFiller profilerFiller, boolean bl
@@ -101,18 +100,7 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 		this.isClientSide = bl;
 		this.worldBorder = this.dimension.createWorldBorder();
 		this.thread = Thread.currentThread();
-	}
-
-	@Override
-	public Biome getBiome(BlockPos blockPos) {
-		ChunkSource chunkSource = this.getChunkSource();
-		LevelChunk levelChunk = chunkSource.getChunk(blockPos.getX() >> 4, blockPos.getZ() >> 4, false);
-		if (levelChunk != null) {
-			return levelChunk.getBiome(blockPos);
-		} else {
-			ChunkGenerator<?> chunkGenerator = this.getChunkSource().getGenerator();
-			return chunkGenerator == null ? Biomes.PLAINS : chunkGenerator.getBiomeSource().getBiome(blockPos);
-		}
+		this.biomeManager = new BiomeManager(this, bl ? levelData.getSeed() : LevelData.obfuscateSeed(levelData.getSeed()), dimensionType.getBiomeZoomer());
 	}
 
 	@Override
@@ -243,7 +231,7 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 	}
 
 	@Override
-	public boolean destroyBlock(BlockPos blockPos, boolean bl) {
+	public boolean destroyBlock(BlockPos blockPos, boolean bl, @Nullable Entity entity) {
 		BlockState blockState = this.getBlockState(blockPos);
 		if (blockState.isAir()) {
 			return false;
@@ -252,7 +240,7 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 			this.levelEvent(2001, blockPos, Block.getId(blockState));
 			if (bl) {
 				BlockEntity blockEntity = blockState.getBlock().isEntityBlock() ? this.getBlockEntity(blockPos) : null;
-				Block.dropResources(blockState, this, blockPos, blockEntity);
+				Block.dropResources(blockState, this, blockPos, blockEntity, entity, ItemStack.EMPTY);
 			}
 
 			return this.setBlock(blockPos, fluidState.createLegacyBlock(), 3);
@@ -333,21 +321,6 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 	}
 
 	@Override
-	public int getRawBrightness(BlockPos blockPos, int i) {
-		if (blockPos.getX() < -30000000 || blockPos.getZ() < -30000000 || blockPos.getX() >= 30000000 || blockPos.getZ() >= 30000000) {
-			return 15;
-		} else if (blockPos.getY() < 0) {
-			return 0;
-		} else {
-			if (blockPos.getY() >= 256) {
-				blockPos = new BlockPos(blockPos.getX(), 255, blockPos.getZ());
-			}
-
-			return this.getChunkAt(blockPos).getRawBrightness(blockPos, i);
-		}
-	}
-
-	@Override
 	public int getHeight(Heightmap.Types types, int i, int j) {
 		int k;
 		if (i >= -30000000 && j >= -30000000 && i < 30000000 && j < 30000000) {
@@ -364,8 +337,8 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 	}
 
 	@Override
-	public int getBrightness(LightLayer lightLayer, BlockPos blockPos) {
-		return this.getChunkSource().getLightEngine().getLayerListener(lightLayer).getLightValue(blockPos);
+	public LevelLightEngine getLightEngine() {
+		return this.getChunkSource().getLightEngine();
 	}
 
 	@Override
@@ -389,7 +362,11 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 	}
 
 	public boolean isDay() {
-		return this.skyDarken < 4;
+		return this.dimension.getType() == DimensionType.OVERWORLD && this.skyDarken < 4;
+	}
+
+	public boolean isNight() {
+		return this.dimension.getType() == DimensionType.OVERWORLD && !this.isDay();
 	}
 
 	@Override
@@ -418,113 +395,9 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 	public void addAlwaysVisibleParticle(ParticleOptions particleOptions, boolean bl, double d, double e, double f, double g, double h, double i) {
 	}
 
-	@Environment(EnvType.CLIENT)
-	public float getSkyDarken(float f) {
-		float g = this.getTimeOfDay(f);
-		float h = 1.0F - (Mth.cos(g * (float) (Math.PI * 2)) * 2.0F + 0.2F);
-		h = Mth.clamp(h, 0.0F, 1.0F);
-		h = 1.0F - h;
-		h = (float)((double)h * (1.0 - (double)(this.getRainLevel(f) * 5.0F) / 16.0));
-		h = (float)((double)h * (1.0 - (double)(this.getThunderLevel(f) * 5.0F) / 16.0));
-		return h * 0.8F + 0.2F;
-	}
-
-	@Environment(EnvType.CLIENT)
-	public Vec3 getSkyColor(BlockPos blockPos, float f) {
-		float g = this.getTimeOfDay(f);
-		float h = Mth.cos(g * (float) (Math.PI * 2)) * 2.0F + 0.5F;
-		h = Mth.clamp(h, 0.0F, 1.0F);
-		Biome biome = this.getBiome(blockPos);
-		float i = biome.getTemperature(blockPos);
-		int j = biome.getSkyColor(i);
-		float k = (float)(j >> 16 & 0xFF) / 255.0F;
-		float l = (float)(j >> 8 & 0xFF) / 255.0F;
-		float m = (float)(j & 0xFF) / 255.0F;
-		k *= h;
-		l *= h;
-		m *= h;
-		float n = this.getRainLevel(f);
-		if (n > 0.0F) {
-			float o = (k * 0.3F + l * 0.59F + m * 0.11F) * 0.6F;
-			float p = 1.0F - n * 0.75F;
-			k = k * p + o * (1.0F - p);
-			l = l * p + o * (1.0F - p);
-			m = m * p + o * (1.0F - p);
-		}
-
-		float o = this.getThunderLevel(f);
-		if (o > 0.0F) {
-			float p = (k * 0.3F + l * 0.59F + m * 0.11F) * 0.2F;
-			float q = 1.0F - o * 0.75F;
-			k = k * q + p * (1.0F - q);
-			l = l * q + p * (1.0F - q);
-			m = m * q + p * (1.0F - q);
-		}
-
-		if (this.skyFlashTime > 0) {
-			float p = (float)this.skyFlashTime - f;
-			if (p > 1.0F) {
-				p = 1.0F;
-			}
-
-			p *= 0.45F;
-			k = k * (1.0F - p) + 0.8F * p;
-			l = l * (1.0F - p) + 0.8F * p;
-			m = m * (1.0F - p) + 1.0F * p;
-		}
-
-		return new Vec3((double)k, (double)l, (double)m);
-	}
-
 	public float getSunAngle(float f) {
 		float g = this.getTimeOfDay(f);
 		return g * (float) (Math.PI * 2);
-	}
-
-	@Environment(EnvType.CLIENT)
-	public Vec3 getCloudColor(float f) {
-		float g = this.getTimeOfDay(f);
-		float h = Mth.cos(g * (float) (Math.PI * 2)) * 2.0F + 0.5F;
-		h = Mth.clamp(h, 0.0F, 1.0F);
-		float i = 1.0F;
-		float j = 1.0F;
-		float k = 1.0F;
-		float l = this.getRainLevel(f);
-		if (l > 0.0F) {
-			float m = (i * 0.3F + j * 0.59F + k * 0.11F) * 0.6F;
-			float n = 1.0F - l * 0.95F;
-			i = i * n + m * (1.0F - n);
-			j = j * n + m * (1.0F - n);
-			k = k * n + m * (1.0F - n);
-		}
-
-		i *= h * 0.9F + 0.1F;
-		j *= h * 0.9F + 0.1F;
-		k *= h * 0.85F + 0.15F;
-		float m = this.getThunderLevel(f);
-		if (m > 0.0F) {
-			float n = (i * 0.3F + j * 0.59F + k * 0.11F) * 0.2F;
-			float o = 1.0F - m * 0.95F;
-			i = i * o + n * (1.0F - o);
-			j = j * o + n * (1.0F - o);
-			k = k * o + n * (1.0F - o);
-		}
-
-		return new Vec3((double)i, (double)j, (double)k);
-	}
-
-	@Environment(EnvType.CLIENT)
-	public Vec3 getFogColor(float f) {
-		float g = this.getTimeOfDay(f);
-		return this.dimension.getFogColor(g, f);
-	}
-
-	@Environment(EnvType.CLIENT)
-	public float getStarBrightness(float f) {
-		float g = this.getTimeOfDay(f);
-		float h = 1.0F - (Mth.cos(g * (float) (Math.PI * 2)) * 2.0F + 0.25F);
-		h = Mth.clamp(h, 0.0F, 1.0F);
-		return h * h * 0.5F;
 	}
 
 	public boolean addBlockEntity(BlockEntity blockEntity) {
@@ -803,7 +676,7 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 		if (!isOutsideBuildHeight(blockPos)) {
 			if (blockEntity != null && !blockEntity.isRemoved()) {
 				if (this.updatingBlockEntities) {
-					blockEntity.setPosition(blockPos);
+					blockEntity.setLevelAndPosition(this, blockPos);
 					Iterator<BlockEntity> iterator = this.pendingBlockEntities.iterator();
 
 					while(iterator.hasNext()) {
@@ -876,9 +749,10 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 		this.chunkSource.close();
 	}
 
+	@Nullable
 	@Override
-	public ChunkStatus statusForCollisions() {
-		return ChunkStatus.FULL;
+	public BlockGetter getChunkForCollisions(int i, int j) {
+		return this.getChunk(i, j, ChunkStatus.FULL, false);
 	}
 
 	@Override
@@ -901,12 +775,12 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 		return list;
 	}
 
-	public List<Entity> getEntities(@Nullable EntityType<?> entityType, AABB aABB, Predicate<? super Entity> predicate) {
+	public <T extends Entity> List<T> getEntities(@Nullable EntityType<T> entityType, AABB aABB, Predicate<? super T> predicate) {
 		int i = Mth.floor((aABB.minX - 2.0) / 16.0);
 		int j = Mth.ceil((aABB.maxX + 2.0) / 16.0);
 		int k = Mth.floor((aABB.minZ - 2.0) / 16.0);
 		int l = Mth.ceil((aABB.maxZ + 2.0) / 16.0);
-		List<Entity> list = Lists.<Entity>newArrayList();
+		List<T> list = Lists.<T>newArrayList();
 
 		for(int m = i; m < j; ++m) {
 			for(int n = k; n < l; ++n) {
@@ -1192,11 +1066,6 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 		return this.dimension.isHasCeiling() ? 128 : 256;
 	}
 
-	@Environment(EnvType.CLIENT)
-	public double getHorizonHeight() {
-		return this.levelData.getGeneratorType() == LevelType.FLAT ? 0.0 : 63.0;
-	}
-
 	public CrashReportCategory fillReportDetails(CrashReport crashReport) {
 		CrashReportCategory crashReportCategory = crashReport.addCategory("Affected level", 1);
 		crashReportCategory.setDetail("All players", (CrashReportDetail<String>)(() -> this.players().size() + " total; " + this.players()));
@@ -1255,13 +1124,7 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 		return this.skyDarken;
 	}
 
-	@Environment(EnvType.CLIENT)
-	public int getSkyFlashTime() {
-		return this.skyFlashTime;
-	}
-
 	public void setSkyFlashTime(int i) {
-		this.skyFlashTime = i;
 	}
 
 	@Override
@@ -1271,11 +1134,6 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 
 	public void sendPacketToServer(Packet<?> packet) {
 		throw new UnsupportedOperationException("Can't send packets to server unless you're on the client.");
-	}
-
-	@Nullable
-	public BlockPos findNearestMapFeature(String string, BlockPos blockPos, int i, boolean bl) {
-		return null;
 	}
 
 	@Override
@@ -1312,7 +1170,7 @@ public abstract class Level implements BlockAndBiomeGetter, LevelAccessor, AutoC
 	}
 
 	@Override
-	public BlockPos getHeightmapPos(Heightmap.Types types, BlockPos blockPos) {
-		return new BlockPos(blockPos.getX(), this.getHeight(types, blockPos.getX(), blockPos.getZ()), blockPos.getZ());
+	public BiomeManager getBiomeManager() {
+		return this.biomeManager;
 	}
 }

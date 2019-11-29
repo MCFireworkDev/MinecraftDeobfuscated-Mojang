@@ -17,6 +17,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.IndirectEntityDamageSource;
@@ -48,7 +49,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 public class EnderMan extends Monster {
@@ -59,9 +59,10 @@ public class EnderMan extends Monster {
 		.setSerialize(false);
 	private static final EntityDataAccessor<Optional<BlockState>> DATA_CARRY_STATE = SynchedEntityData.defineId(EnderMan.class, EntityDataSerializers.BLOCK_STATE);
 	private static final EntityDataAccessor<Boolean> DATA_CREEPY = SynchedEntityData.defineId(EnderMan.class, EntityDataSerializers.BOOLEAN);
+	private static final EntityDataAccessor<Boolean> DATA_STARED_AT = SynchedEntityData.defineId(EnderMan.class, EntityDataSerializers.BOOLEAN);
 	private static final Predicate<LivingEntity> ENDERMITE_SELECTOR = livingEntity -> livingEntity instanceof Endermite
 			&& ((Endermite)livingEntity).isPlayerSpawned();
-	private int lastCreepySound;
+	private int lastStareSound = Integer.MIN_VALUE;
 	private int targetChangeTime;
 
 	public EnderMan(EntityType<? extends EnderMan> entityType, Level level) {
@@ -101,6 +102,7 @@ public class EnderMan extends Monster {
 		if (livingEntity == null) {
 			this.targetChangeTime = 0;
 			this.entityData.set(DATA_CREEPY, false);
+			this.entityData.set(DATA_STARED_AT, false);
 			attributeInstance.removeModifier(SPEED_MODIFIER_ATTACKING);
 		} else {
 			this.targetChangeTime = this.tickCount;
@@ -116,21 +118,22 @@ public class EnderMan extends Monster {
 		super.defineSynchedData();
 		this.entityData.define(DATA_CARRY_STATE, Optional.empty());
 		this.entityData.define(DATA_CREEPY, false);
+		this.entityData.define(DATA_STARED_AT, false);
 	}
 
-	public void playCreepySound() {
-		if (this.tickCount >= this.lastCreepySound + 400) {
-			this.lastCreepySound = this.tickCount;
+	public void playStareSound() {
+		if (this.tickCount >= this.lastStareSound + 400) {
+			this.lastStareSound = this.tickCount;
 			if (!this.isSilent()) {
-				this.level.playLocalSound(this.x, this.y + (double)this.getEyeHeight(), this.z, SoundEvents.ENDERMAN_STARE, this.getSoundSource(), 2.5F, 1.0F, false);
+				this.level.playLocalSound(this.getX(), this.getEyeY(), this.getZ(), SoundEvents.ENDERMAN_STARE, this.getSoundSource(), 2.5F, 1.0F, false);
 			}
 		}
 	}
 
 	@Override
 	public void onSyncedDataUpdated(EntityDataAccessor<?> entityDataAccessor) {
-		if (DATA_CREEPY.equals(entityDataAccessor) && this.isCreepy() && this.level.isClientSide) {
-			this.playCreepySound();
+		if (DATA_CREEPY.equals(entityDataAccessor) && this.hasBeenStaredAt() && this.level.isClientSide) {
+			this.playStareSound();
 		}
 
 		super.onSyncedDataUpdated(entityDataAccessor);
@@ -165,9 +168,7 @@ public class EnderMan extends Monster {
 			return false;
 		} else {
 			Vec3 vec3 = player.getViewVector(1.0F).normalize();
-			Vec3 vec32 = new Vec3(
-				this.x - player.x, this.getBoundingBox().minY + (double)this.getEyeHeight() - (player.y + (double)player.getEyeHeight()), this.z - player.z
-			);
+			Vec3 vec32 = new Vec3(this.getX() - player.getX(), this.getEyeY() - player.getEyeY(), this.getZ() - player.getZ());
 			double d = vec32.length();
 			vec32 = vec32.normalize();
 			double e = vec3.dot(vec32);
@@ -187,9 +188,9 @@ public class EnderMan extends Monster {
 				this.level
 					.addParticle(
 						ParticleTypes.PORTAL,
-						this.x + (this.random.nextDouble() - 0.5) * (double)this.getBbWidth(),
-						this.y + this.random.nextDouble() * (double)this.getBbHeight() - 0.25,
-						this.z + (this.random.nextDouble() - 0.5) * (double)this.getBbWidth(),
+						this.getRandomX(0.5),
+						this.getRandomY() - 0.25,
+						this.getRandomZ(0.5),
 						(this.random.nextDouble() - 0.5) * 2.0,
 						-this.random.nextDouble(),
 						(this.random.nextDouble() - 0.5) * 2.0
@@ -219,21 +220,23 @@ public class EnderMan extends Monster {
 	}
 
 	protected boolean teleport() {
-		double d = this.x + (this.random.nextDouble() - 0.5) * 64.0;
-		double e = this.y + (double)(this.random.nextInt(64) - 32);
-		double f = this.z + (this.random.nextDouble() - 0.5) * 64.0;
-		return this.teleport(d, e, f);
+		if (!this.level.isClientSide() && this.isAlive()) {
+			double d = this.getX() + (this.random.nextDouble() - 0.5) * 64.0;
+			double e = this.getY() + (double)(this.random.nextInt(64) - 32);
+			double f = this.getZ() + (this.random.nextDouble() - 0.5) * 64.0;
+			return this.teleport(d, e, f);
+		} else {
+			return false;
+		}
 	}
 
 	private boolean teleportTowards(Entity entity) {
-		Vec3 vec3 = new Vec3(
-			this.x - entity.x, this.getBoundingBox().minY + (double)(this.getBbHeight() / 2.0F) - entity.y + (double)entity.getEyeHeight(), this.z - entity.z
-		);
+		Vec3 vec3 = new Vec3(this.getX() - entity.getX(), this.getY(0.5) - entity.getEyeY(), this.getZ() - entity.getZ());
 		vec3 = vec3.normalize();
 		double d = 16.0;
-		double e = this.x + (this.random.nextDouble() - 0.5) * 8.0 - vec3.x * 16.0;
-		double f = this.y + (double)(this.random.nextInt(16) - 8) - vec3.y * 16.0;
-		double g = this.z + (this.random.nextDouble() - 0.5) * 8.0 - vec3.z * 16.0;
+		double e = this.getX() + (this.random.nextDouble() - 0.5) * 8.0 - vec3.x * 16.0;
+		double f = this.getY() + (double)(this.random.nextInt(16) - 8) - vec3.y * 16.0;
+		double g = this.getZ() + (this.random.nextDouble() - 0.5) * 8.0 - vec3.z * 16.0;
 		return this.teleport(e, f, g);
 	}
 
@@ -244,16 +247,19 @@ public class EnderMan extends Monster {
 			mutableBlockPos.move(Direction.DOWN);
 		}
 
-		if (!this.level.getBlockState(mutableBlockPos).getMaterial().blocksMotion()) {
-			return false;
-		} else {
-			boolean bl = this.randomTeleport(d, e, f, true);
-			if (bl) {
+		BlockState blockState = this.level.getBlockState(mutableBlockPos);
+		boolean bl = blockState.getMaterial().blocksMotion();
+		boolean bl2 = blockState.getFluidState().is(FluidTags.WATER);
+		if (bl && !bl2) {
+			boolean bl3 = this.randomTeleport(d, e, f, true);
+			if (bl3) {
 				this.level.playSound(null, this.xo, this.yo, this.zo, SoundEvents.ENDERMAN_TELEPORT, this.getSoundSource(), 1.0F, 1.0F);
 				this.playSound(SoundEvents.ENDERMAN_TELEPORT, 1.0F, 1.0F);
 			}
 
-			return bl;
+			return bl3;
+		} else {
+			return false;
 		}
 	}
 
@@ -296,7 +302,7 @@ public class EnderMan extends Monster {
 			return false;
 		} else if (!(damageSource instanceof IndirectEntityDamageSource) && damageSource != DamageSource.FIREWORKS) {
 			boolean bl = super.hurt(damageSource, f);
-			if (damageSource.isBypassArmor() && this.random.nextInt(10) != 0) {
+			if (!this.level.isClientSide() && damageSource.isBypassArmor() && this.random.nextInt(10) != 0) {
 				this.teleport();
 			}
 
@@ -316,8 +322,17 @@ public class EnderMan extends Monster {
 		return this.entityData.get(DATA_CREEPY);
 	}
 
+	public boolean hasBeenStaredAt() {
+		return this.entityData.get(DATA_STARED_AT);
+	}
+
+	public void setBeingStaredAt() {
+		this.entityData.set(DATA_STARED_AT, true);
+	}
+
 	static class EndermanFreezeWhenLookedAt extends Goal {
 		private final EnderMan enderman;
+		private LivingEntity target;
 
 		public EndermanFreezeWhenLookedAt(EnderMan enderMan) {
 			this.enderman = enderMan;
@@ -326,18 +341,23 @@ public class EnderMan extends Monster {
 
 		@Override
 		public boolean canUse() {
-			LivingEntity livingEntity = this.enderman.getTarget();
-			if (!(livingEntity instanceof Player)) {
+			this.target = this.enderman.getTarget();
+			if (!(this.target instanceof Player)) {
 				return false;
 			} else {
-				double d = livingEntity.distanceToSqr(this.enderman);
-				return d > 256.0 ? false : this.enderman.isLookingAtMe((Player)livingEntity);
+				double d = this.target.distanceToSqr(this.enderman);
+				return d > 256.0 ? false : this.enderman.isLookingAtMe((Player)this.target);
 			}
 		}
 
 		@Override
 		public void start() {
 			this.enderman.getNavigation().stop();
+		}
+
+		@Override
+		public void tick() {
+			this.enderman.getLookControl().setLookAt(this.target.getX(), this.target.getEyeY(), this.target.getZ());
 		}
 	}
 
@@ -363,9 +383,9 @@ public class EnderMan extends Monster {
 		public void tick() {
 			Random random = this.enderman.getRandom();
 			LevelAccessor levelAccessor = this.enderman.level;
-			int i = Mth.floor(this.enderman.x - 1.0 + random.nextDouble() * 2.0);
-			int j = Mth.floor(this.enderman.y + random.nextDouble() * 2.0);
-			int k = Mth.floor(this.enderman.z - 1.0 + random.nextDouble() * 2.0);
+			int i = Mth.floor(this.enderman.getX() - 1.0 + random.nextDouble() * 2.0);
+			int j = Mth.floor(this.enderman.getY() + random.nextDouble() * 2.0);
+			int k = Mth.floor(this.enderman.getZ() - 1.0 + random.nextDouble() * 2.0);
 			BlockPos blockPos = new BlockPos(i, j, k);
 			BlockState blockState = levelAccessor.getBlockState(blockPos);
 			BlockPos blockPos2 = blockPos.below();
@@ -413,6 +433,7 @@ public class EnderMan extends Monster {
 		public void start() {
 			this.aggroTime = 5;
 			this.teleportTime = 0;
+			this.enderman.setBeingStaredAt();
 		}
 
 		@Override
@@ -483,16 +504,16 @@ public class EnderMan extends Monster {
 		public void tick() {
 			Random random = this.enderman.getRandom();
 			Level level = this.enderman.level;
-			int i = Mth.floor(this.enderman.x - 2.0 + random.nextDouble() * 4.0);
-			int j = Mth.floor(this.enderman.y + random.nextDouble() * 3.0);
-			int k = Mth.floor(this.enderman.z - 2.0 + random.nextDouble() * 4.0);
+			int i = Mth.floor(this.enderman.getX() - 2.0 + random.nextDouble() * 4.0);
+			int j = Mth.floor(this.enderman.getY() + random.nextDouble() * 3.0);
+			int k = Mth.floor(this.enderman.getZ() - 2.0 + random.nextDouble() * 4.0);
 			BlockPos blockPos = new BlockPos(i, j, k);
 			BlockState blockState = level.getBlockState(blockPos);
 			Block block = blockState.getBlock();
-			Vec3 vec3 = new Vec3((double)Mth.floor(this.enderman.x) + 0.5, (double)j + 0.5, (double)Mth.floor(this.enderman.z) + 0.5);
+			Vec3 vec3 = new Vec3((double)Mth.floor(this.enderman.getX()) + 0.5, (double)j + 0.5, (double)Mth.floor(this.enderman.getZ()) + 0.5);
 			Vec3 vec32 = new Vec3((double)i + 0.5, (double)j + 0.5, (double)k + 0.5);
-			BlockHitResult blockHitResult = level.clip(new ClipContext(vec3, vec32, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this.enderman));
-			boolean bl = blockHitResult.getType() != HitResult.Type.MISS && blockHitResult.getBlockPos().equals(blockPos);
+			BlockHitResult blockHitResult = level.clip(new ClipContext(vec3, vec32, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, this.enderman));
+			boolean bl = blockHitResult.getBlockPos().equals(blockPos);
 			if (block.is(BlockTags.ENDERMAN_HOLDABLE) && bl) {
 				this.enderman.setCarriedBlock(blockState);
 				level.removeBlock(blockPos, false);

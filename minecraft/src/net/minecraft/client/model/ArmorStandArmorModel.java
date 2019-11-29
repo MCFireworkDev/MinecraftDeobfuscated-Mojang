@@ -6,10 +6,6 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 
 @Environment(EnvType.CLIENT)
 public class ArmorStandArmorModel extends HumanoidModel<ArmorStand> {
-	public ArmorStandArmorModel() {
-		this(0.0F);
-	}
-
 	public ArmorStandArmorModel(float f) {
 		this(f, 64, 32);
 	}
@@ -18,7 +14,7 @@ public class ArmorStandArmorModel extends HumanoidModel<ArmorStand> {
 		super(f, 0.0F, i, j);
 	}
 
-	public void setupAnim(ArmorStand armorStand, float f, float g, float h, float i, float j, float k) {
+	public void setupAnim(ArmorStand armorStand, float f, float g, float h, float i, float j) {
 		this.head.xRot = (float) (Math.PI / 180.0) * armorStand.getHeadPose().getX();
 		this.head.yRot = (float) (Math.PI / 180.0) * armorStand.getHeadPose().getY();
 		this.head.zRot = (float) (Math.PI / 180.0) * armorStand.getHeadPose().getZ();

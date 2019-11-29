@@ -65,7 +65,7 @@ public class Silverfish extends Monster {
 	}
 
 	@Override
-	protected boolean makeStepSound() {
+	protected boolean isMovementNoisy() {
 		return false;
 	}
 
@@ -154,7 +154,7 @@ public class Silverfish extends Monster {
 				Random random = this.mob.getRandom();
 				if (this.mob.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING) && random.nextInt(10) == 0) {
 					this.selectedDirection = Direction.getRandomFace(random);
-					BlockPos blockPos = new BlockPos(this.mob.x, this.mob.y + 0.5, this.mob.z).relative(this.selectedDirection);
+					BlockPos blockPos = new BlockPos(this.mob.getX(), this.mob.getY() + 0.5, this.mob.getZ()).relative(this.selectedDirection);
 					BlockState blockState = this.mob.level.getBlockState(blockPos);
 					if (InfestedBlock.isCompatibleHostBlock(blockState)) {
 						this.doMerge = true;
@@ -178,7 +178,7 @@ public class Silverfish extends Monster {
 				super.start();
 			} else {
 				LevelAccessor levelAccessor = this.mob.level;
-				BlockPos blockPos = new BlockPos(this.mob.x, this.mob.y + 0.5, this.mob.z).relative(this.selectedDirection);
+				BlockPos blockPos = new BlockPos(this.mob.getX(), this.mob.getY() + 0.5, this.mob.getZ()).relative(this.selectedDirection);
 				BlockState blockState = levelAccessor.getBlockState(blockPos);
 				if (InfestedBlock.isCompatibleHostBlock(blockState)) {
 					levelAccessor.setBlock(blockPos, InfestedBlock.stateByHostBlock(blockState.getBlock()), 3);
@@ -224,7 +224,7 @@ public class Silverfish extends Monster {
 							Block block = blockState.getBlock();
 							if (block instanceof InfestedBlock) {
 								if (level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
-									level.destroyBlock(blockPos2, true);
+									level.destroyBlock(blockPos2, true, this.silverfish);
 								} else {
 									level.setBlock(blockPos2, ((InfestedBlock)block).getHostBlock().defaultBlockState(), 3);
 								}

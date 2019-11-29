@@ -40,7 +40,7 @@ public class EndCrystal extends Entity {
 	}
 
 	@Override
-	protected boolean makeStepSound() {
+	protected boolean isMovementNoisy() {
 		return false;
 	}
 
@@ -52,9 +52,6 @@ public class EndCrystal extends Entity {
 
 	@Override
 	public void tick() {
-		this.xo = this.x;
-		this.yo = this.y;
-		this.zo = this.z;
 		++this.time;
 		if (!this.level.isClientSide) {
 			BlockPos blockPos = new BlockPos(this);
@@ -99,7 +96,7 @@ public class EndCrystal extends Entity {
 			if (!this.removed && !this.level.isClientSide) {
 				this.remove();
 				if (!damageSource.isExplosion()) {
-					this.level.explode(null, this.x, this.y, this.z, 6.0F, Explosion.BlockInteraction.DESTROY);
+					this.level.explode(null, this.getX(), this.getY(), this.getZ(), 6.0F, Explosion.BlockInteraction.DESTROY);
 				}
 
 				this.onDestroyedBy(damageSource);

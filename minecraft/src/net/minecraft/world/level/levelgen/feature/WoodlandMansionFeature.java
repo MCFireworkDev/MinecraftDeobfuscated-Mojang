@@ -9,11 +9,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
@@ -44,11 +46,11 @@ public class WoodlandMansionFeature extends StructureFeature<NoneFeatureConfigur
 	}
 
 	@Override
-	public boolean isFeatureChunk(ChunkGenerator<?> chunkGenerator, Random random, int i, int j) {
+	public boolean isFeatureChunk(BiomeManager biomeManager, ChunkGenerator<?> chunkGenerator, Random random, int i, int j, Biome biome) {
 		ChunkPos chunkPos = this.getPotentialFeatureChunkFromLocationWithOffset(chunkGenerator, random, i, j, 0, 0);
 		if (i == chunkPos.x && j == chunkPos.z) {
-			for(Biome biome : chunkGenerator.getBiomeSource().getBiomesWithin(i * 16 + 9, j * 16 + 9, 32)) {
-				if (!chunkGenerator.isBiomeValidStartForStructure(biome, Feature.WOODLAND_MANSION)) {
+			for(Biome biome2 : chunkGenerator.getBiomeSource().getBiomesWithin(i * 16 + 9, chunkGenerator.getSeaLevel(), j * 16 + 9, 32)) {
+				if (!chunkGenerator.isBiomeValidStartForStructure(biome2, this)) {
 					return false;
 				}
 			}
@@ -75,8 +77,8 @@ public class WoodlandMansionFeature extends StructureFeature<NoneFeatureConfigur
 	}
 
 	public static class WoodlandMansionStart extends StructureStart {
-		public WoodlandMansionStart(StructureFeature<?> structureFeature, int i, int j, Biome biome, BoundingBox boundingBox, int k, long l) {
-			super(structureFeature, i, j, biome, boundingBox, k, l);
+		public WoodlandMansionStart(StructureFeature<?> structureFeature, int i, int j, BoundingBox boundingBox, int k, long l) {
+			super(structureFeature, i, j, boundingBox, k, l);
 		}
 
 		@Override
@@ -110,8 +112,8 @@ public class WoodlandMansionFeature extends StructureFeature<NoneFeatureConfigur
 		}
 
 		@Override
-		public void postProcess(LevelAccessor levelAccessor, Random random, BoundingBox boundingBox, ChunkPos chunkPos) {
-			super.postProcess(levelAccessor, random, boundingBox, chunkPos);
+		public void postProcess(LevelAccessor levelAccessor, ChunkGenerator<?> chunkGenerator, Random random, BoundingBox boundingBox, ChunkPos chunkPos) {
+			super.postProcess(levelAccessor, chunkGenerator, random, boundingBox, chunkPos);
 			int i = this.boundingBox.y0;
 
 			for(int j = boundingBox.x0; j <= boundingBox.x1; ++j) {

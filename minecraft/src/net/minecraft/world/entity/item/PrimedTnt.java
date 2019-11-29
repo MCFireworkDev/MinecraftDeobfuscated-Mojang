@@ -46,7 +46,7 @@ public class PrimedTnt extends Entity {
 	}
 
 	@Override
-	protected boolean makeStepSound() {
+	protected boolean isMovementNoisy() {
 		return false;
 	}
 
@@ -57,9 +57,6 @@ public class PrimedTnt extends Entity {
 
 	@Override
 	public void tick() {
-		this.xo = this.x;
-		this.yo = this.y;
-		this.zo = this.z;
 		if (!this.isNoGravity()) {
 			this.setDeltaMovement(this.getDeltaMovement().add(0.0, -0.04, 0.0));
 		}
@@ -78,13 +75,15 @@ public class PrimedTnt extends Entity {
 			}
 		} else {
 			this.updateInWaterState();
-			this.level.addParticle(ParticleTypes.SMOKE, this.x, this.y + 0.5, this.z, 0.0, 0.0, 0.0);
+			if (this.level.isClientSide) {
+				this.level.addParticle(ParticleTypes.SMOKE, this.getX(), this.getY() + 0.5, this.getZ(), 0.0, 0.0, 0.0);
+			}
 		}
 	}
 
 	private void explode() {
 		float f = 4.0F;
-		this.level.explode(this, this.x, this.y + (double)(this.getBbHeight() / 16.0F), this.z, 4.0F, Explosion.BlockInteraction.BREAK);
+		this.level.explode(this, this.getX(), this.getY(0.0625), this.getZ(), 4.0F, Explosion.BlockInteraction.BREAK);
 	}
 
 	@Override

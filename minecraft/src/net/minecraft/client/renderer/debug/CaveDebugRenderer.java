@@ -2,30 +2,25 @@ package net.minecraft.client.renderer.debug;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 
 @Environment(EnvType.CLIENT)
 public class CaveDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
-	private final Minecraft minecraft;
 	private final Map<BlockPos, BlockPos> tunnelsList = Maps.<BlockPos, BlockPos>newHashMap();
 	private final Map<BlockPos, Float> thicknessMap = Maps.newHashMap();
 	private final List<BlockPos> startPoses = Lists.<BlockPos>newArrayList();
-
-	public CaveDebugRenderer(Minecraft minecraft) {
-		this.minecraft = minecraft;
-	}
 
 	public void addTunnel(BlockPos blockPos, List<BlockPos> list, List<Float> list2) {
 		for(int i = 0; i < list.size(); ++i) {
@@ -37,18 +32,12 @@ public class CaveDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
 	}
 
 	@Override
-	public void render(long l) {
-		Camera camera = this.minecraft.gameRenderer.getMainCamera();
-		double d = camera.getPosition().x;
-		double e = camera.getPosition().y;
-		double f = camera.getPosition().z;
-		GlStateManager.pushMatrix();
-		GlStateManager.enableBlend();
-		GlStateManager.blendFuncSeparate(
-			GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO
-		);
-		GlStateManager.disableTexture();
-		BlockPos blockPos = new BlockPos(camera.getPosition().x, 0.0, camera.getPosition().z);
+	public void render(PoseStack poseStack, MultiBufferSource multiBufferSource, double d, double e, double f) {
+		RenderSystem.pushMatrix();
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+		RenderSystem.disableTexture();
+		BlockPos blockPos = new BlockPos(d, 0.0, f);
 		Tesselator tesselator = Tesselator.getInstance();
 		BufferBuilder bufferBuilder = tesselator.getBuilder();
 		bufferBuilder.begin(5, DefaultVertexFormat.POSITION_COLOR);
@@ -96,8 +85,8 @@ public class CaveDebugRenderer implements DebugRenderer.SimpleDebugRenderer {
 		}
 
 		tesselator.end();
-		GlStateManager.enableDepthTest();
-		GlStateManager.enableTexture();
-		GlStateManager.popMatrix();
+		RenderSystem.enableDepthTest();
+		RenderSystem.enableTexture();
+		RenderSystem.popMatrix();
 	}
 }

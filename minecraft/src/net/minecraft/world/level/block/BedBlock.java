@@ -1,5 +1,6 @@
 package net.minecraft.world.level.block;
 
+import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
@@ -10,16 +11,17 @@ import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockPlaceContext;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.BlockLayer;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -76,15 +78,17 @@ public class BedBlock extends HorizontalDirectionalBlock implements EntityBlock 
 	}
 
 	@Override
-	public boolean use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
+	public InteractionResult use(
+		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	) {
 		if (level.isClientSide) {
-			return true;
+			return InteractionResult.CONSUME;
 		} else {
 			if (blockState.getValue(PART) != BedPart.HEAD) {
 				blockPos = blockPos.relative(blockState.getValue(FACING));
 				blockState = level.getBlockState(blockPos);
 				if (blockState.getBlock() != this) {
-					return true;
+					return InteractionResult.CONSUME;
 				}
 			}
 
@@ -105,18 +109,31 @@ public class BedBlock extends HorizontalDirectionalBlock implements EntityBlock 
 					true,
 					Explosion.BlockInteraction.DESTROY
 				);
-				return true;
+				return InteractionResult.SUCCESS;
 			} else if (blockState.getValue(OCCUPIED)) {
-				player.displayClientMessage(new TranslatableComponent("block.minecraft.bed.occupied"), true);
-				return true;
+				if (!this.kickVillagerOutOfBed(level, blockPos)) {
+					player.displayClientMessage(new TranslatableComponent("block.minecraft.bed.occupied"), true);
+				}
+
+				return InteractionResult.SUCCESS;
 			} else {
 				player.startSleepInBed(blockPos).ifLeft(bedSleepingProblem -> {
 					if (bedSleepingProblem != null) {
 						player.displayClientMessage(bedSleepingProblem.getMessage(), true);
 					}
 				});
-				return true;
+				return InteractionResult.SUCCESS;
 			}
+		}
+	}
+
+	private boolean kickVillagerOutOfBed(Level level, BlockPos blockPos) {
+		List<Villager> list = level.getEntitiesOfClass(Villager.class, new AABB(blockPos), LivingEntity::isSleeping);
+		if (list.isEmpty()) {
+			return false;
+		} else {
+			((Villager)list.get(0)).stopSleeping();
+			return true;
 		}
 	}
 
@@ -127,14 +144,18 @@ public class BedBlock extends HorizontalDirectionalBlock implements EntityBlock 
 
 	@Override
 	public void updateEntityAfterFallOn(BlockGetter blockGetter, Entity entity) {
-		if (entity.isSneaking()) {
+		if (entity.isSuppressingBounce()) {
 			super.updateEntityAfterFallOn(blockGetter, entity);
 		} else {
-			Vec3 vec3 = entity.getDeltaMovement();
-			if (vec3.y < 0.0) {
-				double d = entity instanceof LivingEntity ? 1.0 : 0.8;
-				entity.setDeltaMovement(vec3.x, -vec3.y * 0.66F * d, vec3.z);
-			}
+			this.bounceUp(entity);
+		}
+	}
+
+	private void bounceUp(Entity entity) {
+		Vec3 vec3 = entity.getDeltaMovement();
+		if (vec3.y < 0.0) {
+			double d = entity instanceof LivingEntity ? 1.0 : 0.8;
+			entity.setDeltaMovement(vec3.x, -vec3.y * 0.66F * d, vec3.z);
 		}
 	}
 
@@ -191,9 +212,8 @@ public class BedBlock extends HorizontalDirectionalBlock implements EntityBlock 
 
 	@Override
 	public VoxelShape getShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
-		Direction direction = blockState.getValue(FACING);
-		Direction direction2 = blockState.getValue(PART) == BedPart.HEAD ? direction : direction.getOpposite();
-		switch(direction2) {
+		Direction direction = getConnectedDirection(blockState).getOpposite();
+		switch(direction) {
 			case NORTH:
 				return NORTH_SHAPE;
 			case SOUTH:
@@ -205,10 +225,15 @@ public class BedBlock extends HorizontalDirectionalBlock implements EntityBlock 
 		}
 	}
 
+	public static Direction getConnectedDirection(BlockState blockState) {
+		Direction direction = blockState.getValue(FACING);
+		return blockState.getValue(PART) == BedPart.HEAD ? direction.getOpposite() : direction;
+	}
+
 	@Environment(EnvType.CLIENT)
-	@Override
-	public boolean hasCustomBreakingProgress(BlockState blockState) {
-		return true;
+	public static DoubleBlockCombiner.BlockType getBlockType(BlockState blockState) {
+		BedPart bedPart = blockState.getValue(PART);
+		return bedPart == BedPart.HEAD ? DoubleBlockCombiner.BlockType.FIRST : DoubleBlockCombiner.BlockType.SECOND;
 	}
 
 	public static Optional<Vec3> findStandUpPosition(EntityType<?> entityType, LevelReader levelReader, BlockPos blockPos, int i) {
@@ -279,11 +304,6 @@ public class BedBlock extends HorizontalDirectionalBlock implements EntityBlock 
 	@Override
 	public PushReaction getPistonPushReaction(BlockState blockState) {
 		return PushReaction.DESTROY;
-	}
-
-	@Override
-	public BlockLayer getRenderLayer() {
-		return BlockLayer.CUTOUT;
 	}
 
 	@Override

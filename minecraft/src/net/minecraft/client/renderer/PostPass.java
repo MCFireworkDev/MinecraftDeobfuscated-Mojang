@@ -2,8 +2,9 @@ package net.minecraft.client.renderer;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.math.Matrix4f;
@@ -42,28 +43,15 @@ public class PostPass implements AutoCloseable {
 		this.auxHeights.add(this.auxHeights.size(), j);
 	}
 
-	private void prepareState() {
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		GlStateManager.disableBlend();
-		GlStateManager.disableDepthTest();
-		GlStateManager.disableAlphaTest();
-		GlStateManager.disableFog();
-		GlStateManager.disableLighting();
-		GlStateManager.disableColorMaterial();
-		GlStateManager.enableTexture();
-		GlStateManager.bindTexture(0);
-	}
-
 	public void setOrthoMatrix(Matrix4f matrix4f) {
 		this.shaderOrthoMatrix = matrix4f;
 	}
 
 	public void process(float f) {
-		this.prepareState();
 		this.inTarget.unbindWrite();
 		float g = (float)this.outTarget.width;
 		float h = (float)this.outTarget.height;
-		GlStateManager.viewport(0, 0, (int)g, (int)h);
+		RenderSystem.viewport(0, 0, (int)g, (int)h);
 		this.effect.setSampler("DiffuseSampler", this.inTarget);
 
 		for(int i = 0; i < this.auxAssets.size(); ++i) {
@@ -76,22 +64,20 @@ public class PostPass implements AutoCloseable {
 		this.effect.safeGetUniform("OutSize").set(g, h);
 		this.effect.safeGetUniform("Time").set(f);
 		Minecraft minecraft = Minecraft.getInstance();
-		this.effect.safeGetUniform("ScreenSize").set((float)minecraft.window.getWidth(), (float)minecraft.window.getHeight());
+		this.effect.safeGetUniform("ScreenSize").set((float)minecraft.getWindow().getWidth(), (float)minecraft.getWindow().getHeight());
 		this.effect.apply();
 		this.outTarget.clear(Minecraft.ON_OSX);
 		this.outTarget.bindWrite(false);
-		GlStateManager.depthMask(false);
-		GlStateManager.colorMask(true, true, true, true);
-		Tesselator tesselator = Tesselator.getInstance();
-		BufferBuilder bufferBuilder = tesselator.getBuilder();
+		RenderSystem.depthMask(false);
+		BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
 		bufferBuilder.begin(7, DefaultVertexFormat.POSITION_COLOR);
 		bufferBuilder.vertex(0.0, 0.0, 500.0).color(255, 255, 255, 255).endVertex();
 		bufferBuilder.vertex((double)g, 0.0, 500.0).color(255, 255, 255, 255).endVertex();
 		bufferBuilder.vertex((double)g, (double)h, 500.0).color(255, 255, 255, 255).endVertex();
 		bufferBuilder.vertex(0.0, (double)h, 500.0).color(255, 255, 255, 255).endVertex();
-		tesselator.end();
-		GlStateManager.depthMask(true);
-		GlStateManager.colorMask(true, true, true, true);
+		bufferBuilder.end();
+		BufferUploader.end(bufferBuilder);
+		RenderSystem.depthMask(true);
 		this.effect.clear();
 		this.outTarget.unbindWrite();
 		this.inTarget.unbindRead();

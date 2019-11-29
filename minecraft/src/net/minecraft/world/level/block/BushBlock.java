@@ -3,10 +3,10 @@ package net.minecraft.world.level.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.BlockLayer;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.PathComputationType;
 
 public class BushBlock extends Block {
 	protected BushBlock(Block.Properties properties) {
@@ -34,12 +34,14 @@ public class BushBlock extends Block {
 	}
 
 	@Override
-	public BlockLayer getRenderLayer() {
-		return BlockLayer.CUTOUT;
+	public boolean propagatesSkylightDown(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos) {
+		return true;
 	}
 
 	@Override
-	public boolean propagatesSkylightDown(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos) {
-		return true;
+	public boolean isPathfindable(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, PathComputationType pathComputationType) {
+		return pathComputationType == PathComputationType.AIR && !this.hasCollision
+			? true
+			: super.isPathfindable(blockState, blockGetter, blockPos, pathComputationType);
 	}
 }

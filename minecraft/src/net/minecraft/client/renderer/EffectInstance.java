@@ -6,7 +6,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.GLX;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.shaders.AbstractUniform;
 import com.mojang.blaze3d.shaders.BlendMode;
@@ -14,6 +13,7 @@ import com.mojang.blaze3d.shaders.Effect;
 import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.shaders.Uniform;
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -22,7 +22,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.renderer.texture.TextureObject;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.ChainedJsonException;
 import net.minecraft.server.packs.resources.Resource;
@@ -124,12 +124,12 @@ public class EffectInstance implements Effect, AutoCloseable {
 			this.cull = GsonHelper.getAsBoolean(jsonObject, "cull", true);
 			this.vertexProgram = getOrCreate(resourceManager, Program.Type.VERTEX, string2);
 			this.fragmentProgram = getOrCreate(resourceManager, Program.Type.FRAGMENT, string3);
-			this.programId = ProgramManager.getInstance().createProgram();
-			ProgramManager.getInstance().linkProgram(this);
+			this.programId = ProgramManager.createProgram();
+			ProgramManager.linkProgram(this);
 			this.updateLocations();
 			if (this.attributeNames != null) {
 				for(String string4 : this.attributeNames) {
-					int l = GLX.glGetAttribLocation(this.programId, string4);
+					int l = Uniform.glGetAttribLocation(this.programId, string4);
 					this.attributes.add(l);
 				}
 			}
@@ -223,54 +223,56 @@ public class EffectInstance implements Effect, AutoCloseable {
 			uniform.close();
 		}
 
-		ProgramManager.getInstance().releaseProgram(this);
+		ProgramManager.releaseProgram(this);
 	}
 
 	public void clear() {
-		GLX.glUseProgram(0);
+		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+		ProgramManager.glUseProgram(0);
 		lastProgramId = -1;
 		lastAppliedEffect = null;
 
 		for(int i = 0; i < this.samplerLocations.size(); ++i) {
 			if (this.samplerMap.get(this.samplerNames.get(i)) != null) {
-				GlStateManager.activeTexture(GLX.GL_TEXTURE0 + i);
-				GlStateManager.bindTexture(0);
+				GlStateManager._activeTexture(33984 + i);
+				GlStateManager._bindTexture(0);
 			}
 		}
 	}
 
 	public void apply() {
+		RenderSystem.assertThread(RenderSystem::isOnGameThread);
 		this.dirty = false;
 		lastAppliedEffect = this;
 		this.blend.apply();
 		if (this.programId != lastProgramId) {
-			GLX.glUseProgram(this.programId);
+			ProgramManager.glUseProgram(this.programId);
 			lastProgramId = this.programId;
 		}
 
 		if (this.cull) {
-			GlStateManager.enableCull();
+			RenderSystem.enableCull();
 		} else {
-			GlStateManager.disableCull();
+			RenderSystem.disableCull();
 		}
 
 		for(int i = 0; i < this.samplerLocations.size(); ++i) {
 			if (this.samplerMap.get(this.samplerNames.get(i)) != null) {
-				GlStateManager.activeTexture(GLX.GL_TEXTURE0 + i);
-				GlStateManager.enableTexture();
+				RenderSystem.activeTexture(33984 + i);
+				RenderSystem.enableTexture();
 				Object object = this.samplerMap.get(this.samplerNames.get(i));
 				int j = -1;
 				if (object instanceof RenderTarget) {
 					j = ((RenderTarget)object).colorTextureId;
-				} else if (object instanceof TextureObject) {
-					j = ((TextureObject)object).getId();
+				} else if (object instanceof AbstractTexture) {
+					j = ((AbstractTexture)object).getId();
 				} else if (object instanceof Integer) {
 					j = (Integer)object;
 				}
 
 				if (j != -1) {
-					GlStateManager.bindTexture(j);
-					GLX.glUniform1i(GLX.glGetUniformLocation(this.programId, (CharSequence)this.samplerNames.get(i)), i);
+					RenderSystem.bindTexture(j);
+					Uniform.uploadInteger(Uniform.glGetUniformLocation(this.programId, (CharSequence)this.samplerNames.get(i)), i);
 				}
 			}
 		}
@@ -287,20 +289,23 @@ public class EffectInstance implements Effect, AutoCloseable {
 
 	@Nullable
 	public Uniform getUniform(String string) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
 		return (Uniform)this.uniformMap.get(string);
 	}
 
 	public AbstractUniform safeGetUniform(String string) {
+		RenderSystem.assertThread(RenderSystem::isOnGameThread);
 		Uniform uniform = this.getUniform(string);
 		return (AbstractUniform)(uniform == null ? DUMMY_UNIFORM : uniform);
 	}
 
 	private void updateLocations() {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
 		int i = 0;
 
 		for(int j = 0; i < this.samplerNames.size(); ++j) {
 			String string = (String)this.samplerNames.get(i);
-			int k = GLX.glGetUniformLocation(this.programId, string);
+			int k = Uniform.glGetUniformLocation(this.programId, string);
 			if (k == -1) {
 				LOGGER.warn("Shader {}could not find sampler named {} in the specified shader program.", this.name, string);
 				this.samplerMap.remove(string);
@@ -315,7 +320,7 @@ public class EffectInstance implements Effect, AutoCloseable {
 
 		for(Uniform uniform : this.uniforms) {
 			String string = uniform.getName();
-			int k = GLX.glGetUniformLocation(this.programId, string);
+			int k = Uniform.glGetUniformLocation(this.programId, string);
 			if (k == -1) {
 				LOGGER.warn("Could not find uniform named {} in the specified shader program.", string);
 			} else {

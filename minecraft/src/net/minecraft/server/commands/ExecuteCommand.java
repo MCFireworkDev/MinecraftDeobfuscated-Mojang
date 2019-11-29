@@ -13,6 +13,8 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.Dynamic2CommandExceptionType;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import java.util.Collection;
@@ -25,6 +27,7 @@ import java.util.function.IntFunction;
 import net.minecraft.advancements.critereon.MinMaxBounds;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.DimensionTypeArgument;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -58,6 +61,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.PredicateManager;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.Score;
 import net.minecraft.world.scores.Scoreboard;
@@ -76,6 +84,10 @@ public class ExecuteCommand {
 			resultConsumer.onCommandComplete(commandContext, bl, i);
 			resultConsumer2.onCommandComplete(commandContext, bl, i);
 		};
+	private static final SuggestionProvider<CommandSourceStack> SUGGEST_PREDICATE = (commandContext, suggestionsBuilder) -> {
+		PredicateManager predicateManager = commandContext.getSource().getServer().getPredicateManager();
+		return SharedSuggestionProvider.suggestResource(predicateManager.getKeys(), suggestionsBuilder);
+	};
 
 	public static void register(CommandDispatcher<CommandSourceStack> commandDispatcher) {
 		LiteralCommandNode<CommandSourceStack> literalCommandNode = commandDispatcher.register(
@@ -128,7 +140,10 @@ public class ExecuteCommand {
 					Commands.literal("positioned")
 						.then(
 							Commands.argument("pos", Vec3Argument.vec3())
-								.redirect(literalCommandNode, commandContext -> commandContext.getSource().withPosition(Vec3Argument.getVec3(commandContext, "pos")))
+								.redirect(
+									literalCommandNode,
+									commandContext -> commandContext.getSource().withPosition(Vec3Argument.getVec3(commandContext, "pos")).withAnchor(EntityAnchorArgument.Anchor.FEET)
+								)
 						)
 						.then(Commands.literal("as").then(Commands.argument("targets", EntityArgument.entities()).fork(literalCommandNode, commandContext -> {
 							List<CommandSourceStack> list = Lists.<CommandSourceStack>newArrayList();
@@ -268,7 +283,7 @@ public class ExecuteCommand {
 														commandContext.getSource(),
 														dataProvider.access(commandContext),
 														NbtPathArgument.getPath(commandContext, "path"),
-														i -> new IntTag((int)((double)i * DoubleArgumentType.getDouble(commandContext, "scale"))),
+														i -> IntTag.valueOf((int)((double)i * DoubleArgumentType.getDouble(commandContext, "scale"))),
 														bl
 													)
 											)
@@ -284,7 +299,7 @@ public class ExecuteCommand {
 														commandContext.getSource(),
 														dataProvider.access(commandContext),
 														NbtPathArgument.getPath(commandContext, "path"),
-														i -> new FloatTag((float)((double)i * DoubleArgumentType.getDouble(commandContext, "scale"))),
+														i -> FloatTag.valueOf((float)((double)i * DoubleArgumentType.getDouble(commandContext, "scale"))),
 														bl
 													)
 											)
@@ -300,7 +315,7 @@ public class ExecuteCommand {
 														commandContext.getSource(),
 														dataProvider.access(commandContext),
 														NbtPathArgument.getPath(commandContext, "path"),
-														i -> new ShortTag((short)((int)((double)i * DoubleArgumentType.getDouble(commandContext, "scale")))),
+														i -> ShortTag.valueOf((short)((int)((double)i * DoubleArgumentType.getDouble(commandContext, "scale")))),
 														bl
 													)
 											)
@@ -316,7 +331,7 @@ public class ExecuteCommand {
 														commandContext.getSource(),
 														dataProvider.access(commandContext),
 														NbtPathArgument.getPath(commandContext, "path"),
-														i -> new LongTag((long)((double)i * DoubleArgumentType.getDouble(commandContext, "scale"))),
+														i -> LongTag.valueOf((long)((double)i * DoubleArgumentType.getDouble(commandContext, "scale"))),
 														bl
 													)
 											)
@@ -332,7 +347,7 @@ public class ExecuteCommand {
 														commandContext.getSource(),
 														dataProvider.access(commandContext),
 														NbtPathArgument.getPath(commandContext, "path"),
-														i -> new DoubleTag((double)i * DoubleArgumentType.getDouble(commandContext, "scale")),
+														i -> DoubleTag.valueOf((double)i * DoubleArgumentType.getDouble(commandContext, "scale")),
 														bl
 													)
 											)
@@ -348,7 +363,7 @@ public class ExecuteCommand {
 														commandContext.getSource(),
 														dataProvider.access(commandContext),
 														NbtPathArgument.getPath(commandContext, "path"),
-														i -> new ByteTag((byte)((int)((double)i * DoubleArgumentType.getDouble(commandContext, "scale")))),
+														i -> ByteTag.valueOf((byte)((int)((double)i * DoubleArgumentType.getDouble(commandContext, "scale")))),
 														bl
 													)
 											)
@@ -534,6 +549,17 @@ public class ExecuteCommand {
 							.fork(commandNode, commandContext -> expect(commandContext, bl, !EntityArgument.getOptionalEntities(commandContext, "entities").isEmpty()))
 							.executes(createNumericConditionalHandler(bl, commandContext -> EntityArgument.getOptionalEntities(commandContext, "entities").size()))
 					)
+			)
+			.then(
+				Commands.literal("predicate")
+					.then(
+						addConditional(
+							commandNode,
+							Commands.argument("predicate", ResourceLocationArgument.id()).suggests(SUGGEST_PREDICATE),
+							bl,
+							commandContext -> checkCustomPredicate(commandContext.getSource(), ResourceLocationArgument.getPredicate(commandContext, "predicate"))
+						)
+					)
 			);
 
 		for(DataCommands.DataProvider dataProvider : DataCommands.SOURCE_PROVIDERS) {
@@ -605,6 +631,14 @@ public class ExecuteCommand {
 		Objective objective = ObjectiveArgument.getObjective(commandContext, "targetObjective");
 		Scoreboard scoreboard = commandContext.getSource().getServer().getScoreboard();
 		return !scoreboard.hasPlayerScore(string, objective) ? false : ints.matches(scoreboard.getOrCreatePlayerScore(string, objective).getScore());
+	}
+
+	private static boolean checkCustomPredicate(CommandSourceStack commandSourceStack, LootItemCondition lootItemCondition) {
+		ServerLevel serverLevel = commandSourceStack.getLevel();
+		LootContext.Builder builder = new LootContext.Builder(serverLevel)
+			.withParameter(LootContextParams.BLOCK_POS, new BlockPos(commandSourceStack.getPosition()))
+			.withOptionalParameter(LootContextParams.THIS_ENTITY, commandSourceStack.getEntity());
+		return lootItemCondition.test(builder.create(LootContextParamSets.COMMAND));
 	}
 
 	private static Collection<CommandSourceStack> expect(CommandContext<CommandSourceStack> commandContext, boolean bl, boolean bl2) {

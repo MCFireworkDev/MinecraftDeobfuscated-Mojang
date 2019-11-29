@@ -1,6 +1,7 @@
 package net.minecraft.client.renderer.entity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.PhantomModel;
@@ -17,19 +18,19 @@ public class PhantomRenderer extends MobRenderer<Phantom, PhantomModel<Phantom>>
 		this.addLayer(new PhantomEyesLayer<>(this));
 	}
 
-	protected ResourceLocation getTextureLocation(Phantom phantom) {
+	public ResourceLocation getTextureLocation(Phantom phantom) {
 		return PHANTOM_LOCATION;
 	}
 
-	protected void scale(Phantom phantom, float f) {
+	protected void scale(Phantom phantom, PoseStack poseStack, float f) {
 		int i = phantom.getPhantomSize();
 		float g = 1.0F + 0.15F * (float)i;
-		GlStateManager.scalef(g, g, g);
-		GlStateManager.translatef(0.0F, 1.3125F, 0.1875F);
+		poseStack.scale(g, g, g);
+		poseStack.translate(0.0, 1.3125, 0.1875);
 	}
 
-	protected void setupRotations(Phantom phantom, float f, float g, float h) {
-		super.setupRotations(phantom, f, g, h);
-		GlStateManager.rotatef(phantom.xRot, 1.0F, 0.0F, 0.0F);
+	protected void setupRotations(Phantom phantom, PoseStack poseStack, float f, float g, float h) {
+		super.setupRotations(phantom, poseStack, f, g, h);
+		poseStack.mulPose(Vector3f.XP.rotationDegrees(phantom.xRot));
 	}
 }

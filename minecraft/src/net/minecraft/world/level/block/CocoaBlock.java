@@ -4,10 +4,10 @@ import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.BlockLayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
@@ -39,11 +39,11 @@ public class CocoaBlock extends HorizontalDirectionalBlock implements Bonemealab
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
-		if (level.random.nextInt(5) == 0) {
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+		if (serverLevel.random.nextInt(5) == 0) {
 			int i = blockState.getValue(AGE);
 			if (i < 2) {
-				level.setBlock(blockPos, blockState.setValue(AGE, Integer.valueOf(i + 1)), 2);
+				serverLevel.setBlock(blockPos, blockState.setValue(AGE, Integer.valueOf(i + 1)), 2);
 			}
 		}
 	}
@@ -109,13 +109,8 @@ public class CocoaBlock extends HorizontalDirectionalBlock implements Bonemealab
 	}
 
 	@Override
-	public void performBonemeal(Level level, Random random, BlockPos blockPos, BlockState blockState) {
-		level.setBlock(blockPos, blockState.setValue(AGE, Integer.valueOf(blockState.getValue(AGE) + 1)), 2);
-	}
-
-	@Override
-	public BlockLayer getRenderLayer() {
-		return BlockLayer.CUTOUT;
+	public void performBonemeal(ServerLevel serverLevel, Random random, BlockPos blockPos, BlockState blockState) {
+		serverLevel.setBlock(blockPos, blockState.setValue(AGE, Integer.valueOf(blockState.getValue(AGE) + 1)), 2);
 	}
 
 	@Override

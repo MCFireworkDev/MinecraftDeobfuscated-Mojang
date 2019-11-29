@@ -7,12 +7,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockPlaceContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.BlockLayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
@@ -108,7 +108,7 @@ public class DoorBlock extends Block {
 			level.setBlock(blockPos2, Blocks.AIR.defaultBlockState(), 35);
 			level.levelEvent(player, 2001, blockPos2, Block.getId(blockState2));
 			ItemStack itemStack = player.getMainHandItem();
-			if (!level.isClientSide && !player.isCreative()) {
+			if (!level.isClientSide && !player.isCreative() && player.canDestroy(blockState2)) {
 				Block.dropResources(blockState, level, blockPos, null, player, itemStack);
 				Block.dropResources(blockState2, level, blockPos2, null, player, itemStack);
 			}
@@ -200,14 +200,16 @@ public class DoorBlock extends Block {
 	}
 
 	@Override
-	public boolean use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
+	public InteractionResult use(
+		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	) {
 		if (this.material == Material.METAL) {
-			return false;
+			return InteractionResult.PASS;
 		} else {
 			blockState = blockState.cycle(OPEN);
 			level.setBlock(blockPos, blockState, 10);
 			level.levelEvent(player, blockState.getValue(OPEN) ? this.getOpenSound() : this.getCloseSound(), blockPos, 0);
-			return true;
+			return InteractionResult.SUCCESS;
 		}
 	}
 
@@ -250,11 +252,6 @@ public class DoorBlock extends Block {
 	@Override
 	public PushReaction getPistonPushReaction(BlockState blockState) {
 		return PushReaction.DESTROY;
-	}
-
-	@Override
-	public BlockLayer getRenderLayer() {
-		return BlockLayer.CUTOUT;
 	}
 
 	@Override

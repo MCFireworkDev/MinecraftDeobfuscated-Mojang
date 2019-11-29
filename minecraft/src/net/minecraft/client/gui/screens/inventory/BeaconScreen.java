@@ -1,13 +1,11 @@
 package net.minecraft.client.gui.screens.inventory;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.NonNullList;
@@ -124,7 +122,6 @@ public class BeaconScreen extends AbstractContainerScreen<BeaconMenu> {
 
 	@Override
 	protected void renderLabels(int i, int j) {
-		Lighting.turnOff();
 		this.drawCenteredString(this.font, I18n.get("block.minecraft.beacon.primary"), 62, 10, 14737632);
 		this.drawCenteredString(this.font, I18n.get("block.minecraft.beacon.secondary"), 169, 10, 14737632);
 
@@ -134,13 +131,11 @@ public class BeaconScreen extends AbstractContainerScreen<BeaconMenu> {
 				break;
 			}
 		}
-
-		Lighting.turnOnGui();
 	}
 
 	@Override
 	protected void renderBg(float f, int i, int j) {
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		this.minecraft.getTextureManager().bind(BEACON_LOCATION);
 		int k = (this.width - this.imageWidth) / 2;
 		int l = (this.height - this.imageHeight) / 2;
@@ -240,8 +235,8 @@ public class BeaconScreen extends AbstractContainerScreen<BeaconMenu> {
 
 		@Override
 		protected void renderIcon() {
-			Minecraft.getInstance().getTextureManager().bind(TextureAtlas.LOCATION_MOB_EFFECTS);
-			blit(this.x + 2, this.y + 2, this.blitOffset, 18, 18, this.sprite);
+			Minecraft.getInstance().getTextureManager().bind(this.sprite.atlas().location());
+			blit(this.x + 2, this.y + 2, this.getBlitOffset(), 18, 18, this.sprite);
 		}
 	}
 
@@ -256,7 +251,7 @@ public class BeaconScreen extends AbstractContainerScreen<BeaconMenu> {
 		@Override
 		public void renderButton(int i, int j, float f) {
 			Minecraft.getInstance().getTextureManager().bind(BeaconScreen.BEACON_LOCATION);
-			GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 			int k = 219;
 			int l = 0;
 			if (!this.active) {

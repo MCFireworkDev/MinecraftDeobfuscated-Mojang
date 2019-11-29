@@ -1,5 +1,7 @@
 package com.mojang.blaze3d.vertex;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import java.util.function.IntConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.apache.logging.log4j.LogManager;
@@ -12,6 +14,7 @@ public class VertexFormatElement {
 	private final VertexFormatElement.Usage usage;
 	private final int index;
 	private final int count;
+	private final int byteSize;
 
 	public VertexFormatElement(int i, VertexFormatElement.Type type, VertexFormatElement.Usage usage, int j) {
 		if (this.supportsUsage(i, usage)) {
@@ -24,9 +27,10 @@ public class VertexFormatElement {
 		this.type = type;
 		this.index = i;
 		this.count = j;
+		this.byteSize = type.getSize() * this.count;
 	}
 
-	private final boolean supportsUsage(int i, VertexFormatElement.Usage usage) {
+	private boolean supportsUsage(int i, VertexFormatElement.Usage usage) {
 		return i == 0 || usage == VertexFormatElement.Usage.UV;
 	}
 
@@ -51,7 +55,7 @@ public class VertexFormatElement {
 	}
 
 	public final int getByteSize() {
-		return this.type.getSize() * this.count;
+		return this.byteSize;
 	}
 
 	public final boolean isPosition() {
@@ -82,6 +86,14 @@ public class VertexFormatElement {
 		i = 31 * i + this.usage.hashCode();
 		i = 31 * i + this.index;
 		return 31 * i + this.count;
+	}
+
+	public void setupBufferState(long l, int i) {
+		this.usage.setupBufferState(this.count, this.type.getGlType(), i, l, this.index);
+	}
+
+	public void clearBufferState() {
+		this.usage.clearBufferState(this.index);
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -119,22 +131,64 @@ public class VertexFormatElement {
 
 	@Environment(EnvType.CLIENT)
 	public static enum Usage {
-		POSITION("Position"),
-		NORMAL("Normal"),
-		COLOR("Vertex Color"),
-		UV("UV"),
-		MATRIX("Bone Matrix"),
-		BLEND_WEIGHT("Blend Weight"),
-		PADDING("Padding");
+		POSITION("Position", (i, j, k, l, m) -> {
+			GlStateManager._vertexPointer(i, j, k, l);
+			GlStateManager._enableClientState(32884);
+		}, i -> GlStateManager._disableClientState(32884)),
+		NORMAL("Normal", (i, j, k, l, m) -> {
+			GlStateManager._normalPointer(j, k, l);
+			GlStateManager._enableClientState(32885);
+		}, i -> GlStateManager._disableClientState(32885)),
+		COLOR("Vertex Color", (i, j, k, l, m) -> {
+			GlStateManager._colorPointer(i, j, k, l);
+			GlStateManager._enableClientState(32886);
+		}, i -> {
+			GlStateManager._disableClientState(32886);
+			GlStateManager._clearCurrentColor();
+		}),
+		UV("UV", (i, j, k, l, m) -> {
+			GlStateManager._glClientActiveTexture(33984 + m);
+			GlStateManager._texCoordPointer(i, j, k, l);
+			GlStateManager._enableClientState(32888);
+			GlStateManager._glClientActiveTexture(33984);
+		}, i -> {
+			GlStateManager._glClientActiveTexture(33984 + i);
+			GlStateManager._disableClientState(32888);
+			GlStateManager._glClientActiveTexture(33984);
+		}),
+		PADDING("Padding", (i, j, k, l, m) -> {
+		}, i -> {
+		}),
+		GENERIC("Generic", (i, j, k, l, m) -> {
+			GlStateManager._enableVertexAttribArray(m);
+			GlStateManager._vertexAttribPointer(m, i, j, false, k, l);
+		}, GlStateManager::_disableVertexAttribArray);
 
 		private final String name;
+		private final VertexFormatElement.Usage.SetupState setupState;
+		private final IntConsumer clearState;
 
-		private Usage(String string2) {
+		private Usage(String string2, VertexFormatElement.Usage.SetupState setupState, IntConsumer intConsumer) {
 			this.name = string2;
+			this.setupState = setupState;
+			this.clearState = intConsumer;
+		}
+
+		private void setupBufferState(int i, int j, int k, long l, int m) {
+			this.setupState.setupBufferState(i, j, k, l, m);
+		}
+
+		public void clearBufferState(int i) {
+			this.clearState.accept(i);
 		}
 
 		public String getName() {
 			return this.name;
+		}
+
+		@Environment(EnvType.CLIENT)
+		interface SetupState {
+			void setupBufferState(int i, int j, int k, long l, int m);
 		}
 	}
 }

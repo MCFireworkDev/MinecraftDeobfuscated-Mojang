@@ -24,9 +24,9 @@ public class DragonSittingFlamingPhase extends AbstractDragonSittingPhase {
 		if (this.flameTicks % 2 == 0 && this.flameTicks < 10) {
 			Vec3 vec3 = this.dragon.getHeadLookVector(1.0F).normalize();
 			vec3.yRot((float) (-Math.PI / 4));
-			double d = this.dragon.head.x;
-			double e = this.dragon.head.y + (double)(this.dragon.head.getBbHeight() / 2.0F);
-			double f = this.dragon.head.z;
+			double d = this.dragon.head.getX();
+			double e = this.dragon.head.getY(0.5);
+			double f = this.dragon.head.getZ();
 
 			for(int i = 0; i < 8; ++i) {
 				double g = d + this.dragon.getRandom().nextGaussian() / 2.0;
@@ -52,19 +52,25 @@ public class DragonSittingFlamingPhase extends AbstractDragonSittingPhase {
 				this.dragon.getPhaseManager().setPhase(EnderDragonPhase.SITTING_SCANNING);
 			}
 		} else if (this.flameTicks == 10) {
-			Vec3 vec3 = new Vec3(this.dragon.head.x - this.dragon.x, 0.0, this.dragon.head.z - this.dragon.z).normalize();
+			Vec3 vec3 = new Vec3(this.dragon.head.getX() - this.dragon.getX(), 0.0, this.dragon.head.getZ() - this.dragon.getZ()).normalize();
 			float f = 5.0F;
-			double d = this.dragon.head.x + vec3.x * 5.0 / 2.0;
-			double e = this.dragon.head.z + vec3.z * 5.0 / 2.0;
-			double g = this.dragon.head.y + (double)(this.dragon.head.getBbHeight() / 2.0F);
+			double d = this.dragon.head.getX() + vec3.x * 5.0 / 2.0;
+			double e = this.dragon.head.getZ() + vec3.z * 5.0 / 2.0;
+			double g = this.dragon.head.getY(0.5);
+			double h = g;
 			BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos(d, g, e);
 
 			while(this.dragon.level.isEmptyBlock(mutableBlockPos)) {
-				mutableBlockPos.set(d, --g, e);
+				if (--h < 0.0) {
+					h = g;
+					break;
+				}
+
+				mutableBlockPos.set(d, h, e);
 			}
 
-			g = (double)(Mth.floor(g) + 1);
-			this.flame = new AreaEffectCloud(this.dragon.level, d, g, e);
+			h = (double)(Mth.floor(h) + 1);
+			this.flame = new AreaEffectCloud(this.dragon.level, d, h, e);
 			this.flame.setOwner(this.dragon);
 			this.flame.setRadius(5.0F);
 			this.flame.setDuration(200);

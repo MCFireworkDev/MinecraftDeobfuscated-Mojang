@@ -7,6 +7,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
@@ -21,6 +22,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BellAttachType;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.material.PushReaction;
@@ -33,6 +35,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public class BellBlock extends BaseEntityBlock {
 	public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 	private static final EnumProperty<BellAttachType> ATTACHMENT = BlockStateProperties.BELL_ATTACHMENT;
+	public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
 	private static final VoxelShape NORTH_SOUTH_FLOOR_SHAPE = Block.box(0.0, 0.0, 4.0, 16.0, 16.0, 12.0);
 	private static final VoxelShape EAST_WEST_FLOOR_SHAPE = Block.box(4.0, 0.0, 0.0, 12.0, 16.0, 16.0);
 	private static final VoxelShape BELL_TOP_SHAPE = Block.box(5.0, 6.0, 5.0, 11.0, 13.0, 11.0);
@@ -48,7 +51,21 @@ public class BellBlock extends BaseEntityBlock {
 
 	public BellBlock(Block.Properties properties) {
 		super(properties);
-		this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(ATTACHMENT, BellAttachType.FLOOR));
+		this.registerDefaultState(
+			this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(ATTACHMENT, BellAttachType.FLOOR).setValue(POWERED, Boolean.valueOf(false))
+		);
+	}
+
+	@Override
+	public void neighborChanged(BlockState blockState, Level level, BlockPos blockPos, Block block, BlockPos blockPos2, boolean bl) {
+		boolean bl2 = level.hasNeighborSignal(blockPos);
+		if (bl2 != blockState.getValue(POWERED)) {
+			if (bl2) {
+				this.attemptToRing(level, blockPos, null);
+			}
+
+			level.setBlock(blockPos, blockState.setValue(POWERED, Boolean.valueOf(bl2)), 3);
+		}
 	}
 
 	@Override
@@ -56,31 +73,30 @@ public class BellBlock extends BaseEntityBlock {
 		if (entity instanceof AbstractArrow) {
 			Entity entity2 = ((AbstractArrow)entity).getOwner();
 			Player player = entity2 instanceof Player ? (Player)entity2 : null;
-			this.onHit(level, blockState, level.getBlockEntity(blockHitResult.getBlockPos()), blockHitResult, player, true);
+			this.onHit(level, blockState, blockHitResult, player, true);
 		}
 	}
 
 	@Override
-	public boolean use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
-		return this.onHit(level, blockState, level.getBlockEntity(blockPos), blockHitResult, player, true);
+	public InteractionResult use(
+		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	) {
+		return this.onHit(level, blockState, blockHitResult, player, true) ? InteractionResult.SUCCESS : InteractionResult.PASS;
 	}
 
-	public boolean onHit(
-		Level level, BlockState blockState, @Nullable BlockEntity blockEntity, BlockHitResult blockHitResult, @Nullable Player player, boolean bl
-	) {
+	public boolean onHit(Level level, BlockState blockState, BlockHitResult blockHitResult, @Nullable Player player, boolean bl) {
 		Direction direction = blockHitResult.getDirection();
 		BlockPos blockPos = blockHitResult.getBlockPos();
 		boolean bl2 = !bl || this.isProperHit(blockState, direction, blockHitResult.getLocation().y - (double)blockPos.getY());
-		if (!level.isClientSide && blockEntity instanceof BellBlockEntity && bl2) {
-			((BellBlockEntity)blockEntity).onHit(direction);
-			this.ring(level, blockPos);
-			if (player != null) {
+		if (bl2) {
+			boolean bl3 = this.attemptToRing(level, blockPos, direction);
+			if (bl3 && player != null) {
 				player.awardStat(Stats.BELL_RING);
 			}
 
 			return true;
 		} else {
-			return true;
+			return false;
 		}
 	}
 
@@ -104,8 +120,19 @@ public class BellBlock extends BaseEntityBlock {
 		}
 	}
 
-	private void ring(Level level, BlockPos blockPos) {
-		level.playSound(null, blockPos, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 2.0F, 1.0F);
+	public boolean attemptToRing(Level level, BlockPos blockPos, @Nullable Direction direction) {
+		BlockEntity blockEntity = level.getBlockEntity(blockPos);
+		if (!level.isClientSide && blockEntity instanceof BellBlockEntity) {
+			if (direction == null) {
+				direction = level.getBlockState(blockPos).getValue(FACING);
+			}
+
+			((BellBlockEntity)blockEntity).onHit(direction);
+			level.playSound(null, blockPos, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 2.0F, 1.0F);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	private VoxelShape getVoxelShape(BlockState blockState) {
@@ -227,7 +254,7 @@ public class BellBlock extends BaseEntityBlock {
 
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-		builder.add(FACING, ATTACHMENT);
+		builder.add(FACING, ATTACHMENT, POWERED);
 	}
 
 	@Nullable

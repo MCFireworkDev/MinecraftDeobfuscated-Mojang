@@ -6,7 +6,6 @@ import com.google.common.collect.Multimap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
 import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -18,6 +17,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.Tag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
@@ -54,8 +55,6 @@ public class Item implements ItemLike {
 	private static final ItemPropertyFunction PROPERTY_CUSTOM_MODEL_DATA = (itemStack, level, livingEntity) -> itemStack.hasTag()
 			? (float)itemStack.getTag().getInt("CustomModelData")
 			: 0.0F;
-	protected static final UUID BASE_ATTACK_DAMAGE_UUID = UUID.fromString("CB3F55D3-645C-4F38-A497-9C13A33DB5CF");
-	protected static final UUID BASE_ATTACK_SPEED_UUID = UUID.fromString("FA233E1C-4180-4865-B01B-BCCE9785ACA3");
 	protected static final Random random = new Random();
 	private final Map<ResourceLocation, ItemPropertyFunction> properties = Maps.<ResourceLocation, ItemPropertyFunction>newHashMap();
 	protected final CreativeModeTab category;
@@ -141,12 +140,12 @@ public class Item implements ItemLike {
 			ItemStack itemStack = player.getItemInHand(interactionHand);
 			if (player.canEat(this.getFoodProperties().canAlwaysEat())) {
 				player.startUsingItem(interactionHand);
-				return new InteractionResultHolder<>(InteractionResult.SUCCESS, itemStack);
+				return InteractionResultHolder.consume(itemStack);
 			} else {
-				return new InteractionResultHolder<>(InteractionResult.FAIL, itemStack);
+				return InteractionResultHolder.fail(itemStack);
 			}
 		} else {
-			return new InteractionResultHolder<>(InteractionResult.PASS, player.getItemInHand(interactionHand));
+			return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
 		}
 	}
 
@@ -253,7 +252,6 @@ public class Item implements ItemLike {
 		return new TranslatableComponent(this.getDescriptionId(itemStack));
 	}
 
-	@Environment(EnvType.CLIENT)
 	public boolean isFoil(ItemStack itemStack) {
 		return itemStack.isEnchanted();
 	}
@@ -342,6 +340,14 @@ public class Item implements ItemLike {
 	@Nullable
 	public FoodProperties getFoodProperties() {
 		return this.foodProperties;
+	}
+
+	public SoundEvent getDrinkingSound() {
+		return SoundEvents.GENERIC_DRINK;
+	}
+
+	public SoundEvent getEatingSound() {
+		return SoundEvents.GENERIC_EAT;
 	}
 
 	public static class Properties {

@@ -2,16 +2,15 @@ package net.minecraft.world.level.biome;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.levelgen.GenerationStep;
-import net.minecraft.world.level.levelgen.feature.DecoratorConfiguration;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.FeatureConfiguration;
-import net.minecraft.world.level.levelgen.feature.MineshaftConfiguration;
 import net.minecraft.world.level.levelgen.feature.MineshaftFeature;
-import net.minecraft.world.level.levelgen.feature.SeagrassFeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.DecoratorConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.MineshaftConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.SeagrassFeatureConfiguration;
 import net.minecraft.world.level.levelgen.placement.FeatureDecorator;
 import net.minecraft.world.level.levelgen.surfacebuilders.SurfaceBuilder;
 
@@ -30,8 +29,8 @@ public final class SwampBiome extends Biome {
 				.waterFogColor(2302743)
 				.parent(null)
 		);
-		this.addStructureStart(Feature.SWAMP_HUT, FeatureConfiguration.NONE);
-		this.addStructureStart(Feature.MINESHAFT, new MineshaftConfiguration(0.004, MineshaftFeature.Type.NORMAL));
+		this.addStructureStart(Feature.SWAMP_HUT.configured(FeatureConfiguration.NONE));
+		this.addStructureStart(Feature.MINESHAFT.configured(new MineshaftConfiguration(0.004, MineshaftFeature.Type.NORMAL)));
 		BiomeDefaultFeatures.addDefaultCarvers(this);
 		BiomeDefaultFeatures.addStructureFeaturePlacement(this);
 		BiomeDefaultFeatures.addDefaultLakes(this);
@@ -45,7 +44,9 @@ public final class SwampBiome extends Biome {
 		BiomeDefaultFeatures.addDefaultSprings(this);
 		this.addFeature(
 			GenerationStep.Decoration.VEGETAL_DECORATION,
-			makeComposite(Feature.SEAGRASS, new SeagrassFeatureConfiguration(64, 0.6), FeatureDecorator.TOP_SOLID_HEIGHTMAP, DecoratorConfiguration.NONE)
+			Feature.SEAGRASS
+				.configured(new SeagrassFeatureConfiguration(64, 0.6))
+				.decorated(FeatureDecorator.TOP_SOLID_HEIGHTMAP.configured(DecoratorConfiguration.NONE))
 		);
 		BiomeDefaultFeatures.addSwampExtraDecoration(this);
 		BiomeDefaultFeatures.addSurfaceFreezing(this);
@@ -67,14 +68,14 @@ public final class SwampBiome extends Biome {
 
 	@Environment(EnvType.CLIENT)
 	@Override
-	public int getGrassColor(BlockPos blockPos) {
-		double d = BIOME_INFO_NOISE.getValue((double)blockPos.getX() * 0.0225, (double)blockPos.getZ() * 0.0225);
-		return d < -0.1 ? 5011004 : 6975545;
+	public int getGrassColor(double d, double e) {
+		double f = BIOME_INFO_NOISE.getValue(d * 0.0225, e * 0.0225, false);
+		return f < -0.1 ? 5011004 : 6975545;
 	}
 
 	@Environment(EnvType.CLIENT)
 	@Override
-	public int getFoliageColor(BlockPos blockPos) {
+	public int getFoliageColor() {
 		return 6975545;
 	}
 }

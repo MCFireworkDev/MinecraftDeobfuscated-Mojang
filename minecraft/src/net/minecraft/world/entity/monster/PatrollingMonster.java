@@ -1,6 +1,7 @@
 package net.minecraft.world.entity.monster;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
@@ -143,21 +144,28 @@ public abstract class PatrollingMonster extends Monster {
 		return this.patrolling;
 	}
 
+	protected void setPatrolling(boolean bl) {
+		this.patrolling = bl;
+	}
+
 	public static class LongDistancePatrolGoal<T extends PatrollingMonster> extends Goal {
 		private final T mob;
 		private final double speedModifier;
 		private final double leaderSpeedModifier;
+		private long cooldownUntil;
 
 		public LongDistancePatrolGoal(T patrollingMonster, double d, double e) {
 			this.mob = patrollingMonster;
 			this.speedModifier = d;
 			this.leaderSpeedModifier = e;
+			this.cooldownUntil = -1L;
 			this.setFlags(EnumSet.of(Goal.Flag.MOVE));
 		}
 
 		@Override
 		public boolean canUse() {
-			return this.mob.isPatrolling() && this.mob.getTarget() == null && !this.mob.isVehicle() && this.mob.hasPatrolTarget();
+			boolean bl = this.mob.level.getGameTime() < this.cooldownUntil;
+			return this.mob.isPatrolling() && this.mob.getTarget() == null && !this.mob.isVehicle() && this.mob.hasPatrolTarget() && !bl;
 		}
 
 		@Override
@@ -173,11 +181,14 @@ public abstract class PatrollingMonster extends Monster {
 			boolean bl = this.mob.isPatrolLeader();
 			PathNavigation pathNavigation = this.mob.getNavigation();
 			if (pathNavigation.isDone()) {
-				if (bl && this.mob.getPatrolTarget().closerThan(this.mob.position(), 10.0)) {
+				List<PatrollingMonster> list = this.findPatrolCompanions();
+				if (this.mob.isPatrolling() && list.isEmpty()) {
+					this.mob.setPatrolling(false);
+				} else if (bl && this.mob.getPatrolTarget().closerThan(this.mob.position(), 10.0)) {
 					this.mob.findPatrolTarget();
 				} else {
 					Vec3 vec3 = new Vec3(this.mob.getPatrolTarget());
-					Vec3 vec32 = new Vec3(this.mob.x, this.mob.y, this.mob.z);
+					Vec3 vec32 = this.mob.position();
 					Vec3 vec33 = vec32.subtract(vec3);
 					vec3 = vec33.yRot(90.0F).scale(0.4).add(vec3);
 					Vec3 vec34 = vec3.subtract(vec32).normalize().scale(10.0).add(vec32);
@@ -187,14 +198,9 @@ public abstract class PatrollingMonster extends Monster {
 						)
 					 {
 						this.moveRandomly();
+						this.cooldownUntil = this.mob.level.getGameTime() + 200L;
 					} else if (bl) {
-						for(PatrollingMonster patrollingMonster : this.mob
-							.level
-							.getEntitiesOfClass(
-								PatrollingMonster.class,
-								this.mob.getBoundingBox().inflate(16.0),
-								patrollingMonsterx -> !patrollingMonsterx.isPatrolLeader() && patrollingMonsterx.canJoinPatrol()
-							)) {
+						for(PatrollingMonster patrollingMonster : list) {
 							patrollingMonster.setPatrolTarget(blockPos);
 						}
 					}
@@ -202,12 +208,22 @@ public abstract class PatrollingMonster extends Monster {
 			}
 		}
 
-		private void moveRandomly() {
+		private List<PatrollingMonster> findPatrolCompanions() {
+			return this.mob
+				.level
+				.getEntitiesOfClass(
+					PatrollingMonster.class,
+					this.mob.getBoundingBox().inflate(16.0),
+					patrollingMonster -> patrollingMonster.canJoinPatrol() && !patrollingMonster.is(this.mob)
+				);
+		}
+
+		private boolean moveRandomly() {
 			Random random = this.mob.getRandom();
 			BlockPos blockPos = this.mob
 				.level
 				.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(this.mob).offset(-8 + random.nextInt(16), 0, -8 + random.nextInt(16)));
-			this.mob.getNavigation().moveTo((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ(), this.speedModifier);
+			return this.mob.getNavigation().moveTo((double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ(), this.speedModifier);
 		}
 	}
 }

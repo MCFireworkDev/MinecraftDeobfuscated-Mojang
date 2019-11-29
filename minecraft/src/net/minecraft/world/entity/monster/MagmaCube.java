@@ -1,8 +1,6 @@
 package net.minecraft.world.entity.monster;
 
 import java.util.Random;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -50,12 +48,6 @@ public class MagmaCube extends Slime {
 		this.getAttribute(SharedMonsterAttributes.ARMOR).setBaseValue((double)(i * 3));
 	}
 
-	@Environment(EnvType.CLIENT)
-	@Override
-	public int getLightColor() {
-		return 15728880;
-	}
-
 	@Override
 	public float getBrightness() {
 		return 1.0F;
@@ -89,7 +81,7 @@ public class MagmaCube extends Slime {
 	@Override
 	protected void jumpFromGround() {
 		Vec3 vec3 = this.getDeltaMovement();
-		this.setDeltaMovement(vec3.x, (double)(0.42F + (float)this.getSize() * 0.1F), vec3.z);
+		this.setDeltaMovement(vec3.x, (double)(this.getJumpPower() + (float)this.getSize() * 0.1F), vec3.z);
 		this.hasImpulse = true;
 	}
 
@@ -105,7 +97,8 @@ public class MagmaCube extends Slime {
 	}
 
 	@Override
-	public void causeFallDamage(float f, float g) {
+	public boolean causeFallDamage(float f, float g) {
+		return false;
 	}
 
 	@Override
@@ -114,8 +107,8 @@ public class MagmaCube extends Slime {
 	}
 
 	@Override
-	protected int getAttackDamage() {
-		return super.getAttackDamage() + 2;
+	protected float getAttackDamage() {
+		return super.getAttackDamage() + 2.0F;
 	}
 
 	@Override

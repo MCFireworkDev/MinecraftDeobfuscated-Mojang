@@ -1,5 +1,6 @@
 package net.minecraft.client.model;
 
+import com.google.common.collect.ImmutableList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -10,7 +11,7 @@ import net.minecraft.world.entity.monster.Guardian;
 import net.minecraft.world.phys.Vec3;
 
 @Environment(EnvType.CLIENT)
-public class GuardianModel extends EntityModel<Guardian> {
+public class GuardianModel extends ListModel<Guardian> {
 	private static final float[] SPIKE_X_ROT = new float[]{1.75F, 0.25F, 0.0F, 0.0F, 0.5F, 0.5F, 0.5F, 0.5F, 1.25F, 0.75F, 0.0F, 0.0F};
 	private static final float[] SPIKE_Y_ROT = new float[]{0.0F, 0.0F, 0.0F, 0.0F, 0.25F, 1.75F, 1.25F, 0.75F, 0.0F, 0.0F, 0.0F, 0.0F};
 	private static final float[] SPIKE_Z_ROT = new float[]{0.0F, 0.0F, 0.25F, 1.75F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.75F, 1.25F};
@@ -27,54 +28,46 @@ public class GuardianModel extends EntityModel<Guardian> {
 		this.texHeight = 64;
 		this.spikeParts = new ModelPart[12];
 		this.head = new ModelPart(this);
-		this.head.texOffs(0, 0).addBox(-6.0F, 10.0F, -8.0F, 12, 12, 16);
-		this.head.texOffs(0, 28).addBox(-8.0F, 10.0F, -6.0F, 2, 12, 12);
-		this.head.texOffs(0, 28).addBox(6.0F, 10.0F, -6.0F, 2, 12, 12, true);
-		this.head.texOffs(16, 40).addBox(-6.0F, 8.0F, -6.0F, 12, 2, 12);
-		this.head.texOffs(16, 40).addBox(-6.0F, 22.0F, -6.0F, 12, 2, 12);
+		this.head.texOffs(0, 0).addBox(-6.0F, 10.0F, -8.0F, 12.0F, 12.0F, 16.0F);
+		this.head.texOffs(0, 28).addBox(-8.0F, 10.0F, -6.0F, 2.0F, 12.0F, 12.0F);
+		this.head.texOffs(0, 28).addBox(6.0F, 10.0F, -6.0F, 2.0F, 12.0F, 12.0F, true);
+		this.head.texOffs(16, 40).addBox(-6.0F, 8.0F, -6.0F, 12.0F, 2.0F, 12.0F);
+		this.head.texOffs(16, 40).addBox(-6.0F, 22.0F, -6.0F, 12.0F, 2.0F, 12.0F);
 
 		for(int i = 0; i < this.spikeParts.length; ++i) {
 			this.spikeParts[i] = new ModelPart(this, 0, 0);
-			this.spikeParts[i].addBox(-1.0F, -4.5F, -1.0F, 2, 9, 2);
+			this.spikeParts[i].addBox(-1.0F, -4.5F, -1.0F, 2.0F, 9.0F, 2.0F);
 			this.head.addChild(this.spikeParts[i]);
 		}
 
 		this.eye = new ModelPart(this, 8, 0);
-		this.eye.addBox(-1.0F, 15.0F, 0.0F, 2, 2, 1);
+		this.eye.addBox(-1.0F, 15.0F, 0.0F, 2.0F, 2.0F, 1.0F);
 		this.head.addChild(this.eye);
 		this.tailParts = new ModelPart[3];
 		this.tailParts[0] = new ModelPart(this, 40, 0);
-		this.tailParts[0].addBox(-2.0F, 14.0F, 7.0F, 4, 4, 8);
+		this.tailParts[0].addBox(-2.0F, 14.0F, 7.0F, 4.0F, 4.0F, 8.0F);
 		this.tailParts[1] = new ModelPart(this, 0, 54);
-		this.tailParts[1].addBox(0.0F, 14.0F, 0.0F, 3, 3, 7);
+		this.tailParts[1].addBox(0.0F, 14.0F, 0.0F, 3.0F, 3.0F, 7.0F);
 		this.tailParts[2] = new ModelPart(this);
-		this.tailParts[2].texOffs(41, 32).addBox(0.0F, 14.0F, 0.0F, 2, 2, 6);
-		this.tailParts[2].texOffs(25, 19).addBox(1.0F, 10.5F, 3.0F, 1, 9, 9);
+		this.tailParts[2].texOffs(41, 32).addBox(0.0F, 14.0F, 0.0F, 2.0F, 2.0F, 6.0F);
+		this.tailParts[2].texOffs(25, 19).addBox(1.0F, 10.5F, 3.0F, 1.0F, 9.0F, 9.0F);
 		this.head.addChild(this.tailParts[0]);
 		this.tailParts[0].addChild(this.tailParts[1]);
 		this.tailParts[1].addChild(this.tailParts[2]);
+		this.setupSpikes(0.0F, 0.0F);
 	}
 
-	public void render(Guardian guardian, float f, float g, float h, float i, float j, float k) {
-		this.setupAnim(guardian, f, g, h, i, j, k);
-		this.head.render(k);
+	@Override
+	public Iterable<ModelPart> parts() {
+		return ImmutableList.<ModelPart>of(this.head);
 	}
 
-	public void setupAnim(Guardian guardian, float f, float g, float h, float i, float j, float k) {
-		float l = h - (float)guardian.tickCount;
+	public void setupAnim(Guardian guardian, float f, float g, float h, float i, float j) {
+		float k = h - (float)guardian.tickCount;
 		this.head.yRot = i * (float) (Math.PI / 180.0);
 		this.head.xRot = j * (float) (Math.PI / 180.0);
-		float m = (1.0F - guardian.getSpikesAnimation(l)) * 0.55F;
-
-		for(int n = 0; n < 12; ++n) {
-			this.spikeParts[n].xRot = (float) Math.PI * SPIKE_X_ROT[n];
-			this.spikeParts[n].yRot = (float) Math.PI * SPIKE_Y_ROT[n];
-			this.spikeParts[n].zRot = (float) Math.PI * SPIKE_Z_ROT[n];
-			this.spikeParts[n].x = SPIKE_X[n] * (1.0F + Mth.cos(h * 1.5F + (float)n) * 0.01F - m);
-			this.spikeParts[n].y = 16.0F + SPIKE_Y[n] * (1.0F + Mth.cos(h * 1.5F + (float)n) * 0.01F - m);
-			this.spikeParts[n].z = SPIKE_Z[n] * (1.0F + Mth.cos(h * 1.5F + (float)n) * 0.01F - m);
-		}
-
+		float l = (1.0F - guardian.getSpikesAnimation(k)) * 0.55F;
+		this.setupSpikes(h, l);
 		this.eye.z = -8.25F;
 		Entity entity = Minecraft.getInstance().getCameraEntity();
 		if (guardian.hasActiveAttackTarget()) {
@@ -99,15 +92,26 @@ public class GuardianModel extends EntityModel<Guardian> {
 		}
 
 		this.eye.visible = true;
-		float o = guardian.getTailAnimation(l);
-		this.tailParts[0].yRot = Mth.sin(o) * (float) Math.PI * 0.05F;
-		this.tailParts[1].yRot = Mth.sin(o) * (float) Math.PI * 0.1F;
+		float m = guardian.getTailAnimation(k);
+		this.tailParts[0].yRot = Mth.sin(m) * (float) Math.PI * 0.05F;
+		this.tailParts[1].yRot = Mth.sin(m) * (float) Math.PI * 0.1F;
 		this.tailParts[1].x = -1.5F;
 		this.tailParts[1].y = 0.5F;
 		this.tailParts[1].z = 14.0F;
-		this.tailParts[2].yRot = Mth.sin(o) * (float) Math.PI * 0.15F;
+		this.tailParts[2].yRot = Mth.sin(m) * (float) Math.PI * 0.15F;
 		this.tailParts[2].x = 0.5F;
 		this.tailParts[2].y = 0.5F;
 		this.tailParts[2].z = 6.0F;
+	}
+
+	private void setupSpikes(float f, float g) {
+		for(int i = 0; i < 12; ++i) {
+			this.spikeParts[i].xRot = (float) Math.PI * SPIKE_X_ROT[i];
+			this.spikeParts[i].yRot = (float) Math.PI * SPIKE_Y_ROT[i];
+			this.spikeParts[i].zRot = (float) Math.PI * SPIKE_Z_ROT[i];
+			this.spikeParts[i].x = SPIKE_X[i] * (1.0F + Mth.cos(f * 1.5F + (float)i) * 0.01F - g);
+			this.spikeParts[i].y = 16.0F + SPIKE_Y[i] * (1.0F + Mth.cos(f * 1.5F + (float)i) * 0.01F - g);
+			this.spikeParts[i].z = SPIKE_Z[i] * (1.0F + Mth.cos(f * 1.5F + (float)i) * 0.01F - g);
+		}
 	}
 }

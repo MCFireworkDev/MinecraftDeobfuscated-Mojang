@@ -14,7 +14,11 @@ public class BlazeRenderer extends MobRenderer<Blaze, BlazeModel<Blaze>> {
 		super(entityRenderDispatcher, new BlazeModel<>(), 0.5F);
 	}
 
-	protected ResourceLocation getTextureLocation(Blaze blaze) {
+	protected int getBlockLightLevel(Blaze blaze, float f) {
+		return 15;
+	}
+
+	public ResourceLocation getTextureLocation(Blaze blaze) {
 		return BLAZE_LOCATION;
 	}
 }

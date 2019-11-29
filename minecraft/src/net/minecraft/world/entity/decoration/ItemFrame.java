@@ -80,28 +80,29 @@ public class ItemFrame extends HangingEntity {
 	protected void recalculateBoundingBox() {
 		if (this.direction != null) {
 			double d = 0.46875;
-			this.x = (double)this.pos.getX() + 0.5 - (double)this.direction.getStepX() * 0.46875;
-			this.y = (double)this.pos.getY() + 0.5 - (double)this.direction.getStepY() * 0.46875;
-			this.z = (double)this.pos.getZ() + 0.5 - (double)this.direction.getStepZ() * 0.46875;
-			double e = (double)this.getWidth();
-			double f = (double)this.getHeight();
-			double g = (double)this.getWidth();
+			double e = (double)this.pos.getX() + 0.5 - (double)this.direction.getStepX() * 0.46875;
+			double f = (double)this.pos.getY() + 0.5 - (double)this.direction.getStepY() * 0.46875;
+			double g = (double)this.pos.getZ() + 0.5 - (double)this.direction.getStepZ() * 0.46875;
+			this.setPosRaw(e, f, g);
+			double h = (double)this.getWidth();
+			double i = (double)this.getHeight();
+			double j = (double)this.getWidth();
 			Direction.Axis axis = this.direction.getAxis();
 			switch(axis) {
 				case X:
-					e = 1.0;
+					h = 1.0;
 					break;
 				case Y:
-					f = 1.0;
+					i = 1.0;
 					break;
 				case Z:
-					g = 1.0;
+					j = 1.0;
 			}
 
-			e /= 32.0;
-			f /= 32.0;
-			g /= 32.0;
-			this.setBoundingBox(new AABB(this.x - e, this.y - f, this.z - g, this.x + e, this.y + f, this.z + g));
+			h /= 32.0;
+			i /= 32.0;
+			j /= 32.0;
+			this.setBoundingBox(new AABB(e - h, f - i, g - j, e + h, f + i, g + j));
 		}
 	}
 
@@ -313,9 +314,11 @@ public class ItemFrame extends HangingEntity {
 	@Override
 	public boolean interact(Player player, InteractionHand interactionHand) {
 		ItemStack itemStack = player.getItemInHand(interactionHand);
+		boolean bl = !this.getItem().isEmpty();
+		boolean bl2 = !itemStack.isEmpty();
 		if (!this.level.isClientSide) {
-			if (this.getItem().isEmpty()) {
-				if (!itemStack.isEmpty()) {
+			if (!bl) {
+				if (bl2) {
 					this.setItem(itemStack);
 					if (!player.abilities.instabuild) {
 						itemStack.shrink(1);
@@ -325,9 +328,11 @@ public class ItemFrame extends HangingEntity {
 				this.playSound(SoundEvents.ITEM_FRAME_ROTATE_ITEM, 1.0F, 1.0F);
 				this.setRotation(this.getRotation() + 1);
 			}
-		}
 
-		return true;
+			return true;
+		} else {
+			return bl || bl2;
+		}
 	}
 
 	public int getAnalogOutput() {

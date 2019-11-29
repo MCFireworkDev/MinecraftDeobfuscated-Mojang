@@ -4,7 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.authlib.properties.PropertyMap.Serializer;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DisplayData;
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.io.File;
 import java.net.Authenticator;
 import java.net.InetSocketAddress;
@@ -20,6 +22,7 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.CrashReport;
 import net.minecraft.DefaultUncaughtExceptionHandler;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -74,7 +77,7 @@ public class Main {
 		if (string != null) {
 			try {
 				proxy = new Proxy(Type.SOCKS, new InetSocketAddress(string, parseArgument(optionSet, optionSpec7)));
-			} catch (Exception var52) {
+			} catch (Exception var68) {
 			}
 		}
 
@@ -129,14 +132,70 @@ public class Main {
 		};
 		thread.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler(LOGGER));
 		Runtime.getRuntime().addShutdownHook(thread);
-		Thread.currentThread().setName("Client thread");
-		new Minecraft(gameConfig).run();
+		new RenderPipeline();
+
+		final Minecraft minecraft;
+		try {
+			Thread.currentThread().setName("Render thread");
+			RenderSystem.initRenderThread();
+			RenderSystem.beginInitialization();
+			minecraft = new Minecraft(gameConfig);
+			RenderSystem.finishInitialization();
+		} catch (SilentInitException var66) {
+			LOGGER.warn("Failed to create window: ", var66);
+			return;
+		} catch (Throwable var67) {
+			CrashReport crashReport = CrashReport.forThrowable(var67, "Initializing game");
+			crashReport.addCategory("Initialization");
+			Minecraft.fillReport(null, gameConfig.game.launchVersion, null, crashReport);
+			Minecraft.crash(crashReport);
+			return;
+		}
+
+		Thread thread2;
+		if (minecraft.renderOnThread()) {
+			thread2 = new Thread("Game thread") {
+				public void run() {
+					try {
+						RenderSystem.initGameThread(true);
+						minecraft.run();
+					} catch (Throwable var2) {
+						Main.LOGGER.error("Exception in client thread", var2);
+					}
+				}
+			};
+			thread2.start();
+
+			while(minecraft.isRunning()) {
+			}
+		} else {
+			thread2 = null;
+
+			try {
+				RenderSystem.initGameThread(false);
+				minecraft.run();
+			} catch (Throwable var65) {
+				LOGGER.error("Unhandled game exception", var65);
+			}
+		}
+
+		try {
+			minecraft.stop();
+			if (thread2 != null) {
+				thread2.join();
+			}
+		} catch (InterruptedException var63) {
+			LOGGER.error("Exception during client thread shutdown", var63);
+		} finally {
+			minecraft.destroy();
+		}
 	}
 
 	private static OptionalInt ofNullable(@Nullable Integer integer) {
 		return integer != null ? OptionalInt.of(integer) : OptionalInt.empty();
 	}
 
+	@Nullable
 	private static <T> T parseArgument(OptionSet optionSet, OptionSpec<T> optionSpec) {
 		try {
 			return optionSet.valueOf(optionSpec);
@@ -153,7 +212,7 @@ public class Main {
 		}
 	}
 
-	private static boolean stringHasValue(String string) {
+	private static boolean stringHasValue(@Nullable String string) {
 		return string != null && !string.isEmpty();
 	}
 

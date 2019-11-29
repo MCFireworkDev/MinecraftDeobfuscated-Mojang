@@ -72,11 +72,11 @@ public class JoinMultiplayerScreen extends Screen {
 		);
 		this.addButton(new Button(this.width / 2 - 50, this.height - 52, 100, 20, I18n.get("selectServer.direct"), button -> {
 			this.editingServer = new ServerData(I18n.get("selectServer.defaultName"), "", false);
-			this.minecraft.setScreen(new DirectJoinServerScreen(this::directJoinCallback, this.editingServer));
+			this.minecraft.setScreen(new DirectJoinServerScreen(this, this::directJoinCallback, this.editingServer));
 		}));
 		this.addButton(new Button(this.width / 2 + 4 + 50, this.height - 52, 100, 20, I18n.get("selectServer.add"), button -> {
 			this.editingServer = new ServerData(I18n.get("selectServer.defaultName"), "", false);
-			this.minecraft.setScreen(new EditServerScreen(this::addServerCallback, this.editingServer));
+			this.minecraft.setScreen(new EditServerScreen(this, this::addServerCallback, this.editingServer));
 		}));
 		this.editButton = this.addButton(new Button(this.width / 2 - 154, this.height - 28, 70, 20, I18n.get("selectServer.edit"), button -> {
 			ServerSelectionList.Entry entry = this.serverSelectionList.getSelected();
@@ -84,7 +84,7 @@ public class JoinMultiplayerScreen extends Screen {
 				ServerData serverData = ((ServerSelectionList.OnlineServerEntry)entry).getServerData();
 				this.editingServer = new ServerData(serverData.name, serverData.ip, false);
 				this.editingServer.copyFrom(serverData);
-				this.minecraft.setScreen(new EditServerScreen(this::editServerCallback, this.editingServer));
+				this.minecraft.setScreen(new EditServerScreen(this, this::editServerCallback, this.editingServer));
 			}
 		}));
 		this.deleteButton = this.addButton(new Button(this.width / 2 - 74, this.height - 28, 70, 20, I18n.get("selectServer.delete"), button -> {
@@ -184,11 +184,15 @@ public class JoinMultiplayerScreen extends Screen {
 		} else if (i == 294) {
 			this.refreshServerList();
 			return true;
-		} else if (this.serverSelectionList.getSelected() == null || i != 257 && i != 335) {
-			return false;
+		} else if (this.serverSelectionList.getSelected() != null) {
+			if (i != 257 && i != 335) {
+				return this.serverSelectionList.keyPressed(i, j, k);
+			} else {
+				this.joinSelectedServer();
+				return true;
+			}
 		} else {
-			this.joinSelectedServer();
-			return true;
+			return false;
 		}
 	}
 

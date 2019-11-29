@@ -28,6 +28,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.Tag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -42,9 +43,7 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.BlockAndBiomeGetter;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.BlockLayer;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.ItemLike;
@@ -54,6 +53,7 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.material.Material;
@@ -98,10 +98,13 @@ public class Block implements ItemLike {
 	protected final Material material;
 	protected final MaterialColor materialColor;
 	private final float friction;
+	private final float speedFactor;
+	private final float jumpFactor;
 	protected final StateDefinition<Block, BlockState> stateDefinition;
 	private BlockState defaultBlockState;
 	protected final boolean hasCollision;
 	private final boolean dynamicShape;
+	private final boolean canOcclude;
 	@Nullable
 	private ResourceLocation drops;
 	@Nullable
@@ -144,7 +147,7 @@ public class Block implements ItemLike {
 
 		for(Entity entity : level.getEntities(null, voxelShape.bounds())) {
 			double d = Shapes.collide(Direction.Axis.Y, entity.getBoundingBox().move(0.0, 1.0, 0.0), Stream.of(voxelShape), -1.0);
-			entity.teleportTo(entity.x, entity.y + 1.0 + d, entity.z);
+			entity.teleportTo(entity.getX(), entity.getY() + 1.0 + d, entity.getZ());
 		}
 
 		return blockState2;
@@ -252,8 +255,11 @@ public class Block implements ItemLike {
 		this.destroySpeed = properties.destroyTime;
 		this.isTicking = properties.isTicking;
 		this.friction = properties.friction;
+		this.speedFactor = properties.speedFactor;
+		this.jumpFactor = properties.jumpFactor;
 		this.dynamicShape = properties.dynamicShape;
 		this.drops = properties.drops;
+		this.canOcclude = properties.canOcclude;
 		this.stateDefinition = builder.create(BlockState::new);
 		this.registerDefaultState(this.stateDefinition.any());
 	}
@@ -264,7 +270,8 @@ public class Block implements ItemLike {
 			|| block == Blocks.CARVED_PUMPKIN
 			|| block == Blocks.JACK_O_LANTERN
 			|| block == Blocks.MELON
-			|| block == Blocks.PUMPKIN;
+			|| block == Blocks.PUMPKIN
+			|| block.is(BlockTags.SHULKER_BOXES);
 	}
 
 	@Deprecated
@@ -275,12 +282,6 @@ public class Block implements ItemLike {
 	@Deprecated
 	public boolean isViewBlocking(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos) {
 		return this.material.blocksMotion() && blockState.isCollisionShapeFullBlock(blockGetter, blockPos);
-	}
-
-	@Deprecated
-	@Environment(EnvType.CLIENT)
-	public boolean hasCustomBreakingProgress(BlockState blockState) {
-		return false;
 	}
 
 	@Deprecated
@@ -308,6 +309,11 @@ public class Block implements ItemLike {
 	}
 
 	@Deprecated
+	public boolean canBeReplaced(BlockState blockState, Fluid fluid) {
+		return this.material.isReplaceable() || !this.material.isSolid();
+	}
+
+	@Deprecated
 	public float getDestroySpeed(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos) {
 		return this.destroySpeed;
 	}
@@ -327,8 +333,8 @@ public class Block implements ItemLike {
 
 	@Deprecated
 	@Environment(EnvType.CLIENT)
-	public int getLightColor(BlockState blockState, BlockAndBiomeGetter blockAndBiomeGetter, BlockPos blockPos) {
-		return blockAndBiomeGetter.getLightColor(blockPos, blockState.getLightEmission());
+	public boolean emissiveRendering(BlockState blockState) {
+		return false;
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -360,8 +366,8 @@ public class Block implements ItemLike {
 	}
 
 	@Deprecated
-	public boolean canOcclude(BlockState blockState) {
-		return this.hasCollision && this.getRenderLayer() == BlockLayer.SOLID;
+	public final boolean canOcclude(BlockState blockState) {
+		return this.canOcclude;
 	}
 
 	@Deprecated
@@ -439,12 +445,12 @@ public class Block implements ItemLike {
 	}
 
 	@Deprecated
-	public void randomTick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
-		this.tick(blockState, level, blockPos, random);
+	public void randomTick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+		this.tick(blockState, serverLevel, blockPos, random);
 	}
 
 	@Deprecated
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -527,22 +533,15 @@ public class Block implements ItemLike {
 	}
 
 	public static List<ItemStack> getDrops(
-		BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, @Nullable BlockEntity blockEntity, Entity entity, ItemStack itemStack
+		BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, @Nullable BlockEntity blockEntity, @Nullable Entity entity, ItemStack itemStack
 	) {
 		LootContext.Builder builder = new LootContext.Builder(serverLevel)
 			.withRandom(serverLevel.random)
 			.withParameter(LootContextParams.BLOCK_POS, blockPos)
 			.withParameter(LootContextParams.TOOL, itemStack)
-			.withParameter(LootContextParams.THIS_ENTITY, entity)
+			.withOptionalParameter(LootContextParams.THIS_ENTITY, entity)
 			.withOptionalParameter(LootContextParams.BLOCK_ENTITY, blockEntity);
 		return blockState.getDrops(builder);
-	}
-
-	public static void dropResources(BlockState blockState, LootContext.Builder builder) {
-		ServerLevel serverLevel = builder.getLevel();
-		BlockPos blockPos = builder.getParameter(LootContextParams.BLOCK_POS);
-		blockState.getDrops(builder).forEach(itemStack -> popResource(serverLevel, blockPos, itemStack));
-		blockState.spawnAfterBreak(serverLevel, blockPos, ItemStack.EMPTY);
 	}
 
 	public static void dropResources(BlockState blockState, Level level, BlockPos blockPos) {
@@ -598,18 +597,16 @@ public class Block implements ItemLike {
 	public void wasExploded(Level level, BlockPos blockPos, Explosion explosion) {
 	}
 
-	public BlockLayer getRenderLayer() {
-		return BlockLayer.SOLID;
-	}
-
 	@Deprecated
 	public boolean canSurvive(BlockState blockState, LevelReader levelReader, BlockPos blockPos) {
 		return true;
 	}
 
 	@Deprecated
-	public boolean use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
-		return false;
+	public InteractionResult use(
+		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	) {
+		return InteractionResult.PASS;
 	}
 
 	public void stepOn(Level level, BlockPos blockPos, Entity entity) {
@@ -711,6 +708,14 @@ public class Block implements ItemLike {
 		return this.friction;
 	}
 
+	public float getSpeedFactor() {
+		return this.speedFactor;
+	}
+
+	public float getJumpFactor() {
+		return this.jumpFactor;
+	}
+
 	@Deprecated
 	@Environment(EnvType.CLIENT)
 	public long getSeed(BlockState blockState, BlockPos blockPos) {
@@ -800,14 +805,6 @@ public class Block implements ItemLike {
 	public void appendHoverText(ItemStack itemStack, @Nullable BlockGetter blockGetter, List<Component> list, TooltipFlag tooltipFlag) {
 	}
 
-	public static boolean equalsStone(Block block) {
-		return block == Blocks.STONE || block == Blocks.GRANITE || block == Blocks.DIORITE || block == Blocks.ANDESITE;
-	}
-
-	public static boolean equalsDirt(Block block) {
-		return block == Blocks.DIRT || block == Blocks.COARSE_DIRT || block == Blocks.PODZOL;
-	}
-
 	public static final class BlockStatePairKey {
 		private final BlockState first;
 		private final BlockState second;
@@ -853,7 +850,10 @@ public class Block implements ItemLike {
 		private float destroyTime;
 		private boolean isTicking;
 		private float friction = 0.6F;
+		private float speedFactor = 1.0F;
+		private float jumpFactor = 1.0F;
 		private ResourceLocation drops;
+		private boolean canOcclude = true;
 		private boolean dynamicShape;
 
 		private Properties(Material material, MaterialColor materialColor) {
@@ -884,17 +884,35 @@ public class Block implements ItemLike {
 			properties.materialColor = block.materialColor;
 			properties.soundType = block.soundType;
 			properties.friction = block.getFriction();
+			properties.speedFactor = block.getSpeedFactor();
 			properties.dynamicShape = block.dynamicShape;
+			properties.canOcclude = block.canOcclude;
 			return properties;
 		}
 
 		public Block.Properties noCollission() {
 			this.hasCollision = false;
+			this.canOcclude = false;
+			return this;
+		}
+
+		public Block.Properties noOcclusion() {
+			this.canOcclude = false;
 			return this;
 		}
 
 		public Block.Properties friction(float f) {
 			this.friction = f;
+			return this;
+		}
+
+		public Block.Properties speedFactor(float f) {
+			this.speedFactor = f;
+			return this;
+		}
+
+		public Block.Properties jumpFactor(float f) {
+			this.jumpFactor = f;
 			return this;
 		}
 

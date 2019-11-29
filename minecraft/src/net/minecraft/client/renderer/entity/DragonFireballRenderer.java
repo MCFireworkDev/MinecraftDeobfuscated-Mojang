@@ -1,59 +1,59 @@
 package net.minecraft.client.renderer.entity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Matrix3f;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.projectile.DragonFireball;
 
 @Environment(EnvType.CLIENT)
 public class DragonFireballRenderer extends EntityRenderer<DragonFireball> {
 	private static final ResourceLocation TEXTURE_LOCATION = new ResourceLocation("textures/entity/enderdragon/dragon_fireball.png");
+	private static final RenderType RENDER_TYPE = RenderType.entityCutoutNoCull(TEXTURE_LOCATION);
 
 	public DragonFireballRenderer(EntityRenderDispatcher entityRenderDispatcher) {
 		super(entityRenderDispatcher);
 	}
 
-	public void render(DragonFireball dragonFireball, double d, double e, double f, float g, float h) {
-		GlStateManager.pushMatrix();
-		this.bindTexture(dragonFireball);
-		GlStateManager.translatef((float)d, (float)e, (float)f);
-		GlStateManager.enableRescaleNormal();
-		GlStateManager.scalef(2.0F, 2.0F, 2.0F);
-		Tesselator tesselator = Tesselator.getInstance();
-		BufferBuilder bufferBuilder = tesselator.getBuilder();
-		float i = 1.0F;
-		float j = 0.5F;
-		float k = 0.25F;
-		GlStateManager.rotatef(180.0F - this.entityRenderDispatcher.playerRotY, 0.0F, 1.0F, 0.0F);
-		GlStateManager.rotatef(
-			(float)(this.entityRenderDispatcher.options.thirdPersonView == 2 ? -1 : 1) * -this.entityRenderDispatcher.playerRotX, 1.0F, 0.0F, 0.0F
-		);
-		if (this.solidRender) {
-			GlStateManager.enableColorMaterial();
-			GlStateManager.setupSolidRenderingTextureCombine(this.getTeamColor(dragonFireball));
-		}
-
-		bufferBuilder.begin(7, DefaultVertexFormat.POSITION_TEX_NORMAL);
-		bufferBuilder.vertex(-0.5, -0.25, 0.0).uv(0.0, 1.0).normal(0.0F, 1.0F, 0.0F).endVertex();
-		bufferBuilder.vertex(0.5, -0.25, 0.0).uv(1.0, 1.0).normal(0.0F, 1.0F, 0.0F).endVertex();
-		bufferBuilder.vertex(0.5, 0.75, 0.0).uv(1.0, 0.0).normal(0.0F, 1.0F, 0.0F).endVertex();
-		bufferBuilder.vertex(-0.5, 0.75, 0.0).uv(0.0, 0.0).normal(0.0F, 1.0F, 0.0F).endVertex();
-		tesselator.end();
-		if (this.solidRender) {
-			GlStateManager.tearDownSolidRenderingTextureCombine();
-			GlStateManager.disableColorMaterial();
-		}
-
-		GlStateManager.disableRescaleNormal();
-		GlStateManager.popMatrix();
-		super.render(dragonFireball, d, e, f, g, h);
+	protected int getBlockLightLevel(DragonFireball dragonFireball, float f) {
+		return 15;
 	}
 
-	protected ResourceLocation getTextureLocation(DragonFireball dragonFireball) {
+	public void render(DragonFireball dragonFireball, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+		poseStack.pushPose();
+		poseStack.scale(2.0F, 2.0F, 2.0F);
+		poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
+		poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
+		PoseStack.Pose pose = poseStack.last();
+		Matrix4f matrix4f = pose.pose();
+		Matrix3f matrix3f = pose.normal();
+		VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RENDER_TYPE);
+		vertex(vertexConsumer, matrix4f, matrix3f, i, 0.0F, 0, 0, 1);
+		vertex(vertexConsumer, matrix4f, matrix3f, i, 1.0F, 0, 1, 1);
+		vertex(vertexConsumer, matrix4f, matrix3f, i, 1.0F, 1, 1, 0);
+		vertex(vertexConsumer, matrix4f, matrix3f, i, 0.0F, 1, 0, 0);
+		poseStack.popPose();
+		super.render(dragonFireball, f, g, poseStack, multiBufferSource, i);
+	}
+
+	private static void vertex(VertexConsumer vertexConsumer, Matrix4f matrix4f, Matrix3f matrix3f, int i, float f, int j, int k, int l) {
+		vertexConsumer.vertex(matrix4f, f - 0.5F, (float)j - 0.25F, 0.0F)
+			.color(255, 255, 255, 255)
+			.uv((float)k, (float)l)
+			.overlayCoords(OverlayTexture.NO_OVERLAY)
+			.uv2(i)
+			.normal(matrix3f, 0.0F, 1.0F, 0.0F)
+			.endVertex();
+	}
+
+	public ResourceLocation getTextureLocation(DragonFireball dragonFireball) {
 		return TEXTURE_LOCATION;
 	}
 }

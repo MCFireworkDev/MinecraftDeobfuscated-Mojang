@@ -8,7 +8,9 @@ import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.monster.PatrollingMonster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class PatrolSpawner {
 	private int nextTick;
@@ -41,8 +43,7 @@ public class PatrolSpawner {
 						} else {
 							int j = (24 + random.nextInt(24)) * (random.nextBoolean() ? -1 : 1);
 							int k = (24 + random.nextInt(24)) * (random.nextBoolean() ? -1 : 1);
-							BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
-							mutableBlockPos.set(player.x, player.y, player.z).move(j, 0, k);
+							BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos(player).move(j, 0, k);
 							if (!serverLevel.hasChunksAt(
 								mutableBlockPos.getX() - 10,
 								mutableBlockPos.getY() - 10,
@@ -87,7 +88,10 @@ public class PatrolSpawner {
 	}
 
 	private boolean spawnPatrolMember(Level level, BlockPos blockPos, Random random, boolean bl) {
-		if (!PatrollingMonster.checkPatrollingMonsterSpawnRules(EntityType.PILLAGER, level, MobSpawnType.PATROL, blockPos, random)) {
+		BlockState blockState = level.getBlockState(blockPos);
+		if (!NaturalSpawner.isValidEmptySpawnBlock(level, blockPos, blockState, blockState.getFluidState())) {
+			return false;
+		} else if (!PatrollingMonster.checkPatrollingMonsterSpawnRules(EntityType.PILLAGER, level, MobSpawnType.PATROL, blockPos, random)) {
 			return false;
 		} else {
 			PatrollingMonster patrollingMonster = EntityType.PILLAGER.create(level);

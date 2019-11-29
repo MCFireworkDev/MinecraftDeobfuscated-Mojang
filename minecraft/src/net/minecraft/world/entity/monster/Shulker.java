@@ -105,7 +105,7 @@ public class Shulker extends AbstractGolem implements Enemy {
 	}
 
 	@Override
-	protected boolean makeStepSound() {
+	protected boolean isMovementNoisy() {
 		return false;
 	}
 
@@ -267,20 +267,12 @@ public class Shulker extends AbstractGolem implements Enemy {
 				}
 			}
 
-			this.x = (double)blockPos.getX() + 0.5;
-			this.y = (double)blockPos.getY();
-			this.z = (double)blockPos.getZ() + 0.5;
-			this.xo = this.x;
-			this.yo = this.y;
-			this.zo = this.z;
-			this.xOld = this.x;
-			this.yOld = this.y;
-			this.zOld = this.z;
+			this.setPosAndOldPos((double)blockPos.getX() + 0.5, (double)blockPos.getY(), (double)blockPos.getZ() + 0.5);
 			double d = 0.5 - (double)Mth.sin((0.5F + this.currentPeekAmount) * (float) Math.PI) * 0.5;
 			double e = 0.5 - (double)Mth.sin((0.5F + this.currentPeekAmountO) * (float) Math.PI) * 0.5;
 			Direction direction3 = this.getAttachFace().getOpposite();
 			this.setBoundingBox(
-				new AABB(this.x - 0.5, this.y, this.z - 0.5, this.x + 0.5, this.y + 1.0, this.z + 0.5)
+				new AABB(this.getX() - 0.5, this.getY(), this.getZ() - 0.5, this.getX() + 0.5, this.getY() + 1.0, this.getZ() + 0.5)
 					.expandTowards((double)direction3.getStepX() * d, (double)direction3.getStepY() * d, (double)direction3.getStepZ() * d)
 			);
 			double g = d - e;
@@ -376,15 +368,7 @@ public class Shulker extends AbstractGolem implements Enemy {
 					this.clientSideTeleportInterpolation = 6;
 				}
 
-				this.x = (double)blockPos.getX() + 0.5;
-				this.y = (double)blockPos.getY();
-				this.z = (double)blockPos.getZ() + 0.5;
-				this.xo = this.x;
-				this.yo = this.y;
-				this.zo = this.z;
-				this.xOld = this.x;
-				this.yOld = this.y;
-				this.zOld = this.z;
+				this.setPosAndOldPos((double)blockPos.getX() + 0.5, (double)blockPos.getY(), (double)blockPos.getZ() + 0.5);
 			}
 		}
 

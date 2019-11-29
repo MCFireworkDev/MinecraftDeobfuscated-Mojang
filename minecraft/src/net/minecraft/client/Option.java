@@ -20,12 +20,8 @@ public abstract class Option {
 		}, (options, progressOption) -> {
 			double d = progressOption.get(options);
 			String string = progressOption.getCaption();
-			if (d == 0.0) {
-				return string + I18n.get("options.off");
-			} else {
-				int i = (int)d * 2 + 1;
-				return string + i + "x" + i;
-			}
+			int i = (int)d * 2 + 1;
+			return string + I18n.get("options.biomeBlendRadius." + i);
 		}
 	);
 	public static final ProgressOption CHAT_HEIGHT_FOCUSED = new ProgressOption(
@@ -88,7 +84,7 @@ public abstract class Option {
 	public static final ProgressOption FRAMERATE_LIMIT = new ProgressOption(
 		"options.framerateLimit", 10.0, 260.0, 10.0F, options -> (double)options.framerateLimit, (options, double_) -> {
 			options.framerateLimit = (int)double_.doubleValue();
-			Minecraft.getInstance().window.setFramerateLimit(options.framerateLimit);
+			Minecraft.getInstance().getWindow().setFramerateLimit(options.framerateLimit);
 		}, (options, progressOption) -> {
 			double d = progressOption.get(options);
 			String string = progressOption.getCaption();
@@ -133,7 +129,7 @@ public abstract class Option {
 	);
 	public static final BooleanOption RAW_MOUSE_INPUT = new BooleanOption("options.rawMouseInput", options -> options.rawMouseInput, (options, boolean_) -> {
 		options.rawMouseInput = boolean_;
-		Window window = Minecraft.getInstance().window;
+		Window window = Minecraft.getInstance().getWindow();
 		if (window != null) {
 			window.updateRawMouseInput(boolean_);
 		}
@@ -173,6 +169,14 @@ public abstract class Option {
 		(options, integer) -> options.attackIndicator = AttackIndicatorStatus.byId(options.attackIndicator.getId() + integer),
 		(options, cycleOption) -> cycleOption.getCaption() + I18n.get(options.attackIndicator.getKey())
 	);
+	public static final CycleOption SHIELD_INDICATOR = new CycleOption(
+		"options.shieldIndicator",
+		(options, integer) -> options.shieldIndicator = ShieldIndicatorStatus.byId(options.shieldIndicator.getId() + integer),
+		(options, cycleOption) -> cycleOption.getCaption() + I18n.get(options.shieldIndicator.getKey())
+	);
+	public static final BooleanOption USE_SHIELD_ON_CROUCH = new BooleanOption(
+		"options.useShieldOnCrouch", options -> options.useShieldOnCrouch, (options, boolean_) -> options.useShieldOnCrouch = boolean_
+	);
 	public static final CycleOption CHAT_VISIBILITY = new CycleOption(
 		"options.chat.visibility",
 		(options, integer) -> options.chatVisibility = ChatVisiblity.byId((options.chatVisibility.getId() + integer) % 3),
@@ -191,7 +195,7 @@ public abstract class Option {
 	public static final CycleOption GUI_SCALE = new CycleOption(
 		"options.guiScale",
 		(options, integer) -> options.guiScale = Integer.remainderUnsigned(
-				options.guiScale + integer, Minecraft.getInstance().window.calculateScale(0, Minecraft.getInstance().isEnforceUnicode()) + 1
+				options.guiScale + integer, Minecraft.getInstance().getWindow().calculateScale(0, Minecraft.getInstance().isEnforceUnicode()) + 1
 			),
 		(options, cycleOption) -> cycleOption.getCaption() + (options.guiScale == 0 ? I18n.get("options.guiScale.auto") : options.guiScale)
 	);
@@ -251,8 +255,8 @@ public abstract class Option {
 	);
 	public static final BooleanOption ENABLE_VSYNC = new BooleanOption("options.vsync", options -> options.enableVsync, (options, boolean_) -> {
 		options.enableVsync = boolean_;
-		if (Minecraft.getInstance().window != null) {
-			Minecraft.getInstance().window.updateVsync(options.enableVsync);
+		if (Minecraft.getInstance().getWindow() != null) {
+			Minecraft.getInstance().getWindow().updateVsync(options.enableVsync);
 		}
 	});
 	public static final BooleanOption ENTITY_SHADOWS = new BooleanOption(
@@ -285,15 +289,25 @@ public abstract class Option {
 
 		return false;
 	}, (options, boolean_) -> options.snooperEnabled = boolean_);
+	public static final CycleOption TOGGLE_CROUCH = new CycleOption(
+		"key.sneak",
+		(options, integer) -> options.toggleCrouch = !options.toggleCrouch,
+		(options, cycleOption) -> cycleOption.getCaption() + I18n.get(options.toggleCrouch ? "options.key.toggle" : "options.key.hold")
+	);
+	public static final CycleOption TOGGLE_SPRINT = new CycleOption(
+		"key.sprint",
+		(options, integer) -> options.toggleSprint = !options.toggleSprint,
+		(options, cycleOption) -> cycleOption.getCaption() + I18n.get(options.toggleSprint ? "options.key.toggle" : "options.key.hold")
+	);
 	public static final BooleanOption TOUCHSCREEN = new BooleanOption(
 		"options.touchscreen", options -> options.touchscreen, (options, boolean_) -> options.touchscreen = boolean_
 	);
 	public static final BooleanOption USE_FULLSCREEN = new BooleanOption("options.fullscreen", options -> options.fullscreen, (options, boolean_) -> {
 		options.fullscreen = boolean_;
 		Minecraft minecraft = Minecraft.getInstance();
-		if (minecraft.window != null && minecraft.window.isFullscreen() != options.fullscreen) {
-			minecraft.window.toggleFullScreen();
-			options.fullscreen = minecraft.window.isFullscreen();
+		if (minecraft.getWindow() != null && minecraft.getWindow().isFullscreen() != options.fullscreen) {
+			minecraft.getWindow().toggleFullScreen();
+			options.fullscreen = minecraft.getWindow().isFullscreen();
 		}
 	});
 	public static final BooleanOption VIEW_BOBBING = new BooleanOption(

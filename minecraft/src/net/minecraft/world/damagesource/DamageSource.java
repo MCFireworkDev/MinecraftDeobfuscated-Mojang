@@ -45,6 +45,10 @@ public class DamageSource {
 	private boolean isExplosion;
 	public final String msgId;
 
+	public static DamageSource sting(LivingEntity livingEntity) {
+		return new EntityDamageSource("sting", livingEntity);
+	}
+
 	public static DamageSource mobAttack(LivingEntity livingEntity) {
 		return new EntityDamageSource("mob", livingEntity);
 	}
@@ -53,7 +57,7 @@ public class DamageSource {
 		return new IndirectEntityDamageSource("mob", entity, livingEntity);
 	}
 
-	public static DamageSource playerAttack(Player player) {
+	public static EntityDamageSource playerAttack(Player player) {
 		return new EntityDamageSource("player", player);
 	}
 

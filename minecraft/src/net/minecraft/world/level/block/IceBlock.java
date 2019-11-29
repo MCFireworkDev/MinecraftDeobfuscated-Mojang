@@ -3,13 +3,13 @@ package net.minecraft.world.level.block;
 import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.BlockLayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -20,11 +20,6 @@ import net.minecraft.world.level.material.PushReaction;
 public class IceBlock extends HalfTransparentBlock {
 	public IceBlock(Block.Properties properties) {
 		super(properties);
-	}
-
-	@Override
-	public BlockLayer getRenderLayer() {
-		return BlockLayer.TRANSLUCENT;
 	}
 
 	@Override
@@ -44,9 +39,9 @@ public class IceBlock extends HalfTransparentBlock {
 	}
 
 	@Override
-	public void tick(BlockState blockState, Level level, BlockPos blockPos, Random random) {
-		if (level.getBrightness(LightLayer.BLOCK, blockPos) > 11 - blockState.getLightBlock(level, blockPos)) {
-			this.melt(blockState, level, blockPos);
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+		if (serverLevel.getBrightness(LightLayer.BLOCK, blockPos) > 11 - blockState.getLightBlock(serverLevel, blockPos)) {
+			this.melt(blockState, serverLevel, blockPos);
 		}
 	}
 

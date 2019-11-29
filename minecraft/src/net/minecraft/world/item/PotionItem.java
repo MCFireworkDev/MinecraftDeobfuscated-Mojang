@@ -11,7 +11,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
@@ -35,10 +34,6 @@ public class PotionItem extends Item {
 	@Override
 	public ItemStack finishUsingItem(ItemStack itemStack, Level level, LivingEntity livingEntity) {
 		Player player = livingEntity instanceof Player ? (Player)livingEntity : null;
-		if (player == null || !player.abilities.instabuild) {
-			itemStack.shrink(1);
-		}
-
 		if (player instanceof ServerPlayer) {
 			CriteriaTriggers.CONSUME_ITEM.trigger((ServerPlayer)player, itemStack);
 		}
@@ -55,6 +50,9 @@ public class PotionItem extends Item {
 
 		if (player != null) {
 			player.awardStat(Stats.ITEM_USED.get(this));
+			if (!player.abilities.instabuild) {
+				itemStack.shrink(1);
+			}
 		}
 
 		if (player == null || !player.abilities.instabuild) {
@@ -83,7 +81,7 @@ public class PotionItem extends Item {
 	@Override
 	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand interactionHand) {
 		player.startUsingItem(interactionHand);
-		return new InteractionResultHolder<>(InteractionResult.SUCCESS, player.getItemInHand(interactionHand));
+		return InteractionResultHolder.success(player.getItemInHand(interactionHand));
 	}
 
 	@Override
@@ -97,7 +95,6 @@ public class PotionItem extends Item {
 		PotionUtils.addPotionTooltip(itemStack, list, 1.0F);
 	}
 
-	@Environment(EnvType.CLIENT)
 	@Override
 	public boolean isFoil(ItemStack itemStack) {
 		return super.isFoil(itemStack) || !PotionUtils.getMobEffects(itemStack).isEmpty();

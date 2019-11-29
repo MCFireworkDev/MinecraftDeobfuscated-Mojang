@@ -41,6 +41,9 @@ public class BlockTags {
 	public static final Tag<Block> SMALL_FLOWERS = bind("small_flowers");
 	public static final Tag<Block> BEDS = bind("beds");
 	public static final Tag<Block> FENCES = bind("fences");
+	public static final Tag<Block> TALL_FLOWERS = bind("tall_flowers");
+	public static final Tag<Block> FLOWERS = bind("flowers");
+	public static final Tag<Block> SHULKER_BOXES = bind("shulker_boxes");
 	public static final Tag<Block> FLOWER_POTS = bind("flower_pots");
 	public static final Tag<Block> ENDERMAN_HOLDABLE = bind("enderman_holdable");
 	public static final Tag<Block> ICE = bind("ice");
@@ -52,12 +55,15 @@ public class BlockTags {
 	public static final Tag<Block> CORAL_PLANTS = bind("coral_plants");
 	public static final Tag<Block> CORALS = bind("corals");
 	public static final Tag<Block> BAMBOO_PLANTABLE_ON = bind("bamboo_plantable_on");
-	public static final Tag<Block> DIRT_LIKE = bind("dirt_like");
 	public static final Tag<Block> STANDING_SIGNS = bind("standing_signs");
 	public static final Tag<Block> WALL_SIGNS = bind("wall_signs");
 	public static final Tag<Block> SIGNS = bind("signs");
 	public static final Tag<Block> DRAGON_IMMUNE = bind("dragon_immune");
 	public static final Tag<Block> WITHER_IMMUNE = bind("wither_immune");
+	public static final Tag<Block> BEEHIVES = bind("beehives");
+	public static final Tag<Block> CROPS = bind("crops");
+	public static final Tag<Block> BEE_GROWABLES = bind("bee_growables");
+	public static final Tag<Block> PORTALS = bind("portals");
 
 	public static void reset(TagCollection<Block> tagCollection) {
 		source = tagCollection;

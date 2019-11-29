@@ -1,14 +1,14 @@
 package net.minecraft.client.renderer.entity;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.Random;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -24,24 +24,14 @@ public class FallingBlockRenderer extends EntityRenderer<FallingBlockEntity> {
 		this.shadowRadius = 0.5F;
 	}
 
-	public void render(FallingBlockEntity fallingBlockEntity, double d, double e, double f, float g, float h) {
+	public void render(FallingBlockEntity fallingBlockEntity, float f, float g, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
 		BlockState blockState = fallingBlockEntity.getBlockState();
 		if (blockState.getRenderShape() == RenderShape.MODEL) {
 			Level level = fallingBlockEntity.getLevel();
 			if (blockState != level.getBlockState(new BlockPos(fallingBlockEntity)) && blockState.getRenderShape() != RenderShape.INVISIBLE) {
-				this.bindTexture(TextureAtlas.LOCATION_BLOCKS);
-				GlStateManager.pushMatrix();
-				GlStateManager.disableLighting();
-				Tesselator tesselator = Tesselator.getInstance();
-				BufferBuilder bufferBuilder = tesselator.getBuilder();
-				if (this.solidRender) {
-					GlStateManager.enableColorMaterial();
-					GlStateManager.setupSolidRenderingTextureCombine(this.getTeamColor(fallingBlockEntity));
-				}
-
-				bufferBuilder.begin(7, DefaultVertexFormat.BLOCK);
-				BlockPos blockPos = new BlockPos(fallingBlockEntity.x, fallingBlockEntity.getBoundingBox().maxY, fallingBlockEntity.z);
-				GlStateManager.translatef((float)(d - (double)blockPos.getX() - 0.5), (float)(e - (double)blockPos.getY()), (float)(f - (double)blockPos.getZ() - 0.5));
+				poseStack.pushPose();
+				BlockPos blockPos = new BlockPos(fallingBlockEntity.getX(), fallingBlockEntity.getBoundingBox().maxY, fallingBlockEntity.getZ());
+				poseStack.translate(-0.5, 0.0, -0.5);
 				BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
 				blockRenderDispatcher.getModelRenderer()
 					.tesselateBlock(
@@ -49,25 +39,20 @@ public class FallingBlockRenderer extends EntityRenderer<FallingBlockEntity> {
 						blockRenderDispatcher.getBlockModel(blockState),
 						blockState,
 						blockPos,
-						bufferBuilder,
+						poseStack,
+						multiBufferSource.getBuffer(ItemBlockRenderTypes.getChunkRenderType(blockState)),
 						false,
 						new Random(),
-						blockState.getSeed(fallingBlockEntity.getStartPos())
+						blockState.getSeed(fallingBlockEntity.getStartPos()),
+						OverlayTexture.NO_OVERLAY
 					);
-				tesselator.end();
-				if (this.solidRender) {
-					GlStateManager.tearDownSolidRenderingTextureCombine();
-					GlStateManager.disableColorMaterial();
-				}
-
-				GlStateManager.enableLighting();
-				GlStateManager.popMatrix();
-				super.render(fallingBlockEntity, d, e, f, g, h);
+				poseStack.popPose();
+				super.render(fallingBlockEntity, f, g, poseStack, multiBufferSource, i);
 			}
 		}
 	}
 
-	protected ResourceLocation getTextureLocation(FallingBlockEntity fallingBlockEntity) {
+	public ResourceLocation getTextureLocation(FallingBlockEntity fallingBlockEntity) {
 		return TextureAtlas.LOCATION_BLOCKS;
 	}
 }

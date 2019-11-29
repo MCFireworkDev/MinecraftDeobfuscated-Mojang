@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.CrashReport;
+import net.minecraft.CrashReportDetail;
 import net.minecraft.ReportedException;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -42,13 +43,9 @@ import net.minecraft.world.level.levelgen.carver.CarverConfiguration;
 import net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver;
 import net.minecraft.world.level.levelgen.carver.WorldCarver;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
-import net.minecraft.world.level.levelgen.feature.DecoratedFeatureConfiguration;
-import net.minecraft.world.level.levelgen.feature.DecoratorConfiguration;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.FeatureConfiguration;
-import net.minecraft.world.level.levelgen.feature.FlowerFeature;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
-import net.minecraft.world.level.levelgen.placement.FeatureDecorator;
+import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 import net.minecraft.world.level.levelgen.surfacebuilders.ConfiguredSurfaceBuilder;
 import net.minecraft.world.level.levelgen.surfacebuilders.SurfaceBuilder;
 import net.minecraft.world.level.levelgen.surfacebuilders.SurfaceBuilderConfiguration;
@@ -62,8 +59,8 @@ public abstract class Biome {
 	public static final Logger LOGGER = LogManager.getLogger();
 	public static final Set<Biome> EXPLORABLE_BIOMES = Sets.<Biome>newHashSet();
 	public static final IdMapper<Biome> MUTATED_BIOMES = new IdMapper<>();
-	protected static final PerlinSimplexNoise TEMPERATURE_NOISE = new PerlinSimplexNoise(new Random(1234L), 1);
-	public static final PerlinSimplexNoise BIOME_INFO_NOISE = new PerlinSimplexNoise(new Random(2345L), 1);
+	protected static final PerlinSimplexNoise TEMPERATURE_NOISE = new PerlinSimplexNoise(new WorldgenRandom(1234L), 0, 0);
+	public static final PerlinSimplexNoise BIOME_INFO_NOISE = new PerlinSimplexNoise(new WorldgenRandom(2345L), 0, 0);
 	@Nullable
 	protected String descriptionId;
 	protected final float depth;
@@ -78,8 +75,8 @@ public abstract class Biome {
 	protected final Biome.BiomeCategory biomeCategory;
 	protected final Biome.Precipitation precipitation;
 	protected final Map<GenerationStep.Carving, List<ConfiguredWorldCarver<?>>> carvers = Maps.newHashMap();
-	protected final Map<GenerationStep.Decoration, List<ConfiguredFeature<?>>> features = Maps.newHashMap();
-	protected final List<ConfiguredFeature<?>> flowerFeatures = Lists.<ConfiguredFeature<?>>newArrayList();
+	protected final Map<GenerationStep.Decoration, List<ConfiguredFeature<?, ?>>> features = Maps.newHashMap();
+	protected final List<ConfiguredFeature<?, ?>> flowerFeatures = Lists.<ConfiguredFeature<?, ?>>newArrayList();
 	protected final Map<StructureFeature<?>, FeatureConfiguration> validFeatureStarts = Maps.<StructureFeature<?>, FeatureConfiguration>newHashMap();
 	private final Map<MobCategory, List<Biome.SpawnerData>> spawners = Maps.newHashMap();
 	private final ThreadLocal<Long2FloatLinkedOpenHashMap> temperatureCache = ThreadLocal.withInitial(() -> Util.make(() -> {
@@ -99,13 +96,6 @@ public abstract class Biome {
 
 	public static <C extends CarverConfiguration> ConfiguredWorldCarver<C> makeCarver(WorldCarver<C> worldCarver, C carverConfiguration) {
 		return new ConfiguredWorldCarver<>(worldCarver, carverConfiguration);
-	}
-
-	public static <F extends FeatureConfiguration, D extends DecoratorConfiguration> ConfiguredFeature<?> makeComposite(
-		Feature<F> feature, F featureConfiguration, FeatureDecorator<D> featureDecorator, D decoratorConfiguration
-	) {
-		Feature<DecoratedFeatureConfiguration> feature2 = feature instanceof FlowerFeature ? Feature.DECORATED_FLOWER : Feature.DECORATED;
-		return new ConfiguredFeature<>(feature2, new DecoratedFeatureConfiguration(feature, featureConfiguration, featureDecorator, decoratorConfiguration));
 	}
 
 	protected Biome(Biome.BiomeBuilder biomeBuilder) {
@@ -146,10 +136,8 @@ public abstract class Biome {
 	}
 
 	@Environment(EnvType.CLIENT)
-	public int getSkyColor(float f) {
-		f /= 3.0F;
-		f = Mth.clamp(f, -1.0F, 1.0F);
-		return Mth.hsvToRgb(0.62222224F - f * 0.05F, 0.5F + f * 0.1F, 1.0F);
+	public int getSkyColor() {
+		return 8364543;
 	}
 
 	protected void addSpawn(MobCategory mobCategory, Biome.SpawnerData spawnerData) {
@@ -174,7 +162,7 @@ public abstract class Biome {
 
 	protected float getTemperatureNoCache(BlockPos blockPos) {
 		if (blockPos.getY() > 64) {
-			float f = (float)(TEMPERATURE_NOISE.getValue((double)((float)blockPos.getX() / 8.0F), (double)((float)blockPos.getZ() / 8.0F)) * 4.0);
+			float f = (float)(TEMPERATURE_NOISE.getValue((double)((float)blockPos.getX() / 8.0F), (double)((float)blockPos.getZ() / 8.0F), false) * 4.0);
 			return this.getTemperature() - (f + (float)blockPos.getY() - 64.0F) * 0.05F / 30.0F;
 		} else {
 			return this.getTemperature();
@@ -243,7 +231,7 @@ public abstract class Biome {
 		}
 	}
 
-	public void addFeature(GenerationStep.Decoration decoration, ConfiguredFeature<?> configuredFeature) {
+	public void addFeature(GenerationStep.Decoration decoration, ConfiguredFeature<?, ?> configuredFeature) {
 		if (configuredFeature.feature == Feature.DECORATED_FLOWER) {
 			this.flowerFeatures.add(configuredFeature);
 		}
@@ -259,8 +247,8 @@ public abstract class Biome {
 		return (List<ConfiguredWorldCarver<?>>)this.carvers.computeIfAbsent(carving, carvingx -> Lists.newArrayList());
 	}
 
-	public <C extends FeatureConfiguration> void addStructureStart(StructureFeature<C> structureFeature, C featureConfiguration) {
-		this.validFeatureStarts.put(structureFeature, featureConfiguration);
+	public <C extends FeatureConfiguration> void addStructureStart(ConfiguredFeature<C, ? extends StructureFeature<C>> configuredFeature) {
+		this.validFeatureStarts.put(configuredFeature.feature, configuredFeature.config);
 	}
 
 	public <C extends FeatureConfiguration> boolean isValidStart(StructureFeature<C> structureFeature) {
@@ -272,12 +260,12 @@ public abstract class Biome {
 		return (C)this.validFeatureStarts.get(structureFeature);
 	}
 
-	public List<ConfiguredFeature<?>> getFlowerFeatures() {
+	public List<ConfiguredFeature<?, ?>> getFlowerFeatures() {
 		return this.flowerFeatures;
 	}
 
-	public List<ConfiguredFeature<?>> getFeaturesForStep(GenerationStep.Decoration decoration) {
-		return (List<ConfiguredFeature<?>>)this.features.get(decoration);
+	public List<ConfiguredFeature<?, ?>> getFeaturesForStep(GenerationStep.Decoration decoration) {
+		return (List<ConfiguredFeature<?, ?>>)this.features.get(decoration);
 	}
 
 	public void generate(
@@ -290,7 +278,7 @@ public abstract class Biome {
 	) {
 		int i = 0;
 
-		for(ConfiguredFeature<?> configuredFeature : (List)this.features.get(decoration)) {
+		for(ConfiguredFeature<?, ?> configuredFeature : (List)this.features.get(decoration)) {
 			worldgenRandom.setFeatureSeed(l, i, decoration.ordinal());
 
 			try {
@@ -299,7 +287,7 @@ public abstract class Biome {
 				CrashReport crashReport = CrashReport.forThrowable(var13, "Feature placement");
 				crashReport.addCategory("Feature")
 					.setDetail("Id", Registry.FEATURE.getKey(configuredFeature.feature))
-					.setDetail("Description", configuredFeature.feature::toString);
+					.setDetail("Description", (CrashReportDetail<String>)(() -> configuredFeature.feature.toString()));
 				throw new ReportedException(crashReport);
 			}
 
@@ -308,15 +296,15 @@ public abstract class Biome {
 	}
 
 	@Environment(EnvType.CLIENT)
-	public int getGrassColor(BlockPos blockPos) {
-		double d = (double)Mth.clamp(this.getTemperature(blockPos), 0.0F, 1.0F);
-		double e = (double)Mth.clamp(this.getDownfall(), 0.0F, 1.0F);
-		return GrassColor.get(d, e);
+	public int getGrassColor(double d, double e) {
+		double f = (double)Mth.clamp(this.getTemperature(), 0.0F, 1.0F);
+		double g = (double)Mth.clamp(this.getDownfall(), 0.0F, 1.0F);
+		return GrassColor.get(f, g);
 	}
 
 	@Environment(EnvType.CLIENT)
-	public int getFoliageColor(BlockPos blockPos) {
-		double d = (double)Mth.clamp(this.getTemperature(blockPos), 0.0F, 1.0F);
+	public int getFoliageColor() {
+		double d = (double)Mth.clamp(this.getTemperature(), 0.0F, 1.0F);
 		double e = (double)Mth.clamp(this.getDownfall(), 0.0F, 1.0F);
 		return FoliageColor.get(d, e);
 	}

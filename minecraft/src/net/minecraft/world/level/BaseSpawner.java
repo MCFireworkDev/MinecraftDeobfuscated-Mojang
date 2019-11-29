@@ -35,6 +35,7 @@ public abstract class BaseSpawner {
 	private int minSpawnDelay = 200;
 	private int maxSpawnDelay = 800;
 	private int spawnCount = 4;
+	@Nullable
 	private Entity displayEntity;
 	private int maxNearbyEntities = 6;
 	private int requiredPlayerRange = 16;
@@ -141,7 +142,7 @@ public abstract class BaseSpawner {
 							return;
 						}
 
-						entity.moveTo(entity.x, entity.y, entity.z, level.random.nextFloat() * 360.0F, 0.0F);
+						entity.moveTo(entity.getX(), entity.getY(), entity.getZ(), level.random.nextFloat() * 360.0F, 0.0F);
 						if (entity instanceof Mob) {
 							Mob mob = (Mob)entity;
 							if (!mob.checkSpawnRules(level, MobSpawnType.SPAWNER) || !mob.checkSpawnObstruction(level)) {
@@ -256,6 +257,7 @@ public abstract class BaseSpawner {
 		}
 	}
 
+	@Nullable
 	@Environment(EnvType.CLIENT)
 	public Entity getOrCreateDisplayEntity() {
 		if (this.displayEntity == null) {

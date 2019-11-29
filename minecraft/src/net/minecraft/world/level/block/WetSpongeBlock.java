@@ -6,12 +6,23 @@ import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class WetSpongeBlock extends Block {
 	protected WetSpongeBlock(Block.Properties properties) {
 		super(properties);
+	}
+
+	@Override
+	public void onPlace(BlockState blockState, Level level, BlockPos blockPos, BlockState blockState2, boolean bl) {
+		if (level.getDimension().isUltraWarm()) {
+			level.setBlock(blockPos, Blocks.SPONGE.defaultBlockState(), 3);
+			level.levelEvent(2009, blockPos, 0);
+			level.playSound(null, blockPos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 1.0F, (1.0F + level.getRandom().nextFloat() * 0.2F) * 0.7F);
+		}
 	}
 
 	@Environment(EnvType.CLIENT)

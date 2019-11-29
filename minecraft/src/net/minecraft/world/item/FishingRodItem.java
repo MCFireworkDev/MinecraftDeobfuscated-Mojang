@@ -5,7 +5,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.fishing.FishingHook;
@@ -40,23 +39,30 @@ public class FishingRodItem extends Item {
 				itemStack.hurtAndBreak(i, player, playerx -> playerx.broadcastBreakEvent(interactionHand));
 			}
 
-			player.swing(interactionHand);
 			level.playSound(
-				null, player.x, player.y, player.z, SoundEvents.FISHING_BOBBER_RETRIEVE, SoundSource.NEUTRAL, 1.0F, 0.4F / (random.nextFloat() * 0.4F + 0.8F)
+				null,
+				player.getX(),
+				player.getY(),
+				player.getZ(),
+				SoundEvents.FISHING_BOBBER_RETRIEVE,
+				SoundSource.NEUTRAL,
+				1.0F,
+				0.4F / (random.nextFloat() * 0.4F + 0.8F)
 			);
 		} else {
-			level.playSound(null, player.x, player.y, player.z, SoundEvents.FISHING_BOBBER_THROW, SoundSource.NEUTRAL, 0.5F, 0.4F / (random.nextFloat() * 0.4F + 0.8F));
+			level.playSound(
+				null, player.getX(), player.getY(), player.getZ(), SoundEvents.FISHING_BOBBER_THROW, SoundSource.NEUTRAL, 0.5F, 0.4F / (random.nextFloat() * 0.4F + 0.8F)
+			);
 			if (!level.isClientSide) {
 				int i = EnchantmentHelper.getFishingSpeedBonus(itemStack);
 				int j = EnchantmentHelper.getFishingLuckBonus(itemStack);
 				level.addFreshEntity(new FishingHook(player, level, j, i));
 			}
 
-			player.swing(interactionHand);
 			player.awardStat(Stats.ITEM_USED.get(this));
 		}
 
-		return new InteractionResultHolder<>(InteractionResult.SUCCESS, itemStack);
+		return InteractionResultHolder.success(itemStack);
 	}
 
 	@Override

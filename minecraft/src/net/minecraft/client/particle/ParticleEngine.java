@@ -6,8 +6,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -31,11 +31,12 @@ import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.client.renderer.texture.TickableTextureObject;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
@@ -73,10 +74,10 @@ public class ParticleEngine implements PreparableReloadListener {
 	private final Int2ObjectMap<ParticleProvider<?>> providers = new Int2ObjectOpenHashMap<>();
 	private final Queue<Particle> particlesToAdd = Queues.<Particle>newArrayDeque();
 	private final Map<ResourceLocation, ParticleEngine.MutableSpriteSet> spriteSets = Maps.<ResourceLocation, ParticleEngine.MutableSpriteSet>newHashMap();
-	private final TextureAtlas textureAtlas = new TextureAtlas("textures/particle");
+	private final TextureAtlas textureAtlas = new TextureAtlas(TextureAtlas.LOCATION_PARTICLES);
 
 	public ParticleEngine(Level level, TextureManager textureManager) {
-		textureManager.register(TextureAtlas.LOCATION_PARTICLES, (TickableTextureObject)this.textureAtlas);
+		textureManager.register(this.textureAtlas.location(), this.textureAtlas);
 		this.level = level;
 		this.textureManager = textureManager;
 		this.registerProviders();
@@ -141,6 +142,10 @@ public class ParticleEngine implements PreparableReloadListener {
 		this.register(ParticleTypes.UNDERWATER, SuspendedParticle.Provider::new);
 		this.register(ParticleTypes.SPLASH, SplashParticle.Provider::new);
 		this.register(ParticleTypes.WITCH, SpellParticle.WitchProvider::new);
+		this.register(ParticleTypes.DRIPPING_HONEY, DripParticle.HoneyHangProvider::new);
+		this.register(ParticleTypes.FALLING_HONEY, DripParticle.HoneyFallProvider::new);
+		this.register(ParticleTypes.LANDING_HONEY, DripParticle.HoneyLandProvider::new);
+		this.register(ParticleTypes.FALLING_NECTAR, DripParticle.NectarFallProvider::new);
 	}
 
 	private <T extends ParticleOptions> void register(ParticleType<T> particleType, ParticleProvider<T> particleProvider) {
@@ -169,18 +174,22 @@ public class ParticleEngine implements PreparableReloadListener {
 			.map(resourceLocation -> CompletableFuture.runAsync(() -> this.loadParticleDescription(resourceManager, resourceLocation, map), executor))
 			.toArray(i -> new CompletableFuture[i]);
 		return CompletableFuture.allOf(completableFutures)
-			.thenApplyAsync(void_ -> {
-				profilerFiller.startTick();
-				profilerFiller.push("stitching");
-				Set<ResourceLocation> set = (Set)map.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
-				TextureAtlas.Preparations preparations = this.textureAtlas.prepareToStitch(resourceManager, set, profilerFiller);
-				profilerFiller.pop();
-				profilerFiller.endTick();
-				return preparations;
-			}, executor)
+			.thenApplyAsync(
+				void_ -> {
+					profilerFiller.startTick();
+					profilerFiller.push("stitching");
+					TextureAtlas.Preparations preparations = this.textureAtlas
+						.prepareToStitch(resourceManager, map.values().stream().flatMap(Collection::stream), profilerFiller, 0);
+					profilerFiller.pop();
+					profilerFiller.endTick();
+					return preparations;
+				},
+				executor
+			)
 			.thenCompose(preparationBarrier::wait)
 			.thenAcceptAsync(
 				preparations -> {
+					this.particles.clear();
 					profilerFiller2.startTick();
 					profilerFiller2.push("upload");
 					this.textureAtlas.reload(preparations);
@@ -231,7 +240,12 @@ public class ParticleEngine implements PreparableReloadListener {
 								throw new IllegalStateException("Redundant texture list for particle " + resourceLocation);
 							}
 
-							map.put(resourceLocation, list);
+							map.put(
+								resourceLocation,
+								list.stream()
+									.map(resourceLocationx -> new ResourceLocation(resourceLocationx.getNamespace(), "particle/" + resourceLocationx.getPath()))
+									.collect(Collectors.toList())
+							);
 						}
 					} catch (Throwable var35) {
 						var8 = var35;
@@ -354,29 +368,28 @@ public class ParticleEngine implements PreparableReloadListener {
 		}
 	}
 
-	public void render(Camera camera, float f) {
-		float g = Mth.cos(camera.getYRot() * (float) (Math.PI / 180.0));
-		float h = Mth.sin(camera.getYRot() * (float) (Math.PI / 180.0));
-		float i = -h * Mth.sin(camera.getXRot() * (float) (Math.PI / 180.0));
-		float j = g * Mth.sin(camera.getXRot() * (float) (Math.PI / 180.0));
-		float k = Mth.cos(camera.getXRot() * (float) (Math.PI / 180.0));
-		Particle.xOff = camera.getPosition().x;
-		Particle.yOff = camera.getPosition().y;
-		Particle.zOff = camera.getPosition().z;
+	public void render(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, LightTexture lightTexture, Camera camera, float f) {
+		lightTexture.turnOnLightLayer();
+		RenderSystem.enableAlphaTest();
+		RenderSystem.defaultAlphaFunc();
+		RenderSystem.enableDepthTest();
+		RenderSystem.enableFog();
+		RenderSystem.pushMatrix();
+		RenderSystem.multMatrix(poseStack.last().pose());
 
 		for(ParticleRenderType particleRenderType : RENDER_ORDER) {
 			Iterable<Particle> iterable = (Iterable)this.particles.get(particleRenderType);
 			if (iterable != null) {
-				GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+				RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 				Tesselator tesselator = Tesselator.getInstance();
 				BufferBuilder bufferBuilder = tesselator.getBuilder();
 				particleRenderType.begin(bufferBuilder, this.textureManager);
 
 				for(Particle particle : iterable) {
 					try {
-						particle.render(bufferBuilder, camera, f, g, k, h, i, j);
-					} catch (Throwable var18) {
-						CrashReport crashReport = CrashReport.forThrowable(var18, "Rendering Particle");
+						particle.render(bufferBuilder, camera, f);
+					} catch (Throwable var16) {
+						CrashReport crashReport = CrashReport.forThrowable(var16, "Rendering Particle");
 						CrashReportCategory crashReportCategory = crashReport.addCategory("Particle being rendered");
 						crashReportCategory.setDetail("Particle", particle::toString);
 						crashReportCategory.setDetail("Particle Type", particleRenderType::toString);
@@ -388,9 +401,12 @@ public class ParticleEngine implements PreparableReloadListener {
 			}
 		}
 
-		GlStateManager.depthMask(true);
-		GlStateManager.disableBlend();
-		GlStateManager.alphaFunc(516, 0.1F);
+		RenderSystem.popMatrix();
+		RenderSystem.depthMask(true);
+		RenderSystem.disableBlend();
+		RenderSystem.defaultAlphaFunc();
+		lightTexture.turnOffLightLayer();
+		RenderSystem.disableFog();
 	}
 
 	public void setLevel(@Nullable Level level) {

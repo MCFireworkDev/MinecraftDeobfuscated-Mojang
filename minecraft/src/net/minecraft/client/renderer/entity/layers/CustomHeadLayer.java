@@ -1,14 +1,16 @@
 package net.minecraft.client.renderer.entity.layers;
 
 import com.mojang.authlib.GameProfile;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Vector3f;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.HeadedModel;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.blockentity.SkullBlockRenderer;
-import net.minecraft.client.renderer.entity.HeadedModel;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
@@ -30,31 +32,26 @@ public class CustomHeadLayer<T extends LivingEntity, M extends EntityModel<T> & 
 		super(renderLayerParent);
 	}
 
-	public void render(T livingEntity, float f, float g, float h, float i, float j, float k, float l) {
+	public void render(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, T livingEntity, float f, float g, float h, float j, float k, float l) {
 		ItemStack itemStack = livingEntity.getItemBySlot(EquipmentSlot.HEAD);
 		if (!itemStack.isEmpty()) {
 			Item item = itemStack.getItem();
-			GlStateManager.pushMatrix();
-			if (livingEntity.isVisuallySneaking()) {
-				GlStateManager.translatef(0.0F, 0.2F, 0.0F);
-			}
-
+			poseStack.pushPose();
 			boolean bl = livingEntity instanceof Villager || livingEntity instanceof ZombieVillager;
 			if (livingEntity.isBaby() && !(livingEntity instanceof Villager)) {
 				float m = 2.0F;
 				float n = 1.4F;
-				GlStateManager.translatef(0.0F, 0.5F * l, 0.0F);
-				GlStateManager.scalef(0.7F, 0.7F, 0.7F);
-				GlStateManager.translatef(0.0F, 16.0F * l, 0.0F);
+				poseStack.translate(0.0, 0.03125, 0.0);
+				poseStack.scale(0.7F, 0.7F, 0.7F);
+				poseStack.translate(0.0, 1.0, 0.0);
 			}
 
-			this.getParentModel().translateToHead(0.0625F);
-			GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+			this.getParentModel().getHead().translateAndRotate(poseStack);
 			if (item instanceof BlockItem && ((BlockItem)item).getBlock() instanceof AbstractSkullBlock) {
 				float m = 1.1875F;
-				GlStateManager.scalef(1.1875F, -1.1875F, -1.1875F);
+				poseStack.scale(1.1875F, -1.1875F, -1.1875F);
 				if (bl) {
-					GlStateManager.translatef(0.0F, 0.0625F, 0.0F);
+					poseStack.translate(0.0, 0.0625, 0.0);
 				}
 
 				GameProfile gameProfile = null;
@@ -71,26 +68,23 @@ public class CustomHeadLayer<T extends LivingEntity, M extends EntityModel<T> & 
 					}
 				}
 
-				SkullBlockRenderer.instance
-					.renderSkull(-0.5F, 0.0F, -0.5F, null, 180.0F, ((AbstractSkullBlock)((BlockItem)item).getBlock()).getType(), gameProfile, -1, f);
+				poseStack.translate(-0.5, 0.0, -0.5);
+				SkullBlockRenderer.renderSkull(null, 180.0F, ((AbstractSkullBlock)((BlockItem)item).getBlock()).getType(), gameProfile, f, poseStack, multiBufferSource, i);
 			} else if (!(item instanceof ArmorItem) || ((ArmorItem)item).getSlot() != EquipmentSlot.HEAD) {
 				float m = 0.625F;
-				GlStateManager.translatef(0.0F, -0.25F, 0.0F);
-				GlStateManager.rotatef(180.0F, 0.0F, 1.0F, 0.0F);
-				GlStateManager.scalef(0.625F, -0.625F, -0.625F);
+				poseStack.translate(0.0, -0.25, 0.0);
+				poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
+				poseStack.scale(0.625F, -0.625F, -0.625F);
 				if (bl) {
-					GlStateManager.translatef(0.0F, 0.1875F, 0.0F);
+					poseStack.translate(0.0, 0.1875, 0.0);
 				}
 
-				Minecraft.getInstance().getItemInHandRenderer().renderItem(livingEntity, itemStack, ItemTransforms.TransformType.HEAD);
+				Minecraft.getInstance()
+					.getItemInHandRenderer()
+					.renderItem(livingEntity, itemStack, ItemTransforms.TransformType.HEAD, false, poseStack, multiBufferSource, i);
 			}
 
-			GlStateManager.popMatrix();
+			poseStack.popPose();
 		}
-	}
-
-	@Override
-	public boolean colorsOnDamage() {
-		return false;
 	}
 }

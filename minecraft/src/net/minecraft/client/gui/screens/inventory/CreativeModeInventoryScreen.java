@@ -3,8 +3,8 @@ package net.minecraft.client.gui.screens.inventory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.datafixers.util.Pair;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -372,7 +372,7 @@ public class CreativeModeInventoryScreen extends EffectRenderingInventoryScreen<
 	protected void renderLabels(int i, int j) {
 		CreativeModeTab creativeModeTab = CreativeModeTab.TABS[selectedTab];
 		if (creativeModeTab.showTitle()) {
-			GlStateManager.disableBlend();
+			RenderSystem.disableBlend();
 			this.font.draw(I18n.get(creativeModeTab.getName()), 8.0F, 6.0F, 4210752);
 		}
 	}
@@ -578,8 +578,7 @@ public class CreativeModeInventoryScreen extends EffectRenderingInventoryScreen<
 			this.renderTooltip(I18n.get("inventory.binSlot"), i, j);
 		}
 
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		GlStateManager.disableLighting();
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		this.renderTooltip(i, j);
 	}
 
@@ -636,8 +635,7 @@ public class CreativeModeInventoryScreen extends EffectRenderingInventoryScreen<
 
 	@Override
 	protected void renderBg(float f, int i, int j) {
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		Lighting.turnOnGui();
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		CreativeModeTab creativeModeTab = CreativeModeTab.TABS[selectedTab];
 
 		for(CreativeModeTab creativeModeTab2 : CreativeModeTab.TABS) {
@@ -650,7 +648,7 @@ public class CreativeModeInventoryScreen extends EffectRenderingInventoryScreen<
 		this.minecraft.getTextureManager().bind(new ResourceLocation("textures/gui/container/creative_inventory/tab_" + creativeModeTab.getBackgroundSuffix()));
 		this.blit(this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
 		this.searchBox.render(i, j, f);
-		GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 		int k = this.leftPos + 175;
 		int l = this.topPos + 18;
 		int m = l + 112;
@@ -661,7 +659,7 @@ public class CreativeModeInventoryScreen extends EffectRenderingInventoryScreen<
 
 		this.renderTabButton(creativeModeTab);
 		if (creativeModeTab == CreativeModeTab.TAB_INVENTORY) {
-			InventoryScreen.renderPlayerModel(
+			InventoryScreen.renderEntityInInventory(
 				this.leftPos + 88, this.topPos + 45, 20, (float)(this.leftPos + 88 - i), (float)(this.topPos + 45 - 30 - j), this.minecraft.player
 			);
 		}
@@ -736,20 +734,17 @@ public class CreativeModeInventoryScreen extends EffectRenderingInventoryScreen<
 			m += this.imageHeight - 4;
 		}
 
-		GlStateManager.disableLighting();
 		this.blit(l, m, j, k, 28, 32);
-		this.blitOffset = 100;
+		this.setBlitOffset(100);
 		this.itemRenderer.blitOffset = 100.0F;
 		l += 6;
 		m += 8 + (bl2 ? 1 : -1);
-		GlStateManager.enableLighting();
-		GlStateManager.enableRescaleNormal();
+		RenderSystem.enableRescaleNormal();
 		ItemStack itemStack = creativeModeTab.getIconItem();
 		this.itemRenderer.renderAndDecorateItem(itemStack, l, m);
 		this.itemRenderer.renderGuiItemDecorations(this.font, itemStack, l, m);
-		GlStateManager.disableLighting();
 		this.itemRenderer.blitOffset = 0.0F;
-		this.blitOffset = 0;
+		this.setBlitOffset(0);
 	}
 
 	public int getSelectedTab() {
@@ -920,7 +915,7 @@ public class CreativeModeInventoryScreen extends EffectRenderingInventoryScreen<
 
 		@Nullable
 		@Override
-		public String getNoItemIcon() {
+		public Pair<ResourceLocation, ResourceLocation> getNoItemIcon() {
 			return this.target.getNoItemIcon();
 		}
 

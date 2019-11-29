@@ -52,12 +52,12 @@ import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 public class Wolf extends TamableAnimal {
-	private static final EntityDataAccessor<Float> DATA_HEALTH_ID = SynchedEntityData.defineId(Wolf.class, EntityDataSerializers.FLOAT);
 	private static final EntityDataAccessor<Boolean> DATA_INTERESTED_ID = SynchedEntityData.defineId(Wolf.class, EntityDataSerializers.BOOLEAN);
 	private static final EntityDataAccessor<Integer> DATA_COLLAR_COLOR = SynchedEntityData.defineId(Wolf.class, EntityDataSerializers.INT);
 	public static final Predicate<LivingEntity> PREY_SELECTOR = livingEntity -> {
@@ -84,7 +84,7 @@ public class Wolf extends TamableAnimal {
 		this.goalSelector.addGoal(3, new Wolf.WolfAvoidEntityGoal(this, Llama.class, 24.0F, 1.5, 1.5));
 		this.goalSelector.addGoal(4, new LeapAtTargetGoal(this, 0.4F));
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0, true));
-		this.goalSelector.addGoal(6, new FollowOwnerGoal(this, 1.0, 10.0F, 2.0F));
+		this.goalSelector.addGoal(6, new FollowOwnerGoal(this, 1.0, 10.0F, 2.0F, false));
 		this.goalSelector.addGoal(7, new BreedGoal(this, 1.0));
 		this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 1.0));
 		this.goalSelector.addGoal(9, new BegGoal(this, 8.0F));
@@ -122,14 +122,8 @@ public class Wolf extends TamableAnimal {
 	}
 
 	@Override
-	protected void customServerAiStep() {
-		this.entityData.set(DATA_HEALTH_ID, this.getHealth());
-	}
-
-	@Override
 	protected void defineSynchedData() {
 		super.defineSynchedData();
-		this.entityData.define(DATA_HEALTH_ID, this.getHealth());
 		this.entityData.define(DATA_INTERESTED_ID, false);
 		this.entityData.define(DATA_COLLAR_COLOR, DyeColor.RED.getId());
 	}
@@ -160,7 +154,7 @@ public class Wolf extends TamableAnimal {
 		if (this.isAngry()) {
 			return SoundEvents.WOLF_GROWL;
 		} else if (this.random.nextInt(3) == 0) {
-			return this.isTame() && this.entityData.get(DATA_HEALTH_ID) < 10.0F ? SoundEvents.WOLF_WHINE : SoundEvents.WOLF_PANT;
+			return this.isTame() && this.getHealth() < 10.0F ? SoundEvents.WOLF_WHINE : SoundEvents.WOLF_PANT;
 		} else {
 			return SoundEvents.WOLF_AMBIENT;
 		}
@@ -227,14 +221,14 @@ public class Wolf extends TamableAnimal {
 				}
 
 				if (this.shakeAnim > 0.4F) {
-					float f = (float)this.getBoundingBox().minY;
+					float f = (float)this.getY();
 					int i = (int)(Mth.sin((this.shakeAnim - 0.4F) * (float) Math.PI) * 7.0F);
 					Vec3 vec3 = this.getDeltaMovement();
 
 					for(int j = 0; j < i; ++j) {
 						float g = (this.random.nextFloat() * 2.0F - 1.0F) * this.getBbWidth() * 0.5F;
 						float h = (this.random.nextFloat() * 2.0F - 1.0F) * this.getBbWidth() * 0.5F;
-						this.level.addParticle(ParticleTypes.SPLASH, this.x + (double)g, (double)(f + 0.8F), this.z + (double)h, vec3.x, vec3.y, vec3.z);
+						this.level.addParticle(ParticleTypes.SPLASH, this.getX() + (double)g, (double)(f + 0.8F), this.getZ() + (double)h, vec3.x, vec3.y, vec3.z);
 					}
 				}
 			}
@@ -320,6 +314,7 @@ public class Wolf extends TamableAnimal {
 		super.setTame(bl);
 		if (bl) {
 			this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(20.0);
+			this.setHealth(20.0F);
 		} else {
 			this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(8.0);
 		}
@@ -331,60 +326,66 @@ public class Wolf extends TamableAnimal {
 	public boolean mobInteract(Player player, InteractionHand interactionHand) {
 		ItemStack itemStack = player.getItemInHand(interactionHand);
 		Item item = itemStack.getItem();
-		if (this.isTame()) {
-			if (!itemStack.isEmpty()) {
-				if (item.isEdible()) {
-					if (item.getFoodProperties().isMeat() && this.entityData.get(DATA_HEALTH_ID) < 20.0F) {
-						if (!player.abilities.instabuild) {
-							itemStack.shrink(1);
-						}
-
-						this.heal((float)item.getFoodProperties().getNutrition());
-						return true;
+		if (itemStack.getItem() instanceof SpawnEggItem) {
+			return super.mobInteract(player, interactionHand);
+		} else if (this.level.isClientSide) {
+			return this.isOwnedBy(player) || item == Items.BONE && !this.isAngry();
+		} else {
+			if (this.isTame()) {
+				if (item.isEdible() && item.getFoodProperties().isMeat() && this.getHealth() < this.getMaxHealth()) {
+					if (!player.abilities.instabuild) {
+						itemStack.shrink(1);
 					}
-				} else if (item instanceof DyeItem) {
-					DyeColor dyeColor = ((DyeItem)item).getDyeColor();
-					if (dyeColor != this.getCollarColor()) {
-						this.setCollarColor(dyeColor);
-						if (!player.abilities.instabuild) {
-							itemStack.shrink(1);
-						}
 
-						return true;
-					}
+					this.heal((float)item.getFoodProperties().getNutrition());
+					return true;
 				}
-			}
 
-			if (this.isOwnedBy(player) && !this.level.isClientSide && !this.isFood(itemStack)) {
-				this.sitGoal.wantToSit(!this.isSitting());
-				this.jumping = false;
-				this.navigation.stop();
-				this.setTarget(null);
-			}
-		} else if (item == Items.BONE && !this.isAngry()) {
-			if (!player.abilities.instabuild) {
-				itemStack.shrink(1);
-			}
+				if (!(item instanceof DyeItem)) {
+					boolean bl = super.mobInteract(player, interactionHand);
+					if (!bl || this.isBaby()) {
+						this.sitGoal.wantToSit(!this.isSitting());
+					}
 
-			if (!this.level.isClientSide) {
+					return bl;
+				}
+
+				DyeColor dyeColor = ((DyeItem)item).getDyeColor();
+				if (dyeColor != this.getCollarColor()) {
+					this.setCollarColor(dyeColor);
+					if (!player.abilities.instabuild) {
+						itemStack.shrink(1);
+					}
+
+					return true;
+				}
+
+				if (this.isOwnedBy(player) && !this.isFood(itemStack)) {
+					this.sitGoal.wantToSit(!this.isSitting());
+					this.jumping = false;
+					this.navigation.stop();
+					this.setTarget(null);
+				}
+			} else if (item == Items.BONE && !this.isAngry()) {
+				if (!player.abilities.instabuild) {
+					itemStack.shrink(1);
+				}
+
 				if (this.random.nextInt(3) == 0) {
 					this.tame(player);
 					this.navigation.stop();
 					this.setTarget(null);
 					this.sitGoal.wantToSit(true);
-					this.setHealth(20.0F);
-					this.spawnTamingParticles(true);
 					this.level.broadcastEntityEvent(this, (byte)7);
 				} else {
-					this.spawnTamingParticles(false);
 					this.level.broadcastEntityEvent(this, (byte)6);
 				}
+
+				return true;
 			}
 
-			return true;
+			return super.mobInteract(player, interactionHand);
 		}
-
-		return super.mobInteract(player, interactionHand);
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -404,7 +405,7 @@ public class Wolf extends TamableAnimal {
 		if (this.isAngry()) {
 			return 1.5393804F;
 		} else {
-			return this.isTame() ? (0.55F - (this.getMaxHealth() - this.entityData.get(DATA_HEALTH_ID)) * 0.02F) * (float) Math.PI : (float) (Math.PI / 5);
+			return this.isTame() ? (0.55F - (this.getMaxHealth() - this.getHealth()) * 0.02F) * (float) Math.PI : (float) (Math.PI / 5);
 		}
 	}
 

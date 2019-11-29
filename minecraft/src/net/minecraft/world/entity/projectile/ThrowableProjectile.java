@@ -43,7 +43,7 @@ public abstract class ThrowableProjectile extends Entity implements Projectile {
 	}
 
 	protected ThrowableProjectile(EntityType<? extends ThrowableProjectile> entityType, LivingEntity livingEntity, Level level) {
-		this(entityType, livingEntity.x, livingEntity.y + (double)livingEntity.getEyeHeight() - 0.1F, livingEntity.z, level);
+		this(entityType, livingEntity.getX(), livingEntity.getEyeY() - 0.1F, livingEntity.getZ(), level);
 		this.owner = livingEntity;
 		this.ownerId = livingEntity.getUUID();
 	}
@@ -98,9 +98,6 @@ public abstract class ThrowableProjectile extends Entity implements Projectile {
 
 	@Override
 	public void tick() {
-		this.xOld = this.x;
-		this.yOld = this.y;
-		this.zOld = this.z;
 		super.tick();
 		if (this.shakeTime > 0) {
 			--this.shakeTime;
@@ -145,12 +142,12 @@ public abstract class ThrowableProjectile extends Entity implements Projectile {
 		}
 
 		Vec3 vec3 = this.getDeltaMovement();
-		this.x += vec3.x;
-		this.y += vec3.y;
-		this.z += vec3.z;
-		float f = Mth.sqrt(getHorizontalDistanceSqr(vec3));
+		double d = this.getX() + vec3.x;
+		double e = this.getY() + vec3.y;
+		double f = this.getZ() + vec3.z;
+		float g = Mth.sqrt(getHorizontalDistanceSqr(vec3));
 		this.yRot = (float)(Mth.atan2(vec3.x, vec3.z) * 180.0F / (float)Math.PI);
-		this.xRot = (float)(Mth.atan2(vec3.y, (double)f) * 180.0F / (float)Math.PI);
+		this.xRot = (float)(Mth.atan2(vec3.y, (double)g) * 180.0F / (float)Math.PI);
 
 		while(this.xRot - this.xRotO < -180.0F) {
 			this.xRotO -= 360.0F;
@@ -170,25 +167,25 @@ public abstract class ThrowableProjectile extends Entity implements Projectile {
 
 		this.xRot = Mth.lerp(0.2F, this.xRotO, this.xRot);
 		this.yRot = Mth.lerp(0.2F, this.yRotO, this.yRot);
-		float h;
+		float j;
 		if (this.isInWater()) {
 			for(int i = 0; i < 4; ++i) {
-				float g = 0.25F;
-				this.level.addParticle(ParticleTypes.BUBBLE, this.x - vec3.x * 0.25, this.y - vec3.y * 0.25, this.z - vec3.z * 0.25, vec3.x, vec3.y, vec3.z);
+				float h = 0.25F;
+				this.level.addParticle(ParticleTypes.BUBBLE, d - vec3.x * 0.25, e - vec3.y * 0.25, f - vec3.z * 0.25, vec3.x, vec3.y, vec3.z);
 			}
 
-			h = 0.8F;
+			j = 0.8F;
 		} else {
-			h = 0.99F;
+			j = 0.99F;
 		}
 
-		this.setDeltaMovement(vec3.scale((double)h));
+		this.setDeltaMovement(vec3.scale((double)j));
 		if (!this.isNoGravity()) {
 			Vec3 vec32 = this.getDeltaMovement();
 			this.setDeltaMovement(vec32.x, vec32.y - (double)this.getGravity(), vec32.z);
 		}
 
-		this.setPos(this.x, this.y, this.z);
+		this.setPos(d, e, f);
 	}
 
 	protected float getGravity() {
@@ -203,7 +200,7 @@ public abstract class ThrowableProjectile extends Entity implements Projectile {
 		compoundTag.putInt("yTile", this.yBlock);
 		compoundTag.putInt("zTile", this.zBlock);
 		compoundTag.putByte("shake", (byte)this.shakeTime);
-		compoundTag.putByte("inGround", (byte)(this.inGround ? 1 : 0));
+		compoundTag.putBoolean("inGround", this.inGround);
 		if (this.ownerId != null) {
 			compoundTag.put("owner", NbtUtils.createUUIDTag(this.ownerId));
 		}
@@ -215,7 +212,7 @@ public abstract class ThrowableProjectile extends Entity implements Projectile {
 		this.yBlock = compoundTag.getInt("yTile");
 		this.zBlock = compoundTag.getInt("zTile");
 		this.shakeTime = compoundTag.getByte("shake") & 255;
-		this.inGround = compoundTag.getByte("inGround") == 1;
+		this.inGround = compoundTag.getBoolean("inGround");
 		this.owner = null;
 		if (compoundTag.contains("owner", 10)) {
 			this.ownerId = NbtUtils.loadUUIDTag(compoundTag.getCompound("owner"));
@@ -224,12 +221,12 @@ public abstract class ThrowableProjectile extends Entity implements Projectile {
 
 	@Nullable
 	public LivingEntity getOwner() {
-		if (this.owner == null && this.ownerId != null && this.level instanceof ServerLevel) {
+		if ((this.owner == null || this.owner.removed) && this.ownerId != null && this.level instanceof ServerLevel) {
 			Entity entity = ((ServerLevel)this.level).getEntity(this.ownerId);
 			if (entity instanceof LivingEntity) {
 				this.owner = (LivingEntity)entity;
 			} else {
-				this.ownerId = null;
+				this.owner = null;
 			}
 		}
 

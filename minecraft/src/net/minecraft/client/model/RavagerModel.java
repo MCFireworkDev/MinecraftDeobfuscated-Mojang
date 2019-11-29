@@ -1,5 +1,6 @@
 package net.minecraft.client.model;
 
+import com.google.common.collect.ImmutableList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.geom.ModelPart;
@@ -7,7 +8,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.monster.Ravager;
 
 @Environment(EnvType.CLIENT)
-public class RavagerModel extends EntityModel<Ravager> {
+public class RavagerModel extends ListModel<Ravager> {
 	private final ModelPart head;
 	private final ModelPart mouth;
 	private final ModelPart body;
@@ -24,66 +25,61 @@ public class RavagerModel extends EntityModel<Ravager> {
 		float f = 0.0F;
 		this.neck = new ModelPart(this);
 		this.neck.setPos(0.0F, -7.0F, -1.5F);
-		this.neck.texOffs(68, 73).addBox(-5.0F, -1.0F, -18.0F, 10, 10, 18, 0.0F);
+		this.neck.texOffs(68, 73).addBox(-5.0F, -1.0F, -18.0F, 10.0F, 10.0F, 18.0F, 0.0F);
 		this.head = new ModelPart(this);
 		this.head.setPos(0.0F, 16.0F, -17.0F);
-		this.head.texOffs(0, 0).addBox(-8.0F, -20.0F, -14.0F, 16, 20, 16, 0.0F);
-		this.head.texOffs(0, 0).addBox(-2.0F, -6.0F, -18.0F, 4, 8, 4, 0.0F);
+		this.head.texOffs(0, 0).addBox(-8.0F, -20.0F, -14.0F, 16.0F, 20.0F, 16.0F, 0.0F);
+		this.head.texOffs(0, 0).addBox(-2.0F, -6.0F, -18.0F, 4.0F, 8.0F, 4.0F, 0.0F);
 		ModelPart modelPart = new ModelPart(this);
 		modelPart.setPos(-10.0F, -14.0F, -8.0F);
-		modelPart.texOffs(74, 55).addBox(0.0F, -14.0F, -2.0F, 2, 14, 4, 0.0F);
+		modelPart.texOffs(74, 55).addBox(0.0F, -14.0F, -2.0F, 2.0F, 14.0F, 4.0F, 0.0F);
 		modelPart.xRot = 1.0995574F;
 		this.head.addChild(modelPart);
 		ModelPart modelPart2 = new ModelPart(this);
 		modelPart2.mirror = true;
 		modelPart2.setPos(8.0F, -14.0F, -8.0F);
-		modelPart2.texOffs(74, 55).addBox(0.0F, -14.0F, -2.0F, 2, 14, 4, 0.0F);
+		modelPart2.texOffs(74, 55).addBox(0.0F, -14.0F, -2.0F, 2.0F, 14.0F, 4.0F, 0.0F);
 		modelPart2.xRot = 1.0995574F;
 		this.head.addChild(modelPart2);
 		this.mouth = new ModelPart(this);
 		this.mouth.setPos(0.0F, -2.0F, 2.0F);
-		this.mouth.texOffs(0, 36).addBox(-8.0F, 0.0F, -16.0F, 16, 3, 16, 0.0F);
+		this.mouth.texOffs(0, 36).addBox(-8.0F, 0.0F, -16.0F, 16.0F, 3.0F, 16.0F, 0.0F);
 		this.head.addChild(this.mouth);
 		this.neck.addChild(this.head);
 		this.body = new ModelPart(this);
-		this.body.texOffs(0, 55).addBox(-7.0F, -10.0F, -7.0F, 14, 16, 20, 0.0F);
-		this.body.texOffs(0, 91).addBox(-6.0F, 6.0F, -7.0F, 12, 13, 18, 0.0F);
+		this.body.texOffs(0, 55).addBox(-7.0F, -10.0F, -7.0F, 14.0F, 16.0F, 20.0F, 0.0F);
+		this.body.texOffs(0, 91).addBox(-6.0F, 6.0F, -7.0F, 12.0F, 13.0F, 18.0F, 0.0F);
 		this.body.setPos(0.0F, 1.0F, 2.0F);
 		this.leg0 = new ModelPart(this, 96, 0);
-		this.leg0.addBox(-4.0F, 0.0F, -4.0F, 8, 37, 8, 0.0F);
+		this.leg0.addBox(-4.0F, 0.0F, -4.0F, 8.0F, 37.0F, 8.0F, 0.0F);
 		this.leg0.setPos(-8.0F, -13.0F, 18.0F);
 		this.leg1 = new ModelPart(this, 96, 0);
 		this.leg1.mirror = true;
-		this.leg1.addBox(-4.0F, 0.0F, -4.0F, 8, 37, 8, 0.0F);
+		this.leg1.addBox(-4.0F, 0.0F, -4.0F, 8.0F, 37.0F, 8.0F, 0.0F);
 		this.leg1.setPos(8.0F, -13.0F, 18.0F);
 		this.leg2 = new ModelPart(this, 64, 0);
-		this.leg2.addBox(-4.0F, 0.0F, -4.0F, 8, 37, 8, 0.0F);
+		this.leg2.addBox(-4.0F, 0.0F, -4.0F, 8.0F, 37.0F, 8.0F, 0.0F);
 		this.leg2.setPos(-8.0F, -13.0F, -5.0F);
 		this.leg3 = new ModelPart(this, 64, 0);
 		this.leg3.mirror = true;
-		this.leg3.addBox(-4.0F, 0.0F, -4.0F, 8, 37, 8, 0.0F);
+		this.leg3.addBox(-4.0F, 0.0F, -4.0F, 8.0F, 37.0F, 8.0F, 0.0F);
 		this.leg3.setPos(8.0F, -13.0F, -5.0F);
 	}
 
-	public void render(Ravager ravager, float f, float g, float h, float i, float j, float k) {
-		this.setupAnim(ravager, f, g, h, i, j, k);
-		this.neck.render(k);
-		this.body.render(k);
-		this.leg0.render(k);
-		this.leg1.render(k);
-		this.leg2.render(k);
-		this.leg3.render(k);
+	@Override
+	public Iterable<ModelPart> parts() {
+		return ImmutableList.<ModelPart>of(this.neck, this.body, this.leg0, this.leg1, this.leg2, this.leg3);
 	}
 
-	public void setupAnim(Ravager ravager, float f, float g, float h, float i, float j, float k) {
+	public void setupAnim(Ravager ravager, float f, float g, float h, float i, float j) {
 		this.head.xRot = j * (float) (Math.PI / 180.0);
 		this.head.yRot = i * (float) (Math.PI / 180.0);
 		this.body.xRot = (float) (Math.PI / 2);
-		float l = 0.4F * g;
-		this.leg0.xRot = Mth.cos(f * 0.6662F) * l;
-		this.leg1.xRot = Mth.cos(f * 0.6662F + (float) Math.PI) * l;
-		this.leg2.xRot = Mth.cos(f * 0.6662F + (float) Math.PI) * l;
-		this.leg3.xRot = Mth.cos(f * 0.6662F) * l;
+		float k = 0.4F * g;
+		this.leg0.xRot = Mth.cos(f * 0.6662F) * k;
+		this.leg1.xRot = Mth.cos(f * 0.6662F + (float) Math.PI) * k;
+		this.leg2.xRot = Mth.cos(f * 0.6662F + (float) Math.PI) * k;
+		this.leg3.xRot = Mth.cos(f * 0.6662F) * k;
 	}
 
 	public void prepareMobModel(Ravager ravager, float f, float g, float h) {
