@@ -281,6 +281,8 @@ public class DebugScreenOverlay extends GuiComponent {
 									+ levelLightEngine.getLayerListener(LightLayer.BLOCK).getLightValue(blockPos)
 									+ " block)"
 							);
+						} else {
+							list.add("Server Light: (?? sky, ?? block)");
 						}
 
 						StringBuilder stringBuilder = new StringBuilder("CH");
@@ -295,22 +297,21 @@ public class DebugScreenOverlay extends GuiComponent {
 						}
 
 						list.add(stringBuilder.toString());
-						if (levelChunk2 != null) {
-							stringBuilder.setLength(0);
-							stringBuilder.append("SH");
+						stringBuilder.setLength(0);
+						stringBuilder.append("SH");
 
-							for(Heightmap.Types types : Heightmap.Types.values()) {
-								if (types.keepAfterWorldgen()) {
-									stringBuilder.append(" ")
-										.append((String)HEIGHTMAP_NAMES.get(types))
-										.append(": ")
-										.append(levelChunk2.getHeight(types, blockPos.getX(), blockPos.getZ()));
+						for(Heightmap.Types types : Heightmap.Types.values()) {
+							if (types.keepAfterWorldgen()) {
+								stringBuilder.append(" ").append((String)HEIGHTMAP_NAMES.get(types)).append(": ");
+								if (levelChunk2 != null) {
+									stringBuilder.append(levelChunk2.getHeight(types, blockPos.getX(), blockPos.getZ()));
+								} else {
+									stringBuilder.append("??");
 								}
 							}
-
-							list.add(stringBuilder.toString());
 						}
 
+						list.add(stringBuilder.toString());
 						if (blockPos.getY() >= 0 && blockPos.getY() < 256) {
 							list.add("Biome: " + Registry.BIOME.getKey(this.minecraft.level.getBiome(blockPos)));
 							long l = 0L;
@@ -503,7 +504,9 @@ public class DebugScreenOverlay extends GuiComponent {
 		}
 
 		int t = this.minecraft.getWindow().getGuiScaledHeight();
-		fill(i, t - 60, i + p, t, -1873784752);
+		Matrix4f matrix4f2 = matrix4f.copy();
+		matrix4f2.multiply(Matrix4f.createTranslateMatrix(0.0F, 0.0F, 100.0F));
+		fill(matrix4f2, i, t - 60, i + p, t, -1873784752);
 		BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
 		RenderSystem.enableBlend();
 		RenderSystem.disableTexture();
@@ -531,15 +534,12 @@ public class DebugScreenOverlay extends GuiComponent {
 		RenderSystem.enableTexture();
 		RenderSystem.disableBlend();
 		if (bl) {
-			fill(i + 1, t - 30 + 1, i + 14, t - 30 + 10, -1873784752);
-			this.font.drawInBatch("60 FPS", (float)(i + 2), (float)(t - 30 + 2), 14737632, false, matrix4f, bufferSource, false, 0, 15728880);
+			this.font.drawInBatch("60 FPS", (float)(i + 2), (float)(t - 30 + 2), 14737632, false, matrix4f, bufferSource, false, -1873784752, 15728880);
 			this.hLine(i, i + p - 1, t - 30, -1);
-			fill(i + 1, t - 60 + 1, i + 14, t - 60 + 10, -1873784752);
-			this.font.drawInBatch("30 FPS", (float)(i + 2), (float)(t - 60 + 2), 14737632, false, matrix4f, bufferSource, false, 0, 15728880);
+			this.font.drawInBatch("30 FPS", (float)(i + 2), (float)(t - 60 + 2), 14737632, false, matrix4f, bufferSource, false, -1873784752, 15728880);
 			this.hLine(i, i + p - 1, t - 60, -1);
 		} else {
-			fill(i + 1, t - 60 + 1, i + 14, t - 60 + 10, -1873784752);
-			this.font.drawInBatch("20 TPS", (float)(i + 2), (float)(t - 60 + 2), 14737632, false, matrix4f, bufferSource, false, 0, 15728880);
+			this.font.drawInBatch("20 TPS", (float)(i + 2), (float)(t - 60 + 2), 14737632, false, matrix4f, bufferSource, false, -1873784752, 15728880);
 			this.hLine(i, i + p - 1, t - 60, -1);
 		}
 
