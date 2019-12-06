@@ -904,6 +904,11 @@ public class Panda extends Animal {
 		}
 
 		@Override
+		public boolean canContinueToUse() {
+			return this.lookAt != null && super.canContinueToUse();
+		}
+
+		@Override
 		public boolean canUse() {
 			if (this.mob.getRandom().nextFloat() >= this.probability) {
 				return false;
