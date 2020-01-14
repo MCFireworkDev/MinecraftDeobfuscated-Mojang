@@ -111,6 +111,7 @@ public class Main {
 		String string7 = optionSet.has(optionSpec20) ? (String)optionSpec20.value(optionSet) : null;
 		String string8 = parseArgument(optionSet, optionSpec);
 		Integer integer = parseArgument(optionSet, optionSpec2);
+		CrashReport.preload();
 		User user = new User((String)optionSpec10.value(optionSet), string6, (String)optionSpec12.value(optionSet), (String)optionSpec21.value(optionSet));
 		GameConfig gameConfig = new GameConfig(
 			new GameConfig.UserData(user, propertyMap, propertyMap2, proxy),
