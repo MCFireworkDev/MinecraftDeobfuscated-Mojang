@@ -44,6 +44,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
@@ -113,20 +114,21 @@ public class ChunkRenderDispatcher {
 				this.freeBufferCount = this.freeBuffers.size();
 				CompletableFuture.runAsync(() -> {
 				}, this.executor).thenCompose(void_ -> chunkCompileTask.doTask(chunkBufferBuilderPack)).whenComplete((chunkTaskResult, throwable) -> {
-					this.mailbox.tell((Runnable)() -> {
-						if (chunkTaskResult == ChunkRenderDispatcher.ChunkTaskResult.SUCCESSFUL) {
-							chunkBufferBuilderPack.clearAll();
-						} else {
-							chunkBufferBuilderPack.discardAll();
-						}
-
-						this.freeBuffers.add(chunkBufferBuilderPack);
-						this.freeBufferCount = this.freeBuffers.size();
-						this.runTask();
-					});
 					if (throwable != null) {
 						CrashReport crashReport = CrashReport.forThrowable(throwable, "Batching chunks");
 						Minecraft.getInstance().delayCrash(Minecraft.getInstance().fillReport(crashReport));
+					} else {
+						this.mailbox.tell((Runnable)() -> {
+							if (chunkTaskResult == ChunkRenderDispatcher.ChunkTaskResult.SUCCESSFUL) {
+								chunkBufferBuilderPack.clearAll();
+							} else {
+								chunkBufferBuilderPack.discardAll();
+							}
+
+							this.freeBuffers.add(chunkBufferBuilderPack);
+							this.freeBufferCount = this.freeBuffers.size();
+							this.runTask();
+						});
 					}
 				});
 			}
@@ -263,7 +265,7 @@ public class ChunkRenderDispatcher {
 		private boolean playerChanged;
 
 		private boolean doesChunkExistAt(BlockPos blockPos) {
-			return !ChunkRenderDispatcher.this.level.getChunk(blockPos.getX() >> 4, blockPos.getZ() >> 4).isEmpty();
+			return ChunkRenderDispatcher.this.level.getChunk(blockPos.getX() >> 4, blockPos.getZ() >> 4, ChunkStatus.FULL, false) != null;
 		}
 
 		public boolean hasAllNeighbors() {

@@ -318,9 +318,12 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 
 	@Override
 	public void close() throws IOException {
-		this.queueSorter.close();
-		this.poiManager.close();
-		super.close();
+		try {
+			this.queueSorter.close();
+			this.poiManager.close();
+		} finally {
+			super.close();
+		}
 	}
 
 	protected void saveAllChunks(boolean bl) {
@@ -478,6 +481,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 	private CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> scheduleChunkLoad(ChunkPos chunkPos) {
 		return CompletableFuture.supplyAsync(() -> {
 			try {
+				this.level.getProfiler().incrementCounter("chunkLoad");
 				CompoundTag compoundTag = this.readChunk(chunkPos);
 				if (compoundTag != null) {
 					boolean bl = compoundTag.contains("Level", 10) && compoundTag.getCompound("Level").contains("Status", 8);
@@ -509,6 +513,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 		CompletableFuture<Either<List<ChunkAccess>, ChunkHolder.ChunkLoadingFailure>> completableFuture = this.getChunkRangeFuture(
 			chunkPos, chunkStatus.getRange(), i -> this.getDependencyStatus(chunkStatus, i)
 		);
+		this.level.getProfiler().incrementCounter((Supplier<String>)(() -> "chunkGenerate " + chunkStatus.getName()));
 		return completableFuture.thenComposeAsync(
 			either -> (CompletableFuture)either.map(
 					list -> {
@@ -666,6 +671,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 					}
 				}
 
+				this.level.getProfiler().incrementCounter("chunkSave");
 				CompoundTag compoundTag = ChunkSerializer.write(this.level, chunkAccess);
 				this.write(chunkPos, compoundTag);
 				return true;

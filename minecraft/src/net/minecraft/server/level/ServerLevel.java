@@ -588,9 +588,11 @@ public class ServerLevel extends Level {
 			entity.xRotO = entity.xRot;
 			if (entity.inChunk) {
 				++entity.tickCount;
-				this.getProfiler().push((Supplier<String>)(() -> Registry.ENTITY_TYPE.getKey(entity.getType()).toString()));
+				ProfilerFiller profilerFiller = this.getProfiler();
+				profilerFiller.push((Supplier<String>)(() -> Registry.ENTITY_TYPE.getKey(entity.getType()).toString()));
+				profilerFiller.incrementCounter("tickNonPassenger");
 				entity.tick();
-				this.getProfiler().pop();
+				profilerFiller.pop();
 			}
 
 			this.updateChunkPos(entity);
@@ -611,7 +613,11 @@ public class ServerLevel extends Level {
 			entity2.xRotO = entity2.xRot;
 			if (entity2.inChunk) {
 				++entity2.tickCount;
+				ProfilerFiller profilerFiller = this.getProfiler();
+				profilerFiller.push((Supplier<String>)(() -> Registry.ENTITY_TYPE.getKey(entity2.getType()).toString()));
+				profilerFiller.incrementCounter("tickPassenger");
 				entity2.rideTick();
+				profilerFiller.pop();
 			}
 
 			this.updateChunkPos(entity2);
@@ -1149,7 +1155,7 @@ public class ServerLevel extends Level {
 
 	public <T extends ParticleOptions> int sendParticles(T particleOptions, double d, double e, double f, int i, double g, double h, double j, double k) {
 		ClientboundLevelParticlesPacket clientboundLevelParticlesPacket = new ClientboundLevelParticlesPacket(
-			particleOptions, false, (float)d, (float)e, (float)f, (float)g, (float)h, (float)j, (float)k, i
+			particleOptions, false, d, e, f, (float)g, (float)h, (float)j, (float)k, i
 		);
 		int l = 0;
 
@@ -1166,7 +1172,7 @@ public class ServerLevel extends Level {
 	public <T extends ParticleOptions> boolean sendParticles(
 		ServerPlayer serverPlayer, T particleOptions, boolean bl, double d, double e, double f, int i, double g, double h, double j, double k
 	) {
-		Packet<?> packet = new ClientboundLevelParticlesPacket(particleOptions, bl, (float)d, (float)e, (float)f, (float)g, (float)h, (float)j, (float)k, i);
+		Packet<?> packet = new ClientboundLevelParticlesPacket(particleOptions, bl, d, e, f, (float)g, (float)h, (float)j, (float)k, i);
 		return this.sendParticles(serverPlayer, bl, d, e, f, packet);
 	}
 

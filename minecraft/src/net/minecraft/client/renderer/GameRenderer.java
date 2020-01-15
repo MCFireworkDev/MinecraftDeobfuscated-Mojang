@@ -271,6 +271,8 @@ public class GameRenderer implements AutoCloseable, ResourceManagerReloadListene
 					this.minecraft.hitResult = hitResult;
 				} else if (entityHitResult != null) {
 					this.minecraft.hitResult = entityHitResult;
+					this.minecraft.hitResultAimAssist = entityHitResult;
+					this.minecraft.hitResultAimAssistTicks = 6;
 					this.minecraft.crosshairPickEntity = entityHitResult.getEntity();
 				} else {
 					this.minecraft.hitResult = hitResult;
@@ -482,7 +484,7 @@ public class GameRenderer implements AutoCloseable, ResourceManagerReloadListene
 			RenderSystem.matrixMode(5888);
 			RenderSystem.loadIdentity();
 			RenderSystem.translatef(0.0F, 0.0F, -2000.0F);
-			Lighting.setupGui(poseStack.last().pose());
+			Lighting.setupFor3DItems();
 			if (bl && this.minecraft.level != null) {
 				this.minecraft.getProfiler().popPush("gui");
 				if (!this.minecraft.options.hideGui || this.minecraft.screen != null) {

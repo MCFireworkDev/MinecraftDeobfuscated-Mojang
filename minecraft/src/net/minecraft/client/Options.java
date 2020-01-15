@@ -1,15 +1,17 @@
 package net.minecraft.client;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.VideoMode;
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -37,7 +39,6 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.entity.player.PlayerModelPart;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -59,7 +60,7 @@ public class Options {
 			return null;
 		}
 	};
-	public static final Splitter COLON_SPLITTER = Splitter.on(':');
+	private static final Splitter OPTION_SPLITTER = Splitter.on(':').limit(2);
 	public double sensitivity = 0.5;
 	public int renderDistance = -1;
 	public int framerateLimit = 120;
@@ -116,6 +117,7 @@ public class Options {
 	public boolean bobView = true;
 	public boolean toggleCrouch;
 	public boolean toggleSprint;
+	public boolean skipMultiplayerWarning;
 	public final KeyMapping keyUp = new KeyMapping("key.forward", 87, "key.categories.movement");
 	public final KeyMapping keyLeft = new KeyMapping("key.left", 65, "key.categories.movement");
 	public final KeyMapping keyDown = new KeyMapping("key.back", 83, "key.categories.movement");
@@ -234,22 +236,40 @@ public class Options {
 			}
 
 			this.sourceVolumes.clear();
-			List<String> list = IOUtils.readLines(new FileInputStream(this.optionsFile));
 			CompoundTag compoundTag = new CompoundTag();
+			BufferedReader bufferedReader = Files.newReader(this.optionsFile, Charsets.UTF_8);
+			Throwable var3 = null;
 
-			for(String string : list) {
-				try {
-					Iterator<String> iterator = COLON_SPLITTER.omitEmptyStrings().limit(2).split(string).iterator();
-					compoundTag.putString((String)iterator.next(), (String)iterator.next());
-				} catch (Exception var10) {
-					LOGGER.warn("Skipping bad option: {}", string);
+			try {
+				bufferedReader.lines().forEach(stringx -> {
+					try {
+						Iterator<String> iterator = OPTION_SPLITTER.split(stringx).iterator();
+						compoundTag.putString((String)iterator.next(), (String)iterator.next());
+					} catch (Exception var3xx) {
+						LOGGER.warn("Skipping bad option: {}", stringx);
+					}
+				});
+			} catch (Throwable var17) {
+				var3 = var17;
+				throw var17;
+			} finally {
+				if (bufferedReader != null) {
+					if (var3 != null) {
+						try {
+							bufferedReader.close();
+						} catch (Throwable var16) {
+							var3.addSuppressed(var16);
+						}
+					} else {
+						bufferedReader.close();
+					}
 				}
 			}
 
-			compoundTag = this.dataFix(compoundTag);
+			CompoundTag compoundTag2 = this.dataFix(compoundTag);
 
-			for(String string : compoundTag.getAllKeys()) {
-				String string2 = compoundTag.getString(string);
+			for(String string : compoundTag2.getAllKeys()) {
+				String string2 = compoundTag2.getString(string);
 
 				try {
 					if ("autoJump".equals(string)) {
@@ -517,6 +537,10 @@ public class Options {
 						this.glDebugVerbosity = Integer.parseInt(string2);
 					}
 
+					if ("skipMultiplayerWarning".equals(string)) {
+						this.skipMultiplayerWarning = "true".equals(string2);
+					}
+
 					for(KeyMapping keyMapping : this.keyMappings) {
 						if (string.equals("key_" + keyMapping.getName())) {
 							keyMapping.setKey(InputConstants.getKey(string2));
@@ -534,14 +558,14 @@ public class Options {
 							this.setModelPart(playerModelPart, "true".equals(string2));
 						}
 					}
-				} catch (Exception var11) {
+				} catch (Exception var19) {
 					LOGGER.warn("Skipping bad option: {}:{}", string, string2);
 				}
 			}
 
 			KeyMapping.resetMapping();
-		} catch (Exception var12) {
-			LOGGER.error("Failed to load options", var12);
+		} catch (Exception var20) {
+			LOGGER.error("Failed to load options", var20);
 		}
 	}
 
@@ -645,6 +669,7 @@ public class Options {
 				printWriter.println("mouseWheelSensitivity:" + this.mouseWheelSensitivity);
 				printWriter.println("rawMouseInput:" + Option.RAW_MOUSE_INPUT.get(this));
 				printWriter.println("glDebugVerbosity:" + this.glDebugVerbosity);
+				printWriter.println("skipMultiplayerWarning:" + this.skipMultiplayerWarning);
 
 				for(KeyMapping keyMapping : this.keyMappings) {
 					printWriter.println("key_" + keyMapping.getName() + ":" + keyMapping.saveString());

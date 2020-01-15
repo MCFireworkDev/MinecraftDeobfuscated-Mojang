@@ -235,7 +235,7 @@ public class Item implements ItemLike {
 
 	public int getUseDuration(ItemStack itemStack) {
 		if (itemStack.getItem().isEdible()) {
-			return this.getFoodProperties().isFastFood() ? 16 : 32;
+			return this.getFoodProperties().isFastFood() ? 20 : 40;
 		} else {
 			return 0;
 		}

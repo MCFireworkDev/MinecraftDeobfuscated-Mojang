@@ -4,8 +4,14 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.GlUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.datafixers.DataFixUtils;
 import com.mojang.datafixers.util.Either;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Transformation;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import java.util.EnumMap;
@@ -273,6 +279,8 @@ public class DebugScreenOverlay extends GuiComponent {
 									+ levelLightEngine.getLayerListener(LightLayer.BLOCK).getLightValue(blockPos)
 									+ " block)"
 							);
+						} else {
+							list.add("Server Light: (?? sky, ?? block)");
 						}
 
 						StringBuilder stringBuilder = new StringBuilder("CH");
@@ -287,22 +295,21 @@ public class DebugScreenOverlay extends GuiComponent {
 						}
 
 						list.add(stringBuilder.toString());
-						if (levelChunk2 != null) {
-							stringBuilder.setLength(0);
-							stringBuilder.append("SH");
+						stringBuilder.setLength(0);
+						stringBuilder.append("SH");
 
-							for(Heightmap.Types types : Heightmap.Types.values()) {
-								if (types.keepAfterWorldgen()) {
-									stringBuilder.append(" ")
-										.append((String)HEIGHTMAP_NAMES.get(types))
-										.append(": ")
-										.append(levelChunk2.getHeight(types, blockPos.getX(), blockPos.getZ()));
+						for(Heightmap.Types types : Heightmap.Types.values()) {
+							if (types.keepAfterWorldgen()) {
+								stringBuilder.append(" ").append((String)HEIGHTMAP_NAMES.get(types)).append(": ");
+								if (levelChunk2 != null) {
+									stringBuilder.append(levelChunk2.getHeight(types, blockPos.getX(), blockPos.getZ()));
+								} else {
+									stringBuilder.append("??");
 								}
 							}
-
-							list.add(stringBuilder.toString());
 						}
 
+						list.add(stringBuilder.toString());
 						if (blockPos.getY() >= 0 && blockPos.getY() < 256) {
 							list.add("Biome: " + Registry.BIOME.getKey(this.minecraft.level.getBiome(blockPos)));
 							long l = 0L;
@@ -497,16 +504,31 @@ public class DebugScreenOverlay extends GuiComponent {
 
 		int t = this.minecraft.getWindow().getGuiScaledHeight();
 		fill(i, t - 60, i + p, t, -1873784752);
+		BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+		RenderSystem.enableBlend();
+		RenderSystem.disableTexture();
+		RenderSystem.defaultBlendFunc();
+		bufferBuilder.begin(7, DefaultVertexFormat.POSITION_COLOR);
 
-		while(m != l) {
-			int u = frameTimer.scaleSampleTo(ls[m], bl ? 30 : 60, bl ? 60 : 20);
-			int v = bl ? 100 : 60;
-			int w = this.getSampleColor(Mth.clamp(u, 0, v), 0, v / 2, v);
-			this.vLine(n, t, t - u, w);
+		for(Matrix4f matrix4f = Transformation.identity().getMatrix(); m != l; m = frameTimer.wrapIndex(m + 1)) {
+			int v = frameTimer.scaleSampleTo(ls[m], bl ? 30 : 60, bl ? 60 : 20);
+			int w = bl ? 100 : 60;
+			int x = this.getSampleColor(Mth.clamp(v, 0, w), 0, w / 2, w);
+			int y = x >> 24 & 0xFF;
+			int z = x >> 16 & 0xFF;
+			int aa = x >> 8 & 0xFF;
+			int ab = x & 0xFF;
+			bufferBuilder.vertex(matrix4f, (float)(n + 1), (float)t, 0.0F).color(z, aa, ab, y).endVertex();
+			bufferBuilder.vertex(matrix4f, (float)n, (float)t, 0.0F).color(z, aa, ab, y).endVertex();
+			bufferBuilder.vertex(matrix4f, (float)n, (float)(t - v + 1), 0.0F).color(z, aa, ab, y).endVertex();
+			bufferBuilder.vertex(matrix4f, (float)(n + 1), (float)(t - v + 1), 0.0F).color(z, aa, ab, y).endVertex();
 			++n;
-			m = frameTimer.wrapIndex(m + 1);
 		}
 
+		bufferBuilder.end();
+		BufferUploader.end(bufferBuilder);
+		RenderSystem.enableTexture();
+		RenderSystem.disableBlend();
 		if (bl) {
 			fill(i + 1, t - 30 + 1, i + 14, t - 30 + 10, -1873784752);
 			this.font.draw("60 FPS", (float)(i + 2), (float)(t - 30 + 2), 14737632);

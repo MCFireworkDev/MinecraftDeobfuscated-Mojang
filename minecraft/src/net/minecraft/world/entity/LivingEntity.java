@@ -1079,7 +1079,7 @@ public abstract class LivingEntity extends Entity {
 	}
 
 	public void die(DamageSource damageSource) {
-		if (!this.dead) {
+		if (!this.removed && !this.dead) {
 			Entity entity = damageSource.getEntity();
 			LivingEntity livingEntity = this.getKillCredit();
 			if (this.deathScore >= 0 && livingEntity != null) {
@@ -1200,7 +1200,7 @@ public abstract class LivingEntity extends Entity {
 			this.hasImpulse = true;
 			Vec3 vec3 = this.getDeltaMovement();
 			Vec3 vec32 = new Vec3(d, 0.0, e).normalize().scale((double)f);
-			this.setDeltaMovement(vec3.x / 2.0 - vec32.x, this.onGround ? Math.min(0.4, vec3.y / 2.0 + (double)f) : vec3.y, vec3.z / 2.0 - vec32.z);
+			this.setDeltaMovement(vec3.x / 2.0 - vec32.x, this.onGround ? Math.min(0.4, (double)f) : Math.max(0.4, vec3.y + (double)(f / 2.0F)), vec3.z / 2.0 - vec32.z);
 		}
 	}
 
@@ -2447,7 +2447,8 @@ public abstract class LivingEntity extends Entity {
 			++g;
 		}
 
-		return this.oAttackAnim + g * f;
+		float h = this.oAttackAnim + g * f;
+		return h > 0.4F && this.getAttackStrengthScale(f) < 1.95F ? 0.4F + 0.6F * (float)Math.pow((double)((h - 0.4F) / 0.6F), 4.0) : h;
 	}
 
 	public boolean isEffectiveAi() {

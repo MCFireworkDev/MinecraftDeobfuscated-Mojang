@@ -40,9 +40,9 @@ enum WeaponType {
 	public float getDamage(Tier tier) {
 		switch(this) {
 			case SWORD:
-				return tier.getAttackDamageBonus() + 3.0F;
+				return tier.getAttackDamageBonus() + 2.0F;
 			case AXE:
-				return tier.getAttackDamageBonus() + 4.0F;
+				return tier.getAttackDamageBonus() + 3.0F;
 			case PICKAXE:
 				return tier.getAttackDamageBonus() + 1.0F;
 			case HOE:
@@ -54,7 +54,7 @@ enum WeaponType {
 			case SHOVEL:
 				return tier.getAttackDamageBonus();
 			case TRIDENT:
-				return 6.0F;
+				return 5.0F;
 			default:
 				return 0.0F;
 		}

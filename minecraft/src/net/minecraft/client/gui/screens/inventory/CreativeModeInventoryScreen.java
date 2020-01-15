@@ -55,7 +55,9 @@ public class CreativeModeInventoryScreen extends EffectRenderingInventoryScreen<
 	private float scrollOffs;
 	private boolean scrolling;
 	private EditBox searchBox;
+	@Nullable
 	private List<Slot> originalSlots;
+	@Nullable
 	private Slot destroyItemSlot;
 	private CreativeInventoryListener listener;
 	private boolean ignoreTextInput;
@@ -460,31 +462,34 @@ public class CreativeModeInventoryScreen extends EffectRenderingInventoryScreen<
 			this.menu.slots.clear();
 
 			for(int j = 0; j < abstractContainerMenu.slots.size(); ++j) {
-				Slot slot = new CreativeModeInventoryScreen.SlotWrapper((Slot)abstractContainerMenu.slots.get(j), j);
-				this.menu.slots.add(slot);
+				int o;
+				int k;
 				if (j >= 5 && j < 9) {
-					int k = j - 5;
-					int l = k / 2;
-					int m = k % 2;
-					slot.x = 54 + l * 54;
-					slot.y = 6 + m * 27;
+					int l = j - 5;
+					int m = l / 2;
+					int n = l % 2;
+					o = 54 + m * 54;
+					k = 6 + n * 27;
 				} else if (j >= 0 && j < 5) {
-					slot.x = -2000;
-					slot.y = -2000;
+					o = -2000;
+					k = -2000;
 				} else if (j == 45) {
-					slot.x = 35;
-					slot.y = 20;
-				} else if (j < abstractContainerMenu.slots.size()) {
-					int k = j - 9;
-					int l = k % 9;
-					int m = k / 9;
-					slot.x = 9 + l * 18;
+					o = 35;
+					k = 20;
+				} else {
+					int l = j - 9;
+					int m = l % 9;
+					int n = l / 9;
+					o = 9 + m * 18;
 					if (j >= 36) {
-						slot.y = 112;
+						k = 112;
 					} else {
-						slot.y = 54 + m * 18;
+						k = 54 + n * 18;
 					}
 				}
+
+				Slot slot = new CreativeModeInventoryScreen.SlotWrapper((Slot)abstractContainerMenu.slots.get(j), j, o, k);
+				this.menu.slots.add(slot);
 			}
 
 			this.destroyItemSlot = new Slot(CONTAINER, 0, 173, 112);
@@ -864,18 +869,17 @@ public class CreativeModeInventoryScreen extends EffectRenderingInventoryScreen<
 	}
 
 	@Environment(EnvType.CLIENT)
-	class SlotWrapper extends Slot {
+	static class SlotWrapper extends Slot {
 		private final Slot target;
 
-		public SlotWrapper(Slot slot, int i) {
-			super(slot.container, i, 0, 0);
+		public SlotWrapper(Slot slot, int i, int j, int k) {
+			super(slot.container, i, j, k);
 			this.target = slot;
 		}
 
 		@Override
 		public ItemStack onTake(Player player, ItemStack itemStack) {
-			this.target.onTake(player, itemStack);
-			return itemStack;
+			return this.target.onTake(player, itemStack);
 		}
 
 		@Override

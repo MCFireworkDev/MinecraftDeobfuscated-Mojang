@@ -124,6 +124,10 @@ public class MultiPlayerGameMode {
 		} else if (!this.minecraft.level.getWorldBorder().isWithinBounds(blockPos)) {
 			return false;
 		} else {
+			if (this.localPlayerMode != GameType.SPECTATOR) {
+				this.minecraft.player.resetAttackStrengthTicker();
+			}
+
 			if (this.localPlayerMode.isCreative()) {
 				BlockState blockState = this.minecraft.level.getBlockState(blockPos);
 				this.minecraft.getTutorial().onDestroyBlock(this.minecraft.level, blockPos, blockState, 1.0F);
@@ -175,43 +179,51 @@ public class MultiPlayerGameMode {
 		if (this.destroyDelay > 0) {
 			--this.destroyDelay;
 			return true;
-		} else if (this.localPlayerMode.isCreative() && this.minecraft.level.getWorldBorder().isWithinBounds(blockPos)) {
-			this.destroyDelay = 5;
-			BlockState blockState = this.minecraft.level.getBlockState(blockPos);
-			this.minecraft.getTutorial().onDestroyBlock(this.minecraft.level, blockPos, blockState, 1.0F);
-			this.sendBlockAction(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, blockPos, direction);
-			creativeDestroyBlock(this.minecraft, this, blockPos, direction);
-			return true;
-		} else if (this.sameDestroyTarget(blockPos)) {
-			BlockState blockState = this.minecraft.level.getBlockState(blockPos);
-			if (blockState.isAir()) {
-				this.isDestroying = false;
-				return false;
-			} else {
-				this.destroyProgress += blockState.getDestroyProgress(this.minecraft.player, this.minecraft.player.level, blockPos);
-				if (this.destroyTicks % 4.0F == 0.0F) {
-					SoundType soundType = blockState.getSoundType();
-					this.minecraft
-						.getSoundManager()
-						.play(new SimpleSoundInstance(soundType.getHitSound(), SoundSource.BLOCKS, (soundType.getVolume() + 1.0F) / 8.0F, soundType.getPitch() * 0.5F, blockPos));
-				}
-
-				++this.destroyTicks;
-				this.minecraft.getTutorial().onDestroyBlock(this.minecraft.level, blockPos, blockState, Mth.clamp(this.destroyProgress, 0.0F, 1.0F));
-				if (this.destroyProgress >= 1.0F) {
-					this.isDestroying = false;
-					this.sendBlockAction(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction);
-					this.destroyBlock(blockPos);
-					this.destroyProgress = 0.0F;
-					this.destroyTicks = 0.0F;
-					this.destroyDelay = 5;
-				}
-
-				this.minecraft.level.destroyBlockProgress(this.minecraft.player.getId(), this.destroyBlockPos, (int)(this.destroyProgress * 10.0F) - 1);
-				return true;
-			}
 		} else {
-			return this.startDestroyBlock(blockPos, direction);
+			if (this.localPlayerMode != GameType.SPECTATOR) {
+				this.minecraft.player.resetAttackStrengthTicker();
+			}
+
+			if (this.localPlayerMode.isCreative() && this.minecraft.level.getWorldBorder().isWithinBounds(blockPos)) {
+				this.destroyDelay = 5;
+				BlockState blockState = this.minecraft.level.getBlockState(blockPos);
+				this.minecraft.getTutorial().onDestroyBlock(this.minecraft.level, blockPos, blockState, 1.0F);
+				this.sendBlockAction(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, blockPos, direction);
+				creativeDestroyBlock(this.minecraft, this, blockPos, direction);
+				return true;
+			} else if (this.sameDestroyTarget(blockPos)) {
+				BlockState blockState = this.minecraft.level.getBlockState(blockPos);
+				if (blockState.isAir()) {
+					this.isDestroying = false;
+					return false;
+				} else {
+					this.destroyProgress += blockState.getDestroyProgress(this.minecraft.player, this.minecraft.player.level, blockPos);
+					if (this.destroyTicks % 4.0F == 0.0F) {
+						SoundType soundType = blockState.getSoundType();
+						this.minecraft
+							.getSoundManager()
+							.play(
+								new SimpleSoundInstance(soundType.getHitSound(), SoundSource.BLOCKS, (soundType.getVolume() + 1.0F) / 8.0F, soundType.getPitch() * 0.5F, blockPos)
+							);
+					}
+
+					++this.destroyTicks;
+					this.minecraft.getTutorial().onDestroyBlock(this.minecraft.level, blockPos, blockState, Mth.clamp(this.destroyProgress, 0.0F, 1.0F));
+					if (this.destroyProgress >= 1.0F) {
+						this.isDestroying = false;
+						this.sendBlockAction(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction);
+						this.destroyBlock(blockPos);
+						this.destroyProgress = 0.0F;
+						this.destroyTicks = 0.0F;
+						this.destroyDelay = 5;
+					}
+
+					this.minecraft.level.destroyBlockProgress(this.minecraft.player.getId(), this.destroyBlockPos, (int)(this.destroyProgress * 10.0F) - 1);
+					return true;
+				}
+			} else {
+				return this.startDestroyBlock(blockPos, direction);
+			}
 		}
 	}
 

@@ -482,23 +482,17 @@ public class Wolf extends TamableAnimal {
 
 	@Override
 	public boolean wantsToAttack(LivingEntity livingEntity, LivingEntity livingEntity2) {
-		if (!(livingEntity instanceof Creeper) && !(livingEntity instanceof Ghast)) {
-			if (livingEntity instanceof Wolf) {
-				Wolf wolf = (Wolf)livingEntity;
-				if (wolf.isTame() && wolf.getOwner() == livingEntity2) {
-					return false;
-				}
-			}
-
-			if (livingEntity instanceof Player && livingEntity2 instanceof Player && !((Player)livingEntity2).canHarmPlayer((Player)livingEntity)) {
-				return false;
-			} else if (livingEntity instanceof AbstractHorse && ((AbstractHorse)livingEntity).isTamed()) {
-				return false;
-			} else {
-				return !(livingEntity instanceof Cat) || !((Cat)livingEntity).isTame();
-			}
-		} else {
+		if (livingEntity instanceof Creeper || livingEntity instanceof Ghast) {
 			return false;
+		} else if (livingEntity instanceof Wolf) {
+			Wolf wolf = (Wolf)livingEntity;
+			return !wolf.isTame() || wolf.getOwner() != livingEntity2;
+		} else if (livingEntity instanceof Player && livingEntity2 instanceof Player && !((Player)livingEntity2).canHarmPlayer((Player)livingEntity)) {
+			return false;
+		} else if (livingEntity instanceof AbstractHorse && ((AbstractHorse)livingEntity).isTamed()) {
+			return false;
+		} else {
+			return !(livingEntity instanceof TamableAnimal) || !((TamableAnimal)livingEntity).isTame();
 		}
 	}
 

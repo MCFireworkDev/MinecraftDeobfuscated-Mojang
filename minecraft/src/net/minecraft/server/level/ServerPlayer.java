@@ -1147,7 +1147,6 @@ public class ServerPlayer extends Player implements ContainerListener {
 		this.chatVisibility = serverboundClientInformationPacket.getChatVisibility();
 		this.canChatColor = serverboundClientInformationPacket.getChatColors();
 		this.enableShieldOnCrouch = serverboundClientInformationPacket.getUseShieldOnCrouch();
-		System.out.println(" asddsf s ServerboundClientInformationPacket");
 		this.getEntityData().set(DATA_PLAYER_MODE_CUSTOMISATION, (byte)serverboundClientInformationPacket.getModelCustomisation());
 		this.getEntityData().set(DATA_PLAYER_MAIN_HAND, (byte)(serverboundClientInformationPacket.getMainHand() == HumanoidArm.LEFT ? 0 : 1));
 	}

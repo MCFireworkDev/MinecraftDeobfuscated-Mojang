@@ -664,13 +664,11 @@ public class LocalPlayer extends AbstractClientPlayer {
 			this.checkInBlock(this.getX() + (double)this.getBbWidth() * 0.35, this.getY() + 0.5, this.getZ() + (double)this.getBbWidth() * 0.35);
 		}
 
-		boolean bl5 = (float)this.getFoodData().getFoodLevel() > 6.0F || this.abilities.mayfly;
 		if ((this.onGround || this.isUnderWater())
 			&& !bl2
 			&& !bl3
 			&& this.hasEnoughImpulseToStartSprinting()
 			&& !this.isSprinting()
-			&& bl5
 			&& !this.isUsingItem()
 			&& !this.hasEffect(MobEffects.BLINDNESS)) {
 			if (this.sprintTriggerTime <= 0 && !this.minecraft.options.keySprint.isDown()) {
@@ -683,7 +681,6 @@ public class LocalPlayer extends AbstractClientPlayer {
 		if (!this.isSprinting()
 			&& (!this.isInWater() || this.isUnderWater())
 			&& this.hasEnoughImpulseToStartSprinting()
-			&& bl5
 			&& !this.isUsingItem()
 			&& !this.hasEffect(MobEffects.BLINDNESS)
 			&& this.minecraft.options.keySprint.isDown()) {
@@ -691,23 +688,23 @@ public class LocalPlayer extends AbstractClientPlayer {
 		}
 
 		if (this.isSprinting()) {
-			boolean bl6 = !this.input.hasForwardImpulse() || !bl5;
-			boolean bl7 = bl6 || this.horizontalCollision || this.isInWater() && !this.isUnderWater();
+			boolean bl5 = !this.input.hasForwardImpulse();
+			boolean bl6 = bl5 || this.horizontalCollision || this.isInWater() && !this.isUnderWater();
 			if (this.isSwimming()) {
-				if (!this.onGround && !this.input.shiftKeyDown && bl6 || !this.isInWater()) {
+				if (!this.onGround && !this.input.shiftKeyDown && bl5 || !this.isInWater()) {
 					this.setSprinting(false);
 				}
-			} else if (bl7) {
+			} else if (bl6) {
 				this.setSprinting(false);
 			}
 		}
 
-		boolean bl6 = false;
+		boolean bl5 = false;
 		if (this.abilities.mayfly) {
 			if (this.minecraft.gameMode.isAlwaysFlying()) {
 				if (!this.abilities.flying) {
 					this.abilities.flying = true;
-					bl6 = true;
+					bl5 = true;
 					this.onUpdateAbilities();
 				}
 			} else if (!bl && this.input.jumping && !bl4) {
@@ -715,14 +712,14 @@ public class LocalPlayer extends AbstractClientPlayer {
 					this.jumpTriggerTime = 7;
 				} else if (!this.isSwimming()) {
 					this.abilities.flying = !this.abilities.flying;
-					bl6 = true;
+					bl5 = true;
 					this.onUpdateAbilities();
 					this.jumpTriggerTime = 0;
 				}
 			}
 		}
 
-		if (this.input.jumping && !bl6 && !bl && !this.abilities.flying && !this.isPassenger()) {
+		if (this.input.jumping && !bl5 && !bl && !this.abilities.flying && !this.isPassenger() && !this.onLadder()) {
 			ItemStack itemStack = this.getItemBySlot(EquipmentSlot.CHEST);
 			if (itemStack.getItem() == Items.ELYTRA && ElytraItem.isFlyEnabled(itemStack) && this.tryToStartFallFlying()) {
 				this.connection.send(new ServerboundPlayerCommandPacket(this, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));

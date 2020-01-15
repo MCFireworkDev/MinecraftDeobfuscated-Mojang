@@ -799,6 +799,10 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 							m = h - this.lastGoodX;
 							n = i - this.lastGoodY;
 							o = j - this.lastGoodZ;
+							if (n > 0.0) {
+								this.player.fallDistance = 0.0F;
+							}
+
 							if (this.player.onGround && !serverboundMovePlayerPacket.isOnGround() && n > 0.0) {
 								this.player.jumpFromGround();
 							}
@@ -1152,7 +1156,10 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 					this.player.interactOn(entity, interactionHand);
 				} else if (serverboundInteractPacket.getAction() == ServerboundInteractPacket.Action.INTERACT_AT) {
 					InteractionHand interactionHand = serverboundInteractPacket.getHand();
-					entity.interactAt(this.player, serverboundInteractPacket.getLocation(), interactionHand);
+					InteractionResult interactionResult = entity.interactAt(this.player, serverboundInteractPacket.getLocation(), interactionHand);
+					if (interactionResult.shouldSwing()) {
+						this.player.swing(interactionHand, true);
+					}
 				} else if (serverboundInteractPacket.getAction() == ServerboundInteractPacket.Action.ATTACK) {
 					if (entity instanceof ItemEntity || entity instanceof ExperienceOrb || entity instanceof AbstractArrow || entity == this.player) {
 						this.disconnect(new TranslatableComponent("multiplayer.disconnect.invalid_entity_attacked"));
@@ -1161,6 +1168,8 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 					}
 
 					this.player.attack(entity);
+				} else if (serverboundInteractPacket.getAction() == ServerboundInteractPacket.Action.AIR_SWING) {
+					this.player.resetAttackStrengthTicker();
 				}
 			}
 		} else {
