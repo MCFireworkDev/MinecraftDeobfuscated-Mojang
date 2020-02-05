@@ -43,7 +43,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.LeapAtTargetGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.OcelotAttackGoal;
-import net.minecraft.world.entity.ai.goal.SitGoal;
+import net.minecraft.world.entity.ai.goal.SitWhenOrderedToGoal;
 import net.minecraft.world.entity.ai.goal.TemptGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.NonTameRandomTargetGoal;
@@ -107,11 +107,10 @@ public class Cat extends TamableAnimal {
 
 	@Override
 	protected void registerGoals() {
-		this.sitGoal = new SitGoal(this);
 		this.temptGoal = new Cat.CatTemptGoal(this, 0.6, TEMPT_INGREDIENT, true);
 		this.goalSelector.addGoal(1, new FloatGoal(this));
-		this.goalSelector.addGoal(1, new Cat.CatRelaxOnOwnerGoal(this));
-		this.goalSelector.addGoal(2, this.sitGoal);
+		this.goalSelector.addGoal(1, new SitWhenOrderedToGoal(this));
+		this.goalSelector.addGoal(2, new Cat.CatRelaxOnOwnerGoal(this));
 		this.goalSelector.addGoal(3, this.temptGoal);
 		this.goalSelector.addGoal(5, new CatLieOnBedGoal(this, 1.1, 8));
 		this.goalSelector.addGoal(6, new FollowOwnerGoal(this, 1.0, 10.0F, 5.0F, false));
@@ -404,7 +403,7 @@ public class Cat extends TamableAnimal {
 
 						boolean bl = super.mobInteract(player, interactionHand);
 						if (!bl || this.isBaby()) {
-							this.sitGoal.wantToSit(!this.isSitting());
+							this.setOrderedToSit(!this.isOrderedToSit());
 						}
 
 						return bl;
@@ -425,7 +424,7 @@ public class Cat extends TamableAnimal {
 				this.usePlayerItem(player, itemStack);
 				if (this.random.nextInt(3) == 0) {
 					this.tame(player);
-					this.sitGoal.wantToSit(true);
+					this.setOrderedToSit(true);
 					this.level.broadcastEntityEvent(this, (byte)7);
 				} else {
 					this.level.broadcastEntityEvent(this, (byte)6);
@@ -504,7 +503,7 @@ public class Cat extends TamableAnimal {
 		public boolean canUse() {
 			if (!this.cat.isTame()) {
 				return false;
-			} else if (this.cat.isSitting()) {
+			} else if (this.cat.isOrderedToSit()) {
 				return false;
 			} else {
 				LivingEntity livingEntity = this.cat.getOwner();
@@ -544,7 +543,7 @@ public class Cat extends TamableAnimal {
 		@Override
 		public boolean canContinueToUse() {
 			return this.cat.isTame()
-				&& !this.cat.isSitting()
+				&& !this.cat.isOrderedToSit()
 				&& this.ownerPlayer != null
 				&& this.ownerPlayer.isSleeping()
 				&& this.goalPos != null
@@ -554,7 +553,7 @@ public class Cat extends TamableAnimal {
 		@Override
 		public void start() {
 			if (this.goalPos != null) {
-				this.cat.getSitGoal().wantToSit(false);
+				this.cat.setInSittingPose(false);
 				this.cat.getNavigation().moveTo((double)this.goalPos.getX(), (double)this.goalPos.getY(), (double)this.goalPos.getZ(), 1.1F);
 			}
 		}
@@ -608,7 +607,7 @@ public class Cat extends TamableAnimal {
 		@Override
 		public void tick() {
 			if (this.ownerPlayer != null && this.goalPos != null) {
-				this.cat.getSitGoal().wantToSit(false);
+				this.cat.setInSittingPose(false);
 				this.cat.getNavigation().moveTo((double)this.goalPos.getX(), (double)this.goalPos.getY(), (double)this.goalPos.getZ(), 1.1F);
 				if (this.cat.distanceToSqr(this.ownerPlayer) < 2.5) {
 					++this.onBedTicks;

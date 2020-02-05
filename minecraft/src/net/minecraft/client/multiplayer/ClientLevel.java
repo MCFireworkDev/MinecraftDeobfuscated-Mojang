@@ -59,6 +59,7 @@ import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.LevelType;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.TickList;
+import net.minecraft.world.level.biome.AmbientParticleSettings;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Block;
@@ -99,10 +100,10 @@ public class ClientLevel extends Level {
 		LevelSettings levelSettings,
 		DimensionType dimensionType,
 		int i,
-		ProfilerFiller profilerFiller,
+		Supplier<ProfilerFiller> supplier,
 		LevelRenderer levelRenderer
 	) {
-		super(new LevelData(levelSettings, "MpServer"), dimensionType, (level, dimension) -> new ClientChunkCache((ClientLevel)level, i), profilerFiller, true);
+		super(new LevelData(levelSettings, "MpServer"), dimensionType, (level, dimension) -> new ClientChunkCache((ClientLevel)level, i), supplier, true);
 		this.connection = clientPacketListener;
 		this.levelRenderer = levelRenderer;
 		this.setSpawnPos(new BlockPos(8, 64, 8));
@@ -382,6 +383,26 @@ public class ClientLevel extends Level {
 
 		if (bl && blockState.getBlock() == Blocks.BARRIER) {
 			this.addParticle(ParticleTypes.BARRIER, (double)m + 0.5, (double)n + 0.5, (double)o + 0.5, 0.0, 0.0, 0.0);
+		}
+
+		if (!blockState.isCollisionShapeFullBlock(this, mutableBlockPos)) {
+			this.getBiome(mutableBlockPos)
+				.getAmbientParticle()
+				.ifPresent(
+					ambientParticleSettings -> {
+						if (ambientParticleSettings.canSpawn(this.random)) {
+							this.addParticle(
+								ambientParticleSettings.getParticleType(),
+								(double)((float)mutableBlockPos.getX() + this.random.nextFloat()),
+								(double)((float)mutableBlockPos.getY() + this.random.nextFloat()),
+								(double)((float)mutableBlockPos.getZ() + this.random.nextFloat()),
+								ambientParticleSettings.getXVelocity(this.random),
+								ambientParticleSettings.getYVelocity(this.random),
+								ambientParticleSettings.getZVelocity(this.random)
+							);
+						}
+					}
+				);
 		}
 	}
 
@@ -710,11 +731,6 @@ public class ClientLevel extends Level {
 		}
 
 		return new Vec3((double)i, (double)j, (double)k);
-	}
-
-	public Vec3 getFogColor(float f) {
-		float g = this.getTimeOfDay(f);
-		return this.dimension.getFogColor(g, f);
 	}
 
 	public float getStarBrightness(float f) {

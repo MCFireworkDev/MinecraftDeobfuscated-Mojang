@@ -351,7 +351,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 			),
 			clientboundLoginPacket.getDimension(),
 			this.serverChunkRadius,
-			this.minecraft.getProfiler(),
+			this.minecraft::getProfiler,
 			this.minecraft.levelRenderer
 		);
 		this.minecraft.setLevel(this.level);
@@ -1047,7 +1047,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 				),
 				clientboundRespawnPacket.getDimension(),
 				this.serverChunkRadius,
-				this.minecraft.getProfiler(),
+				this.minecraft::getProfiler,
 				this.minecraft.levelRenderer
 			);
 			this.level.setScoreboard(scoreboard);

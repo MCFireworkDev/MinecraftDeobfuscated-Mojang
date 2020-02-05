@@ -1,6 +1,8 @@
 package net.minecraft.world.level.block;
 
 import javax.annotation.Nullable;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -112,5 +114,11 @@ public class AnvilBlock extends FallingBlock {
 	@Override
 	public boolean isPathfindable(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, PathComputationType pathComputationType) {
 		return false;
+	}
+
+	@Environment(EnvType.CLIENT)
+	@Override
+	public int getDustColor(BlockState blockState) {
+		return this.materialColor.col;
 	}
 }

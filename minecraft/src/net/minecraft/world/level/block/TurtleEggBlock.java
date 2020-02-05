@@ -150,8 +150,10 @@ public class TurtleEggBlock extends Block {
 	private boolean canDestroyEgg(Level level, Entity entity) {
 		if (entity instanceof Turtle) {
 			return false;
+		} else if (!(entity instanceof LivingEntity)) {
+			return false;
 		} else {
-			return entity instanceof LivingEntity && !(entity instanceof Player) ? level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING) : true;
+			return entity instanceof Player || level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
 		}
 	}
 }
