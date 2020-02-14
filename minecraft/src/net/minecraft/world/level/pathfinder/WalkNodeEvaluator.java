@@ -457,7 +457,7 @@ public class WalkNodeEvaluator extends NodeEvaluator {
 			return BlockPathTypes.STICKY_HONEY;
 		} else if (block == Blocks.COCOA) {
 			return BlockPathTypes.COCOA;
-		} else if (block instanceof DoorBlock && material == Material.WOOD && !blockState.getValue(DoorBlock.OPEN)) {
+		} else if (DoorBlock.isWoodenDoor(blockState) && !blockState.getValue(DoorBlock.OPEN)) {
 			return BlockPathTypes.DOOR_WOOD_CLOSED;
 		} else if (block instanceof DoorBlock && material == Material.METAL && !blockState.getValue(DoorBlock.OPEN)) {
 			return BlockPathTypes.DOOR_IRON_CLOSED;

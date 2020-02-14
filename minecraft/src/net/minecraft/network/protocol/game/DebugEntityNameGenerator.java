@@ -6,9 +6,41 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
 @Environment(EnvType.CLIENT)
-public class DebugMobNameGenerator {
+public class DebugEntityNameGenerator {
 	private static final String[] NAMES_FIRST_PART = new String[]{
-		"Slim", "Far", "River", "Silly", "Fat", "Thin", "Fish", "Bat", "Dark", "Oak", "Sly", "Bush", "Zen", "Bark", "Cry", "Slack", "Soup", "Grim", "Hook"
+		"Slim",
+		"Far",
+		"River",
+		"Silly",
+		"Fat",
+		"Thin",
+		"Fish",
+		"Bat",
+		"Dark",
+		"Oak",
+		"Sly",
+		"Bush",
+		"Zen",
+		"Bark",
+		"Cry",
+		"Slack",
+		"Soup",
+		"Grim",
+		"Hook",
+		"Dirt",
+		"Mud",
+		"Sad",
+		"Hard",
+		"Crook",
+		"Sneak",
+		"Stink",
+		"Weird",
+		"Fire",
+		"Soot",
+		"Soft",
+		"Rough",
+		"Cling",
+		"Scar"
 	};
 	private static final String[] NAMES_SECOND_PART = new String[]{
 		"Fox",
@@ -23,16 +55,27 @@ public class DebugMobNameGenerator {
 		"Blade",
 		"Fry",
 		"Seek",
+		"Wart",
 		"Tooth",
 		"Foot",
 		"Leaf",
 		"Stone",
 		"Fall",
 		"Face",
-		"Tongue"
+		"Tongue",
+		"Voice",
+		"Lip",
+		"Mouth",
+		"Snail",
+		"Toe",
+		"Ear",
+		"Hair",
+		"Beard",
+		"Shirt",
+		"Fist"
 	};
 
-	public static String getMobName(UUID uUID) {
+	public static String getEntityName(UUID uUID) {
 		Random random = getRandom(uUID);
 		return getRandomString(random, NAMES_FIRST_PART) + getRandomString(random, NAMES_SECOND_PART);
 	}

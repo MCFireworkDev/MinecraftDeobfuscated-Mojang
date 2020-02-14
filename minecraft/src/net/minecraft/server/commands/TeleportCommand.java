@@ -249,7 +249,7 @@ public class TeleportCommand {
 		@Nullable TeleportCommand.LookAt lookAt
 	) throws CommandSyntaxException {
 		BlockPos blockPos = new BlockPos(d, e, f);
-		if (!Level.isInWorldBounds(blockPos)) {
+		if (!Level.isInWorldBoundsHorizontal(blockPos)) {
 			throw INVALID_POSITION.create();
 		} else {
 			if (entity instanceof ServerPlayer) {
