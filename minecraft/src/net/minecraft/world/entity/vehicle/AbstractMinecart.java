@@ -295,7 +295,7 @@ public abstract class AbstractMinecart extends Entity {
 				}
 			}
 
-			this.updateInWaterState();
+			this.updateInWaterStateAndDoFluidPushing();
 		}
 	}
 

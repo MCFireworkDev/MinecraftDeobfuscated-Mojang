@@ -14,7 +14,6 @@ import com.google.gson.stream.JsonReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.lang.reflect.Type;
 import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -294,11 +293,11 @@ public class GsonHelper {
 	}
 
 	@Nullable
-	public static <T> T fromJson(Gson gson, Reader reader, Type type, boolean bl) {
+	public static <T> T fromJson(Gson gson, Reader reader, TypeToken<T> typeToken, boolean bl) {
 		try {
 			JsonReader jsonReader = new JsonReader(reader);
 			jsonReader.setLenient(bl);
-			return gson.getAdapter(TypeToken.get(type)).read(jsonReader);
+			return gson.getAdapter(typeToken).read(jsonReader);
 		} catch (IOException var5) {
 			throw new JsonParseException(var5);
 		}
@@ -306,8 +305,8 @@ public class GsonHelper {
 
 	@Nullable
 	@Environment(EnvType.CLIENT)
-	public static <T> T fromJson(Gson gson, String string, Type type, boolean bl) {
-		return fromJson(gson, new StringReader(string), type, bl);
+	public static <T> T fromJson(Gson gson, String string, TypeToken<T> typeToken, boolean bl) {
+		return fromJson(gson, new StringReader(string), typeToken, bl);
 	}
 
 	@Nullable
@@ -316,14 +315,14 @@ public class GsonHelper {
 	}
 
 	@Nullable
-	public static <T> T fromJson(Gson gson, Reader reader, Type type) {
-		return fromJson(gson, reader, type, false);
+	public static <T> T fromJson(Gson gson, Reader reader, TypeToken<T> typeToken) {
+		return fromJson(gson, reader, typeToken, false);
 	}
 
 	@Nullable
 	@Environment(EnvType.CLIENT)
-	public static <T> T fromJson(Gson gson, String string, Type type) {
-		return fromJson(gson, string, type, false);
+	public static <T> T fromJson(Gson gson, String string, TypeToken<T> typeToken) {
+		return fromJson(gson, string, typeToken, false);
 	}
 
 	@Nullable

@@ -41,32 +41,32 @@ public class SoundBufferLibrary {
 							Throwable var5 = null;
 
 							try {
-								AudioStream audioStream;
+								OggAudioStream oggAudioStream;
 								try {
-									audioStream = new OggAudioStream(inputStream);
+									oggAudioStream = new OggAudioStream(inputStream);
 									Throwable var7 = null;
 
 									try {
-										ByteBuffer byteBuffer = audioStream.readAll();
-										var9 = new SoundBuffer(byteBuffer, audioStream.getFormat());
+										ByteBuffer byteBuffer = oggAudioStream.readAll();
+										var9 = new SoundBuffer(byteBuffer, oggAudioStream.getFormat());
 									} catch (Throwable var56) {
 										var7 = var56;
 										throw var56;
 									} finally {
-										if (audioStream != null) {
+										if (oggAudioStream != null) {
 											if (var7 != null) {
 												try {
-													audioStream.close();
+													oggAudioStream.close();
 												} catch (Throwable var55) {
 													var7.addSuppressed(var55);
 												}
 											} else {
-												audioStream.close();
+												oggAudioStream.close();
 											}
 										}
 									}
 								} catch (Throwable var58) {
-									audioStream = var58;
+									oggAudioStream = var58;
 									var5 = var58;
 									throw var58;
 								}
@@ -109,14 +109,14 @@ public class SoundBufferLibrary {
 			}, Util.backgroundExecutor()));
 	}
 
-	public CompletableFuture<AudioStream> getStream(ResourceLocation resourceLocation) {
+	public CompletableFuture<AudioStream> getStream(ResourceLocation resourceLocation, boolean bl) {
 		return CompletableFuture.supplyAsync(() -> {
 			try {
 				Resource resource = this.resourceManager.getResource(resourceLocation);
 				InputStream inputStream = resource.getInputStream();
-				return new OggAudioStream(inputStream);
-			} catch (IOException var4) {
-				throw new CompletionException(var4);
+				return (AudioStream)(bl ? new LoopingAudioStream(OggAudioStream::new, inputStream) : new OggAudioStream(inputStream));
+			} catch (IOException var5) {
+				throw new CompletionException(var5);
 			}
 		}, Util.backgroundExecutor());
 	}
