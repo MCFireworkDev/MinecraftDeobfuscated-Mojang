@@ -519,6 +519,8 @@ public class BlockLoot implements Consumer<BiConsumer<ResourceLocation, LootTabl
 		this.dropSelf(Blocks.STRIPPED_JUNGLE_WOOD);
 		this.dropSelf(Blocks.STRIPPED_ACACIA_WOOD);
 		this.dropSelf(Blocks.STRIPPED_DARK_OAK_WOOD);
+		this.dropSelf(Blocks.STRIPPED_CRIMSON_HYPHAE);
+		this.dropSelf(Blocks.STRIPPED_WARPED_HYPHAE);
 		this.dropSelf(Blocks.SPONGE);
 		this.dropSelf(Blocks.WET_SPONGE);
 		this.dropSelf(Blocks.LAPIS_BLOCK);
@@ -821,11 +823,13 @@ public class BlockLoot implements Consumer<BiConsumer<ResourceLocation, LootTabl
 		this.dropSelf(Blocks.HONEY_BLOCK);
 		this.dropSelf(Blocks.HONEYCOMB_BLOCK);
 		this.dropSelf(Blocks.WARPED_STEM);
+		this.dropSelf(Blocks.WARPED_HYPHAE);
 		this.dropSelf(Blocks.WARPED_NYLIUM);
 		this.dropSelf(Blocks.WARPED_FUNGUS);
 		this.dropSelf(Blocks.WARPED_WART_BLOCK);
 		this.dropSelf(Blocks.WARPED_ROOTS);
 		this.dropSelf(Blocks.CRIMSON_STEM);
+		this.dropSelf(Blocks.CRIMSON_HYPHAE);
 		this.dropSelf(Blocks.CRIMSON_NYLIUM);
 		this.dropSelf(Blocks.CRIMSON_FUNGUS);
 		this.dropSelf(Blocks.SHROOMLIGHT);

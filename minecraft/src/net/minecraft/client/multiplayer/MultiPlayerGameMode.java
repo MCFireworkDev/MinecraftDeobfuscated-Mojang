@@ -71,12 +71,6 @@ public class MultiPlayerGameMode {
 		this.connection = clientPacketListener;
 	}
 
-	public static void creativeDestroyBlock(Minecraft minecraft, MultiPlayerGameMode multiPlayerGameMode, BlockPos blockPos, Direction direction) {
-		if (!minecraft.level.extinguishFire(minecraft.player, blockPos, direction)) {
-			multiPlayerGameMode.destroyBlock(blockPos);
-		}
-	}
-
 	public void adjustPlayer(Player player) {
 		this.localPlayerMode.updatePlayerAbilities(player.abilities);
 	}
@@ -128,7 +122,7 @@ public class MultiPlayerGameMode {
 				BlockState blockState = this.minecraft.level.getBlockState(blockPos);
 				this.minecraft.getTutorial().onDestroyBlock(this.minecraft.level, blockPos, blockState, 1.0F);
 				this.sendBlockAction(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, blockPos, direction);
-				creativeDestroyBlock(this.minecraft, this, blockPos, direction);
+				this.destroyBlock(blockPos);
 				this.destroyDelay = 5;
 			} else if (!this.isDestroying || !this.sameDestroyTarget(blockPos)) {
 				if (this.isDestroying) {
@@ -181,7 +175,7 @@ public class MultiPlayerGameMode {
 			BlockState blockState = this.minecraft.level.getBlockState(blockPos);
 			this.minecraft.getTutorial().onDestroyBlock(this.minecraft.level, blockPos, blockState, 1.0F);
 			this.sendBlockAction(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, blockPos, direction);
-			creativeDestroyBlock(this.minecraft, this, blockPos, direction);
+			this.destroyBlock(blockPos);
 			return true;
 		} else if (this.sameDestroyTarget(blockPos)) {
 			BlockState blockState = this.minecraft.level.getBlockState(blockPos);

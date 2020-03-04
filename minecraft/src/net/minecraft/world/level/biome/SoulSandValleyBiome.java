@@ -3,6 +3,7 @@ package net.minecraft.world.level.biome;
 import com.google.common.collect.ImmutableList;
 import java.util.Random;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.block.Blocks;
@@ -36,6 +37,9 @@ public class SoulSandValleyBiome extends Biome {
 						.waterFogColor(329011)
 						.fogColor(1787717)
 						.ambientParticle(new AmbientParticleSettings(ParticleTypes.ASH, 0.00625F, random -> 0.0, random -> 0.0, random -> 0.0))
+						.ambientLoopSound(SoundEvents.AMBIENT_SOUL_SAND_VALLEY_LOOP)
+						.ambientMoodSound(SoundEvents.AMBIENT_SOUL_SAND_VALLEY_MOOD)
+						.ambientAdditionsSound(SoundEvents.AMBIENT_SOUL_SAND_VALLEY_ADDITIONS)
 						.build()
 				)
 				.parent(null)

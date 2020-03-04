@@ -1,7 +1,6 @@
 package net.minecraft.world.entity.ai.goal;
 
 import java.util.EnumSet;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.LivingEntity;
@@ -61,7 +60,7 @@ public class MeleeAttackGoal extends Goal {
 			return false;
 		} else if (!this.trackTarget) {
 			return !this.mob.getNavigation().isDone();
-		} else if (!this.mob.isWithinRestriction(new BlockPos(livingEntity))) {
+		} else if (!this.mob.isWithinRestriction(livingEntity.blockPosition())) {
 			return false;
 		} else {
 			return !(livingEntity instanceof Player) || !livingEntity.isSpectator() && !((Player)livingEntity).isCreative();

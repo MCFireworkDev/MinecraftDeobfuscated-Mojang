@@ -3,6 +3,7 @@ package net.minecraft.world.level.biome;
 import com.google.common.collect.ImmutableList;
 import java.util.Random;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.block.Blocks;
@@ -43,6 +44,9 @@ public class CrimsonForestBiome extends Biome {
 								random -> random.nextGaussian() * 1.0E-6F
 							)
 						)
+						.ambientLoopSound(SoundEvents.AMBIENT_CRIMSON_FOREST_LOOP)
+						.ambientMoodSound(SoundEvents.AMBIENT_CRIMSON_FOREST_MOOD)
+						.ambientAdditionsSound(SoundEvents.AMBIENT_CRIMSON_FOREST_ADDITIONS)
 						.build()
 				)
 				.parent(null)
