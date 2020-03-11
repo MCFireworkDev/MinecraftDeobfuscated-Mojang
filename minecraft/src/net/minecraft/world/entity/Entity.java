@@ -128,9 +128,6 @@ public abstract class Entity implements Nameable, CommandSource {
 	public double xo;
 	public double yo;
 	public double zo;
-	private double x;
-	private double y;
-	private double z;
 	private Vec3 position;
 	private BlockPos blockPosition;
 	private Vec3 deltaMovement = Vec3.ZERO;
@@ -208,6 +205,8 @@ public abstract class Entity implements Nameable, CommandSource {
 		this.type = entityType;
 		this.level = level;
 		this.dimensions = entityType.getDimensions();
+		this.position = Vec3.ZERO;
+		this.blockPosition = BlockPos.ZERO;
 		this.setPos(0.0, 0.0, 0.0);
 		if (level != null) {
 			this.dimension = level.dimension.getType();
@@ -325,9 +324,9 @@ public abstract class Entity implements Nameable, CommandSource {
 	}
 
 	public boolean closerThan(Entity entity, double d) {
-		double e = entity.x - this.x;
-		double f = entity.y - this.y;
-		double g = entity.z - this.z;
+		double e = entity.position.x - this.position.x;
+		double f = entity.position.y - this.position.y;
+		double g = entity.position.z - this.position.z;
 		return e * e + f * f + g * g < d * d;
 	}
 
@@ -344,7 +343,7 @@ public abstract class Entity implements Nameable, CommandSource {
 	}
 
 	protected void reapplyPosition() {
-		this.setPos(this.x, this.y, this.z);
+		this.setPos(this.position.x, this.position.y, this.position.z);
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -539,7 +538,7 @@ public abstract class Entity implements Nameable, CommandSource {
 				double d = vec32.x;
 				double e = vec32.y;
 				double f = vec32.z;
-				if (block != Blocks.LADDER && block != Blocks.SCAFFOLDING) {
+				if (!block.is(BlockTags.CLIMBABLE)) {
 					e = 0.0;
 				}
 
@@ -590,9 +589,9 @@ public abstract class Entity implements Nameable, CommandSource {
 	}
 
 	protected BlockPos getOnPos() {
-		int i = Mth.floor(this.x);
-		int j = Mth.floor(this.y - 0.2F);
-		int k = Mth.floor(this.z);
+		int i = Mth.floor(this.position.x);
+		int j = Mth.floor(this.position.y - 0.2F);
+		int k = Mth.floor(this.position.z);
 		BlockPos blockPos = new BlockPos(i, j, k);
 		if (this.level.getBlockState(blockPos).isAir()) {
 			BlockPos blockPos2 = blockPos.below();
@@ -623,7 +622,7 @@ public abstract class Entity implements Nameable, CommandSource {
 	}
 
 	protected BlockPos getBlockPosBelowThatAffectsMyMovement() {
-		return new BlockPos(this.x, this.getBoundingBox().minY - 0.5000001, this.z);
+		return new BlockPos(this.position.x, this.getBoundingBox().minY - 0.5000001, this.position.z);
 	}
 
 	protected Vec3 maybeBackOffFromEdge(Vec3 vec3, MoverType moverType) {
@@ -1018,6 +1017,10 @@ public abstract class Entity implements Nameable, CommandSource {
 			float k = (this.random.nextFloat() * 2.0F - 1.0F) * this.dimensions.width;
 			this.level.addParticle(ParticleTypes.SPLASH, this.getX() + (double)j, (double)(h + 1.0F), this.getZ() + (double)k, vec3.x, vec3.y, vec3.z);
 		}
+	}
+
+	protected BlockState getBlockStateOn() {
+		return this.level.getBlockState(this.getOnPos());
 	}
 
 	public void updateSprintingState() {
@@ -2783,11 +2786,11 @@ public abstract class Entity implements Nameable, CommandSource {
 	}
 
 	public final double getX() {
-		return this.x;
+		return this.position.x;
 	}
 
 	public double getX(double d) {
-		return this.x + (double)this.getBbWidth() * d;
+		return this.position.x + (double)this.getBbWidth() * d;
 	}
 
 	public double getRandomX(double d) {
@@ -2795,11 +2798,11 @@ public abstract class Entity implements Nameable, CommandSource {
 	}
 
 	public final double getY() {
-		return this.y;
+		return this.position.y;
 	}
 
 	public double getY(double d) {
-		return this.y + (double)this.getBbHeight() * d;
+		return this.position.y + (double)this.getBbHeight() * d;
 	}
 
 	public double getRandomY() {
@@ -2807,15 +2810,15 @@ public abstract class Entity implements Nameable, CommandSource {
 	}
 
 	public double getEyeY() {
-		return this.y + (double)this.eyeHeight;
+		return this.position.y + (double)this.eyeHeight;
 	}
 
 	public final double getZ() {
-		return this.z;
+		return this.position.z;
 	}
 
 	public double getZ(double d) {
-		return this.z + (double)this.getBbWidth() * d;
+		return this.position.z + (double)this.getBbWidth() * d;
 	}
 
 	public double getRandomZ(double d) {
@@ -2823,11 +2826,15 @@ public abstract class Entity implements Nameable, CommandSource {
 	}
 
 	public void setPosRaw(double d, double e, double f) {
-		this.x = d;
-		this.y = e;
-		this.z = f;
-		this.position = new Vec3(d, e, f);
-		this.blockPosition = new BlockPos(d, e, f);
+		if (this.position.x != d || this.position.y != e || this.position.z != f) {
+			this.position = new Vec3(d, e, f);
+			int i = Mth.floor(d);
+			int j = Mth.floor(e);
+			int k = Mth.floor(f);
+			if (i != this.blockPosition.getX() || j != this.blockPosition.getY() || k != this.blockPosition.getZ()) {
+				this.blockPosition = new BlockPos(i, j, k);
+			}
+		}
 	}
 
 	public void checkDespawn() {
