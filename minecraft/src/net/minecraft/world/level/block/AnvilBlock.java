@@ -19,6 +19,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
@@ -41,7 +42,7 @@ public class AnvilBlock extends FallingBlock {
 	private static final VoxelShape Z_AXIS_AABB = Shapes.or(BASE, Z_LEG1, Z_LEG2, Z_TOP);
 	private static final TranslatableComponent CONTAINER_TITLE = new TranslatableComponent("container.repair");
 
-	public AnvilBlock(Block.Properties properties) {
+	public AnvilBlock(BlockBehaviour.Properties properties) {
 		super(properties);
 		this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
 	}
@@ -82,13 +83,17 @@ public class AnvilBlock extends FallingBlock {
 	}
 
 	@Override
-	public void onLand(Level level, BlockPos blockPos, BlockState blockState, BlockState blockState2) {
-		level.levelEvent(1031, blockPos, 0);
+	public void onLand(Level level, BlockPos blockPos, BlockState blockState, BlockState blockState2, FallingBlockEntity fallingBlockEntity) {
+		if (!fallingBlockEntity.isSilent()) {
+			level.levelEvent(1031, blockPos, 0);
+		}
 	}
 
 	@Override
-	public void onBroken(Level level, BlockPos blockPos) {
-		level.levelEvent(1029, blockPos, 0);
+	public void onBroken(Level level, BlockPos blockPos, FallingBlockEntity fallingBlockEntity) {
+		if (!fallingBlockEntity.isSilent()) {
+			level.levelEvent(1029, blockPos, 0);
+		}
 	}
 
 	@Nullable
@@ -118,7 +123,7 @@ public class AnvilBlock extends FallingBlock {
 
 	@Environment(EnvType.CLIENT)
 	@Override
-	public int getDustColor(BlockState blockState) {
-		return this.materialColor.col;
+	public int getDustColor(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos) {
+		return blockState.getMapColor(blockGetter, blockPos).col;
 	}
 }
