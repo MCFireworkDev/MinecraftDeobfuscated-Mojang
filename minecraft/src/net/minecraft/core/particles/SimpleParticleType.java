@@ -2,6 +2,7 @@ package net.minecraft.core.particles;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import java.util.Random;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 
@@ -17,7 +18,7 @@ public class SimpleParticleType extends ParticleType<SimpleParticleType> impleme
 	};
 
 	protected SimpleParticleType(boolean bl) {
-		super(bl, DESERIALIZER);
+		super(bl, DESERIALIZER, (random, particleType) -> (SimpleParticleType)particleType);
 	}
 
 	@Override

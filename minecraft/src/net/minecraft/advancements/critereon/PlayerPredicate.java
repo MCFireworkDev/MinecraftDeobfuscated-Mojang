@@ -268,6 +268,11 @@ public class PlayerPredicate {
 			
 		);
 
+		public PlayerPredicate.Builder addStat(Stat<?> stat, MinMaxBounds.Ints ints) {
+			this.stats.put(stat, ints);
+			return this;
+		}
+
 		public PlayerPredicate build() {
 			return new PlayerPredicate(this.level, this.gameType, this.stats, this.recipes, this.advancements);
 		}

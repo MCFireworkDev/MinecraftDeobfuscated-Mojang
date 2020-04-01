@@ -246,6 +246,11 @@ public class DoorBlock extends Block {
 		}
 	}
 
+	@Override
+	public boolean isUnstable() {
+		return true;
+	}
+
 	private void playSound(Level level, BlockPos blockPos, boolean bl) {
 		level.levelEvent(null, bl ? this.getOpenSound() : this.getCloseSound(), blockPos, 0);
 	}

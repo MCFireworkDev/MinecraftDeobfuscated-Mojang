@@ -159,6 +159,11 @@ public class BubbleColumnBlock extends Block implements BucketPickup {
 	}
 
 	@Override
+	public boolean isUnstable() {
+		return true;
+	}
+
+	@Override
 	public VoxelShape getShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
 		return Shapes.empty();
 	}

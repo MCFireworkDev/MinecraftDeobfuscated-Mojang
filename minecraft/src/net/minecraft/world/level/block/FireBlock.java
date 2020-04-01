@@ -121,6 +121,11 @@ public class FireBlock extends BaseFireBlock {
 	}
 
 	@Override
+	public boolean isUnstable() {
+		return true;
+	}
+
+	@Override
 	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
 		if (serverLevel.getGameRules().getBoolean(GameRules.RULE_DOFIRETICK)) {
 			if (!blockState.canSurvive(serverLevel, blockPos)) {

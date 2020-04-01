@@ -6,11 +6,15 @@ import com.google.common.collect.ImmutableMap.Builder;
 import com.mojang.datafixers.Dynamic;
 import com.mojang.datafixers.types.DynamicOps;
 import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProviderType;
 import net.minecraft.world.level.levelgen.feature.treedecorators.TreeDecorator;
+import net.minecraft.world.level.levelgen.feature.treedecorators.TreeDecoratorType;
 
 public class TreeConfiguration implements FeatureConfiguration {
 	public final BlockStateProvider trunkProvider;
@@ -24,6 +28,17 @@ public class TreeConfiguration implements FeatureConfiguration {
 		this.leavesProvider = blockStateProvider2;
 		this.decorators = list;
 		this.baseHeight = i;
+	}
+
+	public static TreeConfiguration random(Random random) {
+		return new TreeConfiguration(
+			BlockStateProvider.random(random),
+			BlockStateProvider.random(random),
+			(List<TreeDecorator>)Util.randomObjectStream(random, 4, Registry.TREE_DECORATOR_TYPES)
+				.map(treeDecoratorType -> treeDecoratorType.createRandom(random))
+				.collect(Collectors.toList()),
+			random.nextInt(30) + 1
+		);
 	}
 
 	public void setFromSapling() {
