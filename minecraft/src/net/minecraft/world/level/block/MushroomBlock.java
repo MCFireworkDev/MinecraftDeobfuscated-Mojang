@@ -88,7 +88,7 @@ public class MushroomBlock extends BushBlock implements BonemealableBlock {
 			configuredFeature = Feature.HUGE_RED_MUSHROOM.configured(BiomeDefaultFeatures.HUGE_RED_MUSHROOM_CONFIG);
 		}
 
-		if (configuredFeature.place(serverLevel, serverLevel.getChunkSource().getGenerator(), random, blockPos)) {
+		if (configuredFeature.place(serverLevel, serverLevel.structureFeatureManager(), serverLevel.getChunkSource().getGenerator(), random, blockPos)) {
 			return true;
 		} else {
 			serverLevel.setBlock(blockPos, blockState, 3);

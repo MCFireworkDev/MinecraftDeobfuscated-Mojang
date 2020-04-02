@@ -90,7 +90,15 @@ public class IOWorker implements AutoCloseable {
 					CompletableFuture<?> completableFuture2 = CompletableFuture.allOf(
 						(CompletableFuture[])this.pendingWrites.values().stream().map(pendingStore -> pendingStore.result).toArray(i -> new CompletableFuture[i])
 					);
-					completableFuture2.whenComplete((object, throwable) -> completableFuture.complete(null));
+					completableFuture2.whenComplete((object, throwable) -> {
+						try {
+							this.storage.flush();
+							completableFuture.complete(null);
+						} catch (Exception var5) {
+							LOGGER.warn("Failed to synchronized chunks", var5);
+							completableFuture.completeExceptionally(var5);
+						}
+					});
 				}
 		);
 	}

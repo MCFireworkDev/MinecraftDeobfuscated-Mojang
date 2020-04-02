@@ -185,7 +185,9 @@ public class TheEndGatewayBlockEntity extends TheEndPortalBlockEntity implements
 			LOGGER.debug("Failed to find suitable block, settling on {}", this.exitPortal);
 			Feature.END_ISLAND
 				.configured(FeatureConfiguration.NONE)
-				.place(serverLevel, serverLevel.getChunkSource().getGenerator(), new Random(this.exitPortal.asLong()), this.exitPortal);
+				.place(
+					serverLevel, serverLevel.structureFeatureManager(), serverLevel.getChunkSource().getGenerator(), new Random(this.exitPortal.asLong()), this.exitPortal
+				);
 		} else {
 			LOGGER.debug("Found block at {}", this.exitPortal);
 		}
@@ -252,7 +254,7 @@ public class TheEndGatewayBlockEntity extends TheEndPortalBlockEntity implements
 	private void createExitPortal(ServerLevel serverLevel, BlockPos blockPos) {
 		Feature.END_GATEWAY
 			.configured(EndGatewayConfiguration.knownExit(this.getBlockPos(), false))
-			.place(serverLevel, serverLevel.getChunkSource().getGenerator(), new Random(), blockPos);
+			.place(serverLevel, serverLevel.structureFeatureManager(), serverLevel.getChunkSource().getGenerator(), new Random(), blockPos);
 	}
 
 	@Environment(EnvType.CLIENT)

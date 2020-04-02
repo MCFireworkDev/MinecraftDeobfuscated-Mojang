@@ -16,6 +16,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelSimulatedRW;
 import net.minecraft.world.level.LevelSimulatedReader;
 import net.minecraft.world.level.LevelWriter;
+import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -98,13 +99,13 @@ public abstract class AbstractTreeFeature<T extends TreeConfiguration> extends F
 		}
 	}
 
-	protected boolean placeLog(
+	public static boolean placeLog(
 		LevelSimulatedRW levelSimulatedRW, Random random, BlockPos blockPos, Set<BlockPos> set, BoundingBox boundingBox, TreeConfiguration treeConfiguration
 	) {
 		if (!isAirOrLeaves(levelSimulatedRW, blockPos) && !isReplaceablePlant(levelSimulatedRW, blockPos) && !isBlockWater(levelSimulatedRW, blockPos)) {
 			return false;
 		} else {
-			this.setBlock(levelSimulatedRW, blockPos, treeConfiguration.trunkProvider.getState(random, blockPos), boundingBox);
+			setBlock(levelSimulatedRW, blockPos, treeConfiguration.trunkProvider.getState(random, blockPos), boundingBox);
 			set.add(blockPos.immutable());
 			return true;
 		}
@@ -116,7 +117,7 @@ public abstract class AbstractTreeFeature<T extends TreeConfiguration> extends F
 		if (!isAirOrLeaves(levelSimulatedRW, blockPos) && !isReplaceablePlant(levelSimulatedRW, blockPos) && !isBlockWater(levelSimulatedRW, blockPos)) {
 			return false;
 		} else {
-			this.setBlock(levelSimulatedRW, blockPos, treeConfiguration.leavesProvider.getState(random, blockPos), boundingBox);
+			setBlock(levelSimulatedRW, blockPos, treeConfiguration.leavesProvider.getState(random, blockPos), boundingBox);
 			set.add(blockPos.immutable());
 			return true;
 		}
@@ -124,20 +125,25 @@ public abstract class AbstractTreeFeature<T extends TreeConfiguration> extends F
 
 	@Override
 	protected void setBlock(LevelWriter levelWriter, BlockPos blockPos, BlockState blockState) {
-		this.setBlockKnownShape(levelWriter, blockPos, blockState);
+		setBlockKnownShape(levelWriter, blockPos, blockState);
 	}
 
-	protected final void setBlock(LevelWriter levelWriter, BlockPos blockPos, BlockState blockState, BoundingBox boundingBox) {
-		this.setBlockKnownShape(levelWriter, blockPos, blockState);
+	protected static final void setBlock(LevelWriter levelWriter, BlockPos blockPos, BlockState blockState, BoundingBox boundingBox) {
+		setBlockKnownShape(levelWriter, blockPos, blockState);
 		boundingBox.expand(new BoundingBox(blockPos, blockPos));
 	}
 
-	private void setBlockKnownShape(LevelWriter levelWriter, BlockPos blockPos, BlockState blockState) {
+	private static void setBlockKnownShape(LevelWriter levelWriter, BlockPos blockPos, BlockState blockState) {
 		levelWriter.setBlock(blockPos, blockState, 19);
 	}
 
 	public final boolean place(
-		LevelAccessor levelAccessor, ChunkGenerator<? extends ChunkGeneratorSettings> chunkGenerator, Random random, BlockPos blockPos, T treeConfiguration
+		LevelAccessor levelAccessor,
+		StructureFeatureManager structureFeatureManager,
+		ChunkGenerator<? extends ChunkGeneratorSettings> chunkGenerator,
+		Random random,
+		BlockPos blockPos,
+		T treeConfiguration
 	) {
 		Set<BlockPos> set = Sets.<BlockPos>newHashSet();
 		Set<BlockPos> set2 = Sets.<BlockPos>newHashSet();
@@ -189,7 +195,7 @@ public abstract class AbstractTreeFeature<T extends TreeConfiguration> extends F
 					BlockState blockState = levelAccessor.getBlockState(mutableBlockPos);
 					if (blockState.hasProperty(BlockStateProperties.DISTANCE)) {
 						((Set)list.get(0)).add(mutableBlockPos.immutable());
-						this.setBlockKnownShape(levelAccessor, mutableBlockPos, blockState.setValue(BlockStateProperties.DISTANCE, Integer.valueOf(1)));
+						setBlockKnownShape(levelAccessor, mutableBlockPos, blockState.setValue(BlockStateProperties.DISTANCE, Integer.valueOf(1)));
 						if (boundingBox.isInside(mutableBlockPos)) {
 							discreteVoxelShape.setFull(
 								mutableBlockPos.getX() - boundingBox.x0, mutableBlockPos.getY() - boundingBox.y0, mutableBlockPos.getZ() - boundingBox.z0, true, true
@@ -217,7 +223,7 @@ public abstract class AbstractTreeFeature<T extends TreeConfiguration> extends F
 							int l = blockState2.getValue(BlockStateProperties.DISTANCE);
 							if (l > k + 1) {
 								BlockState blockState3 = blockState2.setValue(BlockStateProperties.DISTANCE, Integer.valueOf(k + 1));
-								this.setBlockKnownShape(levelAccessor, mutableBlockPos, blockState3);
+								setBlockKnownShape(levelAccessor, mutableBlockPos, blockState3);
 								if (boundingBox.isInside(mutableBlockPos)) {
 									discreteVoxelShape.setFull(
 										mutableBlockPos.getX() - boundingBox.x0, mutableBlockPos.getY() - boundingBox.y0, mutableBlockPos.getZ() - boundingBox.z0, true, true

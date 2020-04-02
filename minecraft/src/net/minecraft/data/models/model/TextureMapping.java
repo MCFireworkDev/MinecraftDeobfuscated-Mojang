@@ -11,8 +11,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
 public class TextureMapping {
-	private final Map<TextureSlot, ResourceLocation> slots = Maps.newHashMap();
-	private final Set<TextureSlot> forcedSlots = Sets.newHashSet();
+	private final Map<TextureSlot, ResourceLocation> slots = Maps.<TextureSlot, ResourceLocation>newHashMap();
+	private final Set<TextureSlot> forcedSlots = Sets.<TextureSlot>newHashSet();
 
 	public TextureMapping put(TextureSlot textureSlot, ResourceLocation resourceLocation) {
 		this.slots.put(textureSlot, resourceLocation);

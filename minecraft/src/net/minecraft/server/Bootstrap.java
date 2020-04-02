@@ -13,6 +13,8 @@ import net.minecraft.locale.Language;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.DefaultAttributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -61,6 +63,7 @@ public class Bootstrap {
 
 	public static Set<String> getMissingTranslations() {
 		Set<String> set = new TreeSet();
+		checkTranslations(Registry.ATTRIBUTES, Attribute::getDescriptionId, set);
 		checkTranslations(Registry.ENTITY_TYPE, EntityType::getDescriptionId, set);
 		checkTranslations(Registry.MOB_EFFECT, MobEffect::getDescriptionId, set);
 		checkTranslations(Registry.ITEM, Item::getDescriptionId, set);
@@ -78,6 +81,8 @@ public class Bootstrap {
 			if (SharedConstants.IS_RUNNING_IN_IDE) {
 				getMissingTranslations().forEach(string -> LOGGER.error("Missing translations: " + string));
 			}
+
+			DefaultAttributes.validate();
 		}
 	}
 
