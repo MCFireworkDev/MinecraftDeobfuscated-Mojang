@@ -556,10 +556,10 @@ public abstract class Mob extends LivingEntity {
 		} else if (itemStack.getItem() instanceof BowItem && itemStack2.getItem() instanceof BowItem) {
 			return this.canReplaceEqualItem(itemStack, itemStack2);
 		} else if (itemStack.getItem() instanceof ArmorItem) {
-			if (!(itemStack2.getItem() instanceof ArmorItem)) {
-				return true;
-			} else if (EnchantmentHelper.hasBindingCurse(itemStack2)) {
+			if (EnchantmentHelper.hasBindingCurse(itemStack2)) {
 				return false;
+			} else if (!(itemStack2.getItem() instanceof ArmorItem)) {
+				return true;
 			} else {
 				ArmorItem armorItem = (ArmorItem)itemStack.getItem();
 				ArmorItem armorItem2 = (ArmorItem)itemStack2.getItem();
@@ -1048,7 +1048,7 @@ public abstract class Mob extends LivingEntity {
 		Item item = itemStack.getItem();
 		if (!this.level.isClientSide && item instanceof SpawnEggItem) {
 			SpawnEggItem spawnEggItem = (SpawnEggItem)item;
-			Optional<Mob> optional = spawnEggItem.spawnOffspringFromSpawnEgg(player, this.getType(), this.level, this.position(), itemStack);
+			Optional<Mob> optional = spawnEggItem.spawnOffspringFromSpawnEgg(player, this, this.getType(), this.level, this.position(), itemStack);
 			optional.ifPresent(mob -> this.onOffspringSpawnedFromEgg(player, mob));
 		}
 
