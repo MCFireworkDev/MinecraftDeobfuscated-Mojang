@@ -70,7 +70,7 @@ public class TheEndGatewayBlockEntity extends TheEndPortalBlockEntity implements
 	@Environment(EnvType.CLIENT)
 	@Override
 	public double getViewDistance() {
-		return 65536.0;
+		return 256.0;
 	}
 
 	@Override

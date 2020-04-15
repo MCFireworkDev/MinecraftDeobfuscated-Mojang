@@ -96,7 +96,8 @@ public class FeaturePoolElement extends StructurePoolElement {
 		BlockPos blockPos2,
 		Rotation rotation,
 		BoundingBox boundingBox,
-		Random random
+		Random random,
+		boolean bl
 	) {
 		return this.feature.place(levelAccessor, structureFeatureManager, chunkGenerator, random, blockPos);
 	}
