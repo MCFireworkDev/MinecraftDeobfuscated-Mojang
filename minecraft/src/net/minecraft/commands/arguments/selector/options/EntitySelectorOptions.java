@@ -98,7 +98,7 @@ public class EntitySelectorOptions {
 						entitySelectorParser.setHasNameEquals(true);
 					}
 
-					entitySelectorParser.addPredicate(entity -> entity.getName().getContents().equals(string) != bl);
+					entitySelectorParser.addPredicate(entity -> entity.getName().getString().equals(string) != bl);
 				}
 			}, entitySelectorParser -> !entitySelectorParser.hasNameEquals(), new TranslatableComponent("argument.entity.options.name.description"));
 			register("distance", entitySelectorParser -> {

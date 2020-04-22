@@ -482,13 +482,15 @@ public class WalkNodeEvaluator extends NodeEvaluator {
 		} else if (block instanceof LeavesBlock) {
 			return BlockPathTypes.LEAVES;
 		} else if (!block.is(BlockTags.FENCES) && !block.is(BlockTags.WALLS) && (!(block instanceof FenceGateBlock) || blockState.getValue(FenceGateBlock.OPEN))) {
-			FluidState fluidState = blockGetter.getFluidState(blockPos);
-			if (fluidState.is(FluidTags.WATER)) {
-				return BlockPathTypes.WATER;
-			} else if (fluidState.is(FluidTags.LAVA)) {
-				return BlockPathTypes.LAVA;
+			if (!blockState.isPathfindable(blockGetter, blockPos, PathComputationType.LAND)) {
+				return BlockPathTypes.BLOCKED;
 			} else {
-				return blockState.isPathfindable(blockGetter, blockPos, PathComputationType.LAND) ? BlockPathTypes.OPEN : BlockPathTypes.BLOCKED;
+				FluidState fluidState = blockGetter.getFluidState(blockPos);
+				if (fluidState.is(FluidTags.WATER)) {
+					return BlockPathTypes.WATER;
+				} else {
+					return fluidState.is(FluidTags.LAVA) ? BlockPathTypes.LAVA : BlockPathTypes.OPEN;
+				}
 			}
 		} else {
 			return BlockPathTypes.FENCE;

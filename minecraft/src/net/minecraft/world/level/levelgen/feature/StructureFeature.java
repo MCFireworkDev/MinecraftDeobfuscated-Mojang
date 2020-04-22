@@ -46,7 +46,7 @@ public abstract class StructureFeature<C extends FeatureConfiguration> extends F
 		BlockPos blockPos,
 		C featureConfiguration
 	) {
-		if (!levelAccessor.getLevelData().isGenerateMapFeatures()) {
+		if (!levelAccessor.getLevelData().shouldGenerateMapFeatures()) {
 			return false;
 		} else {
 			int i = blockPos.getX() >> 4;
@@ -80,7 +80,7 @@ public abstract class StructureFeature<C extends FeatureConfiguration> extends F
 	public BlockPos getNearestGeneratedFeature(
 		ServerLevel serverLevel, ChunkGenerator<? extends ChunkGeneratorSettings> chunkGenerator, BlockPos blockPos, int i, boolean bl
 	) {
-		if (!chunkGenerator.getBiomeSource().canGenerateStructure(this)) {
+		if (!chunkGenerator.canGenerateStructure(this)) {
 			return null;
 		} else {
 			StructureFeatureManager structureFeatureManager = serverLevel.structureFeatureManager();

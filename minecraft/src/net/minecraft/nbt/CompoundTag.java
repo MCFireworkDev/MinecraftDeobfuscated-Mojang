@@ -21,6 +21,7 @@ import net.minecraft.CrashReportCategory;
 import net.minecraft.CrashReportDetail;
 import net.minecraft.ReportedException;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -460,7 +461,7 @@ public class CompoundTag implements Tag {
 		if (this.tags.isEmpty()) {
 			return new TextComponent("{}");
 		} else {
-			Component component = new TextComponent("{");
+			MutableComponent mutableComponent = new TextComponent("{");
 			Collection<String> collection = this.tags.keySet();
 			if (LOGGER.isDebugEnabled()) {
 				List<String> list = Lists.newArrayList(this.tags.keySet());
@@ -469,28 +470,28 @@ public class CompoundTag implements Tag {
 			}
 
 			if (!string.isEmpty()) {
-				component.append("\n");
+				mutableComponent.append("\n");
 			}
 
-			Component component2;
-			for(Iterator<String> iterator = collection.iterator(); iterator.hasNext(); component.append(component2)) {
+			MutableComponent mutableComponent2;
+			for(Iterator<String> iterator = collection.iterator(); iterator.hasNext(); mutableComponent.append(mutableComponent2)) {
 				String string2 = (String)iterator.next();
-				component2 = new TextComponent(Strings.repeat(string, i + 1))
+				mutableComponent2 = new TextComponent(Strings.repeat(string, i + 1))
 					.append(handleEscapePretty(string2))
 					.append(String.valueOf(':'))
 					.append(" ")
 					.append(((Tag)this.tags.get(string2)).getPrettyDisplay(string, i + 1));
 				if (iterator.hasNext()) {
-					component2.append(String.valueOf(',')).append(string.isEmpty() ? " " : "\n");
+					mutableComponent2.append(String.valueOf(',')).append(string.isEmpty() ? " " : "\n");
 				}
 			}
 
 			if (!string.isEmpty()) {
-				component.append("\n").append(Strings.repeat(string, i));
+				mutableComponent.append("\n").append(Strings.repeat(string, i));
 			}
 
-			component.append("}");
-			return component;
+			mutableComponent.append("}");
+			return mutableComponent;
 		}
 	}
 }

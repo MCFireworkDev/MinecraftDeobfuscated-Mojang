@@ -7,13 +7,14 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.OptionButton;
+import net.minecraft.network.chat.Component;
 
 @Environment(EnvType.CLIENT)
 public class CycleOption extends Option {
 	private final BiConsumer<Options, Integer> setter;
-	private final BiFunction<Options, CycleOption, String> toString;
+	private final BiFunction<Options, CycleOption, Component> toString;
 
-	public CycleOption(String string, BiConsumer<Options, Integer> biConsumer, BiFunction<Options, CycleOption, String> biFunction) {
+	public CycleOption(String string, BiConsumer<Options, Integer> biConsumer, BiFunction<Options, CycleOption, Component> biFunction) {
 		super(string);
 		this.setter = biConsumer;
 		this.toString = biFunction;
@@ -32,7 +33,7 @@ public class CycleOption extends Option {
 		});
 	}
 
-	public String getMessage(Options options) {
-		return (String)this.toString.apply(options, this);
+	public Component getMessage(Options options) {
+		return (Component)this.toString.apply(options, this);
 	}
 }

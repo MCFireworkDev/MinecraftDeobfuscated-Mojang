@@ -56,7 +56,7 @@ public class Screenshot {
 						nativeImage.writeToFile(file3);
 						Component component = new TextComponent(file3.getName())
 							.withStyle(ChatFormatting.UNDERLINE)
-							.withStyle(style -> style.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file3.getAbsolutePath())));
+							.withStyle(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file3.getAbsolutePath())));
 						consumer.accept(new TranslatableComponent("screenshot.success", component));
 					} catch (Exception var7xx) {
 						LOGGER.warn("Couldn't save screenshot", var7xx);
