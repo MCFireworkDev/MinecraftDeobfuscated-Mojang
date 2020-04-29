@@ -109,7 +109,7 @@ public class VineBlock extends Block {
 			} else {
 				BooleanProperty booleanProperty = (BooleanProperty)PROPERTY_BY_DIRECTION.get(direction);
 				BlockState blockState = blockGetter.getBlockState(blockPos.above());
-				return blockState.getBlock() == this && blockState.getValue(booleanProperty);
+				return blockState.is(this) && blockState.getValue(booleanProperty);
 			}
 		}
 	}
@@ -136,7 +136,7 @@ public class VineBlock extends Block {
 						blockState2 = blockGetter.getBlockState(blockPos2);
 					}
 
-					bl = blockState2.getBlock() == this && blockState2.getValue(booleanProperty);
+					bl = blockState2.is(this) && blockState2.getValue(booleanProperty);
 				}
 
 				blockState = blockState.setValue(booleanProperty, Boolean.valueOf(bl));
@@ -223,7 +223,7 @@ public class VineBlock extends Block {
 				if (blockPos.getY() > 0) {
 					BlockPos blockPos3 = blockPos.below();
 					BlockState blockState2 = serverLevel.getBlockState(blockPos3);
-					if (blockState2.isAir() || blockState2.getBlock() == this) {
+					if (blockState2.isAir() || blockState2.is(this)) {
 						BlockState blockState4 = blockState2.isAir() ? this.defaultBlockState() : blockState2;
 						BlockState blockState5 = this.copyRandomFaces(blockState, blockState4, random);
 						if (blockState4 != blockState5 && this.hasHorizontalConnection(blockState5)) {
@@ -260,7 +260,7 @@ public class VineBlock extends Block {
 		int j = 5;
 
 		for(BlockPos blockPos2 : iterable) {
-			if (blockGetter.getBlockState(blockPos2).getBlock() == this) {
+			if (blockGetter.getBlockState(blockPos2).is(this)) {
 				if (--j <= 0) {
 					return false;
 				}
@@ -273,7 +273,7 @@ public class VineBlock extends Block {
 	@Override
 	public boolean canBeReplaced(BlockState blockState, BlockPlaceContext blockPlaceContext) {
 		BlockState blockState2 = blockPlaceContext.getLevel().getBlockState(blockPlaceContext.getClickedPos());
-		if (blockState2.getBlock() == this) {
+		if (blockState2.is(this)) {
 			return this.countFaces(blockState2) < PROPERTY_BY_DIRECTION.size();
 		} else {
 			return super.canBeReplaced(blockState, blockPlaceContext);
@@ -284,7 +284,7 @@ public class VineBlock extends Block {
 	@Override
 	public BlockState getStateForPlacement(BlockPlaceContext blockPlaceContext) {
 		BlockState blockState = blockPlaceContext.getLevel().getBlockState(blockPlaceContext.getClickedPos());
-		boolean bl = blockState.getBlock() == this;
+		boolean bl = blockState.is(this);
 		BlockState blockState2 = bl ? blockState : this.defaultBlockState();
 
 		for(Direction direction : blockPlaceContext.getNearestLookingDirections()) {

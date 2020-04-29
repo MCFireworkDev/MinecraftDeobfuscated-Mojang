@@ -93,7 +93,7 @@ public class PolarBear extends Animal {
 		if (biome != Biomes.FROZEN_OCEAN && biome != Biomes.DEEP_FROZEN_OCEAN) {
 			return checkAnimalSpawnRules(entityType, levelAccessor, mobSpawnType, blockPos, random);
 		} else {
-			return levelAccessor.getRawBrightness(blockPos, 0) > 8 && levelAccessor.getBlockState(blockPos.below()).getBlock() == Blocks.ICE;
+			return levelAccessor.getRawBrightness(blockPos, 0) > 8 && levelAccessor.getBlockState(blockPos.below()).is(Blocks.ICE);
 		}
 	}
 

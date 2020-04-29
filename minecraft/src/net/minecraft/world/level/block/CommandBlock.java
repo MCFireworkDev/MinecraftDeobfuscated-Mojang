@@ -188,7 +188,7 @@ public class CommandBlock extends BaseEntityBlock {
 			mutableBlockPos.move(direction);
 			blockState = level.getBlockState(mutableBlockPos);
 			Block block = blockState.getBlock();
-			if (block != Blocks.CHAIN_COMMAND_BLOCK) {
+			if (!blockState.is(Blocks.CHAIN_COMMAND_BLOCK)) {
 				break;
 			}
 

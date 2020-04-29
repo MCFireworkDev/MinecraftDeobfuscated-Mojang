@@ -164,7 +164,7 @@ public class ServerPlayer extends Player implements ContainerListener {
 	public boolean wonGame;
 
 	public ServerPlayer(MinecraftServer minecraftServer, ServerLevel serverLevel, GameProfile gameProfile, ServerPlayerGameMode serverPlayerGameMode) {
-		super(serverLevel, gameProfile);
+		super(serverLevel, serverLevel.getSharedSpawnPos(), gameProfile);
 		serverPlayerGameMode.player = this;
 		this.gameMode = serverPlayerGameMode;
 		this.server = minecraftServer;
@@ -177,7 +177,7 @@ public class ServerPlayer extends Player implements ContainerListener {
 
 	private void fudgeSpawnLocation(ServerLevel serverLevel) {
 		BlockPos blockPos = serverLevel.getSharedSpawnPos();
-		if (serverLevel.dimension.isHasSkyLight() && serverLevel.getLevelData().getGameType() != GameType.ADVENTURE) {
+		if (serverLevel.dimension.isHasSkyLight() && serverLevel.getServer().getWorldData().getGameType() != GameType.ADVENTURE) {
 			int i = Math.max(0, this.server.getSpawnRadius(serverLevel));
 			int j = Mth.floor(serverLevel.getWorldBorder().getDistanceToBorder((double)blockPos.getX(), (double)blockPos.getZ()));
 			if (j < i) {
@@ -607,7 +607,7 @@ public class ServerPlayer extends Player implements ContainerListener {
 			this.connection
 				.send(
 					new ClientboundRespawnPacket(
-						dimensionType, LevelData.obfuscateSeed(levelData.getSeed()), levelData.getGeneratorType(), this.gameMode.getGameModeForPlayer()
+						dimensionType, LevelData.obfuscateSeed(levelData.getSeed()), levelData.getGeneratorType(), this.gameMode.getGameModeForPlayer(), true
 					)
 				);
 			this.connection.send(new ClientboundChangeDifficultyPacket(levelData.getDifficulty(), levelData.isDifficultyLocked()));
@@ -1341,7 +1341,7 @@ public class ServerPlayer extends Player implements ContainerListener {
 			this.connection
 				.send(
 					new ClientboundRespawnPacket(
-						this.dimension, LevelData.obfuscateSeed(levelData.getSeed()), levelData.getGeneratorType(), this.gameMode.getGameModeForPlayer()
+						this.dimension, LevelData.obfuscateSeed(levelData.getSeed()), levelData.getGeneratorType(), this.gameMode.getGameModeForPlayer(), true
 					)
 				);
 			this.connection.send(new ClientboundChangeDifficultyPacket(levelData.getDifficulty(), levelData.isDifficultyLocked()));
