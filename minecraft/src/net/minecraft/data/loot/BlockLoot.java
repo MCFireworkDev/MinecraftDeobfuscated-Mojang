@@ -1251,10 +1251,7 @@ public class BlockLoot implements Consumer<BiConsumer<ResourceLocation, LootTabl
 					blockx, applyExplosionDecay(blockx, LootItem.lootTableItem(Items.STICK).apply(SetItemCountFunction.setCount(RandomValueBounds.between(0.0F, 2.0F))))
 				)
 		);
-		this.add(
-			Blocks.NETHER_SPROUTS,
-			blockx -> createSilkTouchOrShearsDispatchTable(blockx, applyExplosionCondition(blockx, LootItem.lootTableItem(Blocks.NETHER_SPROUTS)))
-		);
+		this.add(Blocks.NETHER_SPROUTS, BlockLoot::createShearsOnlyDrop);
 		this.add(Blocks.SEAGRASS, BlockLoot::createShearsOnlyDrop);
 		this.add(Blocks.VINE, BlockLoot::createShearsOnlyDrop);
 		this.add(Blocks.TALL_SEAGRASS, createShearsOnlyDrop(Blocks.SEAGRASS));
