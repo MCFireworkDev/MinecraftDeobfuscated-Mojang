@@ -16,7 +16,7 @@ public abstract class AbstractTreeGrower {
 	@Nullable
 	protected abstract ConfiguredFeature<TreeConfiguration, ?> getConfiguredFeature(Random random, boolean bl);
 
-	public boolean growTree(ServerLevel serverLevel, ChunkGenerator<?> chunkGenerator, BlockPos blockPos, BlockState blockState, Random random) {
+	public boolean growTree(ServerLevel serverLevel, ChunkGenerator chunkGenerator, BlockPos blockPos, BlockState blockState, Random random) {
 		ConfiguredFeature<TreeConfiguration, ?> configuredFeature = this.getConfiguredFeature(random, this.hasFlowers(serverLevel, blockPos));
 		if (configuredFeature == null) {
 			return false;

@@ -20,7 +20,6 @@ import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.entity.ai.village.poi.PoiRecord;
 import net.minecraft.world.entity.ai.village.poi.PoiType;
 import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.dimension.Dimension;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.phys.Vec3;
@@ -32,7 +31,7 @@ public class Raids extends SavedData {
 	private int tick;
 
 	public Raids(ServerLevel serverLevel) {
-		super(getFileId(serverLevel.dimension));
+		super(getFileId(serverLevel.dimensionType()));
 		this.level = serverLevel;
 		this.nextAvailableID = 1;
 		this.setDirty();
@@ -69,10 +68,7 @@ public class Raids extends SavedData {
 
 	public static boolean canJoinRaid(Raider raider, Raid raid) {
 		if (raider != null && raid != null && raid.getLevel() != null) {
-			return raider.isAlive()
-				&& raider.canJoinRaid()
-				&& raider.getNoActionTime() <= 2400
-				&& raider.level.getDimension().getType() == raid.getLevel().getDimension().getType();
+			return raider.isAlive() && raider.canJoinRaid() && raider.getNoActionTime() <= 2400 && raider.level.dimensionType() == raid.getLevel().dimensionType();
 		} else {
 			return false;
 		}
@@ -85,7 +81,7 @@ public class Raids extends SavedData {
 		} else if (this.level.getGameRules().getBoolean(GameRules.RULE_DISABLE_RAIDS)) {
 			return null;
 		} else {
-			DimensionType dimensionType = serverPlayer.level.getDimension().getType();
+			DimensionType dimensionType = serverPlayer.level.dimensionType();
 			if (dimensionType == DimensionType.NETHER) {
 				return null;
 			} else {
@@ -175,8 +171,8 @@ public class Raids extends SavedData {
 		return compoundTag;
 	}
 
-	public static String getFileId(Dimension dimension) {
-		return "raids" + dimension.getType().getFileSuffix();
+	public static String getFileId(DimensionType dimensionType) {
+		return "raids" + dimensionType.getFileSuffix();
 	}
 
 	private int getUniqueId() {

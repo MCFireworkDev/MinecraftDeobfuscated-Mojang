@@ -8,7 +8,6 @@ import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.levelgen.ChunkGeneratorSettings;
 
 public class CountHeight64Decorator extends FeatureDecorator<FrequencyDecoratorConfiguration> {
 	public CountHeight64Decorator(Function<Dynamic<?>, ? extends FrequencyDecoratorConfiguration> function) {
@@ -17,7 +16,7 @@ public class CountHeight64Decorator extends FeatureDecorator<FrequencyDecoratorC
 
 	public Stream<BlockPos> getPositions(
 		LevelAccessor levelAccessor,
-		ChunkGenerator<? extends ChunkGeneratorSettings> chunkGenerator,
+		ChunkGenerator chunkGenerator,
 		Random random,
 		FrequencyDecoratorConfiguration frequencyDecoratorConfiguration,
 		BlockPos blockPos
