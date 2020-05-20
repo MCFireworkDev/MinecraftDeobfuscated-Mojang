@@ -1,12 +1,14 @@
 package net.minecraft.world.entity.ai.village.poi;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.mojang.datafixers.Dynamic;
-import com.mojang.datafixers.types.DynamicOps;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectMap;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectOpenHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -14,37 +16,43 @@ import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
-import net.minecraft.util.Serializable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class PoiSection implements Serializable {
+public class PoiSection {
 	private static final Logger LOGGER = LogManager.getLogger();
 	private final Short2ObjectMap<PoiRecord> records = new Short2ObjectOpenHashMap<>();
 	private final Map<PoiType, Set<PoiRecord>> byType = Maps.newHashMap();
 	private final Runnable setDirty;
 	private boolean isValid;
 
-	public PoiSection(Runnable runnable) {
-		this.setDirty = runnable;
-		this.isValid = true;
+	public static Codec<PoiSection> codec(Runnable runnable) {
+		return RecordCodecBuilder.<PoiSection>create(
+				instance -> instance.group(
+							RecordCodecBuilder.point(runnable),
+							Codec.BOOL.fieldOf("Valid").forGetter(poiSection -> poiSection.isValid),
+							PoiRecord.codec(runnable).listOf().fieldOf("Records").forGetter(poiSection -> ImmutableList.copyOf(poiSection.records.values()))
+						)
+						.apply(instance, PoiSection::new)
+			)
+			.withDefault(
+				Util.prefix("Failed to read POI section: ", LOGGER::error), (Supplier<? extends PoiSection>)(() -> new PoiSection(runnable, false, ImmutableList.of()))
+			);
 	}
 
-	public <T> PoiSection(Runnable runnable, Dynamic<T> dynamic) {
-		this.setDirty = runnable;
+	public PoiSection(Runnable runnable) {
+		this(runnable, true, ImmutableList.of());
+	}
 
-		try {
-			this.isValid = dynamic.get("Valid").asBoolean(false);
-			dynamic.get("Records").asStream().forEach(dynamicx -> this.add(new PoiRecord(dynamicx, runnable)));
-		} catch (Exception var4) {
-			LOGGER.error("Failed to load POI chunk", var4);
-			this.clear();
-			this.isValid = false;
-		}
+	private PoiSection(Runnable runnable, boolean bl, List<PoiRecord> list) {
+		this.setDirty = runnable;
+		this.isValid = bl;
+		list.forEach(this::add);
 	}
 
 	public Stream<PoiRecord> getRecords(Predicate<PoiType> predicate, PoiManager.Occupancy occupancy) {
@@ -113,14 +121,6 @@ public class PoiSection implements Serializable {
 		short s = SectionPos.sectionRelativePos(blockPos);
 		PoiRecord poiRecord = this.records.get(s);
 		return poiRecord != null ? Optional.of(poiRecord.getPoiType()) : Optional.empty();
-	}
-
-	@Override
-	public <T> T serialize(DynamicOps<T> dynamicOps) {
-		T object = dynamicOps.createList(this.records.values().stream().map(poiRecord -> poiRecord.<T>serialize(dynamicOps)));
-		return dynamicOps.createMap(
-			ImmutableMap.of(dynamicOps.createString("Records"), object, dynamicOps.createString("Valid"), dynamicOps.createBoolean(this.isValid))
-		);
 	}
 
 	public void refresh(Consumer<BiConsumer<BlockPos, PoiType>> consumer) {

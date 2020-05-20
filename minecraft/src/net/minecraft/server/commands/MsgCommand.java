@@ -4,7 +4,9 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import java.util.Collection;
+import java.util.UUID;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -34,10 +36,13 @@ public class MsgCommand {
 	}
 
 	private static int sendMessage(CommandSourceStack commandSourceStack, Collection<ServerPlayer> collection, Component component) {
+		UUID uUID = commandSourceStack.getEntity() == null ? Util.NIL_UUID : commandSourceStack.getEntity().getUUID();
+
 		for(ServerPlayer serverPlayer : collection) {
 			serverPlayer.sendMessage(
 				new TranslatableComponent("commands.message.display.incoming", commandSourceStack.getDisplayName(), component)
-					.withStyle(new ChatFormatting[]{ChatFormatting.GRAY, ChatFormatting.ITALIC})
+					.withStyle(new ChatFormatting[]{ChatFormatting.GRAY, ChatFormatting.ITALIC}),
+				uUID
 			);
 			commandSourceStack.sendSuccess(
 				new TranslatableComponent("commands.message.display.outgoing", serverPlayer.getDisplayName(), component)

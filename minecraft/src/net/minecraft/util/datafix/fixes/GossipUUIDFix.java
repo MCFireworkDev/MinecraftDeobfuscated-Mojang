@@ -2,9 +2,9 @@ package net.minecraft.util.datafix.fixes;
 
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixUtils;
-import com.mojang.datafixers.Dynamic;
 import com.mojang.datafixers.Typed;
 import com.mojang.datafixers.schemas.Schema;
+import com.mojang.serialization.Dynamic;
 import java.util.stream.Stream;
 
 public class GossipUUIDFix extends NamedEntityFix {
@@ -20,6 +20,7 @@ public class GossipUUIDFix extends NamedEntityFix {
 					"Gossips",
 					dynamicx -> DataFixUtils.orElse(
 							dynamicx.asStreamOpt()
+								.result()
 								.map(stream -> stream.map(dynamicxx -> (Dynamic)AbstractUUIDFix.replaceUUIDLeastMost(dynamicxx, "Target", "Target").orElse(dynamicxx)))
 								.map(dynamicx::createList),
 							dynamicx

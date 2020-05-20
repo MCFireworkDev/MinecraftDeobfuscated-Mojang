@@ -2,11 +2,11 @@ package net.minecraft.util.datafix.fixes;
 
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFix;
-import com.mojang.datafixers.Dynamic;
 import com.mojang.datafixers.TypeRewriteRule;
 import com.mojang.datafixers.Typed;
 import com.mojang.datafixers.schemas.Schema;
 import com.mojang.datafixers.types.Type;
+import com.mojang.serialization.Dynamic;
 
 public class StructureReferenceCountFix extends DataFix {
 	public StructureReferenceCountFix(Schema schema, boolean bl) {
@@ -22,6 +22,8 @@ public class StructureReferenceCountFix extends DataFix {
 	}
 
 	private static <T> Dynamic<T> setCountToAtLeastOne(Dynamic<T> dynamic) {
-		return dynamic.update("references", dynamicx -> dynamicx.createInt(dynamicx.asNumber().map(Number::intValue).filter(integer -> integer > 0).orElse(1)));
+		return dynamic.update(
+			"references", dynamicx -> dynamicx.createInt(dynamicx.asNumber().map(Number::intValue).result().filter(integer -> integer > 0).orElse(1))
+		);
 	}
 }

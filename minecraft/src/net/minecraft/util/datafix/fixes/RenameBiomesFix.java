@@ -4,11 +4,12 @@ import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFix;
 import com.mojang.datafixers.TypeRewriteRule;
 import com.mojang.datafixers.schemas.Schema;
-import com.mojang.datafixers.types.DynamicOps;
 import com.mojang.datafixers.types.Type;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.DynamicOps;
 import java.util.Map;
 import java.util.Objects;
+import net.minecraft.util.datafix.schemas.NamespacedSchema;
 
 public class RenameBiomesFix extends DataFix {
 	private final String name;
@@ -22,7 +23,7 @@ public class RenameBiomesFix extends DataFix {
 
 	@Override
 	protected TypeRewriteRule makeRule() {
-		Type<Pair<String, String>> type = DSL.named(References.BIOME.typeName(), DSL.namespacedString());
+		Type<Pair<String, String>> type = DSL.named(References.BIOME.typeName(), NamespacedSchema.namespacedString());
 		if (!Objects.equals(type, this.getInputSchema().getType(References.BIOME))) {
 			throw new IllegalStateException("Biome type is not what was expected.");
 		} else {

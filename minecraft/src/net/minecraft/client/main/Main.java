@@ -41,6 +41,8 @@ public class Main {
 		OptionParser optionParser = new OptionParser();
 		optionParser.allowsUnrecognizedOptions();
 		optionParser.accepts("demo");
+		optionParser.accepts("disableMultiplayer");
+		optionParser.accepts("disableChat");
 		optionParser.accepts("fullscreen");
 		optionParser.accepts("checkGlErrors");
 		OptionSpec<String> optionSpec = optionParser.accepts("server").withRequiredArg();
@@ -77,7 +79,7 @@ public class Main {
 		if (string != null) {
 			try {
 				proxy = new Proxy(Type.SOCKS, new InetSocketAddress(string, parseArgument(optionSet, optionSpec7)));
-			} catch (Exception var68) {
+			} catch (Exception var70) {
 			}
 		}
 
@@ -97,6 +99,8 @@ public class Main {
 		OptionalInt optionalInt2 = ofNullable(parseArgument(optionSet, optionSpec17));
 		boolean bl = optionSet.has("fullscreen");
 		boolean bl2 = optionSet.has("demo");
+		boolean bl3 = optionSet.has("disableMultiplayer");
+		boolean bl4 = optionSet.has("disableChat");
 		String string4 = parseArgument(optionSet, optionSpec13);
 		Gson gson = new GsonBuilder().registerTypeAdapter(PropertyMap.class, new Serializer()).create();
 		PropertyMap propertyMap = GsonHelper.fromJson(gson, parseArgument(optionSet, optionSpec18), PropertyMap.class);
@@ -117,7 +121,7 @@ public class Main {
 			new GameConfig.UserData(user, propertyMap, propertyMap2, proxy),
 			new DisplayData(i, j, optionalInt, optionalInt2, bl),
 			new GameConfig.FolderData(file, file3, file2, string7),
-			new GameConfig.GameData(bl2, string4, string5),
+			new GameConfig.GameData(bl2, string4, string5, bl3, bl4),
 			new GameConfig.ServerData(string8, integer)
 		);
 		Thread thread = new Thread("Client Shutdown Thread") {
@@ -142,11 +146,11 @@ public class Main {
 			RenderSystem.beginInitialization();
 			minecraft = new Minecraft(gameConfig);
 			RenderSystem.finishInitialization();
-		} catch (SilentInitException var66) {
-			LOGGER.warn("Failed to create window: ", var66);
+		} catch (SilentInitException var68) {
+			LOGGER.warn("Failed to create window: ", var68);
 			return;
-		} catch (Throwable var67) {
-			CrashReport crashReport = CrashReport.forThrowable(var67, "Initializing game");
+		} catch (Throwable var69) {
+			CrashReport crashReport = CrashReport.forThrowable(var69, "Initializing game");
 			crashReport.addCategory("Initialization");
 			Minecraft.fillReport(null, gameConfig.game.launchVersion, null, crashReport);
 			Minecraft.crash(crashReport);
@@ -175,8 +179,8 @@ public class Main {
 			try {
 				RenderSystem.initGameThread(false);
 				minecraft.run();
-			} catch (Throwable var65) {
-				LOGGER.error("Unhandled game exception", var65);
+			} catch (Throwable var67) {
+				LOGGER.error("Unhandled game exception", var67);
 			}
 		}
 
@@ -185,8 +189,8 @@ public class Main {
 			if (thread2 != null) {
 				thread2.join();
 			}
-		} catch (InterruptedException var63) {
-			LOGGER.error("Exception during client thread shutdown", var63);
+		} catch (InterruptedException var65) {
+			LOGGER.error("Exception during client thread shutdown", var65);
 		} finally {
 			minecraft.destroy();
 		}

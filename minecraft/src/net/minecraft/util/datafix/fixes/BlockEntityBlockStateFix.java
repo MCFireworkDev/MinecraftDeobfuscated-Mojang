@@ -1,12 +1,12 @@
 package net.minecraft.util.datafix.fixes;
 
 import com.mojang.datafixers.DSL;
-import com.mojang.datafixers.Dynamic;
 import com.mojang.datafixers.OpticFinder;
 import com.mojang.datafixers.Typed;
 import com.mojang.datafixers.schemas.Schema;
 import com.mojang.datafixers.types.Type;
-import java.util.Optional;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Dynamic;
 
 public class BlockEntityBlockStateFix extends NamedEntityFix {
 	public BlockEntityBlockStateFix(Schema schema, boolean bl) {
@@ -28,7 +28,8 @@ public class BlockEntityBlockStateFix extends NamedEntityFix {
 		return typed2.set(DSL.remainderFinder(), dynamic)
 			.set(
 				opticFinder,
-				(Typed)((Optional)type2.readTyped(dynamic2).getSecond()).orElseThrow(() -> new IllegalStateException("Could not parse newly created block state tag."))
+				(Typed)((Pair)type2.readTyped(dynamic2).result().orElseThrow(() -> new IllegalStateException("Could not parse newly created block state tag.")))
+					.getFirst()
 			);
 	}
 }

@@ -3,10 +3,10 @@ package net.minecraft.util.datafix.fixes;
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFix;
 import com.mojang.datafixers.DataFixUtils;
-import com.mojang.datafixers.Dynamic;
 import com.mojang.datafixers.TypeRewriteRule;
 import com.mojang.datafixers.Typed;
 import com.mojang.datafixers.schemas.Schema;
+import com.mojang.serialization.Dynamic;
 
 public class OptionsAddTextBackgroundFix extends DataFix {
 	public OptionsAddTextBackgroundFix(Schema schema, boolean bl) {
@@ -21,7 +21,10 @@ public class OptionsAddTextBackgroundFix extends DataFix {
 			typed -> typed.update(
 					DSL.remainderFinder(),
 					dynamic -> DataFixUtils.orElse(
-							dynamic.get("chatOpacity").asString().map(string -> dynamic.set("textBackgroundOpacity", dynamic.createDouble(this.calculateBackground(string)))),
+							dynamic.get("chatOpacity")
+								.asString()
+								.map(string -> dynamic.set("textBackgroundOpacity", dynamic.createDouble(this.calculateBackground(string))))
+								.result(),
 							dynamic
 						)
 				)

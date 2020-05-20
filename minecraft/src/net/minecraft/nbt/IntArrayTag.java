@@ -172,6 +172,11 @@ public class IntArrayTag extends CollectionTag<IntTag> {
 		return IntTag.valueOf(j);
 	}
 
+	@Override
+	public byte getElementType() {
+		return 3;
+	}
+
 	public void clear() {
 		this.data = new int[0];
 	}

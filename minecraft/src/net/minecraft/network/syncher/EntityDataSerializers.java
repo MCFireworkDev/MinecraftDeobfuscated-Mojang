@@ -156,7 +156,7 @@ public class EntityDataSerializers {
 		}
 
 		public ParticleOptions read(FriendlyByteBuf friendlyByteBuf) {
-			return this.readParticle(friendlyByteBuf, Registry.PARTICLE_TYPE.byId(friendlyByteBuf.readVarInt()));
+			return this.readParticle(friendlyByteBuf, (ParticleType<ParticleOptions>)Registry.PARTICLE_TYPE.byId(friendlyByteBuf.readVarInt()));
 		}
 
 		private <T extends ParticleOptions> T readParticle(FriendlyByteBuf friendlyByteBuf, ParticleType<T> particleType) {

@@ -2,9 +2,9 @@ package net.minecraft.util.datafix.fixes;
 
 import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixUtils;
-import com.mojang.datafixers.Dynamic;
 import com.mojang.datafixers.Typed;
 import com.mojang.datafixers.schemas.Schema;
+import com.mojang.serialization.Dynamic;
 import java.util.stream.Stream;
 
 public class BlockEntityBannerColorFix extends NamedEntityFix {
@@ -19,7 +19,8 @@ public class BlockEntityBannerColorFix extends NamedEntityFix {
 			dynamicx -> DataFixUtils.orElse(
 					dynamicx.asStreamOpt()
 						.map(stream -> stream.map(dynamicxx -> dynamicxx.update("Color", dynamicxxx -> dynamicxxx.createInt(15 - dynamicxxx.asInt(0)))))
-						.map(dynamicx::createList),
+						.map(dynamicx::createList)
+						.result(),
 					dynamicx
 				)
 		);
