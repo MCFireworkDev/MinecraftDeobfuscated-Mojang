@@ -76,7 +76,7 @@ public class ShulkerBoxBlock extends BaseEntityBlock {
 		if (level.isClientSide) {
 			return InteractionResult.SUCCESS;
 		} else if (player.isSpectator()) {
-			return InteractionResult.SUCCESS;
+			return InteractionResult.CONSUME;
 		} else {
 			BlockEntity blockEntity = level.getBlockEntity(blockPos);
 			if (blockEntity instanceof ShulkerBoxBlockEntity) {
@@ -95,7 +95,7 @@ public class ShulkerBoxBlock extends BaseEntityBlock {
 					PiglinAi.angerNearbyPiglinsThatSee(player);
 				}
 
-				return InteractionResult.SUCCESS;
+				return InteractionResult.CONSUME;
 			} else {
 				return InteractionResult.PASS;
 			}

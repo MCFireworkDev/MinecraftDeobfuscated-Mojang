@@ -1,5 +1,6 @@
 package net.minecraft.world.level.levelgen.flat;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mojang.serialization.Codec;
@@ -133,8 +134,8 @@ public class FlatLevelGeneratorSettings {
 		) {
 		};
 		if (this.addLakes) {
-			biome2.addFeature(GenerationStep.Decoration.LOCAL_MODIFICATIONS, WATER_LAKE_COMPOSITE_FEATURE);
-			biome2.addFeature(GenerationStep.Decoration.LOCAL_MODIFICATIONS, LAVA_LAKE_COMPOSITE_FEATURE);
+			biome2.addFeature(GenerationStep.Decoration.LAKES, WATER_LAKE_COMPOSITE_FEATURE);
+			biome2.addFeature(GenerationStep.Decoration.LAKES, LAVA_LAKE_COMPOSITE_FEATURE);
 		}
 
 		for(Entry<StructureFeature<?>, StructureFeatureConfiguration> entry : this.structureSettings.structureConfig().entrySet()) {
@@ -185,10 +186,6 @@ public class FlatLevelGeneratorSettings {
 		return this.layersInfo;
 	}
 
-	public void addStructure(StructureFeature<?> structureFeature) {
-		this.structureSettings.structureConfig().put(structureFeature, StructureSettings.DEFAULTS.get(structureFeature));
-	}
-
 	public BlockState[] getLayers() {
 		return this.layers;
 	}
@@ -215,15 +212,18 @@ public class FlatLevelGeneratorSettings {
 	}
 
 	public static FlatLevelGeneratorSettings getDefault() {
-		FlatLevelGeneratorSettings flatLevelGeneratorSettings = new FlatLevelGeneratorSettings(
-			new StructureSettings(Optional.of(StructureSettings.DEFAULT_STRONGHOLD), Maps.<StructureFeature<?>, StructureFeatureConfiguration>newHashMap())
+		StructureSettings structureSettings = new StructureSettings(
+			Optional.of(StructureSettings.DEFAULT_STRONGHOLD),
+			Maps.<StructureFeature<?>, StructureFeatureConfiguration>newHashMap(
+				ImmutableMap.of(StructureFeature.VILLAGE, StructureSettings.DEFAULTS.get(StructureFeature.VILLAGE))
+			)
 		);
+		FlatLevelGeneratorSettings flatLevelGeneratorSettings = new FlatLevelGeneratorSettings(structureSettings);
 		flatLevelGeneratorSettings.setBiome(Biomes.PLAINS);
 		flatLevelGeneratorSettings.getLayersInfo().add(new FlatLayerInfo(1, Blocks.BEDROCK));
 		flatLevelGeneratorSettings.getLayersInfo().add(new FlatLayerInfo(2, Blocks.DIRT));
 		flatLevelGeneratorSettings.getLayersInfo().add(new FlatLayerInfo(1, Blocks.GRASS_BLOCK));
 		flatLevelGeneratorSettings.updateLayers();
-		flatLevelGeneratorSettings.addStructure(StructureFeature.VILLAGE);
 		return flatLevelGeneratorSettings;
 	}
 }

@@ -44,6 +44,6 @@ public class ExperienceBottleItem extends Item {
 			itemStack.shrink(1);
 		}
 
-		return InteractionResultHolder.success(itemStack);
+		return InteractionResultHolder.sidedSuccess(itemStack, level.isClientSide());
 	}
 }

@@ -294,7 +294,7 @@ public abstract class Player extends LivingEntity {
 	}
 
 	protected boolean updateIsUnderwater() {
-		this.wasUnderwater = this.isUnderLiquid(FluidTags.WATER, true);
+		this.wasUnderwater = this.isUnderLiquid(FluidTags.WATER);
 		return this.wasUnderwater;
 	}
 
@@ -464,17 +464,10 @@ public abstract class Player extends LivingEntity {
 			double d = this.getX();
 			double e = this.getY();
 			double f = this.getZ();
-			float g = this.yRot;
-			float h = this.xRot;
 			super.rideTick();
 			this.oBob = this.bob;
 			this.bob = 0.0F;
 			this.checkRidingStatistics(this.getX() - d, this.getY() - e, this.getZ() - f);
-			if (this.getVehicle() instanceof Pig) {
-				this.xRot = h;
-				this.yRot = g;
-				this.yBodyRot = ((Pig)this.getVehicle()).yBodyRot;
-			}
 		}
 	}
 
@@ -756,8 +749,8 @@ public abstract class Player extends LivingEntity {
 		return f;
 	}
 
-	public boolean canDestroy(BlockState blockState) {
-		return blockState.getMaterial().isAlwaysDestroyable() || this.inventory.canDestroy(blockState);
+	public boolean hasCorrectToolForDrops(BlockState blockState) {
+		return !blockState.requiresCorrectToolForDrops() || this.inventory.getSelected().isCorrectToolForDrops(blockState);
 	}
 
 	@Override
@@ -1004,7 +997,7 @@ public abstract class Player extends LivingEntity {
 	}
 
 	@Override
-	public double getRidingHeight() {
+	public double getMyRidingOffset() {
 		return -0.35;
 	}
 
@@ -1436,7 +1429,7 @@ public abstract class Player extends LivingEntity {
 					this.awardStat(Stats.SWIM_ONE_CM, i);
 					this.causeFoodExhaustion(0.01F * (float)i * 0.01F);
 				}
-			} else if (this.isUnderLiquid(FluidTags.WATER, true)) {
+			} else if (this.isUnderLiquid(FluidTags.WATER)) {
 				int i = Math.round(Mth.sqrt(d * d + e * e + f * f) * 100.0F);
 				if (i > 0) {
 					this.awardStat(Stats.WALK_UNDER_WATER_ONE_CM, i);

@@ -126,6 +126,7 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.BaseCommandBlock;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CommandBlock;
@@ -135,7 +136,6 @@ import net.minecraft.world.level.block.entity.JigsawBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.StructureBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.StringUtils;
@@ -665,7 +665,9 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 			BlockEntity blockEntity = this.player.level.getBlockEntity(blockPos);
 			if (blockEntity instanceof JigsawBlockEntity) {
 				JigsawBlockEntity jigsawBlockEntity = (JigsawBlockEntity)blockEntity;
-				jigsawBlockEntity.generate(this.server.getLevel(this.player.level.dimension()), serverboundJigsawGeneratePacket.levels());
+				jigsawBlockEntity.generate(
+					this.server.getLevel(this.player.level.dimension()), serverboundJigsawGeneratePacket.levels(), serverboundJigsawGeneratePacket.keepJigsaws()
+				);
 			}
 		}
 	}
@@ -965,7 +967,7 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 				&& serverLevel.mayInteract(this.player, blockPos)) {
 				InteractionResult interactionResult = this.player.gameMode.useItemOn(this.player, serverLevel, itemStack, interactionHand, blockHitResult);
 				if (direction == Direction.UP
-					&& interactionResult != InteractionResult.SUCCESS
+					&& !interactionResult.consumesAction()
 					&& blockPos.getY() >= this.server.getMaxBuildHeight() - 1
 					&& wasBlockPlacementAttempt(this.player, itemStack)) {
 					Component component = new TranslatableComponent("build.tooHigh", this.server.getMaxBuildHeight()).withStyle(ChatFormatting.RED);
@@ -1216,7 +1218,7 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 				if (this.player.wonGame) {
 					this.player.wonGame = false;
 					this.player = this.server.getPlayerList().respawn(this.player, true);
-					CriteriaTriggers.CHANGED_DIMENSION.trigger(this.player, DimensionType.END_LOCATION, DimensionType.OVERWORLD_LOCATION);
+					CriteriaTriggers.CHANGED_DIMENSION.trigger(this.player, Level.END, Level.OVERWORLD);
 				} else {
 					if (this.player.getHealth() > 0.0F) {
 						return;

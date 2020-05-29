@@ -42,20 +42,21 @@ public class ResourcePackSelectScreen extends OptionsSubScreen {
 				button -> Util.getPlatform().openFile(this.minecraft.getResourcePackDirectory())
 			)
 		);
+		PackRepository<UnopenedResourcePack> packRepository = this.minecraft.getResourcePackRepository();
 		this.addButton(new Button(this.width / 2 + 4, this.height - 48, 150, 20, CommonComponents.GUI_DONE, button -> {
 			if (this.changed) {
-				List<UnopenedResourcePack> listxx = Lists.<UnopenedResourcePack>newArrayList();
+				List<String> listxx = Lists.newArrayList();
 
 				for(ResourcePackList.ResourcePackEntry resourcePackEntry : this.selectedResourcePackList.children()) {
-					listxx.add(resourcePackEntry.getResourcePack());
+					listxx.add(resourcePackEntry.getResourcePack().getId());
 				}
 
 				Collections.reverse(listxx);
-				this.minecraft.getResourcePackRepository().setSelected(listxx);
+				packRepository.setSelected(listxx);
 				this.options.resourcePacks.clear();
 				this.options.incompatibleResourcePacks.clear();
 
-				for(UnopenedResourcePack unopenedResourcePackxx : listxx) {
+				for(UnopenedResourcePack unopenedResourcePackxx : packRepository.getSelectedPacks()) {
 					if (!unopenedResourcePackxx.isFixedPosition()) {
 						this.options.resourcePacks.add(unopenedResourcePackxx.getId());
 						if (!unopenedResourcePackxx.getCompatibility().isCompatible()) {
@@ -93,16 +94,15 @@ public class ResourcePackSelectScreen extends OptionsSubScreen {
 		if (!this.changed) {
 			this.availableResourcePackList.children().clear();
 			this.selectedResourcePackList.children().clear();
-			PackRepository<UnopenedResourcePack> packRepository = this.minecraft.getResourcePackRepository();
 			packRepository.reload();
-			List<UnopenedResourcePack> list = Lists.<UnopenedResourcePack>newArrayList(packRepository.getAvailable());
-			list.removeAll(packRepository.getSelected());
+			List<UnopenedResourcePack> list = Lists.<UnopenedResourcePack>newArrayList(packRepository.getAvailablePacks());
+			list.removeAll(packRepository.getSelectedPacks());
 
 			for(UnopenedResourcePack unopenedResourcePack : list) {
 				this.availableResourcePackList.addResourcePackEntry(new ResourcePackList.ResourcePackEntry(this.availableResourcePackList, this, unopenedResourcePack));
 			}
 
-			for(UnopenedResourcePack unopenedResourcePack : Lists.reverse(Lists.newArrayList(packRepository.getSelected()))) {
+			for(UnopenedResourcePack unopenedResourcePack : Lists.reverse(Lists.newArrayList(packRepository.getSelectedPacks()))) {
 				this.selectedResourcePackList.addResourcePackEntry(new ResourcePackList.ResourcePackEntry(this.selectedResourcePackList, this, unopenedResourcePack));
 			}
 		}
