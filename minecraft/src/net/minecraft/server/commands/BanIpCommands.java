@@ -30,7 +30,7 @@ public class BanIpCommands {
 	public static void register(CommandDispatcher<CommandSourceStack> commandDispatcher) {
 		commandDispatcher.register(
 			Commands.literal("ban-ip")
-				.requires(commandSourceStack -> commandSourceStack.getServer().getPlayerList().getIpBans().isEnabled() && commandSourceStack.hasPermission(3))
+				.requires(commandSourceStack -> commandSourceStack.hasPermission(3))
 				.then(
 					((RequiredArgumentBuilder)Commands.argument("target", StringArgumentType.word())
 							.executes(commandContext -> banIpOrName((CommandSourceStack)commandContext.getSource(), StringArgumentType.getString(commandContext, "target"), null)))

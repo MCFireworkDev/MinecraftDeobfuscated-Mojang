@@ -17,8 +17,8 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackRepository;
-import net.minecraft.server.packs.repository.UnopenedPack;
 
 public class DataPackCommand {
 	private static final DynamicCommandExceptionType ERROR_UNKNOWN_PACK = new DynamicCommandExceptionType(
@@ -33,9 +33,13 @@ public class DataPackCommand {
 	private static final SuggestionProvider<CommandSourceStack> SELECTED_PACKS = (commandContext, suggestionsBuilder) -> SharedSuggestionProvider.suggest(
 			commandContext.getSource().getServer().getPackRepository().getSelectedIds().stream().map(StringArgumentType::escapeIfRequired), suggestionsBuilder
 		);
-	private static final SuggestionProvider<CommandSourceStack> AVAILABLE_PACKS = (commandContext, suggestionsBuilder) -> SharedSuggestionProvider.suggest(
-			commandContext.getSource().getServer().getPackRepository().getAvailableIds().stream().map(StringArgumentType::escapeIfRequired), suggestionsBuilder
+	private static final SuggestionProvider<CommandSourceStack> UNSELECTED_PACKS = (commandContext, suggestionsBuilder) -> {
+		PackRepository<?> packRepository = commandContext.getSource().getServer().getPackRepository();
+		Collection<String> collection = packRepository.getSelectedIds();
+		return SharedSuggestionProvider.suggest(
+			packRepository.getAvailableIds().stream().filter(string -> !collection.contains(string)).map(StringArgumentType::escapeIfRequired), suggestionsBuilder
 		);
+	};
 
 	public static void register(CommandDispatcher<CommandSourceStack> commandDispatcher) {
 		commandDispatcher.register(
@@ -47,12 +51,12 @@ public class DataPackCommand {
 							((RequiredArgumentBuilder)((RequiredArgumentBuilder)((RequiredArgumentBuilder)((RequiredArgumentBuilder)Commands.argument(
 													"name", StringArgumentType.string()
 												)
-												.suggests(AVAILABLE_PACKS)
+												.suggests(UNSELECTED_PACKS)
 												.executes(
 													commandContext -> enablePack(
 															(CommandSourceStack)commandContext.getSource(),
 															getPack(commandContext, "name", true),
-															(list, unopenedPack) -> unopenedPack.getDefaultPosition().insert(list, unopenedPack, unopenedPackx -> unopenedPackx, false)
+															(list, pack) -> pack.getDefaultPosition().insert(list, pack, packx -> packx, false)
 														)
 												))
 											.then(
@@ -64,7 +68,7 @@ public class DataPackCommand {
 																commandContext -> enablePack(
 																		commandContext.getSource(),
 																		getPack(commandContext, "name", true),
-																		(list, unopenedPack) -> list.add(list.indexOf(getPack(commandContext, "existing", false)) + 1, unopenedPack)
+																		(list, pack) -> list.add(list.indexOf(getPack(commandContext, "existing", false)) + 1, pack)
 																	)
 															)
 													)
@@ -78,7 +82,7 @@ public class DataPackCommand {
 															commandContext -> enablePack(
 																	commandContext.getSource(),
 																	getPack(commandContext, "name", true),
-																	(list, unopenedPack) -> list.add(list.indexOf(getPack(commandContext, "existing", false)), unopenedPack)
+																	(list, pack) -> list.add(list.indexOf(getPack(commandContext, "existing", false)), pack)
 																)
 														)
 												)
@@ -86,9 +90,7 @@ public class DataPackCommand {
 									.then(Commands.literal("last").executes(commandContext -> enablePack(commandContext.getSource(), getPack(commandContext, "name", true), List::add))))
 								.then(
 									Commands.literal("first")
-										.executes(
-											commandContext -> enablePack(commandContext.getSource(), getPack(commandContext, "name", true), (list, unopenedPack) -> list.add(0, unopenedPack))
-										)
+										.executes(commandContext -> enablePack(commandContext.getSource(), getPack(commandContext, "name", true), (list, pack) -> list.add(0, pack)))
 								)
 						)
 				)
@@ -109,21 +111,21 @@ public class DataPackCommand {
 		);
 	}
 
-	private static int enablePack(CommandSourceStack commandSourceStack, UnopenedPack unopenedPack, DataPackCommand.Inserter inserter) throws CommandSyntaxException {
+	private static int enablePack(CommandSourceStack commandSourceStack, Pack pack, DataPackCommand.Inserter inserter) throws CommandSyntaxException {
 		PackRepository<?> packRepository = commandSourceStack.getServer().getPackRepository();
-		List<UnopenedPack> list = Lists.<UnopenedPack>newArrayList(packRepository.getSelectedPacks());
-		inserter.apply(list, unopenedPack);
-		commandSourceStack.sendSuccess(new TranslatableComponent("commands.datapack.enable.success", unopenedPack.getChatLink(true)), true);
-		ReloadCommand.reloadPacks((Collection<String>)list.stream().map(UnopenedPack::getId).collect(Collectors.toList()), commandSourceStack);
+		List<Pack> list = Lists.<Pack>newArrayList(packRepository.getSelectedPacks());
+		inserter.apply(list, pack);
+		commandSourceStack.sendSuccess(new TranslatableComponent("commands.datapack.enable.success", pack.getChatLink(true)), true);
+		ReloadCommand.reloadPacks((Collection<String>)list.stream().map(Pack::getId).collect(Collectors.toList()), commandSourceStack);
 		return list.size();
 	}
 
-	private static int disablePack(CommandSourceStack commandSourceStack, UnopenedPack unopenedPack) {
+	private static int disablePack(CommandSourceStack commandSourceStack, Pack pack) {
 		PackRepository<?> packRepository = commandSourceStack.getServer().getPackRepository();
-		List<UnopenedPack> list = Lists.<UnopenedPack>newArrayList(packRepository.getSelectedPacks());
-		list.remove(unopenedPack);
-		ReloadCommand.reloadPacks((Collection<String>)list.stream().map(UnopenedPack::getId).collect(Collectors.toList()), commandSourceStack);
-		commandSourceStack.sendSuccess(new TranslatableComponent("commands.datapack.disable.success", unopenedPack.getChatLink(true)), true);
+		List<Pack> list = Lists.<Pack>newArrayList(packRepository.getSelectedPacks());
+		list.remove(pack);
+		ReloadCommand.reloadPacks((Collection<String>)list.stream().map(Pack::getId).collect(Collectors.toList()), commandSourceStack);
+		commandSourceStack.sendSuccess(new TranslatableComponent("commands.datapack.disable.success", pack.getChatLink(true)), true);
 		return list.size();
 	}
 
@@ -134,16 +136,14 @@ public class DataPackCommand {
 	private static int listAvailablePacks(CommandSourceStack commandSourceStack) {
 		PackRepository<?> packRepository = commandSourceStack.getServer().getPackRepository();
 		packRepository.reload();
-		Collection<? extends UnopenedPack> collection = packRepository.getSelectedPacks();
-		Collection<? extends UnopenedPack> collection2 = packRepository.getAvailablePacks();
-		List<UnopenedPack> list = (List)collection2.stream().filter(unopenedPack -> !collection.contains(unopenedPack)).collect(Collectors.toList());
+		Collection<? extends Pack> collection = packRepository.getSelectedPacks();
+		Collection<? extends Pack> collection2 = packRepository.getAvailablePacks();
+		List<Pack> list = (List)collection2.stream().filter(pack -> !collection.contains(pack)).collect(Collectors.toList());
 		if (list.isEmpty()) {
 			commandSourceStack.sendSuccess(new TranslatableComponent("commands.datapack.list.available.none"), false);
 		} else {
 			commandSourceStack.sendSuccess(
-				new TranslatableComponent(
-					"commands.datapack.list.available.success", list.size(), ComponentUtils.formatList(list, unopenedPack -> unopenedPack.getChatLink(false))
-				),
+				new TranslatableComponent("commands.datapack.list.available.success", list.size(), ComponentUtils.formatList(list, pack -> pack.getChatLink(false))),
 				false
 			);
 		}
@@ -154,13 +154,13 @@ public class DataPackCommand {
 	private static int listEnabledPacks(CommandSourceStack commandSourceStack) {
 		PackRepository<?> packRepository = commandSourceStack.getServer().getPackRepository();
 		packRepository.reload();
-		Collection<? extends UnopenedPack> collection = packRepository.getSelectedPacks();
+		Collection<? extends Pack> collection = packRepository.getSelectedPacks();
 		if (collection.isEmpty()) {
 			commandSourceStack.sendSuccess(new TranslatableComponent("commands.datapack.list.enabled.none"), false);
 		} else {
 			commandSourceStack.sendSuccess(
 				new TranslatableComponent(
-					"commands.datapack.list.enabled.success", collection.size(), ComponentUtils.formatList(collection, unopenedPack -> unopenedPack.getChatLink(true))
+					"commands.datapack.list.enabled.success", collection.size(), ComponentUtils.formatList(collection, pack -> pack.getChatLink(true))
 				),
 				false
 			);
@@ -169,25 +169,25 @@ public class DataPackCommand {
 		return collection.size();
 	}
 
-	private static UnopenedPack getPack(CommandContext<CommandSourceStack> commandContext, String string, boolean bl) throws CommandSyntaxException {
+	private static Pack getPack(CommandContext<CommandSourceStack> commandContext, String string, boolean bl) throws CommandSyntaxException {
 		String string2 = StringArgumentType.getString(commandContext, string);
 		PackRepository<?> packRepository = commandContext.getSource().getServer().getPackRepository();
-		UnopenedPack unopenedPack = packRepository.getPack(string2);
-		if (unopenedPack == null) {
+		Pack pack = packRepository.getPack(string2);
+		if (pack == null) {
 			throw ERROR_UNKNOWN_PACK.create(string2);
 		} else {
-			boolean bl2 = packRepository.getSelectedPacks().contains(unopenedPack);
+			boolean bl2 = packRepository.getSelectedPacks().contains(pack);
 			if (bl && bl2) {
 				throw ERROR_PACK_ALREADY_ENABLED.create(string2);
 			} else if (!bl && !bl2) {
 				throw ERROR_PACK_ALREADY_DISABLED.create(string2);
 			} else {
-				return unopenedPack;
+				return pack;
 			}
 		}
 	}
 
 	interface Inserter {
-		void apply(List<UnopenedPack> list, UnopenedPack unopenedPack) throws CommandSyntaxException;
+		void apply(List<Pack> list, Pack pack) throws CommandSyntaxException;
 	}
 }

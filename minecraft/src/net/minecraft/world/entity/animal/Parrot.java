@@ -26,6 +26,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -54,7 +55,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Blocks;
@@ -238,11 +238,9 @@ public class Parrot extends ShoulderRidingEntity implements FlyingAnimal {
 	}
 
 	@Override
-	public boolean mobInteract(Player player, InteractionHand interactionHand) {
+	public InteractionResult mobInteract(Player player, InteractionHand interactionHand) {
 		ItemStack itemStack = player.getItemInHand(interactionHand);
-		if (itemStack.getItem() instanceof SpawnEggItem) {
-			return super.mobInteract(player, interactionHand);
-		} else if (!this.isTame() && TAME_FOOD.contains(itemStack.getItem())) {
+		if (!this.isTame() && TAME_FOOD.contains(itemStack.getItem())) {
 			if (!player.abilities.instabuild) {
 				itemStack.shrink(1);
 			}
@@ -270,7 +268,7 @@ public class Parrot extends ShoulderRidingEntity implements FlyingAnimal {
 				}
 			}
 
-			return true;
+			return InteractionResult.sidedSuccess(this.level.isClientSide);
 		} else if (itemStack.getItem() == POISONOUS_FOOD) {
 			if (!player.abilities.instabuild) {
 				itemStack.shrink(1);
@@ -281,13 +279,13 @@ public class Parrot extends ShoulderRidingEntity implements FlyingAnimal {
 				this.hurt(DamageSource.playerAttack(player), Float.MAX_VALUE);
 			}
 
-			return true;
+			return InteractionResult.sidedSuccess(this.level.isClientSide);
 		} else if (!this.isFlying() && this.isTame() && this.isOwnedBy(player)) {
 			if (!this.level.isClientSide) {
 				this.setOrderedToSit(!this.isOrderedToSit());
 			}
 
-			return true;
+			return InteractionResult.sidedSuccess(this.level.isClientSide);
 		} else {
 			return super.mobInteract(player, interactionHand);
 		}

@@ -24,14 +24,16 @@ import net.minecraft.client.renderer.CubeMap;
 import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.realms.RealmsBridge;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.LevelStorageSource;
-import net.minecraft.world.level.storage.WorldData;
+import net.minecraft.world.level.storage.LevelSummary;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -200,7 +202,7 @@ public class TitleScreen extends Screen {
 				200,
 				20,
 				new TranslatableComponent("menu.playdemo"),
-				button -> this.minecraft.selectLevel("Demo_World", MinecraftServer.DEMO_SETTINGS)
+				button -> this.minecraft.createLevel("Demo_World", MinecraftServer.DEMO_SETTINGS, RegistryAccess.builtin(), WorldGenSettings.DEMO_SETTINGS)
 			)
 		);
 		this.resetDemoButton = this.addButton(
@@ -214,14 +216,14 @@ public class TitleScreen extends Screen {
 					LevelStorageSource levelStorageSource = this.minecraft.getLevelSource();
 		
 					try (LevelStorageSource.LevelStorageAccess levelStorageAccess = levelStorageSource.createAccess("Demo_World")) {
-						WorldData worldDataxx = levelStorageAccess.getDataTag();
-						if (worldDataxx != null) {
+						LevelSummary levelSummaryxx = levelStorageAccess.getSummary();
+						if (levelSummaryxx != null) {
 							this.minecraft
 								.setScreen(
 									new ConfirmScreen(
 										this::confirmDemo,
 										new TranslatableComponent("selectWorld.deleteQuestion"),
-										new TranslatableComponent("selectWorld.deleteWarning", worldDataxx.getLevelName()),
+										new TranslatableComponent("selectWorld.deleteWarning", levelSummaryxx.getLevelName()),
 										new TranslatableComponent("selectWorld.deleteButton"),
 										CommonComponents.GUI_CANCEL
 									)
@@ -236,8 +238,8 @@ public class TitleScreen extends Screen {
 		);
 
 		try (LevelStorageSource.LevelStorageAccess levelStorageAccess = this.minecraft.getLevelSource().createAccess("Demo_World")) {
-			WorldData worldData = levelStorageAccess.getDataTag();
-			if (worldData == null) {
+			LevelSummary levelSummary = levelStorageAccess.getSummary();
+			if (levelSummary == null) {
 				this.resetDemoButton.active = false;
 			}
 		} catch (IOException var16) {
