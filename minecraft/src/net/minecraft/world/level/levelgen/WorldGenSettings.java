@@ -106,6 +106,7 @@ public class WorldGenSettings {
 		LevelStem levelStem = mappedRegistry.get(LevelStem.OVERWORLD);
 		DimensionType dimensionType = levelStem == null ? DimensionType.defaultOverworld() : levelStem.type();
 		mappedRegistry2.register(LevelStem.OVERWORLD, new LevelStem(() -> dimensionType, chunkGenerator));
+		mappedRegistry2.setPersistent(LevelStem.OVERWORLD);
 
 		for(Entry<ResourceKey<LevelStem>, LevelStem> entry : mappedRegistry.entrySet()) {
 			ResourceKey<LevelStem> resourceKey = (ResourceKey)entry.getKey();
