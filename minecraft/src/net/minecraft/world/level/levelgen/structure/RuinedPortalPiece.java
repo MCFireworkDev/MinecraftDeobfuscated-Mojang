@@ -37,6 +37,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.BlackstoneRep
 import net.minecraft.world.level.levelgen.structure.templatesystem.BlockAgeProcessor;
 import net.minecraft.world.level.levelgen.structure.templatesystem.BlockIgnoreProcessor;
 import net.minecraft.world.level.levelgen.structure.templatesystem.BlockMatchTest;
+import net.minecraft.world.level.levelgen.structure.templatesystem.LavaSubmergedBlockProcessor;
 import net.minecraft.world.level.levelgen.structure.templatesystem.ProcessorRule;
 import net.minecraft.world.level.levelgen.structure.templatesystem.RandomBlockMatchTest;
 import net.minecraft.world.level.levelgen.structure.templatesystem.RuleProcessor;
@@ -113,7 +114,8 @@ public class RuinedPortalPiece extends TemplateStructurePiece {
 			.setRotationPivot(blockPos)
 			.addProcessor(blockIgnoreProcessor)
 			.addProcessor(new RuleProcessor(list))
-			.addProcessor(new BlockAgeProcessor(this.properties.mossiness));
+			.addProcessor(new BlockAgeProcessor(this.properties.mossiness))
+			.addProcessor(new LavaSubmergedBlockProcessor());
 		if (this.properties.replaceWithBlackstone) {
 			structurePlaceSettings.addProcessor(BlackstoneReplaceProcessor.INSTANCE);
 		}

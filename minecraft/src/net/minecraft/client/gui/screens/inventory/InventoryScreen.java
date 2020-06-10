@@ -130,7 +130,7 @@ public class InventoryScreen extends EffectRenderingInventoryScreen<InventoryMen
 		entityRenderDispatcher.overrideCameraOrientation(quaternion2);
 		entityRenderDispatcher.setRenderShadow(false);
 		MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-		entityRenderDispatcher.render(livingEntity, 0.0, 0.0, 0.0, 0.0F, 1.0F, poseStack, bufferSource, 15728880);
+		RenderSystem.runAsFancy(() -> entityRenderDispatcher.render(livingEntity, 0.0, 0.0, 0.0, 0.0F, 1.0F, poseStack, bufferSource, 15728880));
 		bufferSource.endBatch();
 		entityRenderDispatcher.setRenderShadow(true);
 		livingEntity.yBodyRot = m;
@@ -149,6 +149,7 @@ public class InventoryScreen extends EffectRenderingInventoryScreen<InventoryMen
 	@Override
 	public boolean mouseClicked(double d, double e, int i) {
 		if (this.recipeBookComponent.mouseClicked(d, e, i)) {
+			this.setFocused(this.recipeBookComponent);
 			return true;
 		} else {
 			return this.widthTooNarrow && this.recipeBookComponent.isVisible() ? false : super.mouseClicked(d, e, i);

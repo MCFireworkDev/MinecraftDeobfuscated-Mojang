@@ -213,7 +213,7 @@ public final class NoiseGeneratorSettings {
 				0,
 				0,
 				32,
-				true,
+				false,
 				Optional.of(preset)
 			);
 		}

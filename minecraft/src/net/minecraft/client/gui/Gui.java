@@ -866,7 +866,7 @@ public class Gui extends GuiComponent {
 			this.minecraft.getProfiler().popPush("air");
 			int z = player.getAirSupply();
 			int aa = player.getMaxAirSupply();
-			if (player.isUnderLiquid(FluidTags.WATER) || z < aa) {
+			if (player.isEyeInFluid(FluidTags.WATER) || z < aa) {
 				int ab = this.getVisibleVehicleHeartRows(y) - 1;
 				t -= ab * 10;
 				int ac = Mth.ceil((double)(z - 2) * 10.0 / (double)aa);

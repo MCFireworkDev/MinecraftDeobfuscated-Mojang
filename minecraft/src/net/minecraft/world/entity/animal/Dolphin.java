@@ -253,7 +253,9 @@ public class Dolphin extends WaterAnimal {
 	@Override
 	public void tick() {
 		super.tick();
-		if (!this.isNoAi()) {
+		if (this.isNoAi()) {
+			this.setAirSupply(this.getMaxAirSupply());
+		} else {
 			if (this.isInWaterRainOrBubble()) {
 				this.setMoisntessLevel(2400);
 			} else {
