@@ -16,6 +16,7 @@ public class SmithingMenu extends ItemCombinerMenu {
 	private final Level level;
 	@Nullable
 	private UpgradeRecipe selectedRecipe;
+	private final List<UpgradeRecipe> recipes;
 
 	public SmithingMenu(int i, Inventory inventory) {
 		this(i, inventory, ContainerLevelAccess.NULL);
@@ -24,6 +25,7 @@ public class SmithingMenu extends ItemCombinerMenu {
 	public SmithingMenu(int i, Inventory inventory, ContainerLevelAccess containerLevelAccess) {
 		super(MenuType.SMITHING, i, inventory, containerLevelAccess);
 		this.level = inventory.player.level;
+		this.recipes = this.level.getRecipeManager().getAllRecipesFor(RecipeType.SMITHING);
 	}
 
 	@Override
@@ -60,5 +62,10 @@ public class SmithingMenu extends ItemCombinerMenu {
 			ItemStack itemStack = this.selectedRecipe.assemble(this.inputSlots);
 			this.resultSlots.setItem(0, itemStack);
 		}
+	}
+
+	@Override
+	protected boolean shouldQuickMoveToAdditionalSlot(ItemStack itemStack) {
+		return this.recipes.stream().anyMatch(upgradeRecipe -> upgradeRecipe.isAdditionIngredient(itemStack));
 	}
 }

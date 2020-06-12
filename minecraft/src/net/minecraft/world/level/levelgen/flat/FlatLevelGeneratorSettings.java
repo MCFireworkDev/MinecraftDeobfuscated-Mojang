@@ -43,6 +43,8 @@ public class FlatLevelGeneratorSettings {
 			instance -> instance.group(
 						StructureSettings.CODEC.fieldOf("structures").forGetter(FlatLevelGeneratorSettings::structureSettings),
 						FlatLayerInfo.CODEC.listOf().fieldOf("layers").forGetter(FlatLevelGeneratorSettings::getLayersInfo),
+						Codec.BOOL.fieldOf("lakes").withDefault(false).forGetter(flatLevelGeneratorSettings -> flatLevelGeneratorSettings.addLakes),
+						Codec.BOOL.fieldOf("features").withDefault(false).forGetter(flatLevelGeneratorSettings -> flatLevelGeneratorSettings.decoration),
 						Codecs.withDefault(Registry.BIOME.fieldOf("biome"), Util.prefix("Unknown biome, defaulting to plains", LOGGER::error), () -> Biomes.PLAINS)
 							.forGetter(flatLevelGeneratorSettings -> flatLevelGeneratorSettings.biome)
 					)
@@ -83,8 +85,16 @@ public class FlatLevelGeneratorSettings {
 	private boolean decoration = false;
 	private boolean addLakes = false;
 
-	public FlatLevelGeneratorSettings(StructureSettings structureSettings, List<FlatLayerInfo> list, Biome biome) {
+	public FlatLevelGeneratorSettings(StructureSettings structureSettings, List<FlatLayerInfo> list, boolean bl, boolean bl2, Biome biome) {
 		this(structureSettings);
+		if (bl) {
+			this.setAddLakes();
+		}
+
+		if (bl2) {
+			this.setDecoration();
+		}
+
 		this.layersInfo.addAll(list);
 		this.updateLayers();
 		this.biome = biome;
@@ -120,12 +130,10 @@ public class FlatLevelGeneratorSettings {
 		return flatLevelGeneratorSettings;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public void setDecoration() {
 		this.decoration = true;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public void setAddLakes() {
 		this.addLakes = true;
 	}
