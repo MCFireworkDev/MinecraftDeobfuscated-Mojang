@@ -387,7 +387,7 @@ public abstract class Entity implements Nameable, CommandSource {
 			this.clearFire();
 		} else if (this.remainingFireTicks > 0) {
 			if (this.fireImmune()) {
-				this.remainingFireTicks -= 4;
+				this.setRemainingFireTicks(this.remainingFireTicks - 4);
 				if (this.remainingFireTicks < 0) {
 					this.clearFire();
 				}
@@ -396,7 +396,7 @@ public abstract class Entity implements Nameable, CommandSource {
 					this.hurt(DamageSource.ON_FIRE, 1.0F);
 				}
 
-				--this.remainingFireTicks;
+				this.setRemainingFireTicks(this.remainingFireTicks - 1);
 			}
 		}
 
@@ -441,7 +441,7 @@ public abstract class Entity implements Nameable, CommandSource {
 		}
 
 		if (this.remainingFireTicks < j) {
-			this.remainingFireTicks = j;
+			this.setRemainingFireTicks(j);
 		}
 	}
 
@@ -454,7 +454,7 @@ public abstract class Entity implements Nameable, CommandSource {
 	}
 
 	public void clearFire() {
-		this.remainingFireTicks = 0;
+		this.setRemainingFireTicks(0);
 	}
 
 	protected void outOfWorld() {
@@ -575,12 +575,12 @@ public abstract class Entity implements Nameable, CommandSource {
 					.getBlockStatesIfLoaded(this.getBoundingBox().deflate(0.001))
 					.noneMatch(blockStatex -> blockStatex.is(BlockTags.FIRE) || blockStatex.is(Blocks.LAVA))
 				&& this.remainingFireTicks <= 0) {
-				this.remainingFireTicks = -this.getFireImmuneTicks();
+				this.setRemainingFireTicks(-this.getFireImmuneTicks());
 			}
 
 			if (this.isInWaterRainOrBubble() && this.isOnFire()) {
 				this.playSound(SoundEvents.GENERIC_EXTINGUISH_FIRE, 0.7F, 1.6F + (this.random.nextFloat() - this.random.nextFloat()) * 0.4F);
-				this.remainingFireTicks = -this.getFireImmuneTicks();
+				this.setRemainingFireTicks(-this.getFireImmuneTicks());
 			}
 
 			this.level.getProfiler().pop();
@@ -1942,7 +1942,7 @@ public abstract class Entity implements Nameable, CommandSource {
 	}
 
 	public void thunderHit(LightningBolt lightningBolt) {
-		++this.remainingFireTicks;
+		this.setRemainingFireTicks(this.remainingFireTicks + 1);
 		if (this.remainingFireTicks == 0) {
 			this.setSecondsOnFire(8);
 		}
