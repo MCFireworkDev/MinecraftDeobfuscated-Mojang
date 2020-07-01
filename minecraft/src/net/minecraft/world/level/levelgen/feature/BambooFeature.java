@@ -4,7 +4,6 @@ import com.mojang.serialization.Codec;
 import java.util.Random;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.BambooBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -31,7 +30,6 @@ public class BambooFeature extends Feature<ProbabilityFeatureConfiguration> {
 
 	public boolean place(
 		WorldGenLevel worldGenLevel,
-		StructureFeatureManager structureFeatureManager,
 		ChunkGenerator chunkGenerator,
 		Random random,
 		BlockPos blockPos,
