@@ -34,7 +34,9 @@ public class SuggestionProviders {
 	);
 	public static final SuggestionProvider<CommandSourceStack> AVAILABLE_BIOMES = register(
 		new ResourceLocation("available_biomes"),
-		(commandContext, suggestionsBuilder) -> SharedSuggestionProvider.suggestResource(Registry.BIOME.keySet(), suggestionsBuilder)
+		(commandContext, suggestionsBuilder) -> SharedSuggestionProvider.suggestResource(
+				commandContext.getSource().registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).keySet(), suggestionsBuilder
+			)
 	);
 	public static final SuggestionProvider<CommandSourceStack> SUMMONABLE_ENTITIES = register(
 		new ResourceLocation("summonable_entities"),

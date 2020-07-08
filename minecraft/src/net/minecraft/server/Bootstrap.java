@@ -20,7 +20,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ComposterBlock;
 import net.minecraft.world.level.block.FireBlock;
@@ -83,7 +82,6 @@ public class Bootstrap {
 		checkTranslations(Registry.MOB_EFFECT, MobEffect::getDescriptionId, set);
 		checkTranslations(Registry.ITEM, Item::getDescriptionId, set);
 		checkTranslations(Registry.ENCHANTMENT, Enchantment::getDescriptionId, set);
-		checkTranslations(Registry.BIOME, Biome::getDescriptionId, set);
 		checkTranslations(Registry.BLOCK, Block::getDescriptionId, set);
 		checkTranslations(Registry.CUSTOM_STAT, resourceLocation -> "stat." + resourceLocation.toString().replace(':', '.'), set);
 		checkGameruleTranslations(set);

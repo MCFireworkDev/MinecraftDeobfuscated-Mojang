@@ -992,7 +992,7 @@ public class Fox extends Animal {
 		public final Fox.Type type;
 
 		public FoxGroupData(Fox.Type type) {
-			this.setShouldSpawnBaby(false);
+			super(false);
 			this.type = type;
 		}
 	}

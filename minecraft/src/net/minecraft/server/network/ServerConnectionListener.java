@@ -33,6 +33,7 @@ import net.minecraft.ReportedException;
 import net.minecraft.network.Connection;
 import net.minecraft.network.PacketDecoder;
 import net.minecraft.network.PacketEncoder;
+import net.minecraft.network.RateKickingConnection;
 import net.minecraft.network.Varint21FrameDecoder;
 import net.minecraft.network.Varint21LengthFieldPrepender;
 import net.minecraft.network.chat.Component;
@@ -86,7 +87,7 @@ public class ServerConnectionListener {
 								protected void initChannel(Channel channel) throws Exception {
 									try {
 										channel.config().setOption(ChannelOption.TCP_NODELAY, true);
-									} catch (ChannelException var3) {
+									} catch (ChannelException var4) {
 									}
 				
 									channel.pipeline()
@@ -96,7 +97,8 @@ public class ServerConnectionListener {
 										.addLast("decoder", new PacketDecoder(PacketFlow.SERVERBOUND))
 										.addLast("prepender", new Varint21LengthFieldPrepender())
 										.addLast("encoder", new PacketEncoder(PacketFlow.CLIENTBOUND));
-									Connection connection = new Connection(PacketFlow.SERVERBOUND);
+									int i = ServerConnectionListener.this.server.getRateLimitPacketsPerSecond();
+									Connection connection = (Connection)(i > 0 ? new RateKickingConnection(i) : new Connection(PacketFlow.SERVERBOUND));
 									ServerConnectionListener.this.connections.add(connection);
 									channel.pipeline().addLast("packet_handler", connection);
 									connection.setListener(new ServerHandshakePacketListenerImpl(ServerConnectionListener.this.server, connection));

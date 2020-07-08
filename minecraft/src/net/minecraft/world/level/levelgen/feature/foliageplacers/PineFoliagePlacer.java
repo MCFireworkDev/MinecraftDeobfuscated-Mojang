@@ -6,6 +6,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.Random;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.UniformInt;
 import net.minecraft.world.level.LevelSimulatedRW;
 import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
@@ -13,21 +14,14 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 public class PineFoliagePlacer extends FoliagePlacer {
 	public static final Codec<PineFoliagePlacer> CODEC = RecordCodecBuilder.create(
 		instance -> foliagePlacerParts(instance)
-				.and(
-					instance.group(
-						Codec.INT.fieldOf("height").forGetter(pineFoliagePlacer -> pineFoliagePlacer.height),
-						Codec.INT.fieldOf("height_random").forGetter(pineFoliagePlacer -> pineFoliagePlacer.heightRandom)
-					)
-				)
+				.and(UniformInt.codec(0, 16, 8).fieldOf("height").forGetter(pineFoliagePlacer -> pineFoliagePlacer.height))
 				.apply(instance, PineFoliagePlacer::new)
 	);
-	private final int height;
-	private final int heightRandom;
+	private final UniformInt height;
 
-	public PineFoliagePlacer(int i, int j, int k, int l, int m, int n) {
-		super(i, j, k, l);
-		this.height = m;
-		this.heightRandom = n;
+	public PineFoliagePlacer(UniformInt uniformInt, UniformInt uniformInt2, UniformInt uniformInt3) {
+		super(uniformInt, uniformInt2);
+		this.height = uniformInt3;
 	}
 
 	@Override
@@ -67,7 +61,7 @@ public class PineFoliagePlacer extends FoliagePlacer {
 
 	@Override
 	public int foliageHeight(Random random, int i, TreeConfiguration treeConfiguration) {
-		return this.height + random.nextInt(this.heightRandom + 1);
+		return this.height.sample(random);
 	}
 
 	@Override
