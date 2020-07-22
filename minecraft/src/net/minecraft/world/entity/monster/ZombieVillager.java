@@ -242,7 +242,7 @@ public class ZombieVillager extends Zombie implements VillagerDataHolder {
 		}
 
 		villager.setInvulnerable(this.isInvulnerable());
-		serverLevel.addFreshEntity(villager);
+		serverLevel.addFreshEntityWithPassengers(villager);
 		if (this.conversionStarter != null) {
 			Player player = serverLevel.getPlayerByUUID(this.conversionStarter);
 			if (player instanceof ServerPlayer) {

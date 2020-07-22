@@ -570,7 +570,10 @@ public class EntityType<T extends Entity> {
 		boolean bl2
 	) {
 		T entity = this.create(serverLevel, compoundTag, component, player, blockPos, mobSpawnType, bl, bl2);
-		serverLevel.addFreshEntity(entity);
+		if (entity != null) {
+			serverLevel.addFreshEntityWithPassengers(entity);
+		}
+
 		return entity;
 	}
 

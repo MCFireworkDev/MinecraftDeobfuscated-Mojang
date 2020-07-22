@@ -133,8 +133,15 @@ public class EffectInstance implements Effect, AutoCloseable {
 				}
 			}
 		} catch (Exception var25) {
+			String string3;
+			if (resource != null) {
+				string3 = " (" + resource.getSourceName() + ")";
+			} else {
+				string3 = "";
+			}
+
 			ChainedJsonException chainedJsonException4 = ChainedJsonException.forException(var25);
-			chainedJsonException4.setFilenameAndFlush(resourceLocation.getPath());
+			chainedJsonException4.setFilenameAndFlush(resourceLocation.getPath() + string3);
 			throw chainedJsonException4;
 		} finally {
 			IOUtils.closeQuietly(resource);
@@ -150,7 +157,7 @@ public class EffectInstance implements Effect, AutoCloseable {
 			Resource resource = resourceManager.getResource(resourceLocation);
 
 			try {
-				program = Program.compileShader(type, string, resource.getInputStream());
+				program = Program.compileShader(type, string, resource.getInputStream(), resource.getSourceName());
 			} finally {
 				IOUtils.closeQuietly(resource);
 			}

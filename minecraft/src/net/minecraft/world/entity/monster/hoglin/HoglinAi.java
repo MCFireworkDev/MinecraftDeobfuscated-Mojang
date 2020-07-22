@@ -54,7 +54,7 @@ public class HoglinAi {
 	}
 
 	private static void initCoreActivity(Brain<Hoglin> brain) {
-		brain.addActivity(Activity.CORE, 0, ImmutableList.of(new LookAtTargetSink(45, 90), new MoveToTargetSink(200)));
+		brain.addActivity(Activity.CORE, 0, ImmutableList.of(new LookAtTargetSink(45, 90), new MoveToTargetSink()));
 	}
 
 	private static void initIdleActivity(Brain<Hoglin> brain) {

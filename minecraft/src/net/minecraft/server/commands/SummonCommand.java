@@ -24,6 +24,9 @@ import net.minecraft.world.phys.Vec3;
 
 public class SummonCommand {
 	private static final SimpleCommandExceptionType ERROR_FAILED = new SimpleCommandExceptionType(new TranslatableComponent("commands.summon.failed"));
+	private static final SimpleCommandExceptionType ERROR_DUPLICATE_UUID = new SimpleCommandExceptionType(
+		new TranslatableComponent("commands.summon.failed.uuid")
+	);
 	private static final SimpleCommandExceptionType INVALID_POSITION = new SimpleCommandExceptionType(
 		new TranslatableComponent("commands.summon.invalidPosition")
 	);
@@ -82,7 +85,7 @@ public class SummonCommand {
 			ServerLevel serverLevel = commandSourceStack.getLevel();
 			Entity entity = EntityType.loadEntityRecursive(compoundTag2, serverLevel, entityx -> {
 				entityx.moveTo(vec3.x, vec3.y, vec3.z, entityx.yRot, entityx.xRot);
-				return !serverLevel.addWithUUID(entityx) ? null : entityx;
+				return entityx;
 			});
 			if (entity == null) {
 				throw ERROR_FAILED.create();
@@ -94,8 +97,12 @@ public class SummonCommand {
 						);
 				}
 
-				commandSourceStack.sendSuccess(new TranslatableComponent("commands.summon.success", entity.getDisplayName()), true);
-				return 1;
+				if (!serverLevel.tryAddFreshEntityWithPassengers(entity)) {
+					throw ERROR_DUPLICATE_UUID.create();
+				} else {
+					commandSourceStack.sendSuccess(new TranslatableComponent("commands.summon.success", entity.getDisplayName()), true);
+					return 1;
+				}
 			}
 		}
 	}
