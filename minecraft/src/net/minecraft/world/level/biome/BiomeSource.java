@@ -117,13 +117,15 @@ public abstract class BiomeSource implements BiomeManager.NoiseBiomeSource {
 
 	public boolean canGenerateStructure(StructureFeature<?> structureFeature) {
 		return this.supportedStructures
-			.computeIfAbsent(structureFeature, structureFeaturex -> this.possibleBiomes.stream().anyMatch(biome -> biome.isValidStart(structureFeaturex)));
+			.computeIfAbsent(
+				structureFeature, structureFeaturex -> this.possibleBiomes.stream().anyMatch(biome -> biome.getGenerationSettings().isValidStart(structureFeaturex))
+			);
 	}
 
 	public Set<BlockState> getSurfaceBlocks() {
 		if (this.surfaceBlocks.isEmpty()) {
 			for(Biome biome : this.possibleBiomes) {
-				this.surfaceBlocks.add(biome.getSurfaceBuilderConfig().getTopMaterial());
+				this.surfaceBlocks.add(biome.getGenerationSettings().getSurfaceBuilderConfig().getTopMaterial());
 			}
 		}
 

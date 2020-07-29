@@ -198,7 +198,7 @@ public class ZombieVillager extends Zombie implements VillagerDataHolder {
 	}
 
 	private void finishConversion(ServerLevel serverLevel) {
-		Villager villager = EntityType.VILLAGER.create(serverLevel);
+		Villager villager = this.convertTo(EntityType.VILLAGER, false);
 
 		for(EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
 			ItemStack itemStack = this.getItemBySlot(equipmentSlot);
@@ -214,7 +214,6 @@ public class ZombieVillager extends Zombie implements VillagerDataHolder {
 			}
 		}
 
-		villager.copyPosition(this);
 		villager.setVillagerData(this.getVillagerData());
 		if (this.gossips != null) {
 			villager.setGossips(this.gossips);
@@ -226,23 +225,6 @@ public class ZombieVillager extends Zombie implements VillagerDataHolder {
 
 		villager.setVillagerXp(this.villagerXp);
 		villager.finalizeSpawn(serverLevel, serverLevel.getCurrentDifficultyAt(villager.blockPosition()), MobSpawnType.CONVERSION, null, null);
-		if (this.isBaby()) {
-			villager.setAge(-24000);
-		}
-
-		this.remove();
-		villager.setNoAi(this.isNoAi());
-		if (this.hasCustomName()) {
-			villager.setCustomName(this.getCustomName());
-			villager.setCustomNameVisible(this.isCustomNameVisible());
-		}
-
-		if (this.isPersistenceRequired()) {
-			villager.setPersistenceRequired();
-		}
-
-		villager.setInvulnerable(this.isInvulnerable());
-		serverLevel.addFreshEntityWithPassengers(villager);
 		if (this.conversionStarter != null) {
 			Player player = serverLevel.getPlayerByUUID(this.conversionStarter);
 			if (player instanceof ServerPlayer) {

@@ -96,10 +96,10 @@ public class PathFinder {
 		}
 
 		Optional<Path> optional = !set3.isEmpty()
-			? set3.stream().map(target -> this.reconstructPath(target.getBestNode(), (BlockPos)map.get(target), true)).min(Comparator.comparingInt(Path::getSize))
+			? set3.stream().map(target -> this.reconstructPath(target.getBestNode(), (BlockPos)map.get(target), true)).min(Comparator.comparingInt(Path::getNodeCount))
 			: set.stream()
 				.map(target -> this.reconstructPath(target.getBestNode(), (BlockPos)map.get(target), false))
-				.min(Comparator.comparingDouble(Path::getDistToTarget).thenComparingInt(Path::getSize));
+				.min(Comparator.comparingDouble(Path::getDistToTarget).thenComparingInt(Path::getNodeCount));
 		return !optional.isPresent() ? null : (Path)optional.get();
 	}
 

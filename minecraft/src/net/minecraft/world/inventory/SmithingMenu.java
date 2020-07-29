@@ -42,6 +42,8 @@ public class SmithingMenu extends ItemCombinerMenu {
 	protected ItemStack onTake(Player player, ItemStack itemStack) {
 		this.shrinkStackInSlot(0);
 		this.shrinkStackInSlot(1);
+		itemStack.onCraftedBy(player.level, player, itemStack.getCount());
+		this.resultSlots.awardUsedRecipes(player);
 		this.access.execute((level, blockPos) -> level.levelEvent(1044, blockPos, 0));
 		return itemStack;
 	}
@@ -60,6 +62,7 @@ public class SmithingMenu extends ItemCombinerMenu {
 		} else {
 			this.selectedRecipe = (UpgradeRecipe)list.get(0);
 			ItemStack itemStack = this.selectedRecipe.assemble(this.inputSlots);
+			this.resultSlots.setRecipeUsed(this.selectedRecipe);
 			this.resultSlots.setItem(0, itemStack);
 		}
 	}
@@ -67,5 +70,10 @@ public class SmithingMenu extends ItemCombinerMenu {
 	@Override
 	protected boolean shouldQuickMoveToAdditionalSlot(ItemStack itemStack) {
 		return this.recipes.stream().anyMatch(upgradeRecipe -> upgradeRecipe.isAdditionIngredient(itemStack));
+	}
+
+	@Override
+	public boolean canTakeItemForPickAll(ItemStack itemStack, Slot slot) {
+		return slot.container != this.resultSlots && super.canTakeItemForPickAll(itemStack, slot);
 	}
 }

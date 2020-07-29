@@ -81,7 +81,9 @@ public class AcquirePoi extends Behavior<PathfinderMob> {
 				return true;
 			}
 		};
-		Set<BlockPos> set = (Set)poiManager.findAll(this.poiType.getPredicate(), predicate, pathfinderMob.blockPosition(), 48, PoiManager.Occupancy.HAS_SPACE)
+		Set<BlockPos> set = (Set)poiManager.findAllClosestFirst(
+				this.poiType.getPredicate(), predicate, pathfinderMob.blockPosition(), 48, PoiManager.Occupancy.HAS_SPACE
+			)
 			.limit(5L)
 			.collect(Collectors.toSet());
 		Path path = pathfinderMob.getNavigation().createPath(set, this.poiType.getValidRange());

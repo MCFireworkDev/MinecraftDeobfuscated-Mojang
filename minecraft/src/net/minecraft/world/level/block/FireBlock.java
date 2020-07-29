@@ -1,10 +1,13 @@
 package net.minecraft.world.level.block;
 
+import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -37,6 +40,12 @@ public class FireBlock extends BaseFireBlock {
 		.stream()
 		.filter(entry -> entry.getKey() != Direction.DOWN)
 		.collect(Util.toMap());
+	private static final VoxelShape UP_AABB = Block.box(0.0, 15.0, 0.0, 16.0, 16.0, 16.0);
+	private static final VoxelShape WEST_AABB = Block.box(0.0, 0.0, 0.0, 1.0, 16.0, 16.0);
+	private static final VoxelShape EAST_AABB = Block.box(15.0, 0.0, 0.0, 16.0, 16.0, 16.0);
+	private static final VoxelShape NORTH_AABB = Block.box(0.0, 0.0, 0.0, 16.0, 16.0, 1.0);
+	private static final VoxelShape SOUTH_AABB = Block.box(0.0, 0.0, 15.0, 16.0, 16.0, 16.0);
+	private final Map<BlockState, VoxelShape> shapesCache;
 	private final Object2IntMap<Block> flameOdds = new Object2IntOpenHashMap<>();
 	private final Object2IntMap<Block> burnOdds = new Object2IntOpenHashMap<>();
 
@@ -52,6 +61,38 @@ public class FireBlock extends BaseFireBlock {
 				.setValue(WEST, Boolean.valueOf(false))
 				.setValue(UP, Boolean.valueOf(false))
 		);
+		this.shapesCache = ImmutableMap.copyOf(
+			(Map<? extends BlockState, ? extends VoxelShape>)this.stateDefinition
+				.getPossibleStates()
+				.stream()
+				.filter(blockState -> blockState.getValue(AGE) == 0)
+				.collect(Collectors.toMap(Function.identity(), FireBlock::calculateShape))
+		);
+	}
+
+	private static VoxelShape calculateShape(BlockState blockState) {
+		VoxelShape voxelShape = Shapes.empty();
+		if (blockState.getValue(UP)) {
+			voxelShape = UP_AABB;
+		}
+
+		if (blockState.getValue(NORTH)) {
+			voxelShape = Shapes.or(voxelShape, NORTH_AABB);
+		}
+
+		if (blockState.getValue(SOUTH)) {
+			voxelShape = Shapes.or(voxelShape, SOUTH_AABB);
+		}
+
+		if (blockState.getValue(EAST)) {
+			voxelShape = Shapes.or(voxelShape, EAST_AABB);
+		}
+
+		if (blockState.getValue(WEST)) {
+			voxelShape = Shapes.or(voxelShape, WEST_AABB);
+		}
+
+		return voxelShape.isEmpty() ? DOWN_AABB : voxelShape;
 	}
 
 	@Override
@@ -65,28 +106,7 @@ public class FireBlock extends BaseFireBlock {
 
 	@Override
 	public VoxelShape getShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
-		VoxelShape voxelShape = Shapes.empty();
-		if (blockState.getValue(UP)) {
-			voxelShape = UP_AABB;
-		}
-
-		if (blockState.getValue(WEST)) {
-			voxelShape = Shapes.or(voxelShape, WEST_AABB);
-		}
-
-		if (blockState.getValue(EAST)) {
-			voxelShape = Shapes.or(voxelShape, EAST_AABB);
-		}
-
-		if (blockState.getValue(NORTH)) {
-			voxelShape = Shapes.or(voxelShape, NORTH_AABB);
-		}
-
-		if (blockState.getValue(SOUTH)) {
-			voxelShape = Shapes.or(voxelShape, SOUTH_AABB);
-		}
-
-		return voxelShape == Shapes.empty() ? DOWN_AABB : voxelShape;
+		return (VoxelShape)this.shapesCache.get(blockState.setValue(AGE, Integer.valueOf(0)));
 	}
 
 	@Override

@@ -4,7 +4,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.Lifecycle;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.io.File;
@@ -35,7 +34,7 @@ import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 
 public class DimensionType {
-	public static final MapCodec<DimensionType> DIRECT_CODEC = RecordCodecBuilder.mapCodec(
+	public static final Codec<DimensionType> DIRECT_CODEC = RecordCodecBuilder.create(
 		instance -> instance.group(
 					Codec.LONG
 						.optionalFieldOf("fixed_time")
@@ -268,8 +267,6 @@ public class DimensionType {
 		MappedRegistry<LevelStem> mappedRegistry = new MappedRegistry<>(Registry.LEVEL_STEM_REGISTRY, Lifecycle.experimental());
 		mappedRegistry.register(LevelStem.NETHER, new LevelStem(() -> DEFAULT_NETHER, defaultNetherGenerator(l)));
 		mappedRegistry.register(LevelStem.END, new LevelStem(() -> DEFAULT_END, defaultEndGenerator(l)));
-		mappedRegistry.setPersistent(LevelStem.NETHER);
-		mappedRegistry.setPersistent(LevelStem.END);
 		return mappedRegistry;
 	}
 

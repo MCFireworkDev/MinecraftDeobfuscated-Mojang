@@ -381,7 +381,10 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 			}
 
 			boolean bl = this.minecraft.getCameraEntity() instanceof LivingEntity && ((LivingEntity)this.minecraft.getCameraEntity()).isSleeping();
-			if (this.minecraft.options.thirdPersonView == 0 && !bl && !this.minecraft.options.hideGui && this.minecraft.gameMode.getPlayerMode() != GameType.SPECTATOR) {
+			if (this.minecraft.options.getCameraType().isFirstPerson()
+				&& !bl
+				&& !this.minecraft.options.hideGui
+				&& this.minecraft.gameMode.getPlayerMode() != GameType.SPECTATOR) {
 				this.lightTexture.turnOnLightLayer();
 				this.itemInHandRenderer
 					.renderHandsWithItems(
@@ -395,7 +398,7 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 			}
 
 			poseStack.popPose();
-			if (this.minecraft.options.thirdPersonView == 0 && !bl) {
+			if (this.minecraft.options.getCameraType().isFirstPerson() && !bl) {
 				ScreenEffectRenderer.renderScreenEffect(this.minecraft, poseStack);
 				this.bobHurt(poseStack, f);
 			}
@@ -626,7 +629,9 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 			this.bobView(poseStack2, f);
 		}
 
-		float g = Mth.lerp(f, this.minecraft.player.oPortalTime, this.minecraft.player.portalTime);
+		float g = Mth.lerp(f, this.minecraft.player.oPortalTime, this.minecraft.player.portalTime)
+			* this.minecraft.options.screenEffectScale
+			* this.minecraft.options.screenEffectScale;
 		if (g > 0.0F) {
 			int i = 20;
 			if (this.minecraft.player.hasEffect(MobEffects.CONFUSION)) {
@@ -647,8 +652,8 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 		camera.setup(
 			this.minecraft.level,
 			(Entity)(this.minecraft.getCameraEntity() == null ? this.minecraft.player : this.minecraft.getCameraEntity()),
-			this.minecraft.options.thirdPersonView > 0,
-			this.minecraft.options.thirdPersonView == 2,
+			!this.minecraft.options.getCameraType().isFirstPerson(),
+			this.minecraft.options.getCameraType().isMirrored(),
 			f
 		);
 		poseStack.mulPose(Vector3f.XP.rotationDegrees(camera.getXRot()));
