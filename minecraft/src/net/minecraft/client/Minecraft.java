@@ -135,7 +135,6 @@ import net.minecraft.client.tutorial.Tutorial;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
@@ -155,6 +154,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
 import net.minecraft.network.protocol.login.ServerboundHelloPacket;
 import net.minecraft.resources.RegistryReadOps;
+import net.minecraft.resources.RegistryWriteOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.server.MinecraftServer;
@@ -219,7 +219,6 @@ import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.level.storage.LevelStorageSource;
@@ -1595,12 +1594,17 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 			registryHolder,
 			levelStorageAccess -> levelSettings.getDataPackConfig(),
 			(levelStorageAccess, registryHolder2, resourceManager, dataPackConfig) -> {
+				RegistryWriteOps<JsonElement> registryWriteOps = RegistryWriteOps.create(JsonOps.INSTANCE, registryHolder);
 				RegistryReadOps<JsonElement> registryReadOps = RegistryReadOps.create(JsonOps.INSTANCE, resourceManager, registryHolder);
-				DataResult<MappedRegistry<LevelStem>> dataResult = registryReadOps.decodeElements(
-					worldGenSettings.dimensions(), Registry.LEVEL_STEM_REGISTRY, LevelStem.CODEC
-				);
-				MappedRegistry<LevelStem> mappedRegistry = (MappedRegistry)dataResult.resultOrPartial(LOGGER::error).orElse(worldGenSettings.dimensions());
-				return new PrimaryLevelData(levelSettings, worldGenSettings.withDimensions(mappedRegistry), dataResult.lifecycle());
+				DataResult<WorldGenSettings> dataResult = WorldGenSettings.CODEC
+					.encodeStart(registryWriteOps, worldGenSettings)
+					.setLifecycle(Lifecycle.stable())
+					.flatMap(jsonElement -> WorldGenSettings.CODEC.parse(registryReadOps, jsonElement));
+				WorldGenSettings worldGenSettings2 = (WorldGenSettings)dataResult.resultOrPartial(
+						Util.prefix("Error reading worldgen settings after loading data packs: ", LOGGER::error)
+					)
+					.orElse(worldGenSettings);
+				return new PrimaryLevelData(levelSettings, worldGenSettings2, dataResult.lifecycle());
 			},
 			false,
 			Minecraft.ExperimentalDialogType.CREATE
