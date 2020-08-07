@@ -7,18 +7,18 @@ import net.fabricmc.api.Environment;
 import net.minecraft.util.Mth;
 
 @Environment(EnvType.CLIENT)
-public enum AttackIndicatorStatus {
+public enum ShieldIndicatorStatus {
 	OFF(0, "options.off"),
 	CROSSHAIR(1, "options.attack.crosshair"),
 	HOTBAR(2, "options.attack.hotbar");
 
-	private static final AttackIndicatorStatus[] BY_ID = (AttackIndicatorStatus[])Arrays.stream(values())
-		.sorted(Comparator.comparingInt(AttackIndicatorStatus::getId))
-		.toArray(i -> new AttackIndicatorStatus[i]);
+	private static final ShieldIndicatorStatus[] BY_ID = (ShieldIndicatorStatus[])Arrays.stream(values())
+		.sorted(Comparator.comparingInt(ShieldIndicatorStatus::getId))
+		.toArray(i -> new ShieldIndicatorStatus[i]);
 	private final int id;
 	private final String key;
 
-	private AttackIndicatorStatus(int j, String string2) {
+	private ShieldIndicatorStatus(int j, String string2) {
 		this.id = j;
 		this.key = string2;
 	}
@@ -31,7 +31,7 @@ public enum AttackIndicatorStatus {
 		return this.key;
 	}
 
-	public static AttackIndicatorStatus byId(int i) {
+	public static ShieldIndicatorStatus byId(int i) {
 		return BY_ID[Mth.positiveModulo(i, BY_ID.length)];
 	}
 }

@@ -1253,6 +1253,7 @@ public class ServerPlayer extends Player implements ContainerListener {
 	public void updateOptions(ServerboundClientInformationPacket serverboundClientInformationPacket) {
 		this.chatVisibility = serverboundClientInformationPacket.getChatVisibility();
 		this.canChatColor = serverboundClientInformationPacket.getChatColors();
+		this.enableShieldOnCrouch = serverboundClientInformationPacket.getUseShieldOnCrouch();
 		this.getEntityData().set(DATA_PLAYER_MODE_CUSTOMISATION, (byte)serverboundClientInformationPacket.getModelCustomisation());
 		this.getEntityData().set(DATA_PLAYER_MAIN_HAND, (byte)(serverboundClientInformationPacket.getMainHand() == HumanoidArm.LEFT ? 0 : 1));
 	}
@@ -1345,7 +1346,6 @@ public class ServerPlayer extends Player implements ContainerListener {
 	@Override
 	public void swing(InteractionHand interactionHand) {
 		super.swing(interactionHand);
-		this.resetAttackStrengthTicker();
 	}
 
 	public boolean isChangingDimension() {

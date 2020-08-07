@@ -244,10 +244,13 @@ public abstract class Option {
 		options.ambientOcclusion = AmbientOcclusionStatus.byId(options.ambientOcclusion.getId() + integer);
 		Minecraft.getInstance().levelRenderer.allChanged();
 	}, (options, cycleOption) -> cycleOption.genericValueLabel(new TranslatableComponent(options.ambientOcclusion.getKey())));
-	public static final CycleOption ATTACK_INDICATOR = new CycleOption(
-		"options.attackIndicator",
-		(options, integer) -> options.attackIndicator = AttackIndicatorStatus.byId(options.attackIndicator.getId() + integer),
-		(options, cycleOption) -> cycleOption.genericValueLabel(new TranslatableComponent(options.attackIndicator.getKey()))
+	public static final CycleOption SHIELD_INDICATOR = new CycleOption(
+		"options.shieldIndicator",
+		(options, integer) -> options.shieldIndicator = ShieldIndicatorStatus.byId(options.shieldIndicator.getId() + integer),
+		(options, cycleOption) -> cycleOption.genericValueLabel(new TranslatableComponent(options.shieldIndicator.getKey()))
+	);
+	public static final BooleanOption USE_SHIELD_ON_CROUCH = new BooleanOption(
+		"options.useShieldOnCrouch", options -> options.useShieldOnCrouch, (options, boolean_) -> options.useShieldOnCrouch = boolean_
 	);
 	public static final CycleOption CHAT_VISIBILITY = new CycleOption(
 		"options.chat.visibility",

@@ -117,6 +117,7 @@ public class LocalPlayer extends AbstractClientPlayer {
 	private boolean wasFallFlying;
 	private int waterVisionTime;
 	private boolean showDeathScreen = true;
+	private boolean wasShieldBlocking;
 
 	public LocalPlayer(
 		Minecraft minecraft,
@@ -200,6 +201,12 @@ public class LocalPlayer extends AbstractClientPlayer {
 
 			for(AmbientSoundHandler ambientSoundHandler : this.ambientSoundHandlers) {
 				ambientSoundHandler.tick();
+			}
+
+			boolean bl = this.isBlocking();
+			if (bl != this.wasShieldBlocking) {
+				this.wasShieldBlocking = bl;
+				this.minecraft.gameRenderer.itemInHandRenderer.itemUsed(InteractionHand.OFF_HAND);
 			}
 		}
 	}
@@ -321,12 +328,12 @@ public class LocalPlayer extends AbstractClientPlayer {
 			if (g <= 0.0F) {
 				this.setHealth(f);
 				if (g < 0.0F) {
-					this.invulnerableTime = 10;
+					this.invulnerableTime = 5;
 				}
 			} else {
 				this.lastHurt = g;
 				this.setHealth(this.getHealth());
-				this.invulnerableTime = 20;
+				this.invulnerableTime = 10;
 				this.actuallyHurt(DamageSource.GENERIC, g);
 				this.hurtDuration = 10;
 				this.hurtTime = this.hurtDuration;
@@ -666,7 +673,7 @@ public class LocalPlayer extends AbstractClientPlayer {
 			this.sprintTriggerTime = 0;
 		}
 
-		boolean bl5 = (float)this.getFoodData().getFoodLevel() > 6.0F || this.abilities.mayfly;
+		boolean bl5 = this.getFoodData().isEnoughToSprint() || this.abilities.mayfly;
 		if ((this.onGround || this.isUnderWater())
 			&& !bl2
 			&& !bl3
@@ -1039,5 +1046,10 @@ public class LocalPlayer extends AbstractClientPlayer {
 		} else {
 			return super.getRopeHoldPosition(f);
 		}
+	}
+
+	@Override
+	public boolean hasEnabledShieldOnCrouch() {
+		return this.minecraft.options.useShieldOnCrouch;
 	}
 }

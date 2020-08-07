@@ -22,10 +22,10 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
-import net.minecraft.client.AttackIndicatorStatus;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
+import net.minecraft.client.ShieldIndicatorStatus;
 import net.minecraft.client.gui.chat.ChatListener;
 import net.minecraft.client.gui.chat.NarratorChatListener;
 import net.minecraft.client.gui.chat.OverlayChatListener;
@@ -52,6 +52,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -63,6 +64,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -371,23 +373,14 @@ public class Gui extends GuiComponent {
 					);
 					int i = 15;
 					this.blit(poseStack, (this.screenWidth - 15) / 2, (this.screenHeight - 15) / 2, 0, 0, 15, 15);
-					if (this.minecraft.options.attackIndicator == AttackIndicatorStatus.CROSSHAIR) {
-						float f = this.minecraft.player.getAttackStrengthScale(0.0F);
-						boolean bl = false;
-						if (this.minecraft.crosshairPickEntity != null && this.minecraft.crosshairPickEntity instanceof LivingEntity && f >= 1.0F) {
-							bl = this.minecraft.player.getCurrentItemAttackStrengthDelay() > 5.0F;
-							bl &= this.minecraft.crosshairPickEntity.isAlive();
-						}
-
-						int j = this.screenHeight / 2 - 7 + 16;
-						int k = this.screenWidth / 2 - 8;
-						if (bl) {
-							this.blit(poseStack, k, j, 68, 94, 16, 16);
-						} else if (f < 1.0F) {
-							int l = (int)(f * 17.0F);
-							this.blit(poseStack, k, j, 36, 94, 16, 4);
-							this.blit(poseStack, k, j, 52, 94, l, 4);
-						}
+					int j = this.screenHeight / 2 - 7 + 16;
+					int k = this.screenWidth / 2 - 8;
+					ItemStack itemStack = this.minecraft.player.getItemInHand(InteractionHand.OFF_HAND);
+					boolean bl = this.minecraft.options.shieldIndicator == ShieldIndicatorStatus.CROSSHAIR;
+					if (bl && itemStack.getItem() == Items.SHIELD && this.minecraft.player.isItemOnCooldown(itemStack)) {
+						this.blit(poseStack, k, j, 52, 112, 16, 16);
+					} else if (bl && this.minecraft.player.isBlocking()) {
+						this.blit(poseStack, k, j, 36, 112, 16, 16);
 					}
 				}
 			}
@@ -507,21 +500,16 @@ public class Gui extends GuiComponent {
 				}
 			}
 
-			if (this.minecraft.options.attackIndicator == AttackIndicatorStatus.HOTBAR) {
-				float g = this.minecraft.player.getAttackStrengthScale(0.0F);
-				if (g < 1.0F) {
-					int n = this.screenHeight - 20;
-					int o = i + 91 + 6;
-					if (humanoidArm == HumanoidArm.RIGHT) {
-						o = i - 91 - 22;
-					}
-
-					this.minecraft.getTextureManager().bind(GuiComponent.GUI_ICONS_LOCATION);
-					int p = (int)(g * 19.0F);
-					RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-					this.blit(poseStack, o, n, 0, 94, 18, 18);
-					this.blit(poseStack, o, n + 18 - p, 18, 112 - p, 18, p);
-				}
+			this.minecraft.getTextureManager().bind(GuiComponent.GUI_ICONS_LOCATION);
+			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+			int m = this.screenHeight - 20;
+			int n = i + 91 + 6;
+			ItemStack itemStack2 = this.minecraft.player.getItemInHand(InteractionHand.OFF_HAND);
+			boolean bl = this.minecraft.options.shieldIndicator == ShieldIndicatorStatus.HOTBAR;
+			if (bl && itemStack2.getItem() == Items.SHIELD && this.minecraft.player.isItemOnCooldown(itemStack2)) {
+				this.blit(poseStack, n, m, 18, 112, 18, 18);
+			} else if (bl && this.minecraft.player.isBlocking()) {
+				this.blit(poseStack, n, m, 0, 112, 18, 18);
 			}
 
 			RenderSystem.disableRescaleNormal();
