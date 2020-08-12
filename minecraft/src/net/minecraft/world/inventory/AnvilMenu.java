@@ -150,7 +150,7 @@ public class AnvilMenu extends ItemCombinerMenu {
 							int q = map.getOrDefault(enchantment, 0);
 							int r = map2.get(enchantment);
 							r = q == r ? r + 1 : Math.max(r, q);
-							boolean bl4 = enchantment.canEnchant(itemStack);
+							boolean bl4 = enchantment.canEnchant(itemStack, bl);
 							if (this.player.abilities.instabuild || itemStack.getItem() == Items.ENCHANTED_BOOK) {
 								bl4 = true;
 							}

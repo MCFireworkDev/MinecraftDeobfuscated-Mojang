@@ -112,8 +112,8 @@ public abstract class Enchantment {
 		return mutableComponent;
 	}
 
-	public boolean canEnchant(ItemStack itemStack) {
-		return this.category.canEnchant(itemStack.getItem());
+	public boolean canEnchant(ItemStack itemStack, boolean bl) {
+		return this.category.canEnchant(itemStack.getItem(), bl);
 	}
 
 	public void doPostAttack(LivingEntity livingEntity, Entity entity, int i) {

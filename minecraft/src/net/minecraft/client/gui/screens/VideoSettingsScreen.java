@@ -38,6 +38,7 @@ public class VideoSettingsScreen extends OptionsSubScreen {
 		Option.ENABLE_VSYNC,
 		Option.VIEW_BOBBING,
 		Option.GUI_SCALE,
+		Option.ATTACK_INDICATOR,
 		Option.SHIELD_INDICATOR,
 		Option.GAMMA,
 		Option.RENDER_CLOUDS,

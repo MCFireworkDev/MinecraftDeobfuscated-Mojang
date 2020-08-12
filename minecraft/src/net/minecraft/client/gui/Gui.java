@@ -22,6 +22,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
+import net.minecraft.client.AttackIndicatorStatus;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -381,6 +382,23 @@ public class Gui extends GuiComponent {
 						this.blit(poseStack, k, j, 52, 112, 16, 16);
 					} else if (bl && this.minecraft.player.isBlocking()) {
 						this.blit(poseStack, k, j, 36, 112, 16, 16);
+					} else if (this.minecraft.options.attackIndicator == AttackIndicatorStatus.CROSSHAIR) {
+						float f = this.minecraft.player.getAttackStrengthScale(0.0F);
+						boolean bl2 = false;
+						if (this.minecraft.crosshairPickEntity != null && this.minecraft.crosshairPickEntity instanceof LivingEntity && f >= 2.0F) {
+							bl2 = ((EntityHitResult)this.minecraft.hitResult).getInteractionDistance() <= this.minecraft.player.getCurrentAttackReach(0.0F);
+							bl2 &= this.minecraft.crosshairPickEntity.isAlive();
+						}
+
+						float g = 1.3F;
+						if (bl2) {
+							this.blit(poseStack, k, j, 68, 94, 16, 16);
+						} else if (f > 1.3F && f < 2.0F) {
+							float h = (f - 1.0F) / 1.0F;
+							int l = (int)(h * 17.0F);
+							this.blit(poseStack, k, j, 36, 94, 16, 4);
+							this.blit(poseStack, k, j, 52, 94, l, 4);
+						}
 					}
 				}
 			}
@@ -510,6 +528,19 @@ public class Gui extends GuiComponent {
 				this.blit(poseStack, n, m, 18, 112, 18, 18);
 			} else if (bl && this.minecraft.player.isBlocking()) {
 				this.blit(poseStack, n, m, 0, 112, 18, 18);
+			} else if (this.minecraft.options.attackIndicator == AttackIndicatorStatus.HOTBAR) {
+				float g = this.minecraft.player.getAttackStrengthScale(0.0F);
+				float h = 1.3F;
+				if (g > 1.3F && g < 2.0F) {
+					if (humanoidArm == HumanoidArm.RIGHT) {
+						n = i - 91 - 22;
+					}
+
+					int p = (int)((g - 1.3F) / 0.70000005F * 19.0F);
+					RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+					this.blit(poseStack, n, m, 0, 94, 18, 18);
+					this.blit(poseStack, n, m + 18 - p, 18, 112 - p, 18, p);
+				}
 			}
 
 			RenderSystem.disableRescaleNormal();

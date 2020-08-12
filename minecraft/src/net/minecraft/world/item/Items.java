@@ -964,7 +964,7 @@ public class Items {
 	public static final Item NETHER_WART = registerItem(
 		"nether_wart", new ItemNameBlockItem(Blocks.NETHER_WART, new Item.Properties().tab(CreativeModeTab.TAB_MATERIALS))
 	);
-	public static final Item POTION = registerItem("potion", new PotionItem(new Item.Properties().stacksTo(1).tab(CreativeModeTab.TAB_BREWING)));
+	public static final Item POTION = registerItem("potion", new PotionItem(new Item.Properties().stacksTo(16).tab(CreativeModeTab.TAB_BREWING)));
 	public static final Item GLASS_BOTTLE = registerItem("glass_bottle", new BottleItem(new Item.Properties().tab(CreativeModeTab.TAB_BREWING)));
 	public static final Item SPIDER_EYE = registerItem("spider_eye", new Item(new Item.Properties().tab(CreativeModeTab.TAB_FOOD).food(Foods.SPIDER_EYE)));
 	public static final Item FERMENTED_SPIDER_EYE = registerItem("fermented_spider_eye", new Item(new Item.Properties().tab(CreativeModeTab.TAB_BREWING)));

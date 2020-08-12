@@ -32,12 +32,11 @@ public class BowItem extends ProjectileWeaponItem implements Vanishable {
 				int j = this.getUseDuration(itemStack) - i;
 				float f = getPowerForTime(j);
 				if (!((double)f < 0.1)) {
-					float g = getFatigueForTime(j);
 					boolean bl2 = bl && itemStack2.getItem() == Items.ARROW;
 					if (!level.isClientSide) {
 						ArrowItem arrowItem = (ArrowItem)(itemStack2.getItem() instanceof ArrowItem ? itemStack2.getItem() : Items.ARROW);
 						AbstractArrow abstractArrow = arrowItem.createArrow(level, itemStack2, player);
-						abstractArrow.shootFromRotation(player, player.xRot, player.yRot, 0.0F, f * 3.0F, 0.25F * g);
+						abstractArrow.shootFromRotation(player, player.xRot, player.yRot, 0.0F, f * 3.0F, 0.25F);
 						if (f == 1.0F) {
 							abstractArrow.setCritArrow(true);
 						}
@@ -95,14 +94,6 @@ public class BowItem extends ProjectileWeaponItem implements Vanishable {
 		}
 
 		return f;
-	}
-
-	public static float getFatigueForTime(int i) {
-		if (i < 30) {
-			return 0.5F;
-		} else {
-			return i >= 100 ? 10.5F : 0.5F + 10.0F * (float)(i - 30) / 70.0F;
-		}
 	}
 
 	@Override

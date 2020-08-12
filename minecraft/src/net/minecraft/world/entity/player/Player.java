@@ -86,7 +86,6 @@ import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ProjectileWeaponItem;
-import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.trading.MerchantOffers;
@@ -1078,59 +1077,57 @@ public abstract class Player extends LivingEntity {
 	public void attack(Entity entity) {
 		if (entity.isAttackable()) {
 			if (!entity.skipAttackInteraction(this)) {
-				float f = this.getAttackStrengthScale(1.0F);
-				if (!(f < 1.0F)) {
-					float g = (float)this.getAttributeValue(Attributes.ATTACK_DAMAGE);
-					float h;
+				if (this.isAttackAvailable(1.0F)) {
+					float f = (float)this.getAttributeValue(Attributes.ATTACK_DAMAGE);
+					float g;
 					if (entity instanceof LivingEntity) {
-						h = EnchantmentHelper.getDamageBonus(this.getMainHandItem(), (LivingEntity)entity);
+						g = EnchantmentHelper.getDamageBonus(this.getMainHandItem(), (LivingEntity)entity);
 					} else {
-						h = EnchantmentHelper.getDamageBonus(this.getMainHandItem(), null);
+						g = EnchantmentHelper.getDamageBonus(this.getMainHandItem(), null);
 					}
 
-					float i = this.getCurrentAttackReach(1.0F);
-					this.resetAttackStrengthTicker(true);
-					if (g > 0.0F || h > 0.0F) {
+					float h = this.getCurrentAttackReach(1.0F);
+					if (f > 0.0F || g > 0.0F) {
 						boolean bl = !this.onClimbable() && !this.isInWater() && !this.hasEffect(MobEffects.BLINDNESS) && !this.isPassenger() && entity instanceof LivingEntity;
 						boolean bl2 = false;
-						int j = 0;
-						j += EnchantmentHelper.getKnockbackBonus(this);
+						int i = 0;
+						i += EnchantmentHelper.getKnockbackBonus(this);
 						if (this.isSprinting() && bl) {
 							this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, this.getSoundSource(), 1.0F, 1.0F);
-							++j;
+							++i;
 							bl2 = true;
 						}
 
 						boolean bl3 = bl && this.fallDistance > 0.0F && !this.onGround;
 						if (bl3) {
-							g *= 1.5F;
+							f *= 1.5F;
 						}
 
-						g += h;
+						f += g;
 						boolean bl4 = !bl3 && !bl2 && this.checkSweepAttack();
-						float k = 0.0F;
+						float j = 0.0F;
 						boolean bl5 = false;
-						int l = EnchantmentHelper.getFireAspect(this);
+						int k = EnchantmentHelper.getFireAspect(this);
 						if (entity instanceof LivingEntity) {
-							k = ((LivingEntity)entity).getHealth();
-							if (l > 0 && !entity.isOnFire()) {
+							j = ((LivingEntity)entity).getHealth();
+							if (k > 0 && !entity.isOnFire()) {
 								bl5 = true;
 								entity.setSecondsOnFire(1);
 							}
 						}
 
 						Vec3 vec3 = entity.getDeltaMovement();
-						boolean bl6 = entity.hurt(DamageSource.playerAttack(this).setCritSpecial(bl3), g);
+						boolean bl6 = entity.hurt(DamageSource.playerAttack(this).setCritSpecial(bl3), f);
 						if (bl6) {
-							if (j > 0) {
+							if (i > 0) {
 								if (entity instanceof LivingEntity) {
 									((LivingEntity)entity)
-										.knockback((float)j * 0.5F, (double)Mth.sin(this.yRot * (float) (Math.PI / 180.0)), (double)(-Mth.cos(this.yRot * (float) (Math.PI / 180.0))));
+										.knockback((float)i * 0.5F, (double)Mth.sin(this.yRot * (float) (Math.PI / 180.0)), (double)(-Mth.cos(this.yRot * (float) (Math.PI / 180.0))));
 								} else {
 									entity.push(
-										(double)(-Mth.sin(this.yRot * (float) (Math.PI / 180.0)) * (float)j * 0.5F),
+										(double)(-Mth.sin(this.yRot * (float) (Math.PI / 180.0)) * (float)i * 0.5F),
 										0.1,
-										(double)(Mth.cos(this.yRot * (float) (Math.PI / 180.0)) * (float)j * 0.5F)
+										(double)(Mth.cos(this.yRot * (float) (Math.PI / 180.0)) * (float)i * 0.5F)
 									);
 								}
 
@@ -1140,7 +1137,7 @@ public abstract class Player extends LivingEntity {
 
 							if (bl4) {
 								AABB aABB = entity.getBoundingBox().inflate(1.0, 0.25, 1.0);
-								this.sweepAttack(aABB, i, g, entity);
+								this.sweepAttack(aABB, h, f, entity);
 							}
 
 							if (entity instanceof ServerPlayer && entity.hurtMarked) {
@@ -1162,7 +1159,7 @@ public abstract class Player extends LivingEntity {
 								}
 							}
 
-							if (h > 0.0F) {
+							if (g > 0.0F) {
 								this.magicCrit(entity);
 							}
 
@@ -1186,15 +1183,15 @@ public abstract class Player extends LivingEntity {
 							}
 
 							if (entity instanceof LivingEntity) {
-								float m = k - ((LivingEntity)entity).getHealth();
-								this.awardStat(Stats.DAMAGE_DEALT, Math.round(m * 10.0F));
-								if (l > 0) {
-									entity.setSecondsOnFire(l * 4);
+								float l = j - ((LivingEntity)entity).getHealth();
+								this.awardStat(Stats.DAMAGE_DEALT, Math.round(l * 10.0F));
+								if (k > 0) {
+									entity.setSecondsOnFire(k * 4);
 								}
 
-								if (this.level instanceof ServerLevel && m > 2.0F) {
-									int n = (int)((double)m * 0.5);
-									((ServerLevel)this.level).sendParticles(ParticleTypes.DAMAGE_INDICATOR, entity.getX(), entity.getY(0.5), entity.getZ(), n, 0.1, 0.0, 0.1, 0.2);
+								if (this.level instanceof ServerLevel && l > 2.0F) {
+									int m = (int)((double)l * 0.5);
+									((ServerLevel)this.level).sendParticles(ParticleTypes.DAMAGE_INDICATOR, entity.getX(), entity.getY(0.5), entity.getZ(), m, 0.1, 0.0, 0.1, 0.2);
 								}
 							}
 
@@ -1206,25 +1203,27 @@ public abstract class Player extends LivingEntity {
 							}
 						}
 					}
+
+					this.resetAttackStrengthTicker(true);
 				}
 			}
 		}
 	}
 
 	public void attackAir() {
-		float f = this.getAttackStrengthScale(1.0F);
-		if (!(f < 1.0F)) {
+		if (this.isAttackAvailable(1.0F)) {
 			this.swing(InteractionHand.MAIN_HAND);
-			this.resetAttackStrengthTicker(false);
-			float g = (float)this.getAttribute(Attributes.ATTACK_DAMAGE).getValue();
-			if (g > 0.0F && this.checkSweepAttack()) {
-				float h = this.getCurrentAttackReach(1.0F);
+			float f = (float)this.getAttribute(Attributes.ATTACK_DAMAGE).getValue();
+			if (f > 0.0F && this.checkSweepAttack()) {
+				float g = this.getCurrentAttackReach(1.0F);
 				double d = 2.0;
 				double e = (double)(-Mth.sin(this.yRot * (float) (Math.PI / 180.0))) * 2.0;
-				double i = (double)Mth.cos(this.yRot * (float) (Math.PI / 180.0)) * 2.0;
-				AABB aABB = this.getBoundingBox().inflate(1.0, 0.25, 1.0).move(e, 0.0, i);
-				this.sweepAttack(aABB, h, g, null);
+				double h = (double)Mth.cos(this.yRot * (float) (Math.PI / 180.0)) * 2.0;
+				AABB aABB = this.getBoundingBox().inflate(1.0, 0.25, 1.0).move(e, 0.0, h);
+				this.sweepAttack(aABB, g, f, null);
 			}
+
+			this.resetAttackStrengthTicker(false);
 		}
 	}
 
@@ -1248,7 +1247,7 @@ public abstract class Player extends LivingEntity {
 	}
 
 	protected boolean checkSweepAttack() {
-		return this.getItemInHand(InteractionHand.MAIN_HAND).getItem() instanceof SwordItem || EnchantmentHelper.getSweepingDamageRatio(this) > 0.0F;
+		return this.getAttackStrengthScale(1.0F) > 1.95F && EnchantmentHelper.getSweepingDamageRatio(this) > 0.0F;
 	}
 
 	public void sweepAttack(AABB aABB, float f, float g, Entity entity) {
@@ -1968,12 +1967,17 @@ public abstract class Player extends LivingEntity {
 			: Mth.clamp(2.0F * (1.0F - ((float)this.attackStrengthTicker - f) / (float)this.attackStrengthStartValue), 0.0F, 2.0F);
 	}
 
-	public void resetAttackStrengthTicker(boolean bl) {
-		int i = 8;
-		if (bl) {
-			i = this.getAttackDelay() * 2;
+	public boolean isAttackAvailable(float f) {
+		if (!(this.getAttackStrengthScale(f) < 1.0F)) {
+			return true;
+		} else {
+			return this.missedAttackRecovery && (float)this.attackStrengthStartValue - ((float)this.attackStrengthTicker - f) > 4.0F;
 		}
+	}
 
+	public void resetAttackStrengthTicker(boolean bl) {
+		this.missedAttackRecovery = !bl;
+		int i = this.getAttackDelay() * 2;
 		if (i > this.attackStrengthTicker) {
 			this.attackStrengthStartValue = i;
 			this.attackStrengthTicker = this.attackStrengthStartValue;
@@ -1981,7 +1985,13 @@ public abstract class Player extends LivingEntity {
 	}
 
 	public float getCurrentAttackReach(float f) {
-		return (float)this.getAttribute(Attributes.ATTACK_REACH).getValue();
+		float g = 0.0F;
+		float h = this.getAttackStrengthScale(f);
+		if (h > 1.95F && !this.isCrouching()) {
+			g = 1.0F;
+		}
+
+		return (float)this.getAttribute(Attributes.ATTACK_REACH).getValue() + g;
 	}
 
 	public ItemCooldowns getCooldowns() {

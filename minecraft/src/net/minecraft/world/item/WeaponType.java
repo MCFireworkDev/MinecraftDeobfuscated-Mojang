@@ -39,6 +39,10 @@ enum WeaponType {
 				return tier.getAttackDamageBonus() + 1.0F;
 			case HOE:
 				if (tier != Tiers.IRON && tier != Tiers.DIAMOND) {
+					if (tier == Tiers.NETHERITE) {
+						return 2.0F;
+					}
+
 					return 0.0F;
 				}
 

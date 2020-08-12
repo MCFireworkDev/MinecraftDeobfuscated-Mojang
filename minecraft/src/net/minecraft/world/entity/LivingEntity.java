@@ -145,6 +145,7 @@ public abstract class LivingEntity extends Entity {
 	public float attackAnim;
 	protected int attackStrengthTicker;
 	protected int attackStrengthStartValue;
+	protected boolean missedAttackRecovery;
 	public float animationSpeedOld;
 	public float animationSpeed;
 	public float animationPosition;
@@ -963,7 +964,7 @@ public abstract class LivingEntity extends Entity {
 			float h = 0.0F;
 			if (f > 0.0F && this.isDamageSourceBlocked(damageSource)) {
 				h = Math.min(5.0F, f);
-				if (!damageSource.isProjectile()) {
+				if (!damageSource.isProjectile() && !damageSource.isExplosion()) {
 					Entity entity = damageSource.getDirectEntity();
 					if (entity instanceof LivingEntity) {
 						this.blockUsingShield((LivingEntity)entity);
@@ -1009,9 +1010,6 @@ public abstract class LivingEntity extends Entity {
 			if (entity != null) {
 				if (entity instanceof LivingEntity) {
 					this.setLastHurtByMob((LivingEntity)entity);
-					if (this.isUsingItem() && this.getUseItem().getUseAnimation() == UseAnim.EAT) {
-						this.stopUsingItem();
-					}
 				}
 
 				if (entity instanceof Player) {
@@ -2893,23 +2891,19 @@ public abstract class LivingEntity extends Entity {
 	}
 
 	public boolean isBlocking() {
-		if (this.getAttackStrengthScale(1.0F) < 0.75F) {
-			return false;
-		} else {
-			if (this.isUsingItem() && !this.useItem.isEmpty()) {
-				Item item = this.useItem.getItem();
-				if (item.getUseAnimation(this.useItem) == UseAnim.BLOCK) {
-					return true;
-				}
-			} else if ((this.isCrouching() || this.isPassenger()) && this.hasEnabledShieldOnCrouch()) {
-				ItemStack itemStack = this.getItemInHand(InteractionHand.OFF_HAND);
-				if (!itemStack.isEmpty() && itemStack.getItem().getUseAnimation(itemStack) == UseAnim.BLOCK && !this.isItemOnCooldown(itemStack)) {
-					return true;
-				}
+		if (this.isUsingItem() && !this.useItem.isEmpty()) {
+			Item item = this.useItem.getItem();
+			if (item.getUseAnimation(this.useItem) == UseAnim.BLOCK) {
+				return true;
 			}
-
-			return false;
+		} else if ((this.isCrouching() || this.isPassenger()) && this.hasEnabledShieldOnCrouch()) {
+			ItemStack itemStack = this.getItemInHand(InteractionHand.OFF_HAND);
+			if (!itemStack.isEmpty() && itemStack.getItem().getUseAnimation(itemStack) == UseAnim.BLOCK && !this.isItemOnCooldown(itemStack)) {
+				return true;
+			}
 		}
+
+		return false;
 	}
 
 	public boolean hasEnabledShieldOnCrouch() {
