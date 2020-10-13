@@ -70,6 +70,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.server.network.TextFilter;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -170,6 +171,8 @@ public class ServerPlayer extends Player implements ContainerListener {
 	private BlockPos respawnPosition;
 	private boolean respawnForced;
 	private float respawnAngle;
+	@Nullable
+	private final TextFilter textFilter;
 	private int containerCounter;
 	public boolean ignoreSlotUpdateHack;
 	public int latency;
@@ -184,6 +187,7 @@ public class ServerPlayer extends Player implements ContainerListener {
 		this.advancements = minecraftServer.getPlayerList().getPlayerAdvancements(this);
 		this.maxUpStep = 1.0F;
 		this.fudgeSpawnLocation(serverLevel);
+		this.textFilter = minecraftServer.createTextFilterForPlayer(this);
 	}
 
 	private void fudgeSpawnLocation(ServerLevel serverLevel) {
@@ -1479,5 +1483,10 @@ public class ServerPlayer extends Player implements ContainerListener {
 
 			return itemEntity;
 		}
+	}
+
+	@Nullable
+	public TextFilter getTextFilter() {
+		return this.textFilter;
 	}
 }
