@@ -280,7 +280,7 @@ public class WitherBoss extends Monster implements PowerableMob, RangedAttackMob
 						Entity entity = this.level.getEntity(j);
 						if (entity == null || !entity.isAlive() || this.distanceToSqr(entity) > 900.0 || !this.canSee(entity)) {
 							this.setAlternativeTarget(i, 0);
-						} else if (entity instanceof Player && ((Player)entity).abilities.invulnerable) {
+						} else if (entity instanceof Player && ((Player)entity).getAbilities().invulnerable) {
 							this.setAlternativeTarget(i, 0);
 						} else {
 							this.performRangedAttack(i + 1, (LivingEntity)entity);
@@ -294,7 +294,7 @@ public class WitherBoss extends Monster implements PowerableMob, RangedAttackMob
 							LivingEntity livingEntity = (LivingEntity)list.get(this.random.nextInt(list.size()));
 							if (livingEntity != this && livingEntity.isAlive() && this.canSee(livingEntity)) {
 								if (livingEntity instanceof Player) {
-									if (!((Player)livingEntity).abilities.invulnerable) {
+									if (!((Player)livingEntity).getAbilities().invulnerable) {
 										this.setAlternativeTarget(i, livingEntity.getId());
 									}
 								} else {
@@ -353,7 +353,7 @@ public class WitherBoss extends Monster implements PowerableMob, RangedAttackMob
 	}
 
 	public static boolean canDestroy(BlockState blockState) {
-		return !blockState.isAir() && !BlockTags.WITHER_IMMUNE.contains(blockState.getBlock());
+		return !blockState.isAir() && !blockState.is(BlockTags.WITHER_IMMUNE);
 	}
 
 	public void makeInvulnerable() {
@@ -491,7 +491,7 @@ public class WitherBoss extends Monster implements PowerableMob, RangedAttackMob
 	@Override
 	public void checkDespawn() {
 		if (this.level.getDifficulty() == Difficulty.PEACEFUL && this.shouldDespawnInPeaceful()) {
-			this.remove();
+			this.discard();
 		} else {
 			this.noActionTime = 0;
 		}

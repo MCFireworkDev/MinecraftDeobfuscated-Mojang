@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class JigsawRotationFix extends DataFix {
-	private static final Map<String, String> renames = ImmutableMap.builder()
+	private static final Map<String, String> RENAMES = ImmutableMap.builder()
 		.put("down", "down_south")
 		.put("up", "up_north")
 		.put("north", "north_up")
@@ -28,7 +28,7 @@ public class JigsawRotationFix extends DataFix {
 		Optional<String> optional = dynamic.get("Name").asString().result();
 		return optional.equals(Optional.of("minecraft:jigsaw")) ? dynamic.update("Properties", dynamicx -> {
 			String string = dynamicx.get("facing").asString("north");
-			return dynamicx.remove("facing").set("orientation", dynamicx.createString((String)renames.getOrDefault(string, string)));
+			return dynamicx.remove("facing").set("orientation", dynamicx.createString((String)RENAMES.getOrDefault(string, string)));
 		}) : dynamic;
 	}
 

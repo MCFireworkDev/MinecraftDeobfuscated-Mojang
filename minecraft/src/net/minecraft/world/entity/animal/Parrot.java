@@ -31,7 +31,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.AgableMob;
+import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -135,7 +135,7 @@ public class Parrot extends ShoulderRidingEntity implements FlyingAnimal {
 	) {
 		this.setVariant(this.random.nextInt(5));
 		if (spawnGroupData == null) {
-			spawnGroupData = new AgableMob.AgableMobGroupData(false);
+			spawnGroupData = new AgeableMob.AgeableMobGroupData(false);
 		}
 
 		return super.finalizeSpawn(serverLevelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
@@ -243,7 +243,7 @@ public class Parrot extends ShoulderRidingEntity implements FlyingAnimal {
 	public InteractionResult mobInteract(Player player, InteractionHand interactionHand) {
 		ItemStack itemStack = player.getItemInHand(interactionHand);
 		if (!this.isTame() && TAME_FOOD.contains(itemStack.getItem())) {
-			if (!player.abilities.instabuild) {
+			if (!player.getAbilities().instabuild) {
 				itemStack.shrink(1);
 			}
 
@@ -271,8 +271,8 @@ public class Parrot extends ShoulderRidingEntity implements FlyingAnimal {
 			}
 
 			return InteractionResult.sidedSuccess(this.level.isClientSide);
-		} else if (itemStack.getItem() == POISONOUS_FOOD) {
-			if (!player.abilities.instabuild) {
+		} else if (itemStack.is(POISONOUS_FOOD)) {
+			if (!player.getAbilities().instabuild) {
 				itemStack.shrink(1);
 			}
 
@@ -322,7 +322,7 @@ public class Parrot extends ShoulderRidingEntity implements FlyingAnimal {
 
 	@Nullable
 	@Override
-	public AgableMob getBreedOffspring(ServerLevel serverLevel, AgableMob agableMob) {
+	public AgeableMob getBreedOffspring(ServerLevel serverLevel, AgeableMob ageableMob) {
 		return null;
 	}
 

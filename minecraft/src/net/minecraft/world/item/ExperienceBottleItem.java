@@ -30,7 +30,7 @@ public class ExperienceBottleItem extends Item {
 			SoundEvents.EXPERIENCE_BOTTLE_THROW,
 			SoundSource.NEUTRAL,
 			0.5F,
-			0.4F / (random.nextFloat() * 0.4F + 0.8F)
+			0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F)
 		);
 		if (!level.isClientSide) {
 			ThrownExperienceBottle thrownExperienceBottle = new ThrownExperienceBottle(level, player);
@@ -40,7 +40,7 @@ public class ExperienceBottleItem extends Item {
 		}
 
 		player.awardStat(Stats.ITEM_USED.get(this));
-		if (!player.abilities.instabuild) {
+		if (!player.getAbilities().instabuild) {
 			itemStack.shrink(1);
 		}
 

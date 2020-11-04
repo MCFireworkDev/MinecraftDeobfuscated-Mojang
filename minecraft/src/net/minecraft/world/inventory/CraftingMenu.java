@@ -91,7 +91,7 @@ public class CraftingMenu extends RecipeBookMenu<CraftingContainer> {
 	@Override
 	public void removed(Player player) {
 		super.removed(player);
-		this.access.execute((level, blockPos) -> this.clearContainer(player, level, this.craftSlots));
+		this.access.execute((level, blockPos) -> this.clearContainer(player, this.craftSlots));
 	}
 
 	@Override
@@ -102,7 +102,7 @@ public class CraftingMenu extends RecipeBookMenu<CraftingContainer> {
 	@Override
 	public ItemStack quickMoveStack(Player player, int i) {
 		ItemStack itemStack = ItemStack.EMPTY;
-		Slot slot = (Slot)this.slots.get(i);
+		Slot slot = this.slots.get(i);
 		if (slot != null && slot.hasItem()) {
 			ItemStack itemStack2 = slot.getItem();
 			itemStack = itemStack2.copy();

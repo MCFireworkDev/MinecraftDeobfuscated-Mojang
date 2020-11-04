@@ -35,7 +35,7 @@ public class IOWorker implements AutoCloseable {
 		this.mailbox = new ProcessorMailbox<>(new StrictQueue.FixedPriorityQueue(IOWorker.Priority.values().length), Util.ioPool(), "IOWorker-" + string);
 	}
 
-	public CompletableFuture<Void> store(ChunkPos chunkPos, CompoundTag compoundTag) {
+	public CompletableFuture<Void> store(ChunkPos chunkPos, @Nullable CompoundTag compoundTag) {
 		return this.submitTask(
 				() -> {
 					IOWorker.PendingStore pendingStore = (IOWorker.PendingStore)this.pendingWrites
@@ -49,20 +49,7 @@ public class IOWorker implements AutoCloseable {
 
 	@Nullable
 	public CompoundTag load(ChunkPos chunkPos) throws IOException {
-		CompletableFuture<CompoundTag> completableFuture = this.submitTask(() -> {
-			IOWorker.PendingStore pendingStore = (IOWorker.PendingStore)this.pendingWrites.get(chunkPos);
-			if (pendingStore != null) {
-				return Either.left(pendingStore.data);
-			} else {
-				try {
-					CompoundTag compoundTag = this.storage.read(chunkPos);
-					return Either.left(compoundTag);
-				} catch (Exception var4xx) {
-					LOGGER.warn("Failed to read chunk {}", chunkPos, var4xx);
-					return Either.right(var4xx);
-				}
-			}
-		});
+		CompletableFuture<CompoundTag> completableFuture = this.loadAsync(chunkPos);
 
 		try {
 			return (CompoundTag)completableFuture.join();
@@ -73,6 +60,23 @@ public class IOWorker implements AutoCloseable {
 				throw var4;
 			}
 		}
+	}
+
+	protected CompletableFuture<CompoundTag> loadAsync(ChunkPos chunkPos) {
+		return this.submitTask(() -> {
+			IOWorker.PendingStore pendingStore = (IOWorker.PendingStore)this.pendingWrites.get(chunkPos);
+			if (pendingStore != null) {
+				return Either.left(pendingStore.data);
+			} else {
+				try {
+					CompoundTag compoundTag = this.storage.read(chunkPos);
+					return Either.left(compoundTag);
+				} catch (Exception var4) {
+					LOGGER.warn("Failed to read chunk {}", chunkPos, var4);
+					return Either.right(var4);
+				}
+			}
+		});
 	}
 
 	public CompletableFuture<Void> synchronize() {
@@ -96,7 +100,7 @@ public class IOWorker implements AutoCloseable {
 	}
 
 	private <T> CompletableFuture<T> submitTask(Supplier<Either<T, Exception>> supplier) {
-		return this.mailbox.askEither(processorHandle -> new StrictQueue.IntRunnable(IOWorker.Priority.HIGH.ordinal(), () -> {
+		return this.mailbox.askEither(processorHandle -> new StrictQueue.IntRunnable(IOWorker.Priority.FOREGROUND.ordinal(), () -> {
 				if (!this.shutdownRequested.get()) {
 					processorHandle.tell(supplier.get());
 				}
@@ -116,7 +120,7 @@ public class IOWorker implements AutoCloseable {
 	}
 
 	private void tellStorePending() {
-		this.mailbox.tell(new StrictQueue.IntRunnable(IOWorker.Priority.LOW.ordinal(), this::storePendingChunk));
+		this.mailbox.tell(new StrictQueue.IntRunnable(IOWorker.Priority.BACKGROUND.ordinal(), this::storePendingChunk));
 	}
 
 	private void runStore(ChunkPos chunkPos, IOWorker.PendingStore pendingStore) {
@@ -131,42 +135,30 @@ public class IOWorker implements AutoCloseable {
 
 	public void close() throws IOException {
 		if (this.shutdownRequested.compareAndSet(false, true)) {
-			CompletableFuture<Unit> completableFuture = this.mailbox
-				.ask(processorHandle -> new StrictQueue.IntRunnable(IOWorker.Priority.HIGH.ordinal(), () -> processorHandle.tell(Unit.INSTANCE)));
-
-			try {
-				completableFuture.join();
-			} catch (CompletionException var4) {
-				if (var4.getCause() instanceof IOException) {
-					throw (IOException)var4.getCause();
-				}
-
-				throw var4;
-			}
-
+			this.mailbox.ask(processorHandle -> new StrictQueue.IntRunnable(IOWorker.Priority.SHUTDOWN.ordinal(), () -> processorHandle.tell(Unit.INSTANCE))).join();
 			this.mailbox.close();
-			this.pendingWrites.forEach(this::runStore);
-			this.pendingWrites.clear();
 
 			try {
 				this.storage.close();
-			} catch (Exception var3) {
-				LOGGER.error("Failed to close storage", var3);
+			} catch (Exception var2) {
+				LOGGER.error("Failed to close storage", var2);
 			}
 		}
 	}
 
 	static class PendingStore {
+		@Nullable
 		private CompoundTag data;
 		private final CompletableFuture<Void> result = new CompletableFuture();
 
-		public PendingStore(CompoundTag compoundTag) {
+		public PendingStore(@Nullable CompoundTag compoundTag) {
 			this.data = compoundTag;
 		}
 	}
 
 	static enum Priority {
-		HIGH,
-		LOW;
+		FOREGROUND,
+		BACKGROUND,
+		SHUTDOWN;
 	}
 }

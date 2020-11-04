@@ -13,11 +13,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.LevelSimulatedRW;
 import net.minecraft.world.level.LevelSimulatedReader;
 import net.minecraft.world.level.LevelWriter;
 import net.minecraft.world.level.WorldGenLevel;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -54,10 +52,7 @@ public class TreeFeature extends Feature<TreeConfiguration> {
 	}
 
 	private static boolean isGrassOrDirtOrFarmland(LevelSimulatedReader levelSimulatedReader, BlockPos blockPos) {
-		return levelSimulatedReader.isStateAtPosition(blockPos, blockState -> {
-			Block block = blockState.getBlock();
-			return isDirt(block) || block == Blocks.FARMLAND;
-		});
+		return levelSimulatedReader.isStateAtPosition(blockPos, blockState -> isDirt(blockState) || blockState.is(Blocks.FARMLAND));
 	}
 
 	private static boolean isReplaceablePlant(LevelSimulatedReader levelSimulatedReader, BlockPos blockPos) {
@@ -76,7 +71,7 @@ public class TreeFeature extends Feature<TreeConfiguration> {
 	}
 
 	private boolean doPlace(
-		LevelSimulatedRW levelSimulatedRW,
+		WorldGenLevel worldGenLevel,
 		Random random,
 		BlockPos blockPos,
 		Set<BlockPos> set,
@@ -90,8 +85,8 @@ public class TreeFeature extends Feature<TreeConfiguration> {
 		int l = treeConfiguration.foliagePlacer.foliageRadius(random, k);
 		BlockPos blockPos2;
 		if (!treeConfiguration.fromSapling) {
-			int m = levelSimulatedRW.getHeightmapPos(Heightmap.Types.OCEAN_FLOOR, blockPos).getY();
-			int n = levelSimulatedRW.getHeightmapPos(Heightmap.Types.WORLD_SURFACE, blockPos).getY();
+			int m = worldGenLevel.getHeightmapPos(Heightmap.Types.OCEAN_FLOOR, blockPos).getY();
+			int n = worldGenLevel.getHeightmapPos(Heightmap.Types.WORLD_SURFACE, blockPos).getY();
 			if (n - m > treeConfiguration.maxWaterDepth) {
 				return false;
 			}
@@ -102,7 +97,7 @@ public class TreeFeature extends Feature<TreeConfiguration> {
 			} else if (treeConfiguration.heightmap == Heightmap.Types.WORLD_SURFACE) {
 				o = n;
 			} else {
-				o = levelSimulatedRW.getHeightmapPos(treeConfiguration.heightmap, blockPos).getY();
+				o = worldGenLevel.getHeightmapPos(treeConfiguration.heightmap, blockPos).getY();
 			}
 
 			blockPos2 = new BlockPos(blockPos.getX(), o, blockPos.getZ());
@@ -110,19 +105,19 @@ public class TreeFeature extends Feature<TreeConfiguration> {
 			blockPos2 = blockPos;
 		}
 
-		if (blockPos2.getY() < 1 || blockPos2.getY() + i + 1 > 256) {
+		if (blockPos2.getY() < worldGenLevel.getMinBuildHeight() + 1 || blockPos2.getY() + i + 1 > worldGenLevel.getMaxBuildHeight()) {
 			return false;
-		} else if (!isGrassOrDirtOrFarmland(levelSimulatedRW, blockPos2.below())) {
+		} else if (!isGrassOrDirtOrFarmland(worldGenLevel, blockPos2.below())) {
 			return false;
 		} else {
 			OptionalInt optionalInt = treeConfiguration.minimumSize.minClippedHeight();
-			int n = this.getMaxFreeTreeHeight(levelSimulatedRW, i, blockPos2, treeConfiguration);
+			int n = this.getMaxFreeTreeHeight(worldGenLevel, i, blockPos2, treeConfiguration);
 			if (n >= i || optionalInt.isPresent() && n >= optionalInt.getAsInt()) {
 				List<FoliagePlacer.FoliageAttachment> list = treeConfiguration.trunkPlacer
-					.placeTrunk(levelSimulatedRW, random, n, blockPos2, set, boundingBox, treeConfiguration);
+					.placeTrunk(worldGenLevel, random, n, blockPos2, set, boundingBox, treeConfiguration);
 				list.forEach(
 					foliageAttachment -> treeConfiguration.foliagePlacer
-							.createFoliage(levelSimulatedRW, random, treeConfiguration, n, foliageAttachment, j, l, set2, boundingBox)
+							.createFoliage(worldGenLevel, random, treeConfiguration, n, foliageAttachment, j, l, set2, boundingBox)
 				);
 				return true;
 			} else {
@@ -191,13 +186,13 @@ public class TreeFeature extends Feature<TreeConfiguration> {
 
 		for(BlockPos blockPos : Lists.newArrayList(set2)) {
 			if (boundingBox.isInside(blockPos)) {
-				discreteVoxelShape.setFull(blockPos.getX() - boundingBox.x0, blockPos.getY() - boundingBox.y0, blockPos.getZ() - boundingBox.z0, true, true);
+				discreteVoxelShape.fill(blockPos.getX() - boundingBox.x0, blockPos.getY() - boundingBox.y0, blockPos.getZ() - boundingBox.z0);
 			}
 		}
 
 		for(BlockPos blockPos : Lists.newArrayList(set)) {
 			if (boundingBox.isInside(blockPos)) {
-				discreteVoxelShape.setFull(blockPos.getX() - boundingBox.x0, blockPos.getY() - boundingBox.y0, blockPos.getZ() - boundingBox.z0, true, true);
+				discreteVoxelShape.fill(blockPos.getX() - boundingBox.x0, blockPos.getY() - boundingBox.y0, blockPos.getZ() - boundingBox.z0);
 			}
 
 			for(Direction direction : Direction.values()) {
@@ -208,9 +203,7 @@ public class TreeFeature extends Feature<TreeConfiguration> {
 						((Set)list.get(0)).add(mutableBlockPos.immutable());
 						setBlockKnownShape(levelAccessor, mutableBlockPos, blockState.setValue(BlockStateProperties.DISTANCE, Integer.valueOf(1)));
 						if (boundingBox.isInside(mutableBlockPos)) {
-							discreteVoxelShape.setFull(
-								mutableBlockPos.getX() - boundingBox.x0, mutableBlockPos.getY() - boundingBox.y0, mutableBlockPos.getZ() - boundingBox.z0, true, true
-							);
+							discreteVoxelShape.fill(mutableBlockPos.getX() - boundingBox.x0, mutableBlockPos.getY() - boundingBox.y0, mutableBlockPos.getZ() - boundingBox.z0);
 						}
 					}
 				}
@@ -223,7 +216,7 @@ public class TreeFeature extends Feature<TreeConfiguration> {
 
 			for(BlockPos blockPos2 : set3) {
 				if (boundingBox.isInside(blockPos2)) {
-					discreteVoxelShape.setFull(blockPos2.getX() - boundingBox.x0, blockPos2.getY() - boundingBox.y0, blockPos2.getZ() - boundingBox.z0, true, true);
+					discreteVoxelShape.fill(blockPos2.getX() - boundingBox.x0, blockPos2.getY() - boundingBox.y0, blockPos2.getZ() - boundingBox.z0);
 				}
 
 				for(Direction direction2 : Direction.values()) {
@@ -236,9 +229,7 @@ public class TreeFeature extends Feature<TreeConfiguration> {
 								BlockState blockState3 = blockState2.setValue(BlockStateProperties.DISTANCE, Integer.valueOf(k + 1));
 								setBlockKnownShape(levelAccessor, mutableBlockPos, blockState3);
 								if (boundingBox.isInside(mutableBlockPos)) {
-									discreteVoxelShape.setFull(
-										mutableBlockPos.getX() - boundingBox.x0, mutableBlockPos.getY() - boundingBox.y0, mutableBlockPos.getZ() - boundingBox.z0, true, true
-									);
+									discreteVoxelShape.fill(mutableBlockPos.getX() - boundingBox.x0, mutableBlockPos.getY() - boundingBox.y0, mutableBlockPos.getZ() - boundingBox.z0);
 								}
 
 								set4.add(mutableBlockPos.immutable());

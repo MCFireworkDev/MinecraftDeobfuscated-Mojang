@@ -255,7 +255,7 @@ public class Commands {
 				);
 				if (SharedConstants.IS_RUNNING_IN_IDE) {
 					commandSourceStack.sendFailure(new TextComponent(Util.describeError(var15)));
-					LOGGER.error("'" + string + "' threw an exception", var15);
+					LOGGER.error("'{}' threw an exception", string, var15);
 				}
 
 				return 0;

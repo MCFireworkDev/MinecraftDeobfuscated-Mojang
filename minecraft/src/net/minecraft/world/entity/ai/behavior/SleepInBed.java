@@ -40,7 +40,7 @@ public class SleepInBed extends Behavior<LivingEntity> {
 				}
 
 				BlockState blockState = serverLevel.getBlockState(globalPos.pos());
-				return globalPos.pos().closerThan(livingEntity.position(), 2.0) && blockState.getBlock().is(BlockTags.BEDS) && !blockState.getValue(BedBlock.OCCUPIED);
+				return globalPos.pos().closerThan(livingEntity.position(), 2.0) && blockState.is(BlockTags.BEDS) && !blockState.getValue(BedBlock.OCCUPIED);
 			}
 		}
 	}

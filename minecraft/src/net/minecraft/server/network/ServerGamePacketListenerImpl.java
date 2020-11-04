@@ -124,7 +124,6 @@ import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.BeaconMenu;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.inventory.RecipeBookMenu;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.Item;
@@ -512,48 +511,29 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 			boolean bl = serverboundSetCommandBlockPacket.isTrackOutput();
 			if (baseCommandBlock != null) {
 				CommandBlockEntity.Mode mode = commandBlockEntity.getMode();
-				Direction direction = this.player.level.getBlockState(blockPos).getValue(CommandBlock.FACING);
+				BlockState blockState = this.player.level.getBlockState(blockPos);
+				Direction direction = blockState.getValue(CommandBlock.FACING);
+				BlockState blockState2;
 				switch(serverboundSetCommandBlockPacket.getMode()) {
-					case SEQUENCE: {
-						BlockState blockState = Blocks.CHAIN_COMMAND_BLOCK.defaultBlockState();
-						this.player
-							.level
-							.setBlock(
-								blockPos,
-								blockState.setValue(CommandBlock.FACING, direction)
-									.setValue(CommandBlock.CONDITIONAL, Boolean.valueOf(serverboundSetCommandBlockPacket.isConditional())),
-								2
-							);
+					case SEQUENCE:
+						blockState2 = Blocks.CHAIN_COMMAND_BLOCK.defaultBlockState();
 						break;
-					}
-					case AUTO: {
-						BlockState blockState = Blocks.REPEATING_COMMAND_BLOCK.defaultBlockState();
-						this.player
-							.level
-							.setBlock(
-								blockPos,
-								blockState.setValue(CommandBlock.FACING, direction)
-									.setValue(CommandBlock.CONDITIONAL, Boolean.valueOf(serverboundSetCommandBlockPacket.isConditional())),
-								2
-							);
+					case AUTO:
+						blockState2 = Blocks.REPEATING_COMMAND_BLOCK.defaultBlockState();
 						break;
-					}
 					case REDSTONE:
-					default: {
-						BlockState blockState = Blocks.COMMAND_BLOCK.defaultBlockState();
-						this.player
-							.level
-							.setBlock(
-								blockPos,
-								blockState.setValue(CommandBlock.FACING, direction)
-									.setValue(CommandBlock.CONDITIONAL, Boolean.valueOf(serverboundSetCommandBlockPacket.isConditional())),
-								2
-							);
-					}
+					default:
+						blockState2 = Blocks.COMMAND_BLOCK.defaultBlockState();
 				}
 
-				blockEntity.clearRemoved();
-				this.player.level.setBlockEntity(blockPos, blockEntity);
+				BlockState blockState3 = blockState2.setValue(CommandBlock.FACING, direction)
+					.setValue(CommandBlock.CONDITIONAL, Boolean.valueOf(serverboundSetCommandBlockPacket.isConditional()));
+				if (blockState3 != blockState) {
+					this.player.level.setBlock(blockPos, blockState3, 2);
+					blockEntity.setBlockState(blockState3);
+					this.player.level.getChunkAt(blockPos).setBlockEntity(blockEntity);
+				}
+
 				baseCommandBlock.setCommand(string);
 				baseCommandBlock.setTrackOutput(bl);
 				if (!bl) {
@@ -598,14 +578,18 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 	@Override
 	public void handlePickItem(ServerboundPickItemPacket serverboundPickItemPacket) {
 		PacketUtils.ensureRunningOnSameThread(serverboundPickItemPacket, this, this.player.getLevel());
-		this.player.inventory.pickSlot(serverboundPickItemPacket.getSlot());
+		this.player.getInventory().pickSlot(serverboundPickItemPacket.getSlot());
 		this.player
 			.connection
-			.send(new ClientboundContainerSetSlotPacket(-2, this.player.inventory.selected, this.player.inventory.getItem(this.player.inventory.selected)));
+			.send(
+				new ClientboundContainerSetSlotPacket(-2, this.player.getInventory().selected, this.player.getInventory().getItem(this.player.getInventory().selected))
+			);
 		this.player
 			.connection
-			.send(new ClientboundContainerSetSlotPacket(-2, serverboundPickItemPacket.getSlot(), this.player.inventory.getItem(serverboundPickItemPacket.getSlot())));
-		this.player.connection.send(new ClientboundSetCarriedItemPacket(this.player.inventory.selected));
+			.send(
+				new ClientboundContainerSetSlotPacket(-2, serverboundPickItemPacket.getSlot(), this.player.getInventory().getItem(serverboundPickItemPacket.getSlot()))
+			);
+		this.player.connection.send(new ClientboundSetCarriedItemPacket(this.player.getInventory().selected));
 	}
 
 	@Override
@@ -731,7 +715,7 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 	@Override
 	public void handleEditBook(ServerboundEditBookPacket serverboundEditBookPacket) {
 		ItemStack itemStack = serverboundEditBookPacket.getBook();
-		if (itemStack.getItem() == Items.WRITABLE_BOOK) {
+		if (itemStack.is(Items.WRITABLE_BOOK)) {
 			CompoundTag compoundTag = itemStack.getTag();
 			if (WritableBookItem.makeSureTagIsValid(compoundTag)) {
 				List<String> list = Lists.newArrayList();
@@ -757,8 +741,8 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 	}
 
 	private void updateBookContents(List<String> list, int i) {
-		ItemStack itemStack = this.player.inventory.getItem(i);
-		if (itemStack.getItem() == Items.WRITABLE_BOOK) {
+		ItemStack itemStack = this.player.getInventory().getItem(i);
+		if (itemStack.is(Items.WRITABLE_BOOK)) {
 			ListTag listTag = new ListTag();
 			list.stream().map(StringTag::valueOf).forEach(listTag::add);
 			itemStack.addTagElement("pages", listTag);
@@ -766,8 +750,8 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 	}
 
 	private void signBook(String string, List<String> list, int i) {
-		ItemStack itemStack = this.player.inventory.getItem(i);
-		if (itemStack.getItem() == Items.WRITABLE_BOOK) {
+		ItemStack itemStack = this.player.getInventory().getItem(i);
+		if (itemStack.is(Items.WRITABLE_BOOK)) {
 			ItemStack itemStack2 = new ItemStack(Items.WRITTEN_BOOK);
 			CompoundTag compoundTag = itemStack.getTag();
 			if (compoundTag != null) {
@@ -785,7 +769,7 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 			}
 
 			itemStack2.addTagElement("pages", listTag);
-			this.player.inventory.setItem(i, itemStack2);
+			this.player.getInventory().setItem(i, itemStack2);
 		}
 	}
 
@@ -920,7 +904,7 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 								this.clientIsFloating = n >= -0.03125
 									&& this.player.gameMode.getGameModeForPlayer() != GameType.SPECTATOR
 									&& !this.server.isFlightAllowed()
-									&& !this.player.abilities.mayfly
+									&& !this.player.getAbilities().mayfly
 									&& !this.player.hasEffect(MobEffects.LEVITATION)
 									&& !this.player.isFallFlying()
 									&& this.noBlocksAround(this.player);
@@ -1086,6 +1070,11 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 
 	@Override
 	public void handleResourcePackResponse(ServerboundResourcePackPacket serverboundResourcePackPacket) {
+		PacketUtils.ensureRunningOnSameThread(serverboundResourcePackPacket, this, this.player.getLevel());
+		if (serverboundResourcePackPacket.getAction() == ServerboundResourcePackPacket.Action.DECLINED && this.server.isResourcePackRequired()) {
+			LOGGER.info("Disconnecting {} due to resource pack rejection", this.player.getName());
+			this.disconnect(new TranslatableComponent("multiplayer.requiredTexturePrompt.disconnect"));
+		}
 	}
 
 	@Override
@@ -1150,11 +1139,11 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 	public void handleSetCarriedItem(ServerboundSetCarriedItemPacket serverboundSetCarriedItemPacket) {
 		PacketUtils.ensureRunningOnSameThread(serverboundSetCarriedItemPacket, this, this.player.getLevel());
 		if (serverboundSetCarriedItemPacket.getSlot() >= 0 && serverboundSetCarriedItemPacket.getSlot() < Inventory.getSelectionSize()) {
-			if (this.player.inventory.selected != serverboundSetCarriedItemPacket.getSlot() && this.player.getUsedItemHand() == InteractionHand.MAIN_HAND) {
+			if (this.player.getInventory().selected != serverboundSetCarriedItemPacket.getSlot() && this.player.getUsedItemHand() == InteractionHand.MAIN_HAND) {
 				this.player.stopUsingItem();
 			}
 
-			this.player.inventory.selected = serverboundSetCarriedItemPacket.getSlot();
+			this.player.getInventory().selected = serverboundSetCarriedItemPacket.getSlot();
 			this.player.resetLastActionTime();
 		} else {
 			LOGGER.warn("{} tried to set an invalid carried item", this.player.getName().getString());
@@ -1343,7 +1332,7 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 				NonNullList<ItemStack> nonNullList = NonNullList.create();
 
 				for(int i = 0; i < this.player.containerMenu.slots.size(); ++i) {
-					nonNullList.add(((Slot)this.player.containerMenu.slots.get(i)).getItem());
+					nonNullList.add(this.player.containerMenu.slots.get(i).getItem());
 				}
 
 				this.player.refreshContainer(this.player.containerMenu, nonNullList);
@@ -1373,7 +1362,7 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 					NonNullList<ItemStack> nonNullList2 = NonNullList.create();
 
 					for(int j = 0; j < this.player.containerMenu.slots.size(); ++j) {
-						ItemStack itemStack2 = ((Slot)this.player.containerMenu.slots.get(j)).getItem();
+						ItemStack itemStack2 = this.player.containerMenu.slots.get(j).getItem();
 						nonNullList2.add(itemStack2.isEmpty() ? ItemStack.EMPTY : itemStack2);
 					}
 
@@ -1505,7 +1494,7 @@ public class ServerGamePacketListenerImpl implements ServerGamePacketListener {
 	@Override
 	public void handlePlayerAbilities(ServerboundPlayerAbilitiesPacket serverboundPlayerAbilitiesPacket) {
 		PacketUtils.ensureRunningOnSameThread(serverboundPlayerAbilitiesPacket, this, this.player.getLevel());
-		this.player.abilities.flying = serverboundPlayerAbilitiesPacket.isFlying() && this.player.abilities.mayfly;
+		this.player.getAbilities().flying = serverboundPlayerAbilitiesPacket.isFlying() && this.player.getAbilities().mayfly;
 	}
 
 	@Override

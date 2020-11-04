@@ -7,6 +7,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.client.model.CowModel;
+import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.layers.MushroomCowMushroomLayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.MushroomCow;
@@ -18,8 +19,8 @@ public class MushroomCowRenderer extends MobRenderer<MushroomCow, CowModel<Mushr
 		hashMap.put(MushroomCow.MushroomType.RED, new ResourceLocation("textures/entity/cow/red_mooshroom.png"));
 	});
 
-	public MushroomCowRenderer(EntityRenderDispatcher entityRenderDispatcher) {
-		super(entityRenderDispatcher, new CowModel<>(), 0.7F);
+	public MushroomCowRenderer(EntityRendererProvider.Context context) {
+		super(context, new CowModel<>(context.getLayer(ModelLayers.MOOSHROOM)), 0.7F);
 		this.addLayer(new MushroomCowMushroomLayer<>(this));
 	}
 

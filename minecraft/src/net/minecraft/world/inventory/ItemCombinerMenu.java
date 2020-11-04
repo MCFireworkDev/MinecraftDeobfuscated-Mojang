@@ -75,7 +75,7 @@ public abstract class ItemCombinerMenu extends AbstractContainerMenu {
 	@Override
 	public void removed(Player player) {
 		super.removed(player);
-		this.access.execute((level, blockPos) -> this.clearContainer(player, level, this.inputSlots));
+		this.access.execute((level, blockPos) -> this.clearContainer(player, this.inputSlots));
 	}
 
 	@Override
@@ -96,7 +96,7 @@ public abstract class ItemCombinerMenu extends AbstractContainerMenu {
 	@Override
 	public ItemStack quickMoveStack(Player player, int i) {
 		ItemStack itemStack = ItemStack.EMPTY;
-		Slot slot = (Slot)this.slots.get(i);
+		Slot slot = this.slots.get(i);
 		if (slot != null && slot.hasItem()) {
 			ItemStack itemStack2 = slot.getItem();
 			itemStack = itemStack2.copy();
