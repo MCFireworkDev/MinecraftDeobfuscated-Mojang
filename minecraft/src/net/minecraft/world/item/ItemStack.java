@@ -61,6 +61,7 @@ import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickAction;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.enchantment.DigDurabilityEnchantment;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -100,6 +101,11 @@ public final class ItemStack {
 	private boolean cachedBreakBlockResult;
 	private BlockInWorld cachedPlaceBlock;
 	private boolean cachedPlaceBlockResult;
+
+	@Environment(EnvType.CLIENT)
+	public Optional<TooltipComponent> getTooltipImage() {
+		return this.getItem().getTooltipImage(this);
+	}
 
 	public ItemStack(ItemLike itemLike) {
 		this(itemLike, 1);
@@ -571,7 +577,10 @@ public final class ItemStack {
 
 		list.add(mutableComponent);
 		if (!tooltipFlag.isAdvanced() && !this.hasCustomHoverName() && this.is(Items.FILLED_MAP)) {
-			list.add(new TextComponent("#" + MapItem.getMapId(this)).withStyle(ChatFormatting.GRAY));
+			Integer integer = MapItem.getMapId(this);
+			if (integer != null) {
+				list.add(new TextComponent("#" + integer).withStyle(ChatFormatting.GRAY));
+			}
 		}
 
 		int i = this.getHideFlags();
