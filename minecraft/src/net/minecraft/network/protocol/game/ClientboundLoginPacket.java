@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Set;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.Registry;
@@ -20,6 +21,7 @@ public class ClientboundLoginPacket implements Packet<ClientGamePacketListener> 
 	private long seed;
 	private boolean hardcore;
 	private GameType gameType;
+	@Nullable
 	private GameType previousGameType;
 	private Set<ResourceKey<Level>> levels;
 	private RegistryAccess.RegistryHolder registryHolder;
@@ -38,7 +40,7 @@ public class ClientboundLoginPacket implements Packet<ClientGamePacketListener> 
 	public ClientboundLoginPacket(
 		int i,
 		GameType gameType,
-		GameType gameType2,
+		@Nullable GameType gameType2,
 		long l,
 		boolean bl,
 		Set<ResourceKey<Level>> set,
@@ -74,7 +76,7 @@ public class ClientboundLoginPacket implements Packet<ClientGamePacketListener> 
 		this.playerId = friendlyByteBuf.readInt();
 		this.hardcore = friendlyByteBuf.readBoolean();
 		this.gameType = GameType.byId(friendlyByteBuf.readByte());
-		this.previousGameType = GameType.byId(friendlyByteBuf.readByte());
+		this.previousGameType = GameType.byNullableId(friendlyByteBuf.readByte());
 		int i = friendlyByteBuf.readVarInt();
 		this.levels = Sets.<ResourceKey<Level>>newHashSet();
 
@@ -99,7 +101,7 @@ public class ClientboundLoginPacket implements Packet<ClientGamePacketListener> 
 		friendlyByteBuf.writeInt(this.playerId);
 		friendlyByteBuf.writeBoolean(this.hardcore);
 		friendlyByteBuf.writeByte(this.gameType.getId());
-		friendlyByteBuf.writeByte(this.previousGameType.getId());
+		friendlyByteBuf.writeByte(GameType.getNullableId(this.previousGameType));
 		friendlyByteBuf.writeVarInt(this.levels.size());
 
 		for(ResourceKey<Level> resourceKey : this.levels) {

@@ -719,11 +719,8 @@ public class ServerLevel extends Level implements WorldGenLevel {
 		return this.addEntity(entity);
 	}
 
-	public void addAndForceLoad(Entity entity) {
-		boolean bl = entity.forcedLoading;
-		entity.forcedLoading = true;
+	public void addDuringTeleport(Entity entity) {
 		this.addEntity(entity);
-		entity.forcedLoading = bl;
 	}
 
 	public void addDuringCommandTeleport(ServerPlayer serverPlayer) {

@@ -2,6 +2,7 @@ package net.minecraft.network.protocol.game;
 
 import java.io.IOException;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.Registry;
@@ -17,6 +18,7 @@ public class ClientboundRespawnPacket implements Packet<ClientGamePacketListener
 	private ResourceKey<Level> dimension;
 	private long seed;
 	private GameType playerGameType;
+	@Nullable
 	private GameType previousPlayerGameType;
 	private boolean isDebug;
 	private boolean isFlat;
@@ -26,7 +28,7 @@ public class ClientboundRespawnPacket implements Packet<ClientGamePacketListener
 	}
 
 	public ClientboundRespawnPacket(
-		DimensionType dimensionType, ResourceKey<Level> resourceKey, long l, GameType gameType, GameType gameType2, boolean bl, boolean bl2, boolean bl3
+		DimensionType dimensionType, ResourceKey<Level> resourceKey, long l, GameType gameType, @Nullable GameType gameType2, boolean bl, boolean bl2, boolean bl3
 	) {
 		this.dimensionType = dimensionType;
 		this.dimension = resourceKey;
@@ -48,7 +50,7 @@ public class ClientboundRespawnPacket implements Packet<ClientGamePacketListener
 		this.dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, friendlyByteBuf.readResourceLocation());
 		this.seed = friendlyByteBuf.readLong();
 		this.playerGameType = GameType.byId(friendlyByteBuf.readUnsignedByte());
-		this.previousPlayerGameType = GameType.byId(friendlyByteBuf.readUnsignedByte());
+		this.previousPlayerGameType = GameType.byNullableId(friendlyByteBuf.readByte());
 		this.isDebug = friendlyByteBuf.readBoolean();
 		this.isFlat = friendlyByteBuf.readBoolean();
 		this.keepAllPlayerData = friendlyByteBuf.readBoolean();
@@ -60,7 +62,7 @@ public class ClientboundRespawnPacket implements Packet<ClientGamePacketListener
 		friendlyByteBuf.writeResourceLocation(this.dimension.location());
 		friendlyByteBuf.writeLong(this.seed);
 		friendlyByteBuf.writeByte(this.playerGameType.getId());
-		friendlyByteBuf.writeByte(this.previousPlayerGameType.getId());
+		friendlyByteBuf.writeByte(GameType.getNullableId(this.previousPlayerGameType));
 		friendlyByteBuf.writeBoolean(this.isDebug);
 		friendlyByteBuf.writeBoolean(this.isFlat);
 		friendlyByteBuf.writeBoolean(this.keepAllPlayerData);
@@ -86,6 +88,7 @@ public class ClientboundRespawnPacket implements Packet<ClientGamePacketListener
 		return this.playerGameType;
 	}
 
+	@Nullable
 	@Environment(EnvType.CLIENT)
 	public GameType getPreviousPlayerGameType() {
 		return this.previousPlayerGameType;

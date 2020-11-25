@@ -125,7 +125,6 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 	protected int boardingCooldown;
 	@Nullable
 	private Entity vehicle;
-	public boolean forcedLoading;
 	public Level level;
 	public double xo;
 	public double yo;
@@ -879,7 +878,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 			}
 
 			BlockState blockState2 = this.level.getBlockState(blockPos.above());
-			SoundType soundType = blockState2.is(BlockTags.SNOW_STEP_SOUND_BLOCKS) ? blockState2.getSoundType() : blockState.getSoundType();
+			SoundType soundType = blockState2.is(BlockTags.INSIDE_STEP_SOUND_BLOCKS) ? blockState2.getSoundType() : blockState.getSoundType();
 			this.playSound(soundType.getStepSound(), soundType.getVolume() * 0.15F, soundType.getPitch());
 		}
 	}
@@ -1130,10 +1129,6 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		} else {
 			return 0.0F;
 		}
-	}
-
-	public void setLevel(Level level) {
-		this.level = level;
 	}
 
 	public void absMoveTo(double d, double e, double f, float g, float h) {
@@ -2175,7 +2170,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 					entity.restoreFrom(this);
 					entity.moveTo(portalInfo.pos.x, portalInfo.pos.y, portalInfo.pos.z, portalInfo.yRot, entity.xRot);
 					entity.setDeltaMovement(portalInfo.speed);
-					serverLevel.addAndForceLoad(entity);
+					serverLevel.addDuringTeleport(entity);
 					if (serverLevel.dimension() == Level.END) {
 						ServerLevel.makeObsidianPlatform(serverLevel);
 					}

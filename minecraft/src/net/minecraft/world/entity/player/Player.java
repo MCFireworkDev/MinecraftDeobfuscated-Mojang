@@ -820,6 +820,8 @@ public abstract class Player extends LivingEntity {
 			return !this.level.getGameRules().getBoolean(GameRules.RULE_FALL_DAMAGE);
 		} else if (damageSource.isFire()) {
 			return !this.level.getGameRules().getBoolean(GameRules.RULE_FIRE_DAMAGE);
+		} else if (damageSource == DamageSource.FREEZE) {
+			return !this.level.getGameRules().getBoolean(GameRules.RULE_FREEZE_DAMAGE);
 		} else {
 			return false;
 		}
@@ -1694,9 +1696,6 @@ public abstract class Player extends LivingEntity {
 	public void onUpdateAbilities() {
 	}
 
-	public void setGameMode(GameType gameType) {
-	}
-
 	@Override
 	public Component getName() {
 		return new TextComponent(this.gameProfile.getName());
@@ -2043,11 +2042,6 @@ public abstract class Player extends LivingEntity {
 	@Environment(EnvType.CLIENT)
 	public boolean isScoping() {
 		return this.isUsingItem() && this.getUseItem().is(Items.SPYGLASS);
-	}
-
-	@Override
-	public boolean canFreeze() {
-		return super.canFreeze() && !this.isCreative();
 	}
 
 	public static enum BedSleepingProblem {
