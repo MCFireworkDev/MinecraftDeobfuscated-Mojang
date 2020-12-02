@@ -28,8 +28,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.Map.Entry;
 import javax.annotation.Nullable;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.resources.RegistryDataPackCodec;
 import net.minecraft.resources.ResourceKey;
@@ -198,7 +196,6 @@ public class MappedRegistry<T> extends WritableRegistry<T> {
 		return Util.getRandom((T[])this.randomCache, random);
 	}
 
-	@Environment(EnvType.CLIENT)
 	@Override
 	public boolean containsKey(ResourceLocation resourceLocation) {
 		return this.storage.containsKey(resourceLocation);

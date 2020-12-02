@@ -66,6 +66,7 @@ import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
 
 public interface DispenseItemBehavior {
@@ -374,6 +375,7 @@ public interface DispenseItemBehavior {
 					if (itemStack2.isEmpty()) {
 						return super.execute(blockSource, itemStack);
 					} else {
+						levelAccessor.gameEvent(null, GameEvent.FLUID_PICKUP, blockPos);
 						Item item = itemStack2.getItem();
 						itemStack.shrink(1);
 						if (itemStack.isEmpty()) {
@@ -410,8 +412,11 @@ public interface DispenseItemBehavior {
 					this.setSuccess(false);
 				}
 
-				if (this.isSuccess() && itemStack.hurt(1, level.random, null)) {
-					itemStack.setCount(0);
+				if (this.isSuccess()) {
+					level.gameEvent(null, GameEvent.FLINT_AND_STEEL_USE, blockPos);
+					if (itemStack.hurt(1, level.random, null)) {
+						itemStack.setCount(0);
+					}
 				}
 
 				return itemStack;
