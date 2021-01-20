@@ -39,6 +39,8 @@ public abstract class Column {
 
 	public abstract OptionalInt getFloor();
 
+	public abstract OptionalInt getHeight();
+
 	public Column withFloor(OptionalInt optionalInt) {
 		return create(optionalInt, this.getCeiling());
 	}
@@ -89,6 +91,11 @@ public abstract class Column {
 			return OptionalInt.empty();
 		}
 
+		@Override
+		public OptionalInt getHeight() {
+			return OptionalInt.empty();
+		}
+
 		public String toString() {
 			return "C(-)";
 		}
@@ -114,6 +121,11 @@ public abstract class Column {
 		@Override
 		public OptionalInt getFloor() {
 			return OptionalInt.of(this.floor);
+		}
+
+		@Override
+		public OptionalInt getHeight() {
+			return OptionalInt.of(this.height());
 		}
 
 		public int ceiling() {
@@ -150,6 +162,11 @@ public abstract class Column {
 		@Override
 		public OptionalInt getFloor() {
 			return this.pointingUp ? OptionalInt.of(this.edge) : OptionalInt.empty();
+		}
+
+		@Override
+		public OptionalInt getHeight() {
+			return OptionalInt.empty();
 		}
 
 		public String toString() {

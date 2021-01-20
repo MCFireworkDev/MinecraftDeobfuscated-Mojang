@@ -453,7 +453,7 @@ public abstract class Player extends LivingEntity {
 
 	@Override
 	public void rideTick() {
-		if (this.wantsToStopRiding() && this.isPassenger()) {
+		if (!this.level.isClientSide && this.wantsToStopRiding() && this.isPassenger()) {
 			this.stopRiding();
 			this.setShiftKeyDown(false);
 		} else {
@@ -816,7 +816,7 @@ public abstract class Player extends LivingEntity {
 			return true;
 		} else if (damageSource == DamageSource.DROWN) {
 			return !this.level.getGameRules().getBoolean(GameRules.RULE_DROWNING_DAMAGE);
-		} else if (damageSource == DamageSource.FALL) {
+		} else if (damageSource.isFall()) {
 			return !this.level.getGameRules().getBoolean(GameRules.RULE_FALL_DAMAGE);
 		} else if (damageSource.isFire()) {
 			return !this.level.getGameRules().getBoolean(GameRules.RULE_FIRE_DAMAGE);
@@ -1520,7 +1520,7 @@ public abstract class Player extends LivingEntity {
 	}
 
 	@Override
-	public boolean causeFallDamage(float f, float g) {
+	public boolean causeFallDamage(float f, float g, DamageSource damageSource) {
 		if (this.abilities.mayfly) {
 			return false;
 		} else {
@@ -1528,7 +1528,7 @@ public abstract class Player extends LivingEntity {
 				this.awardStat(Stats.FALL_ONE_CM, (int)Math.round((double)f * 100.0));
 			}
 
-			return super.causeFallDamage(f, g);
+			return super.causeFallDamage(f, g, damageSource);
 		}
 	}
 

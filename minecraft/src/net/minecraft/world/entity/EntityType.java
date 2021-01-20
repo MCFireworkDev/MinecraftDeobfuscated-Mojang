@@ -247,6 +247,13 @@ public class EntityType<T extends Entity> implements EntityTypeTest<Entity, T> {
 	public static final EntityType<Giant> GIANT = register(
 		"giant", EntityType.Builder.<Giant>of(Giant::new, MobCategory.MONSTER).sized(3.6F, 12.0F).clientTrackingRange(10)
 	);
+	public static final EntityType<ItemFrame> GLOW_ITEM_FRAME = register(
+		"glow_item_frame",
+		EntityType.Builder.<ItemFrame>of(ItemFrame::new, MobCategory.MISC).sized(0.5F, 0.5F).clientTrackingRange(10).updateInterval(Integer.MAX_VALUE)
+	);
+	public static final EntityType<GlowSquid> GLOW_SQUID = register(
+		"glow_squid", EntityType.Builder.<GlowSquid>of(GlowSquid::new, MobCategory.WATER_CREATURE).sized(0.8F, 0.8F).clientTrackingRange(10)
+	);
 	public static final EntityType<Guardian> GUARDIAN = register(
 		"guardian", EntityType.Builder.<Guardian>of(Guardian::new, MobCategory.MONSTER).sized(0.85F, 0.85F).clientTrackingRange(8)
 	);
@@ -825,6 +832,7 @@ public class EntityType<T extends Entity> implements EntityTypeTest<Entity, T> {
 			&& this != WITHER
 			&& this != BAT
 			&& this != ITEM_FRAME
+			&& this != GLOW_ITEM_FRAME
 			&& this != LEASH_KNOT
 			&& this != PAINTING
 			&& this != END_CRYSTAL
