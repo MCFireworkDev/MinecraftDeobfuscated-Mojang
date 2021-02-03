@@ -204,8 +204,12 @@ public final class Biome {
 		}
 	}
 
+	public boolean isColdEnoughToSnow(BlockPos blockPos) {
+		return this.getTemperature(blockPos) < 0.15F;
+	}
+
 	public boolean shouldSnow(LevelReader levelReader, BlockPos blockPos) {
-		if (this.getTemperature(blockPos) >= 0.15F) {
+		if (!this.isColdEnoughToSnow(blockPos)) {
 			return false;
 		} else {
 			if (blockPos.getY() >= levelReader.getMinBuildHeight()
@@ -255,7 +259,7 @@ public final class Biome {
 										structureFeatureManager,
 										chunkGenerator,
 										worldgenRandom,
-										new BoundingBox(o, q, p, o + 15, worldGenRegion.getMaxBuildHeight(), p + 15),
+										new BoundingBox(o, q, p, o + 15, worldGenRegion.getMaxBuildHeight() - 1, p + 15),
 										new ChunkPos(m, n)
 									)
 							);
