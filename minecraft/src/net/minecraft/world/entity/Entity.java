@@ -2754,16 +2754,16 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 	}
 
 	public boolean updateFluidHeightAndDoFluidPushing(Tag<Fluid> tag, double d) {
-		AABB aABB = this.getBoundingBox().deflate(0.001);
-		int i = Mth.floor(aABB.minX);
-		int j = Mth.ceil(aABB.maxX);
-		int k = Mth.floor(aABB.minY);
-		int l = Mth.ceil(aABB.maxY);
-		int m = Mth.floor(aABB.minZ);
-		int n = Mth.ceil(aABB.maxZ);
-		if (!this.level.hasChunksAt(i, k, m, j, l, n)) {
+		if (this.touchingUnloadedChunk()) {
 			return false;
 		} else {
+			AABB aABB = this.getBoundingBox().deflate(0.001);
+			int i = Mth.floor(aABB.minX);
+			int j = Mth.ceil(aABB.maxX);
+			int k = Mth.floor(aABB.minY);
+			int l = Mth.ceil(aABB.maxY);
+			int m = Mth.floor(aABB.minZ);
+			int n = Mth.ceil(aABB.maxZ);
 			double e = 0.0;
 			boolean bl = this.isPushedByFluid();
 			boolean bl2 = false;
@@ -2818,6 +2818,17 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 			this.fluidHeight.put(tag, e);
 			return bl2;
 		}
+	}
+
+	public boolean touchingUnloadedChunk() {
+		AABB aABB = this.getBoundingBox().inflate(1.0);
+		int i = Mth.floor(aABB.minX);
+		int j = Mth.ceil(aABB.maxX);
+		int k = Mth.floor(aABB.minY);
+		int l = Mth.ceil(aABB.maxY);
+		int m = Mth.floor(aABB.minZ);
+		int n = Mth.ceil(aABB.maxZ);
+		return !this.level.hasChunksAt(i, k, m, j, l, n);
 	}
 
 	public double getFluidHeight(Tag<Fluid> tag) {
