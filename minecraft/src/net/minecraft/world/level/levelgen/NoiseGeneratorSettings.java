@@ -30,7 +30,8 @@ public final class NoiseGeneratorSettings {
 					Codec.INT.fieldOf("sea_level").forGetter(NoiseGeneratorSettings::seaLevel),
 					Codec.BOOL.fieldOf("disable_mob_generation").forGetter(NoiseGeneratorSettings::disableMobGeneration),
 					Codec.BOOL.fieldOf("aquifers_enabled").forGetter(NoiseGeneratorSettings::isAquifersEnabled),
-					Codec.BOOL.fieldOf("noise_caves_enabled").forGetter(NoiseGeneratorSettings::isNoiseCavesEnabled)
+					Codec.BOOL.fieldOf("noise_caves_enabled").forGetter(NoiseGeneratorSettings::isNoiseCavesEnabled),
+					Codec.BOOL.fieldOf("grimstone_enabled").forGetter(NoiseGeneratorSettings::isGrimstoneEnabled)
 				)
 				.apply(instance, NoiseGeneratorSettings::new)
 	);
@@ -45,6 +46,7 @@ public final class NoiseGeneratorSettings {
 	private final boolean disableMobGeneration;
 	private final boolean aquifersEnabled;
 	private final boolean noiseCavesEnabled;
+	private final boolean grimstoneEnabled;
 	public static final ResourceKey<NoiseGeneratorSettings> OVERWORLD = ResourceKey.create(
 		Registry.NOISE_GENERATOR_SETTINGS_REGISTRY, new ResourceLocation("overworld")
 	);
@@ -71,7 +73,8 @@ public final class NoiseGeneratorSettings {
 		int k,
 		boolean bl,
 		boolean bl2,
-		boolean bl3
+		boolean bl3,
+		boolean bl4
 	) {
 		this.structureSettings = structureSettings;
 		this.noiseSettings = noiseSettings;
@@ -83,6 +86,7 @@ public final class NoiseGeneratorSettings {
 		this.disableMobGeneration = bl;
 		this.aquifersEnabled = bl2;
 		this.noiseCavesEnabled = bl3;
+		this.grimstoneEnabled = bl4;
 	}
 
 	public StructureSettings structureSettings() {
@@ -126,6 +130,10 @@ public final class NoiseGeneratorSettings {
 		return this.noiseCavesEnabled;
 	}
 
+	protected boolean isGrimstoneEnabled() {
+		return this.grimstoneEnabled;
+	}
+
 	public boolean stable(ResourceKey<NoiseGeneratorSettings> resourceKey) {
 		return Objects.equals(this, BuiltinRegistries.NOISE_GENERATOR_SETTINGS.get(resourceKey));
 	}
@@ -166,6 +174,7 @@ public final class NoiseGeneratorSettings {
 			bl3 ? -64 : 0,
 			bl,
 			false,
+			false,
 			false
 		);
 	}
@@ -197,6 +206,7 @@ public final class NoiseGeneratorSettings {
 			32,
 			false,
 			false,
+			false,
 			false
 		);
 	}
@@ -210,7 +220,7 @@ public final class NoiseGeneratorSettings {
 				384,
 				new NoiseSamplingSettings(0.9999999814507745, 0.9999999814507745, 80.0, 160.0),
 				new NoiseSlideSettings(-10, 3, 0),
-				new NoiseSlideSettings(10, 3, 0),
+				new NoiseSlideSettings(15, 3, 0),
 				1,
 				2,
 				1.0,
@@ -226,6 +236,7 @@ public final class NoiseGeneratorSettings {
 			0,
 			63,
 			false,
+			true,
 			true,
 			true
 		);

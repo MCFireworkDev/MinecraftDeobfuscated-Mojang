@@ -3,7 +3,6 @@ package net.minecraft.server.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import java.util.Optional;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -28,17 +27,22 @@ public class EmoteCommands {
 								MinecraftServer minecraftServer = commandContext.getSource().getServer();
 								if (entity != null) {
 									if (entity instanceof ServerPlayer) {
-										TextFilter textFilter = ((ServerPlayer)entity).getTextFilter();
-										if (textFilter != null) {
-											textFilter.processStreamMessage(string)
-												.thenAcceptAsync(
-													optional -> optional.ifPresent(
-															stringx -> minecraftServer.getPlayerList().broadcastMessage(createMessage(commandContext, stringx), ChatType.CHAT, entity.getUUID())
-														),
-													minecraftServer
-												);
-											return 1;
-										}
+										ServerPlayer serverPlayer = (ServerPlayer)entity;
+										serverPlayer.getTextFilter()
+											.processStreamMessage(string)
+											.thenAcceptAsync(
+												filteredText -> {
+													String stringxx = filteredText.getFiltered();
+													Component component = stringxx.isEmpty() ? null : createMessage(commandContext, stringxx);
+													Component component2 = createMessage(commandContext, filteredText.getRaw());
+													minecraftServer.getPlayerList()
+														.broadcastMessage(
+															component2, serverPlayer2 -> serverPlayer.shouldFilterMessageTo(serverPlayer2) ? component : component2, ChatType.CHAT, entity.getUUID()
+														);
+												},
+												minecraftServer
+											);
+										return 1;
 									}
 					
 									minecraftServer.getPlayerList().broadcastMessage(createMessage(commandContext, string), ChatType.CHAT, entity.getUUID());
