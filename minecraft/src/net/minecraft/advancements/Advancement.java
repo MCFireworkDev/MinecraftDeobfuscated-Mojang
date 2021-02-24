@@ -431,7 +431,7 @@ public class Advancement {
 				strings[i] = new String[friendlyByteBuf.readVarInt()];
 
 				for(int j = 0; j < strings[i].length; ++j) {
-					strings[i][j] = friendlyByteBuf.readUtf(32767);
+					strings[i][j] = friendlyByteBuf.readUtf();
 				}
 			}
 

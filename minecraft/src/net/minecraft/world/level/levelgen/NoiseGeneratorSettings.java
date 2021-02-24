@@ -31,7 +31,7 @@ public final class NoiseGeneratorSettings {
 					Codec.BOOL.fieldOf("disable_mob_generation").forGetter(NoiseGeneratorSettings::disableMobGeneration),
 					Codec.BOOL.fieldOf("aquifers_enabled").forGetter(NoiseGeneratorSettings::isAquifersEnabled),
 					Codec.BOOL.fieldOf("noise_caves_enabled").forGetter(NoiseGeneratorSettings::isNoiseCavesEnabled),
-					Codec.BOOL.fieldOf("grimstone_enabled").forGetter(NoiseGeneratorSettings::isGrimstoneEnabled)
+					Codec.BOOL.fieldOf("deepslate_enabled").forGetter(NoiseGeneratorSettings::isDeepslateEnabled)
 				)
 				.apply(instance, NoiseGeneratorSettings::new)
 	);
@@ -46,7 +46,7 @@ public final class NoiseGeneratorSettings {
 	private final boolean disableMobGeneration;
 	private final boolean aquifersEnabled;
 	private final boolean noiseCavesEnabled;
-	private final boolean grimstoneEnabled;
+	private final boolean deepslateEnabled;
 	public static final ResourceKey<NoiseGeneratorSettings> OVERWORLD = ResourceKey.create(
 		Registry.NOISE_GENERATOR_SETTINGS_REGISTRY, new ResourceLocation("overworld")
 	);
@@ -86,7 +86,7 @@ public final class NoiseGeneratorSettings {
 		this.disableMobGeneration = bl;
 		this.aquifersEnabled = bl2;
 		this.noiseCavesEnabled = bl3;
-		this.grimstoneEnabled = bl4;
+		this.deepslateEnabled = bl4;
 	}
 
 	public StructureSettings structureSettings() {
@@ -130,8 +130,8 @@ public final class NoiseGeneratorSettings {
 		return this.noiseCavesEnabled;
 	}
 
-	protected boolean isGrimstoneEnabled() {
-		return this.grimstoneEnabled;
+	protected boolean isDeepslateEnabled() {
+		return this.deepslateEnabled;
 	}
 
 	public boolean stable(ResourceKey<NoiseGeneratorSettings> resourceKey) {
