@@ -11,6 +11,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
 import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -94,8 +95,9 @@ public class InventoryScreen extends EffectRenderingInventoryScreen<InventoryMen
 
 	@Override
 	protected void renderBg(PoseStack poseStack, float f, int i, int j) {
-		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		this.minecraft.getTextureManager().bind(INVENTORY_LOCATION);
+		RenderSystem.setShader(GameRenderer::getPositionTexShader);
+		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderSystem.setShaderTexture(0, INVENTORY_LOCATION);
 		int k = this.leftPos;
 		int l = this.topPos;
 		this.blit(poseStack, k, l, 0, 0, this.imageWidth, this.imageHeight);
@@ -105,16 +107,18 @@ public class InventoryScreen extends EffectRenderingInventoryScreen<InventoryMen
 	public static void renderEntityInInventory(int i, int j, int k, float f, float g, LivingEntity livingEntity) {
 		float h = (float)Math.atan((double)(f / 40.0F));
 		float l = (float)Math.atan((double)(g / 40.0F));
-		RenderSystem.pushMatrix();
-		RenderSystem.translatef((float)i, (float)j, 1050.0F);
-		RenderSystem.scalef(1.0F, 1.0F, -1.0F);
-		PoseStack poseStack = new PoseStack();
-		poseStack.translate(0.0, 0.0, 1000.0);
-		poseStack.scale((float)k, (float)k, (float)k);
+		PoseStack poseStack = RenderSystem.getModelViewStack();
+		poseStack.pushPose();
+		poseStack.translate((double)i, (double)j, 1050.0);
+		poseStack.scale(1.0F, 1.0F, -1.0F);
+		RenderSystem.applyModelViewMatrix();
+		PoseStack poseStack2 = new PoseStack();
+		poseStack2.translate(0.0, 0.0, 1000.0);
+		poseStack2.scale((float)k, (float)k, (float)k);
 		Quaternion quaternion = Vector3f.ZP.rotationDegrees(180.0F);
 		Quaternion quaternion2 = Vector3f.XP.rotationDegrees(l * 20.0F);
 		quaternion.mul(quaternion2);
-		poseStack.mulPose(quaternion);
+		poseStack2.mulPose(quaternion);
 		float m = livingEntity.yBodyRot;
 		float n = livingEntity.yRot;
 		float o = livingEntity.xRot;
@@ -130,7 +134,7 @@ public class InventoryScreen extends EffectRenderingInventoryScreen<InventoryMen
 		entityRenderDispatcher.overrideCameraOrientation(quaternion2);
 		entityRenderDispatcher.setRenderShadow(false);
 		MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-		RenderSystem.runAsFancy(() -> entityRenderDispatcher.render(livingEntity, 0.0, 0.0, 0.0, 0.0F, 1.0F, poseStack, bufferSource, 15728880));
+		RenderSystem.runAsFancy(() -> entityRenderDispatcher.render(livingEntity, 0.0, 0.0, 0.0, 0.0F, 1.0F, poseStack2, bufferSource, 15728880));
 		bufferSource.endBatch();
 		entityRenderDispatcher.setRenderShadow(true);
 		livingEntity.yBodyRot = m;
@@ -138,7 +142,8 @@ public class InventoryScreen extends EffectRenderingInventoryScreen<InventoryMen
 		livingEntity.xRot = o;
 		livingEntity.yHeadRotO = p;
 		livingEntity.yHeadRot = q;
-		RenderSystem.popMatrix();
+		poseStack.popPose();
+		RenderSystem.applyModelViewMatrix();
 	}
 
 	@Override

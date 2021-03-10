@@ -46,7 +46,7 @@ public class AnvilMenu extends ItemCombinerMenu {
 	}
 
 	@Override
-	protected ItemStack onTake(Player player, ItemStack itemStack) {
+	protected void onTake(Player player, ItemStack itemStack) {
 		if (!player.getAbilities().instabuild) {
 			player.giveExperienceLevels(-this.cost.get());
 		}
@@ -80,7 +80,6 @@ public class AnvilMenu extends ItemCombinerMenu {
 				level.levelEvent(1030, blockPos, 0);
 			}
 		});
-		return itemStack;
 	}
 
 	@Override

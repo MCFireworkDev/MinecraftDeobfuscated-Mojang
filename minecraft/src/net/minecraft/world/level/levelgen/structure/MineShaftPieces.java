@@ -7,7 +7,8 @@ import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.vehicle.MinecartChest;
@@ -31,8 +32,12 @@ import net.minecraft.world.level.levelgen.feature.MineshaftFeature;
 import net.minecraft.world.level.levelgen.feature.StructurePieceType;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MineShaftPieces {
+	private static final Logger LOGGER = LogManager.getLogger();
+
 	private static MineShaftPieces.MineShaftPiece createRandomShaftPiece(
 		List<StructurePiece> list, Random random, int i, int j, int k, @Nullable Direction direction, int l, MineshaftFeature.Type type
 	) {
@@ -845,11 +850,11 @@ public class MineShaftPieces {
 
 		public MineShaftRoom(StructureManager structureManager, CompoundTag compoundTag) {
 			super(StructurePieceType.MINE_SHAFT_ROOM, compoundTag);
-			ListTag listTag = compoundTag.getList("Entrances", 11);
-
-			for(int i = 0; i < listTag.size(); ++i) {
-				this.childEntranceBoxes.add(new BoundingBox(listTag.getIntArray(i)));
-			}
+			BoundingBox.CODEC
+				.listOf()
+				.parse(NbtOps.INSTANCE, compoundTag.getList("Entrances", 11))
+				.resultOrPartial(MineShaftPieces.LOGGER::error)
+				.ifPresent(this.childEntranceBoxes::addAll);
 		}
 
 		@Override
@@ -1010,13 +1015,11 @@ public class MineShaftPieces {
 		@Override
 		protected void addAdditionalSaveData(CompoundTag compoundTag) {
 			super.addAdditionalSaveData(compoundTag);
-			ListTag listTag = new ListTag();
-
-			for(BoundingBox boundingBox : this.childEntranceBoxes) {
-				listTag.add(boundingBox.createTag());
-			}
-
-			compoundTag.put("Entrances", listTag);
+			BoundingBox.CODEC
+				.listOf()
+				.encodeStart(NbtOps.INSTANCE, this.childEntranceBoxes)
+				.resultOrPartial(MineShaftPieces.LOGGER::error)
+				.ifPresent(tag -> compoundTag.put("Entrances", tag));
 		}
 	}
 
