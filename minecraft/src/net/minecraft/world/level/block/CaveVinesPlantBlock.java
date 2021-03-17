@@ -18,15 +18,15 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class CaveVinesBodyBlock extends GrowingPlantBodyBlock implements BonemealableBlock, CaveVinesBlock {
-	public CaveVinesBodyBlock(BlockBehaviour.Properties properties) {
+public class CaveVinesPlantBlock extends GrowingPlantBodyBlock implements BonemealableBlock, CaveVines {
+	public CaveVinesPlantBlock(BlockBehaviour.Properties properties) {
 		super(properties, Direction.DOWN, SHAPE, false);
 		this.registerDefaultState(this.stateDefinition.any().setValue(BERRIES, Boolean.valueOf(false)));
 	}
 
 	@Override
 	protected GrowingPlantHeadBlock getHeadBlock() {
-		return (GrowingPlantHeadBlock)Blocks.CAVE_VINES_HEAD;
+		return (GrowingPlantHeadBlock)Blocks.CAVE_VINES;
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public class CaveVinesBodyBlock extends GrowingPlantBodyBlock implements Bonemea
 	public InteractionResult use(
 		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
 	) {
-		return CaveVinesBlock.use(blockState, level, blockPos);
+		return CaveVines.use(blockState, level, blockPos);
 	}
 
 	@Override
