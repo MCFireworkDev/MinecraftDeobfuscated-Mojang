@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -65,6 +63,7 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 
 public class Sheep extends Animal implements Shearable {
+	private static final int EAT_ANIMATION_TICKS = 40;
 	private static final EntityDataAccessor<Byte> DATA_WOOL_ID = SynchedEntityData.defineId(Sheep.class, EntityDataSerializers.BYTE);
 	private static final Map<DyeColor, ItemLike> ITEM_BY_DYE = Util.make(Maps.newEnumMap(DyeColor.class), enumMap -> {
 		enumMap.put(DyeColor.WHITE, Blocks.WHITE_WOOL);
@@ -100,7 +99,6 @@ public class Sheep extends Animal implements Shearable {
 		}
 	}
 
-	@Environment(EnvType.CLIENT)
 	public static float[] getColorArray(DyeColor dyeColor) {
 		return (float[])COLORARRAY_BY_COLOR.get(dyeColor);
 	}
@@ -191,7 +189,6 @@ public class Sheep extends Animal implements Shearable {
 		}
 	}
 
-	@Environment(EnvType.CLIENT)
 	@Override
 	public void handleEntityEvent(byte b) {
 		if (b == 10) {
@@ -201,7 +198,6 @@ public class Sheep extends Animal implements Shearable {
 		}
 	}
 
-	@Environment(EnvType.CLIENT)
 	public float getHeadEatPositionScale(float f) {
 		if (this.eatAnimationTick <= 0) {
 			return 0.0F;
@@ -212,7 +208,6 @@ public class Sheep extends Animal implements Shearable {
 		}
 	}
 
-	@Environment(EnvType.CLIENT)
 	public float getHeadEatAngleScale(float f) {
 		if (this.eatAnimationTick > 4 && this.eatAnimationTick <= 36) {
 			float g = ((float)(this.eatAnimationTick - 4) - f) / 32.0F;

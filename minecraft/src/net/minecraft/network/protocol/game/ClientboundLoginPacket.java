@@ -4,8 +4,6 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
@@ -16,6 +14,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
 
 public class ClientboundLoginPacket implements Packet<ClientGamePacketListener> {
+	private static final int HARDCORE_FLAG = 8;
 	private final int playerId;
 	private final long seed;
 	private final boolean hardcore;
@@ -110,73 +109,63 @@ public class ClientboundLoginPacket implements Packet<ClientGamePacketListener> 
 		clientGamePacketListener.handleLogin(this);
 	}
 
-	@Environment(EnvType.CLIENT)
 	public int getPlayerId() {
 		return this.playerId;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public long getSeed() {
 		return this.seed;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public boolean isHardcore() {
 		return this.hardcore;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public GameType getGameType() {
 		return this.gameType;
 	}
 
 	@Nullable
-	@Environment(EnvType.CLIENT)
 	public GameType getPreviousGameType() {
 		return this.previousGameType;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public Set<ResourceKey<Level>> levels() {
 		return this.levels;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public RegistryAccess registryAccess() {
 		return this.registryHolder;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public DimensionType getDimensionType() {
 		return this.dimensionType;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public ResourceKey<Level> getDimension() {
 		return this.dimension;
 	}
 
-	@Environment(EnvType.CLIENT)
+	public int getMaxPlayers() {
+		return this.maxPlayers;
+	}
+
 	public int getChunkRadius() {
 		return this.chunkRadius;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public boolean isReducedDebugInfo() {
 		return this.reducedDebugInfo;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public boolean shouldShowDeathScreen() {
 		return this.showDeathScreen;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public boolean isDebug() {
 		return this.isDebug;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public boolean isFlat() {
 		return this.isFlat;
 	}

@@ -4,8 +4,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.Random;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 
@@ -25,12 +23,10 @@ public class AmbientParticleSettings {
 		this.probability = f;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public ParticleOptions getOptions() {
 		return this.options;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public boolean canSpawn(Random random) {
 		return random.nextFloat() <= this.probability;
 	}

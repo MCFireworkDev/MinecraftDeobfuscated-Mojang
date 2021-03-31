@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.util.VisibleForDebug;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -95,6 +96,12 @@ public class PoiSection {
 			LOGGER.debug("Removed POI of type {} @ {}", poiRecord::getPoiType, poiRecord::getPos);
 			this.setDirty.run();
 		}
+	}
+
+	@Deprecated
+	@VisibleForDebug
+	public int getFreeTickets(BlockPos blockPos) {
+		return this.getPoiRecord(blockPos).map(PoiRecord::getFreeTickets).orElse(0);
 	}
 
 	public boolean release(BlockPos blockPos) {

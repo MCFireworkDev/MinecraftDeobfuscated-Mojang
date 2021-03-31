@@ -8,8 +8,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.BlockUtil;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -59,6 +57,7 @@ public abstract class AbstractMinecart extends Entity {
 	private static final ImmutableMap<Pose, ImmutableList<Integer>> POSE_DISMOUNT_HEIGHTS = ImmutableMap.of(
 		Pose.STANDING, ImmutableList.of(0, 1, -1), Pose.CROUCHING, ImmutableList.of(0, 1, -1), Pose.SWIMMING, ImmutableList.of(0, 1)
 	);
+	protected static final float WATER_SLOWDOWN_FACTOR = 0.95F;
 	private boolean flipped;
 	private static final Map<RailShape, Pair<Vec3i, Vec3i>> EXITS = Util.make(Maps.newEnumMap(RailShape.class), enumMap -> {
 		Vec3i vec3i = Direction.WEST.getNormal();
@@ -86,11 +85,8 @@ public abstract class AbstractMinecart extends Entity {
 	private double lz;
 	private double lyr;
 	private double lxr;
-	@Environment(EnvType.CLIENT)
 	private double lxd;
-	@Environment(EnvType.CLIENT)
 	private double lyd;
-	@Environment(EnvType.CLIENT)
 	private double lzd;
 
 	protected AbstractMinecart(EntityType<?> entityType, Level level) {
@@ -252,7 +248,6 @@ public abstract class AbstractMinecart extends Entity {
 		}
 	}
 
-	@Environment(EnvType.CLIENT)
 	@Override
 	public void animateHurt() {
 		this.setHurtDir(-this.getHurtDir());
@@ -571,7 +566,6 @@ public abstract class AbstractMinecart extends Entity {
 	}
 
 	@Nullable
-	@Environment(EnvType.CLIENT)
 	public Vec3 getPosOffs(double d, double e, double f, double g) {
 		int i = Mth.floor(d);
 		int j = Mth.floor(e);
@@ -660,7 +654,6 @@ public abstract class AbstractMinecart extends Entity {
 		}
 	}
 
-	@Environment(EnvType.CLIENT)
 	@Override
 	public AABB getBoundingBoxForCulling() {
 		AABB aABB = this.getBoundingBox();
@@ -745,7 +738,6 @@ public abstract class AbstractMinecart extends Entity {
 		}
 	}
 
-	@Environment(EnvType.CLIENT)
 	@Override
 	public void lerpTo(double d, double e, double f, float g, float h, int i, boolean bl) {
 		this.lx = d;
@@ -757,7 +749,6 @@ public abstract class AbstractMinecart extends Entity {
 		this.setDeltaMovement(this.lxd, this.lyd, this.lzd);
 	}
 
-	@Environment(EnvType.CLIENT)
 	@Override
 	public void lerpMotion(double d, double e, double f) {
 		this.lxd = d;
@@ -831,7 +822,6 @@ public abstract class AbstractMinecart extends Entity {
 		return new ClientboundAddEntityPacket(this);
 	}
 
-	@Environment(EnvType.CLIENT)
 	@Override
 	public ItemStack getPickResult() {
 		Item item;

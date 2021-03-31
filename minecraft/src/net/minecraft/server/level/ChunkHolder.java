@@ -13,8 +13,6 @@ import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -50,6 +48,7 @@ public class ChunkHolder {
 	);
 	private static final List<ChunkStatus> CHUNK_STATUSES = ChunkStatus.getStatusList();
 	private static final ChunkHolder.FullChunkStatus[] FULL_CHUNK_STATUSES = ChunkHolder.FullChunkStatus.values();
+	private static final int BLOCKS_BEFORE_RESEND_FUDGE = 64;
 	private final AtomicReferenceArray<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> futures = new AtomicReferenceArray(
 		CHUNK_STATUSES.size()
 	);
@@ -124,7 +123,6 @@ public class ChunkHolder {
 	}
 
 	@Nullable
-	@Environment(EnvType.CLIENT)
 	public ChunkStatus getLastAvailableStatus() {
 		for(int i = CHUNK_STATUSES.size() - 1; i >= 0; --i) {
 			ChunkStatus chunkStatus = (ChunkStatus)CHUNK_STATUSES.get(i);
@@ -282,7 +280,6 @@ public class ChunkHolder {
 			.thenCombine(completableFuture, (chunkAccess, either) -> either.map(chunkAccessx -> chunkAccessx, chunkLoadingFailure -> chunkAccess));
 	}
 
-	@Environment(EnvType.CLIENT)
 	public ChunkHolder.FullChunkStatus getFullStatus() {
 		return getFullChunkStatus(this.ticketLevel);
 	}

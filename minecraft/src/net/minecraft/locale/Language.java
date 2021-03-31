@@ -17,8 +17,6 @@ import java.util.Optional;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
@@ -32,6 +30,7 @@ public abstract class Language {
 	private static final Logger LOGGER = LogManager.getLogger();
 	private static final Gson GSON = new Gson();
 	private static final Pattern UNSUPPORTED_FORMAT_PATTERN = Pattern.compile("%(\\d+\\$)?[\\d.]*[df]");
+	public static final String DEFAULT = "en_us";
 	private static volatile Language instance = loadDefault();
 
 	private static Language loadDefault() {
@@ -77,13 +76,11 @@ public abstract class Language {
 				return map.containsKey(string);
 			}
 
-			@Environment(EnvType.CLIENT)
 			@Override
 			public boolean isDefaultRightToLeft() {
 				return false;
 			}
 
-			@Environment(EnvType.CLIENT)
 			@Override
 			public FormattedCharSequence getVisualOrder(FormattedText formattedText) {
 				return formattedCharSink -> formattedText.visit(
@@ -107,7 +104,6 @@ public abstract class Language {
 		return instance;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public static void inject(Language language) {
 		instance = language;
 	}
@@ -116,13 +112,10 @@ public abstract class Language {
 
 	public abstract boolean has(String string);
 
-	@Environment(EnvType.CLIENT)
 	public abstract boolean isDefaultRightToLeft();
 
-	@Environment(EnvType.CLIENT)
 	public abstract FormattedCharSequence getVisualOrder(FormattedText formattedText);
 
-	@Environment(EnvType.CLIENT)
 	public List<FormattedCharSequence> getVisualOrder(List<FormattedText> list) {
 		return (List<FormattedCharSequence>)list.stream().map(this::getVisualOrder).collect(ImmutableList.toImmutableList());
 	}

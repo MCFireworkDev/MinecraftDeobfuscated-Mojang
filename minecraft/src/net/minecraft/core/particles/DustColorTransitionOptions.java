@@ -7,8 +7,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.Locale;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.phys.Vec3;
@@ -49,12 +47,10 @@ public class DustColorTransitionOptions extends DustParticleOptionsBase {
 		this.toColor = vector3f2;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public Vector3f getFromColor() {
 		return this.color;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public Vector3f getToColor() {
 		return this.toColor;
 	}

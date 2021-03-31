@@ -5,8 +5,6 @@ import com.google.common.collect.Maps;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -122,7 +120,6 @@ public class FireworkStarRecipe extends CustomRecipe {
 		return itemStack;
 	}
 
-	@Environment(EnvType.CLIENT)
 	@Override
 	public boolean canCraftInDimensions(int i, int j) {
 		return i * j >= 2;

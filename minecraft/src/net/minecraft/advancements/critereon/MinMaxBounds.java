@@ -185,8 +185,20 @@ public abstract class MinMaxBounds<T extends Number> {
 			this.maxSq = squareOpt(float2);
 		}
 
+		public static MinMaxBounds.Floats exactly(float f) {
+			return new MinMaxBounds.Floats(f, f);
+		}
+
+		public static MinMaxBounds.Floats between(float f, float g) {
+			return new MinMaxBounds.Floats(f, g);
+		}
+
 		public static MinMaxBounds.Floats atLeast(float f) {
 			return new MinMaxBounds.Floats(f, null);
+		}
+
+		public static MinMaxBounds.Floats atMost(float f) {
+			return new MinMaxBounds.Floats(null, f);
 		}
 
 		public boolean matches(float f) {
@@ -246,8 +258,16 @@ public abstract class MinMaxBounds<T extends Number> {
 			return new MinMaxBounds.Ints(i, i);
 		}
 
+		public static MinMaxBounds.Ints between(int i, int j) {
+			return new MinMaxBounds.Ints(i, j);
+		}
+
 		public static MinMaxBounds.Ints atLeast(int i) {
 			return new MinMaxBounds.Ints(i, null);
+		}
+
+		public static MinMaxBounds.Ints atMost(int i) {
+			return new MinMaxBounds.Ints(null, i);
 		}
 
 		public boolean matches(int i) {
@@ -255,6 +275,14 @@ public abstract class MinMaxBounds<T extends Number> {
 				return false;
 			} else {
 				return this.max == null || this.max >= i;
+			}
+		}
+
+		public boolean matchesSqr(long l) {
+			if (this.minSq != null && this.minSq > l) {
+				return false;
+			} else {
+				return this.maxSq == null || this.maxSq >= l;
 			}
 		}
 

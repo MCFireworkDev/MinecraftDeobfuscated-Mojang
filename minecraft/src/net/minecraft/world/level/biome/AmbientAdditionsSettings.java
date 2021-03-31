@@ -3,8 +3,6 @@ package net.minecraft.world.level.biome;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.sounds.SoundEvent;
 
 public class AmbientAdditionsSettings {
@@ -23,12 +21,10 @@ public class AmbientAdditionsSettings {
 		this.tickChance = d;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public SoundEvent getSoundEvent() {
 		return this.soundEvent;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public double getTickChance() {
 		return this.tickChance;
 	}

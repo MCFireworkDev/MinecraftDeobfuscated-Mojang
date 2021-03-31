@@ -12,8 +12,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.CrashReportDetail;
@@ -33,6 +31,14 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 public abstract class AbstractContainerMenu {
+	public static final int SLOT_CLICKED_OUTSIDE = -999;
+	public static final int QUICKCRAFT_TYPE_CHARITABLE = 0;
+	public static final int QUICKCRAFT_TYPE_GREEDY = 1;
+	public static final int QUICKCRAFT_TYPE_CLONE = 2;
+	public static final int QUICKCRAFT_HEADER_START = 0;
+	public static final int QUICKCRAFT_HEADER_CONTINUE = 1;
+	public static final int QUICKCRAFT_HEADER_END = 2;
+	public static final int CARRIED_SLOT_SIZE = Integer.MAX_VALUE;
 	private final NonNullList<ItemStack> lastSlots = NonNullList.create();
 	public final NonNullList<Slot> slots = NonNullList.create();
 	private final List<DataSlot> dataSlots = Lists.<DataSlot>newArrayList();
@@ -138,12 +144,10 @@ public abstract class AbstractContainerMenu {
 		}
 	}
 
-	@Environment(EnvType.CLIENT)
 	public void removeSlotListener(ContainerListener containerListener) {
 		this.containerListeners.remove(containerListener);
 	}
 
-	@Environment(EnvType.CLIENT)
 	public NonNullList<ItemStack> getItems() {
 		NonNullList<ItemStack> nonNullList = NonNullList.create();
 
@@ -522,7 +526,6 @@ public abstract class AbstractContainerMenu {
 		this.getSlot(i).set(itemStack);
 	}
 
-	@Environment(EnvType.CLIENT)
 	public void setAll(List<ItemStack> list) {
 		for(int i = 0; i < list.size(); ++i) {
 			this.getSlot(i).set((ItemStack)list.get(i));
@@ -610,7 +613,6 @@ public abstract class AbstractContainerMenu {
 		return i & 3;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public static int getQuickcraftMask(int i, int j) {
 		return i & 3 | (j & 3) << 2;
 	}
@@ -710,7 +712,6 @@ public abstract class AbstractContainerMenu {
 			Slot slot = this.slots.get(i);
 			Integer integer = (Integer)table.get(slot.container, slot.getContainerSlot());
 			if (integer != null) {
-				this.lastSlots.set(i, abstractContainerMenu.lastSlots.get(integer));
 				this.remoteSlots.set(i, abstractContainerMenu.remoteSlots.get(integer));
 			}
 		}

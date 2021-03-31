@@ -8,8 +8,6 @@ import java.util.concurrent.Semaphore;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.core.IdMapper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -20,6 +18,9 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.ThreadingDetector;
 
 public class PalettedContainer<T> implements PaletteResize<T> {
+	private static final int SIZE = 4096;
+	public static final int GLOBAL_PALETTE_BITS = 9;
+	public static final int MIN_PALETTE_SIZE = 4;
 	private final Palette<T> globalPalette;
 	private final PaletteResize<T> dummyPaletteResize = (i, objectx) -> 0;
 	private final IdMapper<T> registry;
@@ -111,6 +112,12 @@ public class PalettedContainer<T> implements PaletteResize<T> {
 		return (T)(object2 == null ? this.defaultValue : object2);
 	}
 
+	public void set(int i, int j, int k, T object) {
+		this.acquire();
+		this.set(getIndex(i, j, k), object);
+		this.release();
+	}
+
 	private void set(int i, T object) {
 		int j = this.palette.idFor(object);
 		this.storage.set(i, j);
@@ -125,7 +132,6 @@ public class PalettedContainer<T> implements PaletteResize<T> {
 		return (T)(object == null ? this.defaultValue : object);
 	}
 
-	@Environment(EnvType.CLIENT)
 	public void read(FriendlyByteBuf friendlyByteBuf) {
 		this.acquire();
 		int i = friendlyByteBuf.readByte();

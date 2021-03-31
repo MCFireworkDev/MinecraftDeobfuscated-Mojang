@@ -3,11 +3,11 @@ package net.minecraft.world.entity.npc;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.core.Registry;
 
 public class VillagerData {
+	public static final int MIN_VILLAGER_LEVEL = 1;
+	public static final int MAX_VILLAGER_LEVEL = 5;
 	private static final int[] NEXT_LEVEL_XP_THRESHOLDS = new int[]{0, 10, 70, 150, 250};
 	public static final Codec<VillagerData> CODEC = RecordCodecBuilder.create(
 		instance -> instance.group(
@@ -51,7 +51,6 @@ public class VillagerData {
 		return new VillagerData(this.type, this.profession, i);
 	}
 
-	@Environment(EnvType.CLIENT)
 	public static int getMinXpPerLevel(int i) {
 		return canLevelUp(i) ? NEXT_LEVEL_XP_THRESHOLDS[i - 1] : 0;
 	}

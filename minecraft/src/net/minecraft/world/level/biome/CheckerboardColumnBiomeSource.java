@@ -5,8 +5,6 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.List;
 import java.util.function.Supplier;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 
 public class CheckerboardColumnBiomeSource extends BiomeSource {
 	public static final Codec<CheckerboardColumnBiomeSource> CODEC = RecordCodecBuilder.create(
@@ -32,7 +30,6 @@ public class CheckerboardColumnBiomeSource extends BiomeSource {
 		return CODEC;
 	}
 
-	@Environment(EnvType.CLIENT)
 	@Override
 	public BiomeSource withSeed(long l) {
 		return this;

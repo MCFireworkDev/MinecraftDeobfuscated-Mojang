@@ -6,8 +6,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.Locale;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
@@ -72,7 +70,6 @@ public class VibrationParticleOption implements ParticleOptions {
 		return ParticleTypes.VIBRATION;
 	}
 
-	@Environment(EnvType.CLIENT)
 	public VibrationPath getVibrationPath() {
 		return this.vibrationPath;
 	}
