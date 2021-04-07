@@ -317,11 +317,11 @@ public final class Biome {
 	}
 
 	public void buildSurfaceAt(
-		Random random, ChunkAccess chunkAccess, int i, int j, int k, double d, BlockState blockState, BlockState blockState2, int l, long m
+		Random random, ChunkAccess chunkAccess, int i, int j, int k, double d, BlockState blockState, BlockState blockState2, int l, int m, long n
 	) {
 		ConfiguredSurfaceBuilder<?> configuredSurfaceBuilder = (ConfiguredSurfaceBuilder)this.generationSettings.getSurfaceBuilder().get();
-		configuredSurfaceBuilder.initNoise(m);
-		configuredSurfaceBuilder.apply(random, chunkAccess, this, i, j, k, d, blockState, blockState2, l, m);
+		configuredSurfaceBuilder.initNoise(n);
+		configuredSurfaceBuilder.apply(random, chunkAccess, this, i, j, k, d, blockState, blockState2, l, m, n);
 	}
 
 	public final float getDepth() {

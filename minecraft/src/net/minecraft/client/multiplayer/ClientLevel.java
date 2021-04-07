@@ -242,6 +242,7 @@ public class ClientLevel extends Level {
 		Entity entity = this.getEntities().get(i);
 		if (entity != null) {
 			entity.setRemoved(removalReason);
+			entity.onClientRemoval();
 		}
 	}
 

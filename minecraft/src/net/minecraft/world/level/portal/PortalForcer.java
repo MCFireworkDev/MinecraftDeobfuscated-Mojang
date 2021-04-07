@@ -71,7 +71,7 @@ public class PortalForcer {
 		double e = -1.0;
 		BlockPos blockPos3 = null;
 		WorldBorder worldBorder = this.level.getWorldBorder();
-		int i = this.level.getMinBuildHeight() + this.level.getLogicalHeight() - 1;
+		int i = Math.min(this.level.getMaxBuildHeight(), this.level.getMinBuildHeight() + this.level.getLogicalHeight()) - 1;
 		BlockPos.MutableBlockPos mutableBlockPos = blockPos.mutable();
 
 		for(BlockPos.MutableBlockPos mutableBlockPos2 : BlockPos.spiralAround(blockPos, 16, Direction.EAST, Direction.SOUTH)) {
@@ -120,30 +120,33 @@ public class PortalForcer {
 		}
 
 		if (d == -1.0) {
-			blockPos2 = new BlockPos(
-					blockPos.getX(), Mth.clamp(blockPos.getY(), 70, this.level.getMinBuildHeight() + this.level.getLogicalHeight() - 10), blockPos.getZ()
-				)
-				.immutable();
+			int o = Math.max(this.level.getMinBuildHeight() - -1, 70);
+			int p = i - 9;
+			if (p < o) {
+				return Optional.empty();
+			}
+
+			blockPos2 = new BlockPos(blockPos.getX(), Mth.clamp(blockPos.getY(), o, p), blockPos.getZ()).immutable();
 			Direction direction2 = direction.getClockWise();
 			if (!worldBorder.isWithinBounds(blockPos2)) {
 				return Optional.empty();
 			}
 
-			for(int o = -1; o < 2; ++o) {
-				for(int j = 0; j < 2; ++j) {
-					for(int k = -1; k < 3; ++k) {
-						BlockState blockState = k < 0 ? Blocks.OBSIDIAN.defaultBlockState() : Blocks.AIR.defaultBlockState();
-						mutableBlockPos.setWithOffset(blockPos2, j * direction.getStepX() + o * direction2.getStepX(), k, j * direction.getStepZ() + o * direction2.getStepZ());
+			for(int k = -1; k < 2; ++k) {
+				for(int l = 0; l < 2; ++l) {
+					for(int m = -1; m < 3; ++m) {
+						BlockState blockState = m < 0 ? Blocks.OBSIDIAN.defaultBlockState() : Blocks.AIR.defaultBlockState();
+						mutableBlockPos.setWithOffset(blockPos2, l * direction.getStepX() + k * direction2.getStepX(), m, l * direction.getStepZ() + k * direction2.getStepZ());
 						this.level.setBlockAndUpdate(mutableBlockPos, blockState);
 					}
 				}
 			}
 		}
 
-		for(int p = -1; p < 3; ++p) {
-			for(int o = -1; o < 4; ++o) {
-				if (p == -1 || p == 2 || o == -1 || o == 3) {
-					mutableBlockPos.setWithOffset(blockPos2, p * direction.getStepX(), o, p * direction.getStepZ());
+		for(int o = -1; o < 3; ++o) {
+			for(int p = -1; p < 4; ++p) {
+				if (o == -1 || o == 2 || p == -1 || p == 3) {
+					mutableBlockPos.setWithOffset(blockPos2, o * direction.getStepX(), p, o * direction.getStepZ());
 					this.level.setBlock(mutableBlockPos, Blocks.OBSIDIAN.defaultBlockState(), 3);
 				}
 			}
@@ -151,9 +154,9 @@ public class PortalForcer {
 
 		BlockState blockState2 = Blocks.NETHER_PORTAL.defaultBlockState().setValue(NetherPortalBlock.AXIS, axis);
 
-		for(int o = 0; o < 2; ++o) {
+		for(int p = 0; p < 2; ++p) {
 			for(int j = 0; j < 3; ++j) {
-				mutableBlockPos.setWithOffset(blockPos2, o * direction.getStepX(), j, o * direction.getStepZ());
+				mutableBlockPos.setWithOffset(blockPos2, p * direction.getStepX(), j, p * direction.getStepZ());
 				this.level.setBlock(mutableBlockPos, blockState2, 18);
 			}
 		}
