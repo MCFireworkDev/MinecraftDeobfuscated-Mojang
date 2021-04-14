@@ -1755,4 +1755,9 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 	public ResourceManager getResourceManager() {
 		return this.resources.getResourceManager();
 	}
+
+	@Nullable
+	public Component getResourcePackPrompt() {
+		return null;
+	}
 }

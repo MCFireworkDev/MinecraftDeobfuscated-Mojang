@@ -4,7 +4,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
 import net.minecraft.util.Mth;
@@ -63,24 +62,6 @@ public class ClampedNormalFloat extends FloatProvider {
 	@Override
 	public FloatProviderType<?> getType() {
 		return FloatProviderType.CLAMPED_NORMAL;
-	}
-
-	public boolean equals(Object object) {
-		if (this == object) {
-			return true;
-		} else if (object != null && this.getClass() == object.getClass()) {
-			ClampedNormalFloat clampedNormalFloat = (ClampedNormalFloat)object;
-			return this.mean == clampedNormalFloat.mean
-				&& this.deviation == clampedNormalFloat.deviation
-				&& this.min == clampedNormalFloat.min
-				&& this.max == clampedNormalFloat.max;
-		} else {
-			return false;
-		}
-	}
-
-	public int hashCode() {
-		return Objects.hash(new Object[]{this.mean, this.deviation, this.min, this.max});
 	}
 
 	public String toString() {
