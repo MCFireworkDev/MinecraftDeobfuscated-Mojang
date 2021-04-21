@@ -1682,8 +1682,10 @@ public class ClientPacketListener implements ClientGamePacketListener {
 				ServerData serverData = this.minecraft.getCurrentServer();
 				if (serverData != null && serverData.getResourcePackStatus() == ServerData.ServerPackStatus.ENABLED) {
 					this.send(ServerboundResourcePackPacket.Action.ACCEPTED);
-					this.downloadCallback(this.minecraft.getClientPackSource().downloadAndSelectResourcePack(string, string2));
-				} else if (serverData != null && serverData.getResourcePackStatus() != ServerData.ServerPackStatus.PROMPT) {
+					this.downloadCallback(this.minecraft.getClientPackSource().downloadAndSelectResourcePack(string, string2, true));
+				} else if (serverData != null
+					&& serverData.getResourcePackStatus() != ServerData.ServerPackStatus.PROMPT
+					&& (!bl || serverData.getResourcePackStatus() != ServerData.ServerPackStatus.DISABLED)) {
 					this.send(ServerboundResourcePackPacket.Action.DECLINED);
 					if (bl) {
 						this.connection.disconnect(new TranslatableComponent("multiplayer.requiredTexturePrompt.disconnect"));
@@ -1703,7 +1705,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 													}
 					
 													this.send(ServerboundResourcePackPacket.Action.ACCEPTED);
-													this.downloadCallback(this.minecraft.getClientPackSource().downloadAndSelectResourcePack(string, string2));
+													this.downloadCallback(this.minecraft.getClientPackSource().downloadAndSelectResourcePack(string, string2, true));
 												} else {
 													this.send(ServerboundResourcePackPacket.Action.DECLINED);
 													if (bl) {

@@ -25,7 +25,10 @@ public class RootSystemConfiguration implements FeatureConfiguration {
 					BlockStateProvider.CODEC.fieldOf("hanging_root_state_provider").forGetter(rootSystemConfiguration -> rootSystemConfiguration.hangingRootStateProvider),
 					Codec.intRange(1, 256)
 						.fieldOf("hanging_root_placement_attempts")
-						.forGetter(rootSystemConfiguration -> rootSystemConfiguration.hangingRootPlacementAttempts)
+						.forGetter(rootSystemConfiguration -> rootSystemConfiguration.hangingRootPlacementAttempts),
+					Codec.intRange(1, 64)
+						.fieldOf("allowed_vertical_water_for_tree")
+						.forGetter(rootSystemConfiguration -> rootSystemConfiguration.requiredVerticalSpaceForTree)
 				)
 				.apply(instance, RootSystemConfiguration::new)
 	);
@@ -40,6 +43,7 @@ public class RootSystemConfiguration implements FeatureConfiguration {
 	public final int hangingRootsVerticalSpan;
 	public final BlockStateProvider hangingRootStateProvider;
 	public final int hangingRootPlacementAttempts;
+	public final int allowedVerticalWaterForTree;
 
 	public RootSystemConfiguration(
 		Supplier<ConfiguredFeature<?, ?>> supplier,
@@ -52,7 +56,8 @@ public class RootSystemConfiguration implements FeatureConfiguration {
 		int m,
 		int n,
 		BlockStateProvider blockStateProvider2,
-		int o
+		int o,
+		int p
 	) {
 		this.treeFeature = supplier;
 		this.requiredVerticalSpaceForTree = i;
@@ -65,5 +70,6 @@ public class RootSystemConfiguration implements FeatureConfiguration {
 		this.hangingRootsVerticalSpan = n;
 		this.hangingRootStateProvider = blockStateProvider2;
 		this.hangingRootPlacementAttempts = o;
+		this.allowedVerticalWaterForTree = p;
 	}
 }
