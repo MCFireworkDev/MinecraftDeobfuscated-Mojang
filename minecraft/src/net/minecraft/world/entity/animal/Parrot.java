@@ -375,7 +375,7 @@ public class Parrot extends ShoulderRidingEntity implements FlyingAnimal {
 	}
 
 	@Override
-	protected float getVoicePitch() {
+	public float getVoicePitch() {
 		return getPitch(this.random);
 	}
 
