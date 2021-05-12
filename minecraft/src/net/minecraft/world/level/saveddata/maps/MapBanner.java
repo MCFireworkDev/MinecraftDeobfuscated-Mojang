@@ -33,8 +33,7 @@ public class MapBanner {
 	@Nullable
 	public static MapBanner fromWorld(BlockGetter blockGetter, BlockPos blockPos) {
 		BlockEntity blockEntity = blockGetter.getBlockEntity(blockPos);
-		if (blockEntity instanceof BannerBlockEntity) {
-			BannerBlockEntity bannerBlockEntity = (BannerBlockEntity)blockEntity;
+		if (blockEntity instanceof BannerBlockEntity bannerBlockEntity) {
 			DyeColor dyeColor = bannerBlockEntity.getBaseColor();
 			Component component = bannerBlockEntity.hasCustomName() ? bannerBlockEntity.getCustomName() : null;
 			return new MapBanner(blockPos, dyeColor, component);

@@ -632,8 +632,7 @@ public class ServerPlayer extends Player {
 						return false;
 					}
 
-					if (entity instanceof AbstractArrow) {
-						AbstractArrow abstractArrow = (AbstractArrow)entity;
+					if (entity instanceof AbstractArrow abstractArrow) {
 						Entity entity2 = abstractArrow.getOwner();
 						if (entity2 instanceof Player && !this.canHarmPlayer((Player)entity2)) {
 							return false;
@@ -1137,7 +1136,7 @@ public class ServerPlayer extends Player {
 
 		this.enchantmentSeed = serverPlayer.enchantmentSeed;
 		this.enderChestInventory = serverPlayer.enderChestInventory;
-		this.getEntityData().set(DATA_PLAYER_MODE_CUSTOMISATION, serverPlayer.getEntityData().get(DATA_PLAYER_MODE_CUSTOMISATION));
+		this.getEntityData().set(DATA_PLAYER_MODE_CUSTOMISATION, (Byte)serverPlayer.getEntityData().get(DATA_PLAYER_MODE_CUSTOMISATION));
 		this.lastSentExp = -1;
 		this.lastSentHealth = -1.0F;
 		this.lastSentFood = -1;

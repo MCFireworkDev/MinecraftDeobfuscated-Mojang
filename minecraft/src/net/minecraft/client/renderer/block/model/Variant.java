@@ -49,7 +49,7 @@ public class Variant implements ModelState {
 	}
 
 	public String toString() {
-		return "Variant{modelLocation=" + this.modelLocation + ", rotation=" + this.rotation + ", uvLock=" + this.uvLock + ", weight=" + this.weight + '}';
+		return "Variant{modelLocation=" + this.modelLocation + ", rotation=" + this.rotation + ", uvLock=" + this.uvLock + ", weight=" + this.weight + "}";
 	}
 
 	public boolean equals(Object object) {

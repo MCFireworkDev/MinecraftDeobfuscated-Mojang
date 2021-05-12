@@ -47,8 +47,7 @@ public class Beardifier {
 			structureFeatureManager.startsForFeature(SectionPos.bottomOf(chunkAccess), structureFeature).forEach(structureStart -> {
 				for(StructurePiece structurePiece : structureStart.getPieces()) {
 					if (structurePiece.isCloseToChunk(chunkPos, 12)) {
-						if (structurePiece instanceof PoolElementStructurePiece) {
-							PoolElementStructurePiece poolElementStructurePiece = (PoolElementStructurePiece)structurePiece;
+						if (structurePiece instanceof PoolElementStructurePiece poolElementStructurePiece) {
 							StructureTemplatePool.Projection projection = poolElementStructurePiece.getElement().getProjection();
 							if (projection == StructureTemplatePool.Projection.RIGID) {
 								this.rigids.add(poolElementStructurePiece);

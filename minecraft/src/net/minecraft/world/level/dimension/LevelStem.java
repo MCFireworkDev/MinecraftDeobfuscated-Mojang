@@ -65,7 +65,7 @@ public final class LevelStem {
 		for(Entry<ResourceKey<LevelStem>, LevelStem> entry : mappedRegistry.entrySet()) {
 			ResourceKey<LevelStem> resourceKey2 = (ResourceKey)entry.getKey();
 			if (!BUILTIN_ORDER.contains(resourceKey2)) {
-				mappedRegistry2.register(resourceKey2, entry.getValue(), mappedRegistry.lifecycle((LevelStem)entry.getValue()));
+				mappedRegistry2.register(resourceKey2, (LevelStem)entry.getValue(), mappedRegistry.lifecycle((LevelStem)entry.getValue()));
 			}
 		}
 
@@ -89,10 +89,8 @@ public final class LevelStem {
 				return false;
 			} else if (!((LevelStem)entry3.getValue()).type().equalTo(DimensionType.DEFAULT_END)) {
 				return false;
-			} else if (((LevelStem)entry2.getValue()).generator() instanceof NoiseBasedChunkGenerator
-				&& ((LevelStem)entry3.getValue()).generator() instanceof NoiseBasedChunkGenerator) {
-				NoiseBasedChunkGenerator noiseBasedChunkGenerator = (NoiseBasedChunkGenerator)((LevelStem)entry2.getValue()).generator();
-				NoiseBasedChunkGenerator noiseBasedChunkGenerator2 = (NoiseBasedChunkGenerator)((LevelStem)entry3.getValue()).generator();
+			} else if (((LevelStem)entry2.getValue()).generator() instanceof NoiseBasedChunkGenerator noiseBasedChunkGenerator
+				&& ((LevelStem)entry3.getValue()).generator() instanceof NoiseBasedChunkGenerator noiseBasedChunkGenerator2) {
 				if (!noiseBasedChunkGenerator.stable(l, NoiseGeneratorSettings.NETHER)) {
 					return false;
 				} else if (!noiseBasedChunkGenerator2.stable(l, NoiseGeneratorSettings.END)) {

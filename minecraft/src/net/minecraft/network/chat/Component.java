@@ -183,11 +183,8 @@ public interface Component extends Message, FormattedText {
 
 						for(int i = 0; i < objects.length; ++i) {
 							objects[i] = this.deserialize(jsonArray.get(i), type, jsonDeserializationContext);
-							if (objects[i] instanceof TextComponent) {
-								TextComponent textComponent = (TextComponent)objects[i];
-								if (textComponent.getStyle().isEmpty() && textComponent.getSiblings().isEmpty()) {
-									objects[i] = textComponent.getText();
-								}
+							if (objects[i] instanceof TextComponent textComponent && textComponent.getStyle().isEmpty() && textComponent.getSiblings().isEmpty()) {
+								objects[i] = textComponent.getText();
 							}
 						}
 
@@ -277,8 +274,7 @@ public interface Component extends Message, FormattedText {
 
 			if (component instanceof TextComponent) {
 				jsonObject.addProperty("text", ((TextComponent)component).getText());
-			} else if (component instanceof TranslatableComponent) {
-				TranslatableComponent translatableComponent = (TranslatableComponent)component;
+			} else if (component instanceof TranslatableComponent translatableComponent) {
 				jsonObject.addProperty("translate", translatableComponent.getKey());
 				if (translatableComponent.getArgs() != null && translatableComponent.getArgs().length > 0) {
 					JsonArray jsonArray2 = new JsonArray();
@@ -293,18 +289,15 @@ public interface Component extends Message, FormattedText {
 
 					jsonObject.add("with", jsonArray2);
 				}
-			} else if (component instanceof ScoreComponent) {
-				ScoreComponent scoreComponent = (ScoreComponent)component;
+			} else if (component instanceof ScoreComponent scoreComponent) {
 				JsonObject jsonObject2 = new JsonObject();
 				jsonObject2.addProperty("name", scoreComponent.getName());
 				jsonObject2.addProperty("objective", scoreComponent.getObjective());
 				jsonObject.add("score", jsonObject2);
-			} else if (component instanceof SelectorComponent) {
-				SelectorComponent selectorComponent = (SelectorComponent)component;
+			} else if (component instanceof SelectorComponent selectorComponent) {
 				jsonObject.addProperty("selector", selectorComponent.getPattern());
 				this.serializeSeparator(jsonSerializationContext, jsonObject, selectorComponent.getSeparator());
-			} else if (component instanceof KeybindComponent) {
-				KeybindComponent keybindComponent = (KeybindComponent)component;
+			} else if (component instanceof KeybindComponent keybindComponent) {
 				jsonObject.addProperty("keybind", keybindComponent.getName());
 			} else {
 				if (!(component instanceof NbtComponent)) {
@@ -315,11 +308,9 @@ public interface Component extends Message, FormattedText {
 				jsonObject.addProperty("nbt", nbtComponent.getNbtPath());
 				jsonObject.addProperty("interpret", nbtComponent.isInterpreting());
 				this.serializeSeparator(jsonSerializationContext, jsonObject, nbtComponent.separator);
-				if (component instanceof NbtComponent.BlockNbtComponent) {
-					NbtComponent.BlockNbtComponent blockNbtComponent = (NbtComponent.BlockNbtComponent)component;
+				if (component instanceof NbtComponent.BlockNbtComponent blockNbtComponent) {
 					jsonObject.addProperty("block", blockNbtComponent.getPos());
-				} else if (component instanceof NbtComponent.EntityNbtComponent) {
-					NbtComponent.EntityNbtComponent entityNbtComponent = (NbtComponent.EntityNbtComponent)component;
+				} else if (component instanceof NbtComponent.EntityNbtComponent entityNbtComponent) {
 					jsonObject.addProperty("entity", entityNbtComponent.getSelector());
 				} else {
 					if (!(component instanceof NbtComponent.StorageNbtComponent)) {

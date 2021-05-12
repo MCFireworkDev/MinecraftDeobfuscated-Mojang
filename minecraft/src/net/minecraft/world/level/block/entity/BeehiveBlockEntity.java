@@ -109,14 +109,11 @@ public class BeehiveBlockEntity extends BlockEntity {
 		List<Entity> list = this.releaseAllOccupants(blockState, beeReleaseStatus);
 		if (player != null) {
 			for(Entity entity : list) {
-				if (entity instanceof Bee) {
-					Bee bee = (Bee)entity;
-					if (player.position().distanceToSqr(entity.position()) <= 16.0) {
-						if (!this.isSedated()) {
-							bee.setTarget(player);
-						} else {
-							bee.setStayOutOfHiveCountdown(400);
-						}
+				if (entity instanceof Bee bee && player.position().distanceToSqr(entity.position()) <= 16.0) {
+					if (!this.isSedated()) {
+						bee.setTarget(player);
+					} else {
+						bee.setStayOutOfHiveCountdown(400);
 					}
 				}
 			}
@@ -155,11 +152,8 @@ public class BeehiveBlockEntity extends BlockEntity {
 			entity.save(compoundTag);
 			this.storeBee(compoundTag, i, bl);
 			if (this.level != null) {
-				if (entity instanceof Bee) {
-					Bee bee = (Bee)entity;
-					if (bee.hasSavedFlowerPos() && (!this.hasSavedFlowerPos() || this.level.random.nextBoolean())) {
-						this.savedFlowerPos = bee.getSavedFlowerPos();
-					}
+				if (entity instanceof Bee bee && bee.hasSavedFlowerPos() && (!this.hasSavedFlowerPos() || this.level.random.nextBoolean())) {
+					this.savedFlowerPos = bee.getSavedFlowerPos();
 				}
 
 				BlockPos blockPos = this.getBlockPos();
@@ -202,8 +196,7 @@ public class BeehiveBlockEntity extends BlockEntity {
 					if (!entity.getType().is(EntityTypeTags.BEEHIVE_INHABITORS)) {
 						return false;
 					} else {
-						if (entity instanceof Bee) {
-							Bee bee = (Bee)entity;
+						if (entity instanceof Bee bee) {
 							if (blockPos2 != null && !bee.hasSavedFlowerPos() && level.random.nextFloat() < 0.9F) {
 								bee.setSavedFlowerPos(blockPos2);
 							}
@@ -246,7 +239,7 @@ public class BeehiveBlockEntity extends BlockEntity {
 		}
 	}
 
-	private static void removeIgnoredBeeTags(CompoundTag compoundTag) {
+	static void removeIgnoredBeeTags(CompoundTag compoundTag) {
 		for(String string : IGNORED_BEE_TAGS) {
 			compoundTag.remove(string);
 		}
@@ -269,7 +262,7 @@ public class BeehiveBlockEntity extends BlockEntity {
 
 	private static void tickOccupants(Level level, BlockPos blockPos, BlockState blockState, List<BeehiveBlockEntity.BeeData> list, @Nullable BlockPos blockPos2) {
 		BeehiveBlockEntity.BeeData beeData;
-		for(Iterator<BeehiveBlockEntity.BeeData> iterator = list.iterator(); iterator.hasNext(); beeData.ticksInHive++) {
+		for(Iterator<BeehiveBlockEntity.BeeData> iterator = list.iterator(); iterator.hasNext(); ++beeData.ticksInHive) {
 			beeData = (BeehiveBlockEntity.BeeData)iterator.next();
 			if (beeData.ticksInHive > beeData.minOccupationTicks) {
 				BeehiveBlockEntity.BeeReleaseStatus beeReleaseStatus = beeData.entityData.getBoolean("HasNectar")
@@ -341,11 +334,11 @@ public class BeehiveBlockEntity extends BlockEntity {
 	}
 
 	static class BeeData {
-		private final CompoundTag entityData;
-		private int ticksInHive;
-		private final int minOccupationTicks;
+		final CompoundTag entityData;
+		int ticksInHive;
+		final int minOccupationTicks;
 
-		private BeeData(CompoundTag compoundTag, int i, int j) {
+		BeeData(CompoundTag compoundTag, int i, int j) {
 			BeehiveBlockEntity.removeIgnoredBeeTags(compoundTag);
 			this.entityData = compoundTag;
 			this.ticksInHive = i;

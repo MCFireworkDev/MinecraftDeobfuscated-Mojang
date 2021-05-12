@@ -125,8 +125,7 @@ public class NbtOps implements DynamicOps<Tag> {
 	}
 
 	private static <T extends Tag> void fillOne(CollectionTag<T> collectionTag, Tag tag, Tag tag2) {
-		if (tag instanceof CollectionTag) {
-			CollectionTag<?> collectionTag2 = (CollectionTag)tag;
+		if (tag instanceof CollectionTag collectionTag2) {
 			collectionTag2.forEach(tagx -> collectionTag.add(tagx));
 		}
 
@@ -134,8 +133,7 @@ public class NbtOps implements DynamicOps<Tag> {
 	}
 
 	private static <T extends Tag> void fillMany(CollectionTag<T> collectionTag, Tag tag, List<Tag> list) {
-		if (tag instanceof CollectionTag) {
-			CollectionTag<?> collectionTag2 = (CollectionTag)tag;
+		if (tag instanceof CollectionTag collectionTag2) {
 			collectionTag2.forEach(tagx -> collectionTag.add(tagx));
 		}
 
@@ -171,8 +169,7 @@ public class NbtOps implements DynamicOps<Tag> {
 			return DataResult.error("key is not a string: " + tag2, tag);
 		} else {
 			CompoundTag compoundTag = new CompoundTag();
-			if (tag instanceof CompoundTag) {
-				CompoundTag compoundTag2 = (CompoundTag)tag;
+			if (tag instanceof CompoundTag compoundTag2) {
 				compoundTag2.getAllKeys().forEach(string -> compoundTag.put(string, compoundTag2.get(string)));
 			}
 
@@ -186,8 +183,7 @@ public class NbtOps implements DynamicOps<Tag> {
 			return DataResult.error("mergeToMap called with not a map: " + tag, tag);
 		} else {
 			CompoundTag compoundTag = new CompoundTag();
-			if (tag instanceof CompoundTag) {
-				CompoundTag compoundTag2 = (CompoundTag)tag;
+			if (tag instanceof CompoundTag compoundTag2) {
 				compoundTag2.getAllKeys().forEach(string -> compoundTag.put(string, compoundTag2.get(string)));
 			}
 
@@ -263,12 +259,7 @@ public class NbtOps implements DynamicOps<Tag> {
 	}
 
 	public DataResult<Consumer<Consumer<Tag>>> getList(Tag tag) {
-		if (tag instanceof CollectionTag) {
-			CollectionTag<?> collectionTag = (CollectionTag)tag;
-			return DataResult.success(collectionTag::forEach);
-		} else {
-			return DataResult.error("Not a list: " + tag);
-		}
+		return tag instanceof CollectionTag collectionTag ? DataResult.success(collectionTag::forEach) : DataResult.error("Not a list: " + tag);
 	}
 
 	public DataResult<ByteBuffer> getByteBuffer(Tag tag) {
@@ -326,8 +317,7 @@ public class NbtOps implements DynamicOps<Tag> {
 	}
 
 	public Tag remove(Tag tag, String string) {
-		if (tag instanceof CompoundTag) {
-			CompoundTag compoundTag = (CompoundTag)tag;
+		if (tag instanceof CompoundTag compoundTag) {
 			CompoundTag compoundTag2 = new CompoundTag();
 			compoundTag.getAllKeys()
 				.stream()

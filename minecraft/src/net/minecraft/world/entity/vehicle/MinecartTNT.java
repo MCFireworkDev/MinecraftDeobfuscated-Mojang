@@ -61,11 +61,8 @@ public class MinecartTNT extends AbstractMinecart {
 	@Override
 	public boolean hurt(DamageSource damageSource, float f) {
 		Entity entity = damageSource.getDirectEntity();
-		if (entity instanceof AbstractArrow) {
-			AbstractArrow abstractArrow = (AbstractArrow)entity;
-			if (abstractArrow.isOnFire()) {
-				this.explode(abstractArrow.getDeltaMovement().lengthSqr());
-			}
+		if (entity instanceof AbstractArrow abstractArrow && abstractArrow.isOnFire()) {
+			this.explode(abstractArrow.getDeltaMovement().lengthSqr());
 		}
 
 		return super.hurt(damageSource, f);

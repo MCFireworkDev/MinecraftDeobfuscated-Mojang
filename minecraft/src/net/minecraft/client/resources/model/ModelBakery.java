@@ -219,7 +219,7 @@ public class ModelBakery {
 			TextureAtlas.Preparations preparations = textureAtlas.prepareToStitch(
 				this.resourceManager, ((List)entry.getValue()).stream().map(Material::texture), profilerFiller, i
 			);
-			this.atlasPreparations.put(entry.getKey(), Pair.of(textureAtlas, preparations));
+			this.atlasPreparations.put((ResourceLocation)entry.getKey(), Pair.of(textureAtlas, preparations));
 		}
 
 		profilerFiller.pop();
@@ -342,13 +342,13 @@ public class ModelBakery {
 				this.unbakedCache.put(resourceLocation2, blockModel);
 			} else {
 				ResourceLocation resourceLocation2 = new ResourceLocation(resourceLocation.getNamespace(), resourceLocation.getPath());
-				StateDefinition<Block, BlockState> stateDefinition = (StateDefinition)Optional.ofNullable(STATIC_DEFINITIONS.get(resourceLocation2))
+				StateDefinition<Block, BlockState> stateDefinition = (StateDefinition)Optional.ofNullable((StateDefinition)STATIC_DEFINITIONS.get(resourceLocation2))
 					.orElseGet(() -> Registry.BLOCK.get(resourceLocation2).getStateDefinition());
 				this.context.setDefinition(stateDefinition);
 				List<Property<?>> list = ImmutableList.copyOf(this.blockColors.getColoringProperties(stateDefinition.getOwner()));
 				ImmutableList<BlockState> immutableList = stateDefinition.getPossibleStates();
 				Map<ModelResourceLocation, BlockState> map = Maps.<ModelResourceLocation, BlockState>newHashMap();
-				immutableList.forEach(blockState -> BlockModelShaper.stateToModelLocation(resourceLocation2, blockState));
+				immutableList.forEach(blockState -> map.put(BlockModelShaper.stateToModelLocation(resourceLocation2, blockState), blockState));
 				Map<BlockState, Pair<UnbakedModel, Supplier<ModelBakery.ModelGroupKey>>> map2 = Maps.<BlockState, Pair<UnbakedModel, Supplier<ModelBakery.ModelGroupKey>>>newHashMap(
 					
 				);
@@ -367,33 +367,31 @@ public class ModelBakery {
 								resource -> {
 									try {
 										InputStream inputStream = resource.getInputStream();
-										Throwable var3xx = null;
 		
-										Pair var4x;
+										Pair var3x;
 										try {
-											var4x = Pair.of(resource.getSourceName(), BlockModelDefinition.fromStream(this.context, new InputStreamReader(inputStream, StandardCharsets.UTF_8)));
-										} catch (Throwable var14) {
-											var3xx = var14;
-											throw var14;
-										} finally {
+											var3x = Pair.of(resource.getSourceName(), BlockModelDefinition.fromStream(this.context, new InputStreamReader(inputStream, StandardCharsets.UTF_8)));
+										} catch (Throwable var6xx) {
 											if (inputStream != null) {
-												if (var3xx != null) {
-													try {
-														inputStream.close();
-													} catch (Throwable var13xx) {
-														var3xx.addSuppressed(var13xx);
-													}
-												} else {
+												try {
 													inputStream.close();
+												} catch (Throwable var5xx) {
+													var6xx.addSuppressed(var5xx);
 												}
 											}
+		
+											throw var6xx;
 										}
 		
-										return var4x;
-									} catch (Exception var16xx) {
+										if (inputStream != null) {
+											inputStream.close();
+										}
+		
+										return var3x;
+									} catch (Exception var7xx) {
 										throw new ModelBakery.BlockStateDefinitionException(
 											String.format(
-												"Exception loading blockstate definition: '%s' in resourcepack: '%s': %s", resource.getLocation(), resource.getSourceName(), var16xx.getMessage()
+												"Exception loading blockstate definition: '%s' in resourcepack: '%s': %s", resource.getLocation(), resource.getSourceName(), var7xx.getMessage()
 											)
 										);
 									}
@@ -413,8 +411,9 @@ public class ModelBakery {
 						MultiPart multiPart;
 						if (blockModelDefinition.isMultiPart()) {
 							multiPart = blockModelDefinition.getMultiPart();
-							immutableList.forEach(blockState -> {
-							});
+							immutableList.forEach(
+								blockState -> map4.put(blockState, Pair.of(multiPart, (Supplier)() -> ModelBakery.ModelGroupKey.create(blockState, multiPart, list)))
+							);
 						} else {
 							multiPart = null;
 						}
@@ -525,12 +524,9 @@ public class ModelBakery {
 			throw new IllegalStateException("bake called too early");
 		} else {
 			UnbakedModel unbakedModel = this.getModel(resourceLocation);
-			if (unbakedModel instanceof BlockModel) {
-				BlockModel blockModel = (BlockModel)unbakedModel;
-				if (blockModel.getRootModel() == GENERATION_MARKER) {
-					return ITEM_MODEL_GENERATOR.generateBlockModel(this.atlasSet::getSprite, blockModel)
-						.bake(this, blockModel, this.atlasSet::getSprite, modelState, resourceLocation, false);
-				}
+			if (unbakedModel instanceof BlockModel blockModel && blockModel.getRootModel() == GENERATION_MARKER) {
+				return ITEM_MODEL_GENERATOR.generateBlockModel(this.atlasSet::getSprite, blockModel)
+					.bake(this, blockModel, this.atlasSet::getSprite, modelState, resourceLocation, false);
 			}
 
 			BakedModel bakedModel = unbakedModel.bake(this, this.atlasSet::getSprite, modelState, resourceLocation);

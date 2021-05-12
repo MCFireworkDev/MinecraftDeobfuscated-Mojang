@@ -47,8 +47,7 @@ public class MobBucketItem extends BucketItem {
 
 	private void spawn(ServerLevel serverLevel, ItemStack itemStack, BlockPos blockPos) {
 		Entity entity = this.type.spawn(serverLevel, itemStack, null, blockPos, MobSpawnType.BUCKET, true, false);
-		if (entity instanceof Bucketable) {
-			Bucketable bucketable = (Bucketable)entity;
+		if (entity instanceof Bucketable bucketable) {
 			bucketable.loadFromBucketTag(itemStack.getOrCreateTag());
 			bucketable.setFromBucket(true);
 		}

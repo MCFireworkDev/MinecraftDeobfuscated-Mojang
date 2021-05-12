@@ -490,8 +490,7 @@ public class Wolf extends TamableAnimal implements NeutralMob {
 	public boolean wantsToAttack(LivingEntity livingEntity, LivingEntity livingEntity2) {
 		if (livingEntity instanceof Creeper || livingEntity instanceof Ghast) {
 			return false;
-		} else if (livingEntity instanceof Wolf) {
-			Wolf wolf = (Wolf)livingEntity;
+		} else if (livingEntity instanceof Wolf wolf) {
 			return !wolf.isTame() || wolf.getOwner() != livingEntity2;
 		} else if (livingEntity instanceof Player && livingEntity2 instanceof Player && !((Player)livingEntity2).canHarmPlayer((Player)livingEntity)) {
 			return false;

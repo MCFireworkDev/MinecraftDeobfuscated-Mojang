@@ -230,7 +230,7 @@ public class DataCommands {
 	
 					biConsumer.accept(
 						argumentBuilder2,
-						(DataCommands.DataManipulatorDecorator)dataManipulator -> (LiteralArgumentBuilder)Commands.literal("value")
+						(DataCommands.DataManipulatorDecorator)dataManipulator -> Commands.literal("value")
 								.then(Commands.argument("value", NbtTagArgument.nbtTag()).executes(commandContext -> {
 									List<Tag> list = Collections.singletonList(NbtTagArgument.getNbtTag(commandContext, "value"));
 									return manipulateData(commandContext, dataProvider, dataManipulator, list);

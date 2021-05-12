@@ -61,16 +61,14 @@ public class PlayerSocialManager {
 		}
 
 		Screen screen = this.minecraft.screen;
-		if (screen instanceof SocialInteractionsScreen) {
-			SocialInteractionsScreen socialInteractionsScreen = (SocialInteractionsScreen)screen;
+		if (screen instanceof SocialInteractionsScreen socialInteractionsScreen) {
 			socialInteractionsScreen.onAddPlayer(playerInfo);
 		}
 	}
 
 	public void removePlayer(UUID uUID) {
 		Screen screen = this.minecraft.screen;
-		if (screen instanceof SocialInteractionsScreen) {
-			SocialInteractionsScreen socialInteractionsScreen = (SocialInteractionsScreen)screen;
+		if (screen instanceof SocialInteractionsScreen socialInteractionsScreen) {
 			socialInteractionsScreen.onRemovePlayer(uUID);
 		}
 	}

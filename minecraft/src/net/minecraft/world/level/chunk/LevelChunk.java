@@ -59,7 +59,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class LevelChunk implements ChunkAccess {
-	private static final Logger LOGGER = LogManager.getLogger();
+	static final Logger LOGGER = LogManager.getLogger();
 	private static final TickingBlockEntity NULL_TICKER = new TickingBlockEntity() {
 		@Override
 		public void tick() {
@@ -89,7 +89,7 @@ public class LevelChunk implements ChunkAccess {
 		
 	);
 	private boolean loaded;
-	private final Level level;
+	final Level level;
 	private final Map<Heightmap.Types, Heightmap> heightmaps = Maps.newEnumMap(Heightmap.Types.class);
 	private final UpgradeData upgradeData;
 	private final Map<BlockPos, BlockEntity> blockEntities = Maps.<BlockPos, BlockEntity>newHashMap();
@@ -421,7 +421,7 @@ public class LevelChunk implements ChunkAccess {
 		return this.loaded || this.level.isClientSide();
 	}
 
-	private boolean isTicking(BlockPos blockPos) {
+	boolean isTicking(BlockPos blockPos) {
 		return (this.level.isClientSide() || this.getFullStatus().isOrAfter(ChunkHolder.FullChunkStatus.TICKING))
 			&& this.level.getWorldBorder().isWithinBounds(blockPos);
 	}
@@ -870,7 +870,7 @@ public class LevelChunk implements ChunkAccess {
 	}
 
 	private <T extends BlockEntity> TickingBlockEntity createTicker(T blockEntity, BlockEntityTicker<T> blockEntityTicker) {
-		return new LevelChunk.BoundTickingBlockEntity(blockEntity, blockEntityTicker);
+		return new LevelChunk.BoundTickingBlockEntity<>(blockEntity, blockEntityTicker);
 	}
 
 	class BoundTickingBlockEntity<T extends BlockEntity> implements TickingBlockEntity {
@@ -878,7 +878,7 @@ public class LevelChunk implements ChunkAccess {
 		private final BlockEntityTicker<T> ticker;
 		private boolean loggedInvalidBlockState;
 
-		private BoundTickingBlockEntity(T blockEntity, BlockEntityTicker<T> blockEntityTicker) {
+		BoundTickingBlockEntity(T blockEntity, BlockEntityTicker<T> blockEntityTicker) {
 			this.blockEntity = blockEntity;
 			this.ticker = blockEntityTicker;
 		}
@@ -940,11 +940,11 @@ public class LevelChunk implements ChunkAccess {
 	class RebindableTickingBlockEntityWrapper implements TickingBlockEntity {
 		private TickingBlockEntity ticker;
 
-		private RebindableTickingBlockEntityWrapper(TickingBlockEntity tickingBlockEntity) {
+		RebindableTickingBlockEntityWrapper(TickingBlockEntity tickingBlockEntity) {
 			this.ticker = tickingBlockEntity;
 		}
 
-		private void rebind(TickingBlockEntity tickingBlockEntity) {
+		void rebind(TickingBlockEntity tickingBlockEntity) {
 			this.ticker = tickingBlockEntity;
 		}
 

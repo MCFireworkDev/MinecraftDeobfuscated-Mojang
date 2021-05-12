@@ -202,8 +202,7 @@ public class Zoglin extends Monster implements Enemy, HoglinBase {
 		boolean bl = super.hurt(damageSource, f);
 		if (this.level.isClientSide) {
 			return false;
-		} else if (bl && damageSource.getEntity() instanceof LivingEntity) {
-			LivingEntity livingEntity = (LivingEntity)damageSource.getEntity();
+		} else if (bl && damageSource.getEntity() instanceof LivingEntity livingEntity) {
 			if (EntitySelector.ATTACK_ALLOWED.test(livingEntity) && !BehaviorUtils.isOtherTargetMuchFurtherAwayThanCurrentAttackTarget(this, livingEntity, 4.0)) {
 				this.setAttackTarget(livingEntity);
 			}

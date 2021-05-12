@@ -73,8 +73,7 @@ public class EnchantCommand {
 			int j = 0;
 
 			for(Entity entity : collection) {
-				if (entity instanceof LivingEntity) {
-					LivingEntity livingEntity = (LivingEntity)entity;
+				if (entity instanceof LivingEntity livingEntity) {
 					ItemStack itemStack = livingEntity.getMainHandItem();
 					if (!itemStack.isEmpty()) {
 						if (enchantment.canEnchant(itemStack) && EnchantmentHelper.isEnchantmentCompatible(EnchantmentHelper.getEnchantments(itemStack).keySet(), enchantment)) {

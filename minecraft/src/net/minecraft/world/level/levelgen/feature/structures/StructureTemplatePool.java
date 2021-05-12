@@ -79,7 +79,7 @@ public class StructureTemplatePool {
 
 		for(Pair<Function<StructureTemplatePool.Projection, ? extends StructurePoolElement>, Integer> pair : list) {
 			StructurePoolElement structurePoolElement = (StructurePoolElement)((Function)pair.getFirst()).apply(projection);
-			this.rawTemplates.add(Pair.of(structurePoolElement, pair.getSecond()));
+			this.rawTemplates.add(Pair.of(structurePoolElement, (Integer)pair.getSecond()));
 
 			for(int i = 0; i < pair.getSecond(); ++i) {
 				this.templates.add(structurePoolElement);
@@ -111,7 +111,7 @@ public class StructureTemplatePool {
 	}
 
 	public List<StructurePoolElement> getShuffledTemplates(Random random) {
-		return ImmutableList.copyOf(ObjectArrays.shuffle(this.templates.toArray(new StructurePoolElement[0]), random));
+		return ImmutableList.copyOf(ObjectArrays.shuffle((StructurePoolElement[])this.templates.toArray(new StructurePoolElement[0]), random));
 	}
 
 	public ResourceLocation getName() {

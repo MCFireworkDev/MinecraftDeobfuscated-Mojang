@@ -447,8 +447,7 @@ public class Zombie extends Monster {
 			spawnGroupData = new Zombie.ZombieGroupData(getSpawnAsBabyOdds(serverLevelAccessor.getRandom()), true);
 		}
 
-		if (spawnGroupData instanceof Zombie.ZombieGroupData) {
-			Zombie.ZombieGroupData zombieGroupData = (Zombie.ZombieGroupData)spawnGroupData;
+		if (spawnGroupData instanceof Zombie.ZombieGroupData zombieGroupData) {
 			if (zombieGroupData.isBaby) {
 				this.setBaby(true);
 				if (zombieGroupData.canSpawnJockey) {
@@ -527,14 +526,11 @@ public class Zombie extends Monster {
 	protected void dropCustomDeathLoot(DamageSource damageSource, int i, boolean bl) {
 		super.dropCustomDeathLoot(damageSource, i, bl);
 		Entity entity = damageSource.getEntity();
-		if (entity instanceof Creeper) {
-			Creeper creeper = (Creeper)entity;
-			if (creeper.canDropMobsSkull()) {
-				ItemStack itemStack = this.getSkull();
-				if (!itemStack.isEmpty()) {
-					creeper.increaseDroppedSkulls();
-					this.spawnAtLocation(itemStack);
-				}
+		if (entity instanceof Creeper creeper && creeper.canDropMobsSkull()) {
+			ItemStack itemStack = this.getSkull();
+			if (!itemStack.isEmpty()) {
+				creeper.increaseDroppedSkulls();
+				this.spawnAtLocation(itemStack);
 			}
 		}
 	}

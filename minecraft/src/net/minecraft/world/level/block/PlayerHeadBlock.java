@@ -23,8 +23,7 @@ public class PlayerHeadBlock extends SkullBlock {
 	public void setPlacedBy(Level level, BlockPos blockPos, BlockState blockState, @Nullable LivingEntity livingEntity, ItemStack itemStack) {
 		super.setPlacedBy(level, blockPos, blockState, livingEntity, itemStack);
 		BlockEntity blockEntity = level.getBlockEntity(blockPos);
-		if (blockEntity instanceof SkullBlockEntity) {
-			SkullBlockEntity skullBlockEntity = (SkullBlockEntity)blockEntity;
+		if (blockEntity instanceof SkullBlockEntity skullBlockEntity) {
 			GameProfile gameProfile = null;
 			if (itemStack.hasTag()) {
 				CompoundTag compoundTag = itemStack.getTag();

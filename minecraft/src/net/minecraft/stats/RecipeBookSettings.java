@@ -123,8 +123,8 @@ public final class RecipeBookSettings {
 	}
 
 	static final class TypeSettings {
-		private boolean open;
-		private boolean filtering;
+		boolean open;
+		boolean filtering;
 
 		public TypeSettings(boolean bl, boolean bl2) {
 			this.open = bl;
@@ -152,7 +152,7 @@ public final class RecipeBookSettings {
 		}
 
 		public String toString() {
-			return "[open=" + this.open + ", filtering=" + this.filtering + ']';
+			return "[open=" + this.open + ", filtering=" + this.filtering + "]";
 		}
 	}
 }

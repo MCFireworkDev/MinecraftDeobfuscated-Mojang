@@ -159,13 +159,13 @@ public class OptionsKeyLwjgl3Fix extends DataFix {
 												string = "key.mouse." + (j + 1);
 											}
 			
-											return Pair.of(entry.getKey(), ((Dynamic)entry.getValue()).createString(string));
+											return Pair.of((Dynamic)entry.getKey(), ((Dynamic)entry.getValue()).createString(string));
 										} else {
 											String string2 = (String)MAP.getOrDefault(i, "key.unknown");
-											return Pair.of(entry.getKey(), ((Dynamic)entry.getValue()).createString(string2));
+											return Pair.of((Dynamic)entry.getKey(), ((Dynamic)entry.getValue()).createString(string2));
 										}
 									} else {
-										return Pair.of(entry.getKey(), entry.getValue());
+										return Pair.of((Dynamic)entry.getKey(), (Dynamic)entry.getValue());
 									}
 								}).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond))))
 							.result()

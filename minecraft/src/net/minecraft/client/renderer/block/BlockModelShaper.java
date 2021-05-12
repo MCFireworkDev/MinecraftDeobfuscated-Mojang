@@ -45,8 +45,9 @@ public class BlockModelShaper {
 		this.modelByStateCache.clear();
 
 		for(Block block : Registry.BLOCK) {
-			block.getStateDefinition().getPossibleStates().forEach(blockState -> {
-			});
+			block.getStateDefinition()
+				.getPossibleStates()
+				.forEach(blockState -> this.modelByStateCache.put(blockState, this.modelManager.getModel(stateToModelLocation(blockState))));
 		}
 	}
 

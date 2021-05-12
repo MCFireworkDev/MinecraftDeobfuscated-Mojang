@@ -119,7 +119,7 @@ public class TraderLlama extends Llama {
 		return super.finalizeSpawn(serverLevelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
 	}
 
-	public static class TraderLlamaDefendWanderingTraderGoal extends TargetGoal {
+	protected static class TraderLlamaDefendWanderingTraderGoal extends TargetGoal {
 		private final Llama llama;
 		private LivingEntity ownerLastHurtBy;
 		private int timestamp;

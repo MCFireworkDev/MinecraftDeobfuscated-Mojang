@@ -163,8 +163,7 @@ public class LecternBlock extends BaseEntityBlock {
 
 	private static void placeBook(@Nullable Player player, Level level, BlockPos blockPos, BlockState blockState, ItemStack itemStack) {
 		BlockEntity blockEntity = level.getBlockEntity(blockPos);
-		if (blockEntity instanceof LecternBlockEntity) {
-			LecternBlockEntity lecternBlockEntity = (LecternBlockEntity)blockEntity;
+		if (blockEntity instanceof LecternBlockEntity lecternBlockEntity) {
 			lecternBlockEntity.setBook(itemStack.split(1));
 			resetBookState(level, blockPos, blockState, true);
 			level.playSound(null, blockPos, SoundEvents.BOOK_PUT, SoundSource.BLOCKS, 1.0F, 1.0F);
@@ -214,8 +213,7 @@ public class LecternBlock extends BaseEntityBlock {
 
 	private void popBook(BlockState blockState, Level level, BlockPos blockPos) {
 		BlockEntity blockEntity = level.getBlockEntity(blockPos);
-		if (blockEntity instanceof LecternBlockEntity) {
-			LecternBlockEntity lecternBlockEntity = (LecternBlockEntity)blockEntity;
+		if (blockEntity instanceof LecternBlockEntity lecternBlockEntity) {
 			Direction direction = blockState.getValue(FACING);
 			ItemStack itemStack = lecternBlockEntity.getBook().copy();
 			float f = 0.25F * (float)direction.getStepX();

@@ -354,11 +354,9 @@ public class Raid {
 
 						for(UUID uUID : this.heroesOfTheVillage) {
 							Entity entity = this.level.getEntity(uUID);
-							if (entity instanceof LivingEntity && !entity.isSpectator()) {
-								LivingEntity livingEntity = (LivingEntity)entity;
+							if (entity instanceof LivingEntity livingEntity && !entity.isSpectator()) {
 								livingEntity.addEffect(new MobEffectInstance(MobEffects.HERO_OF_THE_VILLAGE, 48000, this.badOmenLevel - 1, false, false, true));
-								if (livingEntity instanceof ServerPlayer) {
-									ServerPlayer serverPlayer = (ServerPlayer)livingEntity;
+								if (livingEntity instanceof ServerPlayer serverPlayer) {
 									serverPlayer.awardStat(Stats.RAID_WIN);
 									CriteriaTriggers.RAID_WIN.trigger(serverPlayer);
 								}
@@ -798,7 +796,7 @@ public class Raid {
 
 		private static final Raid.RaidStatus[] VALUES = values();
 
-		private static Raid.RaidStatus getByName(String string) {
+		static Raid.RaidStatus getByName(String string) {
 			for(Raid.RaidStatus raidStatus : VALUES) {
 				if (string.equalsIgnoreCase(raidStatus.name())) {
 					return raidStatus;
@@ -820,9 +818,9 @@ public class Raid {
 		WITCH(EntityType.WITCH, new int[]{0, 0, 0, 0, 3, 0, 0, 1}),
 		RAVAGER(EntityType.RAVAGER, new int[]{0, 0, 0, 1, 0, 1, 0, 2});
 
-		private static final Raid.RaiderType[] VALUES = values();
-		private final EntityType<? extends Raider> entityType;
-		private final int[] spawnsPerWaveBeforeBonus;
+		static final Raid.RaiderType[] VALUES = values();
+		final EntityType<? extends Raider> entityType;
+		final int[] spawnsPerWaveBeforeBonus;
 
 		private RaiderType(EntityType<? extends Raider> entityType, int[] is) {
 			this.entityType = entityType;

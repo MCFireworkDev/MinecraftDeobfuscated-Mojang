@@ -41,8 +41,7 @@ public class MsgCommand {
 		UUID uUID = commandSourceStack.getEntity() == null ? Util.NIL_UUID : commandSourceStack.getEntity().getUUID();
 		Entity entity = commandSourceStack.getEntity();
 		Consumer<Component> consumer;
-		if (entity instanceof ServerPlayer) {
-			ServerPlayer serverPlayer = (ServerPlayer)entity;
+		if (entity instanceof ServerPlayer serverPlayer) {
 			consumer = component2 -> serverPlayer.sendMessage(
 					new TranslatableComponent("commands.message.display.outgoing", component2, component)
 						.withStyle(new ChatFormatting[]{ChatFormatting.GRAY, ChatFormatting.ITALIC}),

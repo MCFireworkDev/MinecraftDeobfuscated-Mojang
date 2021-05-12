@@ -641,7 +641,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 					PoiManager poiManager = serverLevel.getPoiManager();
 					Optional<PoiType> optional = poiManager.getType(globalPos.pos());
 					BiPredicate<Villager, PoiType> biPredicate = (BiPredicate)POI_MEMORIES.get(memoryModuleType);
-					if (optional.isPresent() && biPredicate.test(this, optional.get())) {
+					if (optional.isPresent() && biPredicate.test(this, (PoiType)optional.get())) {
 						poiManager.release(globalPos.pos());
 						DebugPackets.sendPoiTicketCountPacket(serverLevel, globalPos.pos());
 					}
@@ -711,7 +711,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	@Override
 	protected Component getTypeName() {
 		return new TranslatableComponent(
-			this.getType().getDescriptionId() + '.' + Registry.VILLAGER_PROFESSION.getKey(this.getVillagerData().getProfession()).getPath()
+			this.getType().getDescriptionId() + "." + Registry.VILLAGER_PROFESSION.getKey(this.getVillagerData().getProfession()).getPath()
 		);
 	}
 

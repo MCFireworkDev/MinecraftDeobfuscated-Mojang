@@ -218,11 +218,8 @@ public class Explosion {
 						}
 
 						entity.setDeltaMovement(entity.getDeltaMovement().add(x * ad, y * ad, z * ad));
-						if (entity instanceof Player) {
-							Player player = (Player)entity;
-							if (!player.isSpectator() && (!player.isCreative() || !player.getAbilities().flying)) {
-								this.hitPlayers.put(player, new Vec3(x * ac, y * ac, z * ac));
-							}
+						if (entity instanceof Player player && !player.isSpectator() && (!player.isCreative() || !player.getAbilities().flying)) {
+							this.hitPlayers.put(player, new Vec3(x * ac, y * ac, z * ac));
 						}
 					}
 				}

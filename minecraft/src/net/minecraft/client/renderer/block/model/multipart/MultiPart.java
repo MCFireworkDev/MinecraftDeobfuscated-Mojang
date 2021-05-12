@@ -118,7 +118,7 @@ public class MultiPart implements UnbakedModel {
 			List<Selector> list = Lists.<Selector>newArrayList();
 
 			for(JsonElement jsonElement : jsonArray) {
-				list.add(jsonDeserializationContext.deserialize(jsonElement, Selector.class));
+				list.add((Selector)jsonDeserializationContext.deserialize(jsonElement, Selector.class));
 			}
 
 			return list;

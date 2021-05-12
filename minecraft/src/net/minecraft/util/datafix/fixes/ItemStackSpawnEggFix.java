@@ -83,7 +83,7 @@ public class ItemStackSpawnEggFix extends DataFix {
 				Typed<?> typed3 = typed2.getOrCreateTyped(opticFinder4);
 				Optional<String> optional2 = typed3.getOptional(opticFinder2);
 				if (optional2.isPresent()) {
-					return typed.set(opticFinder, Pair.of(References.ITEM_NAME.typeName(), MAP.getOrDefault(optional2.get(), "minecraft:pig_spawn_egg")));
+					return typed.set(opticFinder, Pair.of(References.ITEM_NAME.typeName(), (String)MAP.getOrDefault(optional2.get(), "minecraft:pig_spawn_egg")));
 				}
 			}
 

@@ -822,8 +822,7 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 
 	private void tickFov() {
 		float f = 1.0F;
-		if (this.minecraft.getCameraEntity() instanceof AbstractClientPlayer) {
-			AbstractClientPlayer abstractClientPlayer = (AbstractClientPlayer)this.minecraft.getCameraEntity();
+		if (this.minecraft.getCameraEntity() instanceof AbstractClientPlayer abstractClientPlayer) {
 			f = abstractClientPlayer.getFieldOfViewModifier();
 		}
 
@@ -863,8 +862,7 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 	}
 
 	private void bobHurt(PoseStack poseStack, float f) {
-		if (this.minecraft.getCameraEntity() instanceof LivingEntity) {
-			LivingEntity livingEntity = (LivingEntity)this.minecraft.getCameraEntity();
+		if (this.minecraft.getCameraEntity() instanceof LivingEntity livingEntity) {
 			float g = (float)livingEntity.hurtTime - f;
 			if (livingEntity.isDeadOrDying()) {
 				float h = Math.min((float)livingEntity.deathTime + f, 20.0F);
@@ -1108,8 +1106,8 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 				try (NativeImage nativeImage2 = new NativeImage(64, 64, false)) {
 					nativeImage.resizeSubRectTo(k, l, i, j, nativeImage2);
 					nativeImage2.writeToFile(this.minecraft.getSingleplayerServer().getWorldScreenshotFile());
-				} catch (IOException var27) {
-					LOGGER.warn("Couldn't save auto screenshot", var27);
+				} catch (IOException var16) {
+					LOGGER.warn("Couldn't save auto screenshot", var16);
 				} finally {
 					nativeImage.close();
 				}

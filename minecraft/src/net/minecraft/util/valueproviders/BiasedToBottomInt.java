@@ -54,6 +54,6 @@ public class BiasedToBottomInt extends IntProvider {
 	}
 
 	public String toString() {
-		return "[" + this.minInclusive + '-' + this.maxInclusive + ']';
+		return "[" + this.minInclusive + "-" + this.maxInclusive + "]";
 	}
 }

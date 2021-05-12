@@ -75,7 +75,7 @@ public class RandomPatchConfiguration implements FeatureConfiguration {
 		);
 	}
 
-	private RandomPatchConfiguration(
+	RandomPatchConfiguration(
 		BlockStateProvider blockStateProvider,
 		BlockPlacer blockPlacer,
 		Set<Block> set,

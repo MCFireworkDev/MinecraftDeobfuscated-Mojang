@@ -224,7 +224,7 @@ public class EntitySelectorOptions {
 					for(GameType gameTypexx : GameType.values()) {
 						if (gameTypexx.getName().toLowerCase(Locale.ROOT).startsWith(stringxx)) {
 							if (bl2) {
-								suggestionsBuilder.suggest('!' + gameTypexx.getName());
+								suggestionsBuilder.suggest("!" + gameTypexx.getName());
 							}
 
 							if (blxx) {
@@ -537,7 +537,7 @@ public class EntitySelectorOptions {
 		for(Entry<String, EntitySelectorOptions.Option> entry : OPTIONS.entrySet()) {
 			if (((EntitySelectorOptions.Option)entry.getValue()).predicate.test(entitySelectorParser)
 				&& ((String)entry.getKey()).toLowerCase(Locale.ROOT).startsWith(string)) {
-				suggestionsBuilder.suggest((String)entry.getKey() + '=', ((EntitySelectorOptions.Option)entry.getValue()).description);
+				suggestionsBuilder.suggest((String)entry.getKey() + "=", ((EntitySelectorOptions.Option)entry.getValue()).description);
 			}
 		}
 	}
@@ -551,7 +551,7 @@ public class EntitySelectorOptions {
 		public final Predicate<EntitySelectorParser> predicate;
 		public final Component description;
 
-		private Option(EntitySelectorOptions.Modifier modifier, Predicate<EntitySelectorParser> predicate, Component component) {
+		Option(EntitySelectorOptions.Modifier modifier, Predicate<EntitySelectorParser> predicate, Component component) {
 			this.modifier = modifier;
 			this.predicate = predicate;
 			this.description = component;

@@ -228,8 +228,7 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
 	}
 
 	public static ItemStack addItem(@Nullable Container container, Container container2, ItemStack itemStack, @Nullable Direction direction) {
-		if (container2 instanceof WorldlyContainer && direction != null) {
-			WorldlyContainer worldlyContainer = (WorldlyContainer)container2;
+		if (container2 instanceof WorldlyContainer worldlyContainer && direction != null) {
 			int[] is = worldlyContainer.getSlotsForFace(direction);
 
 			for(int i = 0; i < is.length && !itemStack.isEmpty(); ++i) {
@@ -276,19 +275,13 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
 			}
 
 			if (bl) {
-				if (bl2 && container2 instanceof HopperBlockEntity) {
-					HopperBlockEntity hopperBlockEntity = (HopperBlockEntity)container2;
-					if (!hopperBlockEntity.isOnCustomCooldown()) {
-						int k = 0;
-						if (container instanceof HopperBlockEntity) {
-							HopperBlockEntity hopperBlockEntity2 = (HopperBlockEntity)container;
-							if (hopperBlockEntity.tickedGameTime >= hopperBlockEntity2.tickedGameTime) {
-								k = 1;
-							}
-						}
-
-						hopperBlockEntity.setCooldown(8 - k);
+				if (bl2 && container2 instanceof HopperBlockEntity hopperBlockEntity && !hopperBlockEntity.isOnCustomCooldown()) {
+					int k = 0;
+					if (container instanceof HopperBlockEntity hopperBlockEntity2 && hopperBlockEntity.tickedGameTime >= hopperBlockEntity2.tickedGameTime) {
+						k = 1;
 					}
+
+					hopperBlockEntity.setCooldown(8 - k);
 				}
 
 				container2.setChanged();

@@ -172,12 +172,7 @@ public abstract class Mob extends LivingEntity {
 	}
 
 	public MoveControl getMoveControl() {
-		if (this.isPassenger() && this.getVehicle() instanceof Mob) {
-			Mob mob = (Mob)this.getVehicle();
-			return mob.getMoveControl();
-		} else {
-			return this.moveControl;
-		}
+		return this.isPassenger() && this.getVehicle() instanceof Mob mob ? mob.getMoveControl() : this.moveControl;
 	}
 
 	public JumpControl getJumpControl() {
@@ -185,12 +180,7 @@ public abstract class Mob extends LivingEntity {
 	}
 
 	public PathNavigation getNavigation() {
-		if (this.isPassenger() && this.getVehicle() instanceof Mob) {
-			Mob mob = (Mob)this.getVehicle();
-			return mob.getNavigation();
-		} else {
-			return this.navigation;
-		}
+		return this.isPassenger() && this.getVehicle() instanceof Mob mob ? mob.getNavigation() : this.navigation;
 	}
 
 	public Sensing getSensing() {
@@ -724,8 +714,7 @@ public abstract class Mob extends LivingEntity {
 		double d = entity.getX() - this.getX();
 		double e = entity.getZ() - this.getZ();
 		double h;
-		if (entity instanceof LivingEntity) {
-			LivingEntity livingEntity = (LivingEntity)entity;
+		if (entity instanceof LivingEntity livingEntity) {
 			h = livingEntity.getEyeY() - this.getEyeY();
 		} else {
 			h = (entity.getBoundingBox().minY + entity.getBoundingBox().maxY) / 2.0 - this.getEyeY();
@@ -845,19 +834,11 @@ public abstract class Mob extends LivingEntity {
 	}
 
 	protected float getEquipmentDropChance(EquipmentSlot equipmentSlot) {
-		float f;
-		switch(equipmentSlot.getType()) {
-			case HAND:
-				f = this.handDropChances[equipmentSlot.getIndex()];
-				break;
-			case ARMOR:
-				f = this.armorDropChances[equipmentSlot.getIndex()];
-				break;
-			default:
-				f = 0.0F;
-		}
-
-		return f;
+		return switch(equipmentSlot.getType()) {
+			case HAND -> this.handDropChances[equipmentSlot.getIndex()];
+			case ARMOR -> this.armorDropChances[equipmentSlot.getIndex()];
+			default -> 0.0F;
+		};
 	}
 
 	protected void populateDefaultEquipmentSlots(DifficultyInstance difficultyInstance) {
@@ -1339,8 +1320,7 @@ public abstract class Mob extends LivingEntity {
 				this.setDeltaMovement(this.getDeltaMovement().multiply(0.6, 1.0, 0.6));
 			}
 
-			if (entity instanceof Player) {
-				Player player = (Player)entity;
+			if (entity instanceof Player player) {
 				this.maybeDisableShield(player, this.getMainHandItem(), player.isUsingItem() ? player.getUseItem() : ItemStack.EMPTY);
 			}
 

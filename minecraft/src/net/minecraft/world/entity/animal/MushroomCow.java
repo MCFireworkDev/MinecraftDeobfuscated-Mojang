@@ -223,8 +223,7 @@ public class MushroomCow extends Cow implements Shearable {
 		Item item = itemStack.getItem();
 		if (item instanceof BlockItem) {
 			Block block = ((BlockItem)item).getBlock();
-			if (block instanceof FlowerBlock) {
-				FlowerBlock flowerBlock = (FlowerBlock)block;
+			if (block instanceof FlowerBlock flowerBlock) {
 				return Optional.of(Pair.of(flowerBlock.getSuspiciousStewEffect(), flowerBlock.getEffectDuration()));
 			}
 		}
@@ -263,8 +262,8 @@ public class MushroomCow extends Cow implements Shearable {
 		RED("red", Blocks.RED_MUSHROOM.defaultBlockState()),
 		BROWN("brown", Blocks.BROWN_MUSHROOM.defaultBlockState());
 
-		private final String type;
-		private final BlockState blockState;
+		final String type;
+		final BlockState blockState;
 
 		private MushroomType(String string2, BlockState blockState) {
 			this.type = string2;
@@ -275,7 +274,7 @@ public class MushroomCow extends Cow implements Shearable {
 			return this.blockState;
 		}
 
-		private static MushroomCow.MushroomType byType(String string) {
+		static MushroomCow.MushroomType byType(String string) {
 			for(MushroomCow.MushroomType mushroomType : values()) {
 				if (mushroomType.type.equals(string)) {
 					return mushroomType;

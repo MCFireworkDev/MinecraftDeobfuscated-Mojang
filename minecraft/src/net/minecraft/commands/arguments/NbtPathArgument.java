@@ -142,7 +142,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 		return c != ' ' && c != '"' && c != '[' && c != ']' && c != '.' && c != '{' && c != '}';
 	}
 
-	private static Predicate<Tag> createTagPredicate(CompoundTag compoundTag) {
+	static Predicate<Tag> createTagPredicate(CompoundTag compoundTag) {
 		return tag -> NbtUtils.compareNbt(compoundTag, tag, true);
 	}
 
@@ -161,8 +161,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 
 		@Override
 		public void getOrCreateTag(Tag tag, Supplier<Tag> supplier, List<Tag> list) {
-			if (tag instanceof CollectionTag) {
-				CollectionTag<?> collectionTag = (CollectionTag)tag;
+			if (tag instanceof CollectionTag collectionTag) {
 				if (collectionTag.isEmpty()) {
 					Tag tag2 = (Tag)supplier.get();
 					if (collectionTag.addTag(0, tag2)) {
@@ -212,8 +211,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 
 		@Override
 		public int removeTag(Tag tag) {
-			if (tag instanceof CollectionTag) {
-				CollectionTag<?> collectionTag = (CollectionTag)tag;
+			if (tag instanceof CollectionTag collectionTag) {
 				int i = collectionTag.size();
 				if (i > 0) {
 					collectionTag.clear();
@@ -244,8 +242,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 
 		@Override
 		public void getOrCreateTag(Tag tag, Supplier<Tag> supplier, List<Tag> list) {
-			if (tag instanceof CompoundTag) {
-				CompoundTag compoundTag = (CompoundTag)tag;
+			if (tag instanceof CompoundTag compoundTag) {
 				Tag tag2;
 				if (compoundTag.contains(this.name)) {
 					tag2 = compoundTag.get(this.name);
@@ -265,8 +262,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 
 		@Override
 		public int setTag(Tag tag, Supplier<Tag> supplier) {
-			if (tag instanceof CompoundTag) {
-				CompoundTag compoundTag = (CompoundTag)tag;
+			if (tag instanceof CompoundTag compoundTag) {
 				Tag tag2 = (Tag)supplier.get();
 				Tag tag3 = compoundTag.put(this.name, tag2);
 				if (!tag2.equals(tag3)) {
@@ -279,12 +275,9 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 
 		@Override
 		public int removeTag(Tag tag) {
-			if (tag instanceof CompoundTag) {
-				CompoundTag compoundTag = (CompoundTag)tag;
-				if (compoundTag.contains(this.name)) {
-					compoundTag.remove(this.name);
-					return 1;
-				}
+			if (tag instanceof CompoundTag compoundTag && compoundTag.contains(this.name)) {
+				compoundTag.remove(this.name);
+				return 1;
 			}
 
 			return 0;
@@ -300,12 +293,11 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 
 		@Override
 		public void getTag(Tag tag, List<Tag> list) {
-			if (tag instanceof CollectionTag) {
-				CollectionTag<?> collectionTag = (CollectionTag)tag;
+			if (tag instanceof CollectionTag collectionTag) {
 				int i = collectionTag.size();
 				int j = this.index < 0 ? i + this.index : this.index;
 				if (0 <= j && j < i) {
-					list.add(collectionTag.get(j));
+					list.add((Tag)collectionTag.get(j));
 				}
 			}
 		}
@@ -322,8 +314,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 
 		@Override
 		public int setTag(Tag tag, Supplier<Tag> supplier) {
-			if (tag instanceof CollectionTag) {
-				CollectionTag<?> collectionTag = (CollectionTag)tag;
+			if (tag instanceof CollectionTag collectionTag) {
 				int i = collectionTag.size();
 				int j = this.index < 0 ? i + this.index : this.index;
 				if (0 <= j && j < i) {
@@ -340,8 +331,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 
 		@Override
 		public int removeTag(Tag tag) {
-			if (tag instanceof CollectionTag) {
-				CollectionTag<?> collectionTag = (CollectionTag)tag;
+			if (tag instanceof CollectionTag collectionTag) {
 				int i = collectionTag.size();
 				int j = this.index < 0 ? i + this.index : this.index;
 				if (0 <= j && j < i) {
@@ -365,8 +355,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 
 		@Override
 		public void getTag(Tag tag, List<Tag> list) {
-			if (tag instanceof ListTag) {
-				ListTag listTag = (ListTag)tag;
+			if (tag instanceof ListTag listTag) {
 				listTag.stream().filter(this.predicate).forEach(list::add);
 			}
 		}
@@ -374,8 +363,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 		@Override
 		public void getOrCreateTag(Tag tag, Supplier<Tag> supplier, List<Tag> list) {
 			MutableBoolean mutableBoolean = new MutableBoolean();
-			if (tag instanceof ListTag) {
-				ListTag listTag = (ListTag)tag;
+			if (tag instanceof ListTag listTag) {
 				listTag.stream().filter(this.predicate).forEach(tagx -> {
 					list.add(tagx);
 					mutableBoolean.setTrue();
@@ -396,11 +384,10 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 		@Override
 		public int setTag(Tag tag, Supplier<Tag> supplier) {
 			int i = 0;
-			if (tag instanceof ListTag) {
-				ListTag listTag = (ListTag)tag;
+			if (tag instanceof ListTag listTag) {
 				int j = listTag.size();
 				if (j == 0) {
-					listTag.add(supplier.get());
+					listTag.add((Tag)supplier.get());
 					++i;
 				} else {
 					for(int k = 0; k < j; ++k) {
@@ -421,9 +408,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 		@Override
 		public int removeTag(Tag tag) {
 			int i = 0;
-			if (tag instanceof ListTag) {
-				ListTag listTag = (ListTag)tag;
-
+			if (tag instanceof ListTag listTag) {
 				for(int j = listTag.size() - 1; j >= 0; --j) {
 					if (this.predicate.test(listTag.get(j))) {
 						listTag.remove(j);
@@ -459,8 +444,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 
 		@Override
 		public void getOrCreateTag(Tag tag, Supplier<Tag> supplier, List<Tag> list) {
-			if (tag instanceof CompoundTag) {
-				CompoundTag compoundTag = (CompoundTag)tag;
+			if (tag instanceof CompoundTag compoundTag) {
 				Tag tag2 = compoundTag.get(this.name);
 				if (tag2 == null) {
 					Tag var6 = this.pattern.copy();
@@ -479,8 +463,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 
 		@Override
 		public int setTag(Tag tag, Supplier<Tag> supplier) {
-			if (tag instanceof CompoundTag) {
-				CompoundTag compoundTag = (CompoundTag)tag;
+			if (tag instanceof CompoundTag compoundTag) {
 				Tag tag2 = compoundTag.get(this.name);
 				if (this.predicate.test(tag2)) {
 					Tag tag3 = (Tag)supplier.get();
@@ -496,8 +479,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 
 		@Override
 		public int removeTag(Tag tag) {
-			if (tag instanceof CompoundTag) {
-				CompoundTag compoundTag = (CompoundTag)tag;
+			if (tag instanceof CompoundTag compoundTag) {
 				Tag tag2 = compoundTag.get(this.name);
 				if (this.predicate.test(tag2)) {
 					compoundTag.remove(this.name);

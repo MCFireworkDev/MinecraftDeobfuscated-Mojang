@@ -21,7 +21,7 @@ public class NearestLivingEntitySensor extends Sensor<LivingEntity> {
 		brain.setMemory(MemoryModuleType.NEAREST_LIVING_ENTITIES, list);
 		brain.setMemory(
 			MemoryModuleType.NEAREST_VISIBLE_LIVING_ENTITIES,
-			list.stream().filter(livingEntity2 -> isEntityTargetable(livingEntity, livingEntity2)).collect(Collectors.toList())
+			(List)list.stream().filter(livingEntity2 -> isEntityTargetable(livingEntity, livingEntity2)).collect(Collectors.toList())
 		);
 	}
 

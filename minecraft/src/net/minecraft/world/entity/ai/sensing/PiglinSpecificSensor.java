@@ -61,8 +61,7 @@ public class PiglinSpecificSensor extends Sensor<LivingEntity> {
 		List<AbstractPiglin> list2 = Lists.<AbstractPiglin>newArrayList();
 
 		for(LivingEntity livingEntity2 : (List)brain.getMemory(MemoryModuleType.NEAREST_VISIBLE_LIVING_ENTITIES).orElse(ImmutableList.of())) {
-			if (livingEntity2 instanceof Hoglin) {
-				Hoglin hoglin = (Hoglin)livingEntity2;
+			if (livingEntity2 instanceof Hoglin hoglin) {
 				if (hoglin.isBaby() && !optional3.isPresent()) {
 					optional3 = Optional.of(hoglin);
 				} else if (hoglin.isAdult()) {
@@ -73,15 +72,13 @@ public class PiglinSpecificSensor extends Sensor<LivingEntity> {
 				}
 			} else if (livingEntity2 instanceof PiglinBrute) {
 				list.add((PiglinBrute)livingEntity2);
-			} else if (livingEntity2 instanceof Piglin) {
-				Piglin piglin = (Piglin)livingEntity2;
+			} else if (livingEntity2 instanceof Piglin piglin) {
 				if (piglin.isBaby() && !optional4.isPresent()) {
 					optional4 = Optional.of(piglin);
 				} else if (piglin.isAdult()) {
 					list.add(piglin);
 				}
-			} else if (livingEntity2 instanceof Player) {
-				Player player = (Player)livingEntity2;
+			} else if (livingEntity2 instanceof Player player) {
 				if (!optional6.isPresent() && EntitySelector.ATTACK_ALLOWED.test(livingEntity2) && !PiglinAi.isWearingGold(player)) {
 					optional6 = Optional.of(player);
 				}

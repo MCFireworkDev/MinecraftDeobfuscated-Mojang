@@ -47,13 +47,13 @@ public class PlayerPredicate {
 			JsonObject jsonObject = GsonHelper.convertToJsonObject(jsonElement, "criterion data");
 			jsonObject.entrySet().forEach(entry -> {
 				boolean bl = GsonHelper.convertToBoolean((JsonElement)entry.getValue(), "criterion test");
-				object2BooleanMap.put(entry.getKey(), bl);
+				object2BooleanMap.put((String)entry.getKey(), bl);
 			});
 			return new PlayerPredicate.AdvancementCriterionsPredicate(object2BooleanMap);
 		}
 	}
 
-	private PlayerPredicate(
+	PlayerPredicate(
 		MinMaxBounds.Ints ints,
 		@Nullable GameType gameType,
 		Map<Stat<?>, MinMaxBounds.Ints> map,

@@ -79,81 +79,58 @@ public class DimensionDataStorage {
 	public CompoundTag readTagFromDisk(String string, int i) throws IOException {
 		File file = this.getDataFile(string);
 		FileInputStream fileInputStream = new FileInputStream(file);
-		Throwable var5 = null;
 
-		Object var10;
+		CompoundTag var8;
 		try {
-			PushbackInputStream pushbackInputStream;
+			PushbackInputStream pushbackInputStream = new PushbackInputStream(fileInputStream, 2);
+
 			try {
-				pushbackInputStream = new PushbackInputStream(fileInputStream, 2);
-				Throwable var7 = null;
-
-				try {
-					CompoundTag compoundTag;
-					if (this.isGzip(pushbackInputStream)) {
-						compoundTag = NbtIo.readCompressed(pushbackInputStream);
-					} else {
-						DataInputStream dataInputStream = new DataInputStream(pushbackInputStream);
-						var10 = null;
-
-						try {
-							compoundTag = NbtIo.read(dataInputStream);
-						} catch (Throwable var54) {
-							var10 = var54;
-							throw var54;
-						} finally {
-							if (dataInputStream != null) {
-								if (var10 != null) {
-									try {
-										dataInputStream.close();
-									} catch (Throwable var53) {
-										var10.addSuppressed(var53);
-									}
-								} else {
-									dataInputStream.close();
-								}
-							}
-						}
-					}
-
-					int j = compoundTag.contains("DataVersion", 99) ? compoundTag.getInt("DataVersion") : 1343;
-					var10 = NbtUtils.update(this.fixerUpper, DataFixTypes.SAVED_DATA, compoundTag, j, i);
-				} catch (Throwable var56) {
-					var7 = var56;
-					throw var56;
-				} finally {
-					if (pushbackInputStream != null) {
-						if (var7 != null) {
-							try {
-								pushbackInputStream.close();
-							} catch (Throwable var52) {
-								var7.addSuppressed(var52);
-							}
-						} else {
-							pushbackInputStream.close();
-						}
-					}
-				}
-			} catch (Throwable var58) {
-				pushbackInputStream = var58;
-				var5 = var58;
-				throw var58;
-			}
-		} finally {
-			if (fileInputStream != null) {
-				if (var5 != null) {
-					try {
-						fileInputStream.close();
-					} catch (Throwable var51) {
-						var5.addSuppressed(var51);
-					}
+				CompoundTag compoundTag;
+				if (this.isGzip(pushbackInputStream)) {
+					compoundTag = NbtIo.readCompressed(pushbackInputStream);
 				} else {
-					fileInputStream.close();
+					DataInputStream dataInputStream = new DataInputStream(pushbackInputStream);
+
+					try {
+						compoundTag = NbtIo.read(dataInputStream);
+					} catch (Throwable var13) {
+						try {
+							dataInputStream.close();
+						} catch (Throwable var12) {
+							var13.addSuppressed(var12);
+						}
+
+						throw var13;
+					}
+
+					dataInputStream.close();
 				}
+
+				int j = compoundTag.contains("DataVersion", 99) ? compoundTag.getInt("DataVersion") : 1343;
+				var8 = NbtUtils.update(this.fixerUpper, DataFixTypes.SAVED_DATA, compoundTag, j, i);
+			} catch (Throwable var14) {
+				try {
+					pushbackInputStream.close();
+				} catch (Throwable var11) {
+					var14.addSuppressed(var11);
+				}
+
+				throw var14;
 			}
+
+			pushbackInputStream.close();
+		} catch (Throwable var15) {
+			try {
+				fileInputStream.close();
+			} catch (Throwable var10) {
+				var15.addSuppressed(var10);
+			}
+
+			throw var15;
 		}
 
-		return (CompoundTag)var10;
+		fileInputStream.close();
+		return var8;
 	}
 
 	private boolean isGzip(PushbackInputStream pushbackInputStream) throws IOException {

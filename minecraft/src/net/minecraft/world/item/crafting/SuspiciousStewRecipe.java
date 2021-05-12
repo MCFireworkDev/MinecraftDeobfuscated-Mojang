@@ -57,8 +57,7 @@ public class SuspiciousStewRecipe extends CustomRecipe {
 		}
 
 		ItemStack itemStack3 = new ItemStack(Items.SUSPICIOUS_STEW, 1);
-		if (itemStack.getItem() instanceof BlockItem && ((BlockItem)itemStack.getItem()).getBlock() instanceof FlowerBlock) {
-			FlowerBlock flowerBlock = (FlowerBlock)((BlockItem)itemStack.getItem()).getBlock();
+		if (itemStack.getItem() instanceof BlockItem && ((BlockItem)itemStack.getItem()).getBlock() instanceof FlowerBlock flowerBlock) {
 			MobEffect mobEffect = flowerBlock.getSuspiciousStewEffect();
 			SuspiciousStewItem.saveMobEffect(itemStack3, mobEffect, flowerBlock.getEffectDuration());
 		}

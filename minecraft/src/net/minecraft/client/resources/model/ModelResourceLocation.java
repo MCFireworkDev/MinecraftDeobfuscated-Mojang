@@ -30,7 +30,7 @@ public class ModelResourceLocation extends ResourceLocation {
 	}
 
 	public ModelResourceLocation(String string, String string2) {
-		this(decompose(string + '#' + string2));
+		this(decompose(string + "#" + string2));
 	}
 
 	protected static String[] decompose(String string) {
@@ -56,11 +56,8 @@ public class ModelResourceLocation extends ResourceLocation {
 	public boolean equals(Object object) {
 		if (this == object) {
 			return true;
-		} else if (object instanceof ModelResourceLocation && super.equals(object)) {
-			ModelResourceLocation modelResourceLocation = (ModelResourceLocation)object;
-			return this.variant.equals(modelResourceLocation.variant);
 		} else {
-			return false;
+			return object instanceof ModelResourceLocation modelResourceLocation && super.equals(object) ? this.variant.equals(modelResourceLocation.variant) : false;
 		}
 	}
 
@@ -71,6 +68,6 @@ public class ModelResourceLocation extends ResourceLocation {
 
 	@Override
 	public String toString() {
-		return super.toString() + '#' + this.variant;
+		return super.toString() + "#" + this.variant;
 	}
 }
