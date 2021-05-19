@@ -749,6 +749,7 @@ public abstract class AbstractHorse extends Animal implements ContainerListener,
 				}
 
 				this.calculateEntityAnimation(this, false);
+				this.tryCheckInsideBlocks();
 			} else {
 				this.flyingSpeed = 0.02F;
 				super.travel(vec3);

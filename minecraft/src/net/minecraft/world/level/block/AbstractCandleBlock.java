@@ -30,7 +30,7 @@ public abstract class AbstractCandleBlock extends Block {
 	protected abstract Iterable<Vec3> getParticleOffsets(BlockState blockState);
 
 	public static boolean isLit(BlockState blockState) {
-		return blockState.hasProperty(LIT) && blockState.is(BlockTags.CANDLES) && blockState.getValue(LIT);
+		return blockState.hasProperty(LIT) && (blockState.is(BlockTags.CANDLES) || blockState.is(BlockTags.CANDLE_CAKES)) && blockState.getValue(LIT);
 	}
 
 	@Override

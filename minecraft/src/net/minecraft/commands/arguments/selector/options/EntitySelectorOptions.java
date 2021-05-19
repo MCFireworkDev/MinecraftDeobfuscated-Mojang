@@ -102,9 +102,9 @@ public class EntitySelectorOptions {
 			}, entitySelectorParser -> !entitySelectorParser.hasNameEquals(), new TranslatableComponent("argument.entity.options.name.description"));
 			register("distance", entitySelectorParser -> {
 				int i = entitySelectorParser.getReader().getCursor();
-				MinMaxBounds.Floats floats = MinMaxBounds.Floats.fromReader(entitySelectorParser.getReader());
-				if ((floats.getMin() == null || !(floats.getMin() < 0.0F)) && (floats.getMax() == null || !(floats.getMax() < 0.0F))) {
-					entitySelectorParser.setDistance(floats);
+				MinMaxBounds.Doubles doubles = MinMaxBounds.Doubles.fromReader(entitySelectorParser.getReader());
+				if ((doubles.getMin() == null || !(doubles.getMin() < 0.0)) && (doubles.getMax() == null || !(doubles.getMax() < 0.0))) {
+					entitySelectorParser.setDistance(doubles);
 					entitySelectorParser.setWorldLimited();
 				} else {
 					entitySelectorParser.getReader().setCursor(i);

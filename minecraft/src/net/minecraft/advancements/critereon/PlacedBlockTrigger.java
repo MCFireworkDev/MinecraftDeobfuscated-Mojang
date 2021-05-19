@@ -81,7 +81,7 @@ public class PlacedBlockTrigger extends SimpleCriterionTrigger<PlacedBlockTrigge
 				return false;
 			} else if (!this.state.matches(blockState)) {
 				return false;
-			} else if (!this.location.matches(serverLevel, (float)blockPos.getX(), (float)blockPos.getY(), (float)blockPos.getZ())) {
+			} else if (!this.location.matches(serverLevel, (double)blockPos.getX(), (double)blockPos.getY(), (double)blockPos.getZ())) {
 				return false;
 			} else {
 				return this.item.matches(itemStack);

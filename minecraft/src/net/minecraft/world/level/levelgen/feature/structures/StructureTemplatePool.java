@@ -14,7 +14,6 @@ import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.RegistryFileCodec;
@@ -38,7 +37,6 @@ public class StructureTemplatePool {
 					Codec.mapPair(StructurePoolElement.CODEC.fieldOf("element"), Codec.INT.fieldOf("weight"))
 						.codec()
 						.listOf()
-						.promotePartial(Util.prefix("Pool element: ", LOGGER::error))
 						.fieldOf("elements")
 						.forGetter(structureTemplatePool -> structureTemplatePool.rawTemplates)
 				)
