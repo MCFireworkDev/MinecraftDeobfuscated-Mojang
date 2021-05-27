@@ -17,6 +17,7 @@ public class GeodeBlockSettings {
 	public final BlockStateProvider outerLayerProvider;
 	public final List<BlockState> innerPlacements;
 	public final ResourceLocation cannotReplace;
+	public final ResourceLocation invalidBlocks;
 	public static final Codec<GeodeBlockSettings> CODEC = RecordCodecBuilder.create(
 		instance -> instance.group(
 					BlockStateProvider.CODEC.fieldOf("filling_provider").forGetter(geodeBlockSettings -> geodeBlockSettings.fillingProvider),
@@ -25,7 +26,8 @@ public class GeodeBlockSettings {
 					BlockStateProvider.CODEC.fieldOf("middle_layer_provider").forGetter(geodeBlockSettings -> geodeBlockSettings.middleLayerProvider),
 					BlockStateProvider.CODEC.fieldOf("outer_layer_provider").forGetter(geodeBlockSettings -> geodeBlockSettings.outerLayerProvider),
 					ExtraCodecs.nonEmptyList(BlockState.CODEC.listOf()).fieldOf("inner_placements").forGetter(geodeBlockSettings -> geodeBlockSettings.innerPlacements),
-					ResourceLocation.CODEC.fieldOf("cannot_replace").forGetter(geodeBlockSettings -> geodeBlockSettings.cannotReplace)
+					ResourceLocation.CODEC.fieldOf("cannot_replace").forGetter(geodeBlockSettings -> geodeBlockSettings.cannotReplace),
+					ResourceLocation.CODEC.fieldOf("invalid_blocks").forGetter(geodeBlockSettings -> geodeBlockSettings.invalidBlocks)
 				)
 				.apply(instance, GeodeBlockSettings::new)
 	);
@@ -37,7 +39,8 @@ public class GeodeBlockSettings {
 		BlockStateProvider blockStateProvider4,
 		BlockStateProvider blockStateProvider5,
 		List<BlockState> list,
-		ResourceLocation resourceLocation
+		ResourceLocation resourceLocation,
+		ResourceLocation resourceLocation2
 	) {
 		this.fillingProvider = blockStateProvider;
 		this.innerLayerProvider = blockStateProvider2;
@@ -46,5 +49,6 @@ public class GeodeBlockSettings {
 		this.outerLayerProvider = blockStateProvider5;
 		this.innerPlacements = list;
 		this.cannotReplace = resourceLocation;
+		this.invalidBlocks = resourceLocation2;
 	}
 }

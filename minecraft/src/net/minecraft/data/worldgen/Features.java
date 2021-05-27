@@ -1315,6 +1315,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.OAK_LOG),
 						new StraightTrunkPlacer(4, 2, 0),
 						new SimpleStateProvider(Features.States.OAK_LEAVES),
+						new SimpleStateProvider(Features.States.OAK_SAPLING),
 						new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 3),
 						new TwoLayersFeatureSize(1, 0, 1)
 					)
@@ -1330,6 +1331,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.DARK_OAK_LOG),
 						new DarkOakTrunkPlacer(6, 2, 1),
 						new SimpleStateProvider(Features.States.DARK_OAK_LEAVES),
+						new SimpleStateProvider(Features.States.DARK_OAK_SAPLING),
 						new DarkOakFoliagePlacer(ConstantInt.of(0), ConstantInt.of(0)),
 						new ThreeLayersFeatureSize(1, 1, 0, 1, 2, OptionalInt.empty())
 					)
@@ -1345,6 +1347,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.BIRCH_LOG),
 						new StraightTrunkPlacer(5, 2, 0),
 						new SimpleStateProvider(Features.States.BIRCH_LEAVES),
+						new SimpleStateProvider(Features.States.BIRCH_SAPLING),
 						new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 3),
 						new TwoLayersFeatureSize(1, 0, 1)
 					)
@@ -1360,6 +1363,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.ACACIA_LOG),
 						new ForkingTrunkPlacer(5, 2, 2),
 						new SimpleStateProvider(Features.States.ACACIA_LEAVES),
+						new SimpleStateProvider(Features.States.ACACIA_SAPLING),
 						new AcaciaFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0)),
 						new TwoLayersFeatureSize(1, 0, 2)
 					)
@@ -1375,6 +1379,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.SPRUCE_LOG),
 						new StraightTrunkPlacer(5, 2, 1),
 						new SimpleStateProvider(Features.States.SPRUCE_LEAVES),
+						new SimpleStateProvider(Features.States.SPRUCE_SAPLING),
 						new SpruceFoliagePlacer(UniformInt.of(2, 3), UniformInt.of(0, 2), UniformInt.of(1, 2)),
 						new TwoLayersFeatureSize(2, 0, 2)
 					)
@@ -1390,6 +1395,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.SPRUCE_LOG),
 						new StraightTrunkPlacer(6, 4, 0),
 						new SimpleStateProvider(Features.States.SPRUCE_LEAVES),
+						new SimpleStateProvider(Features.States.SPRUCE_SAPLING),
 						new PineFoliagePlacer(ConstantInt.of(1), ConstantInt.of(1), UniformInt.of(3, 4)),
 						new TwoLayersFeatureSize(2, 0, 2)
 					)
@@ -1405,6 +1411,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.JUNGLE_LOG),
 						new StraightTrunkPlacer(4, 8, 0),
 						new SimpleStateProvider(Features.States.JUNGLE_LEAVES),
+						new SimpleStateProvider(Features.States.JUNGLE_SAPLING),
 						new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 3),
 						new TwoLayersFeatureSize(1, 0, 1)
 					)
@@ -1421,6 +1428,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.OAK_LOG),
 						new FancyTrunkPlacer(3, 11, 0),
 						new SimpleStateProvider(Features.States.OAK_LEAVES),
+						new SimpleStateProvider(Features.States.OAK_SAPLING),
 						new FancyFoliagePlacer(ConstantInt.of(2), ConstantInt.of(4), 4),
 						new TwoLayersFeatureSize(0, 0, 0, OptionalInt.of(4))
 					)
@@ -1436,6 +1444,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.JUNGLE_LOG),
 						new StraightTrunkPlacer(4, 8, 0),
 						new SimpleStateProvider(Features.States.JUNGLE_LEAVES),
+						new SimpleStateProvider(Features.States.JUNGLE_SAPLING),
 						new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 3),
 						new TwoLayersFeatureSize(1, 0, 1)
 					)
@@ -1451,6 +1460,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.JUNGLE_LOG),
 						new MegaJungleTrunkPlacer(10, 2, 19),
 						new SimpleStateProvider(Features.States.JUNGLE_LEAVES),
+						new SimpleStateProvider(Features.States.JUNGLE_SAPLING),
 						new MegaJungleFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 2),
 						new TwoLayersFeatureSize(1, 1, 2)
 					)
@@ -1466,6 +1476,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.SPRUCE_LOG),
 						new GiantTrunkPlacer(13, 2, 14),
 						new SimpleStateProvider(Features.States.SPRUCE_LEAVES),
+						new SimpleStateProvider(Features.States.SPRUCE_SAPLING),
 						new MegaPineFoliagePlacer(ConstantInt.of(0), ConstantInt.of(0), UniformInt.of(13, 17)),
 						new TwoLayersFeatureSize(1, 1, 2)
 					)
@@ -1481,6 +1492,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.SPRUCE_LOG),
 						new GiantTrunkPlacer(13, 2, 14),
 						new SimpleStateProvider(Features.States.SPRUCE_LEAVES),
+						new SimpleStateProvider(Features.States.SPRUCE_SAPLING),
 						new MegaPineFoliagePlacer(ConstantInt.of(0), ConstantInt.of(0), UniformInt.of(3, 7)),
 						new TwoLayersFeatureSize(1, 1, 2)
 					)
@@ -1496,6 +1508,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.BIRCH_LOG),
 						new StraightTrunkPlacer(5, 2, 6),
 						new SimpleStateProvider(Features.States.BIRCH_LEAVES),
+						new SimpleStateProvider(Features.States.BIRCH_SAPLING),
 						new BlobFoliagePlacer(ConstantInt.of(2), ConstantInt.of(0), 3),
 						new TwoLayersFeatureSize(1, 0, 1)
 					)
@@ -1512,6 +1525,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.OAK_LOG),
 						new StraightTrunkPlacer(5, 3, 0),
 						new SimpleStateProvider(Features.States.OAK_LEAVES),
+						new SimpleStateProvider(Features.States.OAK_SAPLING),
 						new BlobFoliagePlacer(ConstantInt.of(3), ConstantInt.of(0), 3),
 						new TwoLayersFeatureSize(1, 0, 1)
 					)
@@ -1527,6 +1541,7 @@ public class Features {
 						new SimpleStateProvider(Features.States.JUNGLE_LOG),
 						new StraightTrunkPlacer(1, 0, 0),
 						new SimpleStateProvider(Features.States.OAK_LEAVES),
+						new SimpleStateProvider(Features.States.OAK_SAPLING),
 						new BushFoliagePlacer(ConstantInt.of(2), ConstantInt.of(1), 2),
 						new TwoLayersFeatureSize(0, 0, 0)
 					)
@@ -1540,9 +1555,8 @@ public class Features {
 				new TreeConfiguration.TreeConfigurationBuilder(
 						new SimpleStateProvider(Features.States.OAK_LOG),
 						new BendingTrunkPlacer(4, 2, 0, 3, UniformInt.of(1, 2)),
-						new WeightedStateProvider(
-							weightedBlockStateBuilder().add(Blocks.AZALEA_LEAVES.defaultBlockState(), 3).add(Blocks.AZALEA_LEAVES_FLOWERS.defaultBlockState(), 1)
-						),
+						new WeightedStateProvider(weightedBlockStateBuilder().add(Features.States.AZALEA_LEAVES, 3).add(Features.States.AZALEA_LEAVES_FLOWERS, 1)),
+						new SimpleStateProvider(Features.States.AZALEA),
 						new RandomSpreadFoliagePlacer(ConstantInt.of(3), ConstantInt.of(0), ConstantInt.of(2), 50),
 						new TwoLayersFeatureSize(1, 0, 1)
 					)
@@ -2098,7 +2112,8 @@ public class Features {
 							Blocks.LARGE_AMETHYST_BUD.defaultBlockState(),
 							Blocks.AMETHYST_CLUSTER.defaultBlockState()
 						),
-						BlockTags.FEATURES_CANNOT_REPLACE.getName()
+						BlockTags.FEATURES_CANNOT_REPLACE.getName(),
+						BlockTags.GEODE_INVALID_BLOCKS.getName()
 					),
 					new GeodeLayerSettings(1.7, 2.2, 3.2, 4.2),
 					new GeodeCrackSettings(0.95, 2.0, 2),
@@ -2280,16 +2295,22 @@ public class Features {
 		protected static final BlockState ICE = Blocks.ICE.defaultBlockState();
 		protected static final BlockState OAK_LOG = Blocks.OAK_LOG.defaultBlockState();
 		protected static final BlockState OAK_LEAVES = Blocks.OAK_LEAVES.defaultBlockState();
+		protected static final BlockState OAK_SAPLING = Blocks.OAK_SAPLING.defaultBlockState();
 		protected static final BlockState JUNGLE_LOG = Blocks.JUNGLE_LOG.defaultBlockState();
 		protected static final BlockState JUNGLE_LEAVES = Blocks.JUNGLE_LEAVES.defaultBlockState();
+		protected static final BlockState JUNGLE_SAPLING = Blocks.JUNGLE_SAPLING.defaultBlockState();
 		protected static final BlockState SPRUCE_LOG = Blocks.SPRUCE_LOG.defaultBlockState();
 		protected static final BlockState SPRUCE_LEAVES = Blocks.SPRUCE_LEAVES.defaultBlockState();
+		protected static final BlockState SPRUCE_SAPLING = Blocks.SPRUCE_SAPLING.defaultBlockState();
 		protected static final BlockState ACACIA_LOG = Blocks.ACACIA_LOG.defaultBlockState();
 		protected static final BlockState ACACIA_LEAVES = Blocks.ACACIA_LEAVES.defaultBlockState();
+		protected static final BlockState ACACIA_SAPLING = Blocks.ACACIA_SAPLING.defaultBlockState();
 		protected static final BlockState BIRCH_LOG = Blocks.BIRCH_LOG.defaultBlockState();
 		protected static final BlockState BIRCH_LEAVES = Blocks.BIRCH_LEAVES.defaultBlockState();
+		protected static final BlockState BIRCH_SAPLING = Blocks.BIRCH_SAPLING.defaultBlockState();
 		protected static final BlockState DARK_OAK_LOG = Blocks.DARK_OAK_LOG.defaultBlockState();
 		protected static final BlockState DARK_OAK_LEAVES = Blocks.DARK_OAK_LEAVES.defaultBlockState();
+		protected static final BlockState DARK_OAK_SAPLING = Blocks.DARK_OAK_SAPLING.defaultBlockState();
 		protected static final BlockState GRASS_BLOCK = Blocks.GRASS_BLOCK.defaultBlockState();
 		protected static final BlockState LARGE_FERN = Blocks.LARGE_FERN.defaultBlockState();
 		protected static final BlockState TALL_GRASS = Blocks.TALL_GRASS.defaultBlockState();
@@ -2387,5 +2408,8 @@ public class Features {
 		protected static final BlockState BIG_DRIPLEAF_NORTH = Blocks.BIG_DRIPLEAF.defaultBlockState().setValue(BigDripleafBlock.FACING, Direction.NORTH);
 		protected static final BlockState BIG_DRIPLEAF_SOUTH = Blocks.BIG_DRIPLEAF.defaultBlockState().setValue(BigDripleafBlock.FACING, Direction.SOUTH);
 		protected static final BlockState DEEPSLATE = Blocks.DEEPSLATE.defaultBlockState();
+		protected static final BlockState AZALEA_LEAVES = Blocks.AZALEA_LEAVES.defaultBlockState();
+		protected static final BlockState AZALEA_LEAVES_FLOWERS = Blocks.AZALEA_LEAVES_FLOWERS.defaultBlockState();
+		protected static final BlockState AZALEA = Blocks.AZALEA.defaultBlockState();
 	}
 }

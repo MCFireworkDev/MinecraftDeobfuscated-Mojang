@@ -1391,7 +1391,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 					clientboundUpdateMobEffectPacket.effectShowsIcon()
 				);
 				mobEffectInstance.setNoCounter(clientboundUpdateMobEffectPacket.isSuperLongDuration());
-				((LivingEntity)entity).forceAddEffect(mobEffectInstance);
+				((LivingEntity)entity).forceAddEffect(mobEffectInstance, null);
 			}
 		}
 	}

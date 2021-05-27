@@ -20,7 +20,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
@@ -51,7 +50,6 @@ public class ServerTickList<T> implements TickList<T> {
 				i = 65536;
 			}
 
-			ServerChunkCache serverChunkCache = this.level.getChunkSource();
 			Iterator<TickNextTickData<T>> iterator = this.tickNextTickList.iterator();
 			this.level.getProfiler().push("cleaning");
 
@@ -61,7 +59,7 @@ public class ServerTickList<T> implements TickList<T> {
 					break;
 				}
 
-				if (serverChunkCache.isTickingChunk(tickNextTickData.pos)) {
+				if (this.level.isPositionTickingWithEntitiesLoaded(tickNextTickData.pos)) {
 					iterator.remove();
 					this.tickNextTickSet.remove(tickNextTickData);
 					this.currentlyTicking.add(tickNextTickData);
@@ -73,12 +71,12 @@ public class ServerTickList<T> implements TickList<T> {
 
 			TickNextTickData<T> tickNextTickData;
 			while((tickNextTickData = (TickNextTickData)this.currentlyTicking.poll()) != null) {
-				if (serverChunkCache.isTickingChunk(tickNextTickData.pos)) {
+				if (this.level.isPositionTickingWithEntitiesLoaded(tickNextTickData.pos)) {
 					try {
 						this.alreadyTicked.add(tickNextTickData);
 						this.ticker.accept(tickNextTickData);
-					} catch (Throwable var8) {
-						CrashReport crashReport = CrashReport.forThrowable(var8, "Exception while ticking");
+					} catch (Throwable var7) {
+						CrashReport crashReport = CrashReport.forThrowable(var7, "Exception while ticking");
 						CrashReportCategory crashReportCategory = crashReport.addCategory("Block being ticked");
 						CrashReportCategory.populateBlockDetails(crashReportCategory, this.level, tickNextTickData.pos, null);
 						throw new ReportedException(crashReport);

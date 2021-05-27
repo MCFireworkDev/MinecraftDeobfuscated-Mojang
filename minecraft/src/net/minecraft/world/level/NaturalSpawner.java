@@ -209,8 +209,7 @@ public final class NaturalSpawner {
 			.closerThan(new Vec3((double)mutableBlockPos.getX() + 0.5, (double)mutableBlockPos.getY(), (double)mutableBlockPos.getZ() + 0.5), 24.0)) {
 			return false;
 		} else {
-			ChunkPos chunkPos = new ChunkPos(mutableBlockPos);
-			return Objects.equals(chunkPos, chunkAccess.getPos()) || serverLevel.getChunkSource().isEntityTickingChunk(chunkPos);
+			return Objects.equals(new ChunkPos(mutableBlockPos), chunkAccess.getPos()) || serverLevel.isPositionEntityTicking(mutableBlockPos);
 		}
 	}
 

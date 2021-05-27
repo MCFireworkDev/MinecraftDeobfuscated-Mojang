@@ -16,6 +16,7 @@ import net.minecraft.client.ClientRecipeBook;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.RecipeBookCategories;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.StateSwitchingButton;
 import net.minecraft.client.gui.components.Widget;
@@ -502,7 +503,11 @@ public class RecipeBookComponent extends GuiComponent implements Widget, GuiEven
 	@Override
 	public void updateNarration(NarrationElementOutput narrationElementOutput) {
 		List<NarratableEntry> list = Lists.<NarratableEntry>newArrayList();
-		this.recipeBookPage.listButtons(list::add);
+		this.recipeBookPage.listButtons(abstractWidget -> {
+			if (abstractWidget.isActive()) {
+				list.add(abstractWidget);
+			}
+		});
 		list.add(this.searchBox);
 		list.add(this.filterButton);
 		list.addAll(this.tabButtons);
