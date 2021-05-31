@@ -369,7 +369,7 @@ public class Slime extends Mob implements Enemy {
 			if (livingEntity == null) {
 				return false;
 			} else {
-				return this.slime.canAttack(livingEntity) ? false : this.slime.getMoveControl() instanceof Slime.SlimeMoveControl;
+				return !this.slime.canAttack(livingEntity) ? false : this.slime.getMoveControl() instanceof Slime.SlimeMoveControl;
 			}
 		}
 
@@ -384,7 +384,7 @@ public class Slime extends Mob implements Enemy {
 			LivingEntity livingEntity = this.slime.getTarget();
 			if (livingEntity == null) {
 				return false;
-			} else if (this.slime.canAttack(livingEntity)) {
+			} else if (!this.slime.canAttack(livingEntity)) {
 				return false;
 			} else {
 				return --this.growTiredTimer > 0;

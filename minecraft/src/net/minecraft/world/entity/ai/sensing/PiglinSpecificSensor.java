@@ -78,7 +78,7 @@ public class PiglinSpecificSensor extends Sensor<LivingEntity> {
 					list.add(piglin);
 				}
 			} else if (livingEntity2 instanceof Player player) {
-				if (!optional6.isPresent() && livingEntity2.canBeSeenAsEnemy() && !PiglinAi.isWearingGold(player)) {
+				if (!optional6.isPresent() && livingEntity.canAttack(livingEntity2) && !PiglinAi.isWearingGold(player)) {
 					optional6 = Optional.of(player);
 				}
 
