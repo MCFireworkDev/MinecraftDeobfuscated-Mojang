@@ -256,7 +256,8 @@ public class ChunkHolder {
 		CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> completableFuture = (CompletableFuture)this.futures.get(i);
 		if (completableFuture != null) {
 			Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure> either = (Either)completableFuture.getNow(null);
-			if (either == null || either.left().isPresent()) {
+			boolean bl = either != null && either.right().isPresent();
+			if (!bl) {
 				return completableFuture;
 			}
 		}

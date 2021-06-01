@@ -7,6 +7,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -389,324 +390,328 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 
 	public void reloadShaders(ResourceManager resourceManager) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
-		List<Pair<ShaderInstance, Consumer<ShaderInstance>>> list = Lists.<Pair<ShaderInstance, Consumer<ShaderInstance>>>newArrayListWithCapacity(
+		List<Program> list = Lists.<Program>newArrayList();
+		list.addAll(Program.Type.FRAGMENT.getPrograms().values());
+		list.addAll(Program.Type.VERTEX.getPrograms().values());
+		list.forEach(Program::close);
+		List<Pair<ShaderInstance, Consumer<ShaderInstance>>> list2 = Lists.<Pair<ShaderInstance, Consumer<ShaderInstance>>>newArrayListWithCapacity(
 			this.shaders.size()
 		);
 
 		try {
-			list.add(Pair.of(new ShaderInstance(resourceManager, "block", DefaultVertexFormat.BLOCK), (Consumer)shaderInstance -> blockShader = shaderInstance));
-			list.add(
+			list2.add(Pair.of(new ShaderInstance(resourceManager, "block", DefaultVertexFormat.BLOCK), (Consumer)shaderInstance -> blockShader = shaderInstance));
+			list2.add(
 				Pair.of(new ShaderInstance(resourceManager, "new_entity", DefaultVertexFormat.NEW_ENTITY), (Consumer)shaderInstance -> newEntityShader = shaderInstance)
 			);
-			list.add(
+			list2.add(
 				Pair.of(new ShaderInstance(resourceManager, "particle", DefaultVertexFormat.PARTICLE), (Consumer)shaderInstance -> particleShader = shaderInstance)
 			);
-			list.add(
+			list2.add(
 				Pair.of(new ShaderInstance(resourceManager, "position", DefaultVertexFormat.POSITION), (Consumer)shaderInstance -> positionShader = shaderInstance)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "position_color", DefaultVertexFormat.POSITION_COLOR),
 					(Consumer)shaderInstance -> positionColorShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "position_color_lightmap", DefaultVertexFormat.POSITION_COLOR_LIGHTMAP),
 					(Consumer)shaderInstance -> positionColorLightmapShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "position_color_tex", DefaultVertexFormat.POSITION_COLOR_TEX),
 					(Consumer)shaderInstance -> positionColorTexShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "position_color_tex_lightmap", DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP),
 					(Consumer)shaderInstance -> positionColorTexLightmapShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "position_tex", DefaultVertexFormat.POSITION_TEX), (Consumer)shaderInstance -> positionTexShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "position_tex_color", DefaultVertexFormat.POSITION_TEX_COLOR),
 					(Consumer)shaderInstance -> positionTexColorShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "position_tex_color_normal", DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL),
 					(Consumer)shaderInstance -> positionTexColorNormalShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "position_tex_lightmap_color", DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR),
 					(Consumer)shaderInstance -> positionTexLightmapColorShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_solid", DefaultVertexFormat.BLOCK), (Consumer)shaderInstance -> rendertypeSolidShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_cutout_mipped", DefaultVertexFormat.BLOCK),
 					(Consumer)shaderInstance -> rendertypeCutoutMippedShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_cutout", DefaultVertexFormat.BLOCK), (Consumer)shaderInstance -> rendertypeCutoutShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_translucent", DefaultVertexFormat.BLOCK),
 					(Consumer)shaderInstance -> rendertypeTranslucentShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_translucent_moving_block", DefaultVertexFormat.BLOCK),
 					(Consumer)shaderInstance -> rendertypeTranslucentMovingBlockShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_translucent_no_crumbling", DefaultVertexFormat.BLOCK),
 					(Consumer)shaderInstance -> rendertypeTranslucentNoCrumblingShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_armor_cutout_no_cull", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeArmorCutoutNoCullShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_solid", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeEntitySolidShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_cutout", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeEntityCutoutShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_cutout_no_cull", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeEntityCutoutNoCullShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_cutout_no_cull_z_offset", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeEntityCutoutNoCullZOffsetShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_item_entity_translucent_cull", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeItemEntityTranslucentCullShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_translucent_cull", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeEntityTranslucentCullShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_translucent", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeEntityTranslucentShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_smooth_cutout", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeEntitySmoothCutoutShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_beacon_beam", DefaultVertexFormat.BLOCK),
 					(Consumer)shaderInstance -> rendertypeBeaconBeamShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_decal", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeEntityDecalShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_no_outline", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeEntityNoOutlineShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_shadow", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeEntityShadowShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_alpha", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeEntityAlphaShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_eyes", DefaultVertexFormat.NEW_ENTITY), (Consumer)shaderInstance -> rendertypeEyesShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_energy_swirl", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeEnergySwirlShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_leash", DefaultVertexFormat.POSITION_COLOR_LIGHTMAP),
 					(Consumer)shaderInstance -> rendertypeLeashShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_water_mask", DefaultVertexFormat.POSITION),
 					(Consumer)shaderInstance -> rendertypeWaterMaskShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_outline", DefaultVertexFormat.POSITION_COLOR_TEX),
 					(Consumer)shaderInstance -> rendertypeOutlineShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_armor_glint", DefaultVertexFormat.POSITION_TEX),
 					(Consumer)shaderInstance -> rendertypeArmorGlintShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_armor_entity_glint", DefaultVertexFormat.POSITION_TEX),
 					(Consumer)shaderInstance -> rendertypeArmorEntityGlintShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_glint_translucent", DefaultVertexFormat.POSITION_TEX),
 					(Consumer)shaderInstance -> rendertypeGlintTranslucentShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_glint", DefaultVertexFormat.POSITION_TEX),
 					(Consumer)shaderInstance -> rendertypeGlintShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_glint_direct", DefaultVertexFormat.POSITION_TEX),
 					(Consumer)shaderInstance -> rendertypeGlintDirectShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_glint", DefaultVertexFormat.POSITION_TEX),
 					(Consumer)shaderInstance -> rendertypeEntityGlintShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_glint_direct", DefaultVertexFormat.POSITION_TEX),
 					(Consumer)shaderInstance -> rendertypeEntityGlintDirectShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_text", DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP),
 					(Consumer)shaderInstance -> rendertypeTextShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_text_intensity", DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP),
 					(Consumer)shaderInstance -> rendertypeTextIntensityShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_text_see_through", DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP),
 					(Consumer)shaderInstance -> rendertypeTextSeeThroughShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_text_intensity_see_through", DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP),
 					(Consumer)shaderInstance -> rendertypeTextIntensitySeeThroughShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_lightning", DefaultVertexFormat.POSITION_COLOR),
 					(Consumer)shaderInstance -> rendertypeLightningShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_tripwire", DefaultVertexFormat.BLOCK),
 					(Consumer)shaderInstance -> rendertypeTripwireShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_end_portal", DefaultVertexFormat.POSITION),
 					(Consumer)shaderInstance -> rendertypeEndPortalShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_end_gateway", DefaultVertexFormat.POSITION),
 					(Consumer)shaderInstance -> rendertypeEndGatewayShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_lines", DefaultVertexFormat.POSITION_COLOR_NORMAL),
 					(Consumer)shaderInstance -> rendertypeLinesShader = shaderInstance
 				)
 			);
-			list.add(
+			list2.add(
 				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_crumbling", DefaultVertexFormat.BLOCK),
 					(Consumer)shaderInstance -> rendertypeCrumblingShader = shaderInstance
 				)
 			);
-		} catch (IOException var4) {
-			list.forEach(pair -> ((ShaderInstance)pair.getFirst()).close());
-			throw new RuntimeException("could not reload shaders", var4);
+		} catch (IOException var5) {
+			list2.forEach(pair -> ((ShaderInstance)pair.getFirst()).close());
+			throw new RuntimeException("could not reload shaders", var5);
 		}
 
 		this.shutdownShaders();
-		list.forEach(pair -> {
+		list2.forEach(pair -> {
 			ShaderInstance shaderInstance = (ShaderInstance)pair.getFirst();
 			this.shaders.put(shaderInstance.getName(), shaderInstance);
 			((Consumer)pair.getSecond()).accept(shaderInstance);
