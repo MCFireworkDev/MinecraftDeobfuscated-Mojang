@@ -1687,7 +1687,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 				new MetricsPersister("server"),
 				this.onMetricsRecordingStopped,
 				path -> {
-					this.saveDebugReport(path.resolve("server"));
+					this.executeBlocking(() -> this.saveDebugReport(path.resolve("server")));
 					this.onMetricsRecordingFinished.accept(path);
 				}
 			);
