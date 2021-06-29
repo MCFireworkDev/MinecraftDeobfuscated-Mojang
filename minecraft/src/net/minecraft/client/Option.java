@@ -416,6 +416,7 @@ public abstract class Option {
 			Minecraft minecraft = Minecraft.getInstance();
 			if (minecraft.getWindow() != null) {
 				minecraft.selectMainFont(boolean_);
+				minecraft.resizeDisplay();
 			}
 		}
 	);
