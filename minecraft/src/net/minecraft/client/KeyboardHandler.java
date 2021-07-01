@@ -356,8 +356,6 @@ public class KeyboardHandler {
 
 					Screenshot.grab(
 						this.minecraft.gameDirectory,
-						this.minecraft.getWindow().getWidth(),
-						this.minecraft.getWindow().getHeight(),
 						this.minecraft.getMainRenderTarget(),
 						component -> this.minecraft.execute(() -> this.minecraft.gui.getChat().addMessage(component))
 					);
