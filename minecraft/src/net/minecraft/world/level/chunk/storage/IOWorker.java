@@ -79,7 +79,7 @@ public class IOWorker implements AutoCloseable {
 		});
 	}
 
-	public CompletableFuture<Void> synchronize() {
+	public CompletableFuture<Void> synchronize(boolean bl) {
 		CompletableFuture<Void> completableFuture = this.submitTask(
 				() -> Either.left(
 						CompletableFuture.allOf(
@@ -88,15 +88,15 @@ public class IOWorker implements AutoCloseable {
 					)
 			)
 			.thenCompose(Function.identity());
-		return completableFuture.thenCompose(void_ -> this.submitTask(() -> {
+		return bl ? completableFuture.thenCompose(void_ -> this.submitTask(() -> {
 				try {
 					this.storage.flush();
 					return Either.left(null);
-				} catch (Exception var2) {
-					LOGGER.warn("Failed to synchronized chunks", var2);
-					return Either.right(var2);
+				} catch (Exception var2xx) {
+					LOGGER.warn("Failed to synchronize chunks", var2xx);
+					return Either.right(var2xx);
 				}
-			}));
+			})) : completableFuture.thenCompose(void_ -> this.submitTask(() -> Either.left(null)));
 	}
 
 	private <T> CompletableFuture<T> submitTask(Supplier<Either<T, Exception>> supplier) {
