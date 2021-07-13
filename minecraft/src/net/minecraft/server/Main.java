@@ -41,6 +41,7 @@ import net.minecraft.server.packs.repository.ServerPacksSource;
 import net.minecraft.server.players.GameProfileCache;
 import net.minecraft.util.Mth;
 import net.minecraft.util.datafix.DataFixers;
+import net.minecraft.util.profiling.jfr.JfrRecording;
 import net.minecraft.util.worldupdate.WorldUpgrader;
 import net.minecraft.world.level.DataPackConfig;
 import net.minecraft.world.level.GameRules;
@@ -75,7 +76,8 @@ public class Main {
 		OptionSpec<String> optionSpec11 = optionParser.accepts("world").withRequiredArg();
 		OptionSpec<Integer> optionSpec12 = optionParser.accepts("port").withRequiredArg().ofType(Integer.class).defaultsTo(-1);
 		OptionSpec<String> optionSpec13 = optionParser.accepts("serverId").withRequiredArg();
-		OptionSpec<String> optionSpec14 = optionParser.nonOptions();
+		OptionSpec<File> optionSpec14 = optionParser.accepts("jfrProfile").withOptionalArg().ofType(File.class);
+		OptionSpec<String> optionSpec15 = optionParser.nonOptions();
 
 		try {
 			OptionSet optionSet = optionParser.parse(strings);
@@ -85,6 +87,14 @@ public class Main {
 			}
 
 			CrashReport.preload();
+			if (optionSet.has(optionSpec14)) {
+				if (optionSet.hasArgument(optionSpec14)) {
+					JfrRecording.start(((File)optionSpec14.value(optionSet)).toPath(), JfrRecording.Environment.SERVER);
+				} else {
+					JfrRecording.start(JfrRecording.Environment.SERVER);
+				}
+			}
+
 			Bootstrap.bootStrap();
 			Bootstrap.validate();
 			Util.startTimerHackThread();
@@ -145,8 +155,8 @@ public class Main {
 			ServerResources serverResources;
 			try {
 				serverResources = (ServerResources)completableFuture.get();
-			} catch (Exception var42) {
-				LOGGER.warn("Failed to load datapacks, can't proceed with server load. You can either fix your datapacks or reset to vanilla with --safeMode", var42);
+			} catch (Exception var43) {
+				LOGGER.warn("Failed to load datapacks, can't proceed with server load. You can either fix your datapacks or reset to vanilla with --safeMode", var43);
 				packRepository.close();
 				return;
 			}
@@ -206,7 +216,7 @@ public class Main {
 					dedicatedServerxx.setPort(optionSet.valueOf(optionSpec12));
 					dedicatedServerxx.setDemo(optionSet.has(optionSpec3));
 					dedicatedServerxx.setId(optionSet.valueOf(optionSpec13));
-					boolean blxx = !optionSet.has(optionSpec) && !optionSet.valuesOf(optionSpec14).contains("nogui");
+					boolean blxx = !optionSet.has(optionSpec) && !optionSet.valuesOf(optionSpec15).contains("nogui");
 					if (blxx && !GraphicsEnvironment.isHeadless()) {
 						dedicatedServerxx.showGui();
 					}
@@ -221,8 +231,8 @@ public class Main {
 			};
 			thread.setUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler(LOGGER));
 			Runtime.getRuntime().addShutdownHook(thread);
-		} catch (Exception var43) {
-			LOGGER.fatal("Failed to start the minecraft server", var43);
+		} catch (Exception var44) {
+			LOGGER.fatal("Failed to start the minecraft server", var44);
 		}
 	}
 

@@ -185,7 +185,7 @@ public final class NoiseGeneratorSettings {
 				2,
 				1,
 				0.0,
-				0.0,
+				-0.05,
 				true,
 				false,
 				bl2,
@@ -220,7 +220,7 @@ public final class NoiseGeneratorSettings {
 				1,
 				2,
 				0.0,
-				0.019921875,
+				-0.030078125,
 				false,
 				false,
 				false,
@@ -246,15 +246,15 @@ public final class NoiseGeneratorSettings {
 		return new NoiseGeneratorSettings(
 			structureSettings,
 			NoiseSettings.create(
-				0,
-				256,
+				-64,
+				384,
 				new NoiseSamplingSettings(0.9999999814507745, 0.9999999814507745, 80.0, 160.0),
-				new NoiseSlideSettings(-10, 3, 0),
+				new NoiseSlideSettings(-10, 2, 8),
 				new NoiseSlideSettings(15, 3, 0),
 				1,
 				2,
 				1.0,
-				-0.46875,
+				-0.51875,
 				true,
 				true,
 				false,
@@ -265,13 +265,13 @@ public final class NoiseGeneratorSettings {
 			Integer.MIN_VALUE,
 			0,
 			63,
-			0,
+			50,
 			false,
-			false,
-			false,
-			false,
-			false,
-			false
+			true,
+			true,
+			true,
+			true,
+			true
 		);
 	}
 

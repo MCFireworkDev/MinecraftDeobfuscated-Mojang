@@ -4,7 +4,6 @@ import com.google.common.collect.Iterables;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.properties.Property;
-import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -122,18 +121,22 @@ public class SkullBlockEntity extends BlockEntity {
 			&& (!gameProfile.isComplete() || !gameProfile.getProperties().containsKey("textures"))
 			&& profileCache != null
 			&& sessionService != null) {
-			profileCache.getAsync(gameProfile.getName(), optional -> Util.backgroundExecutor().execute(() -> Util.ifElse(optional, gameProfilexxx -> {
-						Property property = Iterables.getFirst(gameProfilexxx.getProperties().get("textures"), null);
-						if (property == null) {
-							gameProfilexxx = sessionService.fillProfileProperties(gameProfilexxx, true);
-						}
+			profileCache.getAsync(gameProfile.getName(), gameProfilex -> {
+				Runnable runnable = () -> {
+					GameProfile gameProfile2 = gameProfilex;
+					Property property = Iterables.getFirst(gameProfilex.getProperties().get("textures"), null);
+					if (property == null) {
+						gameProfile2 = sessionService.fillProfileProperties(gameProfilex, true);
+					}
 
-						GameProfile gameProfile2 = gameProfilexxx;
-						mainThreadExecutor.execute(() -> {
-							profileCache.add(gameProfile2);
-							consumer.accept(gameProfile2);
-						});
-					}, () -> mainThreadExecutor.execute(() -> consumer.accept(gameProfile)))));
+					GameProfile gameProfile3 = gameProfile2;
+					mainThreadExecutor.execute(() -> {
+						profileCache.add(gameProfile3);
+						consumer.accept(gameProfile3);
+					});
+				};
+				Util.backgroundExecutor().execute(runnable);
+			});
 		} else {
 			consumer.accept(gameProfile);
 		}

@@ -27,7 +27,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeZoomer;
 import net.minecraft.world.level.biome.FuzzyOffsetBiomeZoomer;
-import net.minecraft.world.level.biome.FuzzyOffsetConstantColumnBiomeZoomer;
 import net.minecraft.world.level.biome.MultiNoiseBiomeSource;
 import net.minecraft.world.level.biome.TheEndBiomeSource;
 import net.minecraft.world.level.block.Block;
@@ -89,10 +88,10 @@ public class DimensionType {
 		true,
 		false,
 		true,
-		0,
-		256,
-		256,
-		FuzzyOffsetConstantColumnBiomeZoomer.INSTANCE,
+		-64,
+		384,
+		384,
+		FuzzyOffsetBiomeZoomer.INSTANCE,
 		BlockTags.INFINIBURN_OVERWORLD.getName(),
 		OVERWORLD_EFFECTS,
 		0.0F
@@ -152,10 +151,10 @@ public class DimensionType {
 		true,
 		false,
 		true,
-		0,
-		256,
-		256,
-		FuzzyOffsetConstantColumnBiomeZoomer.INSTANCE,
+		-64,
+		384,
+		384,
+		FuzzyOffsetBiomeZoomer.INSTANCE,
 		BlockTags.INFINIBURN_OVERWORLD.getName(),
 		OVERWORLD_EFFECTS,
 		0.0F
