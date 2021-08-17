@@ -26,21 +26,24 @@ public class PacketDecoder extends ByteToMessageDecoder {
 	protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
 		int i = byteBuf.readableBytes();
 		if (i != 0) {
+			int j = byteBuf.readerIndex();
 			FriendlyByteBuf friendlyByteBuf = new FriendlyByteBuf(byteBuf);
-			int j = friendlyByteBuf.readVarInt();
+			int k = friendlyByteBuf.readVarInt();
 			Packet<?> packet = ((ConnectionProtocol)channelHandlerContext.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get())
-				.createPacket(this.flow, j, friendlyByteBuf);
+				.createPacket(this.flow, k, friendlyByteBuf);
+			int l = byteBuf.readerIndex() - j;
 			if (packet == null) {
-				throw new IOException("Bad packet id " + j);
+				throw new IOException("Bad packet id " + k);
 			} else {
 				PacketReceivedEvent packetReceivedEvent = (PacketReceivedEvent)PacketReceivedEvent.EVENT.get();
 				if (packetReceivedEvent.isEnabled() && packetReceivedEvent.shouldCommit()) {
 					packetReceivedEvent.packetName = ((ConnectionProtocol)channelHandlerContext.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get()).getId()
 						+ "/"
-						+ j
+						+ k
 						+ " ("
 						+ packet.getClass().getSimpleName()
 						+ ")";
+					packetReceivedEvent.bytes = l;
 					packetReceivedEvent.commit();
 					packetReceivedEvent.reset();
 				}
@@ -50,18 +53,18 @@ public class PacketDecoder extends ByteToMessageDecoder {
 						"Packet "
 							+ ((ConnectionProtocol)channelHandlerContext.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get()).getId()
 							+ "/"
-							+ j
+							+ k
 							+ " ("
 							+ packet.getClass().getSimpleName()
 							+ ") was larger than I expected, found "
 							+ friendlyByteBuf.readableBytes()
 							+ " bytes extra whilst reading packet "
-							+ j
+							+ k
 					);
 				} else {
 					list.add(packet);
 					if (LOGGER.isDebugEnabled()) {
-						LOGGER.debug(MARKER, " IN: [{}:{}] {}", channelHandlerContext.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get(), j, packet.getClass().getName());
+						LOGGER.debug(MARKER, " IN: [{}:{}] {}", channelHandlerContext.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get(), k, packet.getClass().getName());
 					}
 				}
 			}
