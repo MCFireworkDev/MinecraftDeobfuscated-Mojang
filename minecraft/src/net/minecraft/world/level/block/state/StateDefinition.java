@@ -70,10 +70,10 @@ public class StateDefinition<O, S extends StateHolder<O, S>> {
 	private static <S extends StateHolder<?, S>, T extends Comparable<T>> MapCodec<S> appendPropertyCodec(
 		MapCodec<S> mapCodec, Supplier<S> supplier, String string, Property<T> property
 	) {
-		return Codec.mapPair(mapCodec, property.valueCodec().fieldOf(string).setPartial(() -> property.value((StateHolder<?, ?>)supplier.get())))
+		return Codec.<S, S>mapPair(mapCodec, property.valueCodec().fieldOf(string).setPartial(() -> property.value((StateHolder<?, ?>)supplier.get())))
 			.xmap(
 				pair -> (StateHolder)((StateHolder)pair.getFirst()).setValue(property, ((Property.Value)pair.getSecond()).value()),
-				stateHolder -> Pair.of(stateHolder, property.value(stateHolder))
+				stateHolder -> Pair.of(stateHolder, (S)property.value(stateHolder))
 			);
 	}
 

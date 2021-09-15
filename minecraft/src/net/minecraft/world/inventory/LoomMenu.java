@@ -11,12 +11,14 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BannerItem;
 import net.minecraft.world.item.BannerPatternItem;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BannerPattern;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 
 public class LoomMenu extends AbstractContainerMenu {
 	private static final int INV_SLOT_START = 4;
@@ -143,8 +145,8 @@ public class LoomMenu extends AbstractContainerMenu {
 				&& this.selectedBannerPatternIndex.get() > 0
 				&& (this.selectedBannerPatternIndex.get() < BannerPattern.COUNT - BannerPattern.PATTERN_ITEM_COUNT || !itemStack3.isEmpty())) {
 			if (!itemStack3.isEmpty() && itemStack3.getItem() instanceof BannerPatternItem) {
-				CompoundTag compoundTag = itemStack.getOrCreateTagElement("BlockEntityTag");
-				boolean bl = compoundTag.contains("Patterns", 9) && !itemStack.isEmpty() && compoundTag.getList("Patterns", 10).size() >= 6;
+				CompoundTag compoundTag = BlockItem.getBlockEntityData(itemStack);
+				boolean bl = compoundTag != null && compoundTag.contains("Patterns", 9) && !itemStack.isEmpty() && compoundTag.getList("Patterns", 10).size() >= 6;
 				if (bl) {
 					this.selectedBannerPatternIndex.set(0);
 				} else {
@@ -233,12 +235,16 @@ public class LoomMenu extends AbstractContainerMenu {
 				itemStack3.setCount(1);
 				BannerPattern bannerPattern = BannerPattern.values()[this.selectedBannerPatternIndex.get()];
 				DyeColor dyeColor = ((DyeItem)itemStack2.getItem()).getDyeColor();
-				CompoundTag compoundTag = itemStack3.getOrCreateTagElement("BlockEntityTag");
+				CompoundTag compoundTag = BlockItem.getBlockEntityData(itemStack3);
 				ListTag listTag;
-				if (compoundTag.contains("Patterns", 9)) {
+				if (compoundTag != null && compoundTag.contains("Patterns", 9)) {
 					listTag = compoundTag.getList("Patterns", 10);
 				} else {
 					listTag = new ListTag();
+					if (compoundTag == null) {
+						compoundTag = new CompoundTag();
+					}
+
 					compoundTag.put("Patterns", listTag);
 				}
 
@@ -246,6 +252,7 @@ public class LoomMenu extends AbstractContainerMenu {
 				compoundTag2.putString("Pattern", bannerPattern.getHashname());
 				compoundTag2.putInt("Color", dyeColor.getId());
 				listTag.add(compoundTag2);
+				BlockItem.setBlockEntityData(itemStack3, BlockEntityType.BANNER, compoundTag);
 			}
 
 			if (!ItemStack.matches(itemStack3, this.resultSlot.getItem())) {

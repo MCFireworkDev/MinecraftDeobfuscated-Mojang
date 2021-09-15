@@ -1,43 +1,120 @@
 package net.minecraft.world.level;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
+import java.lang.runtime.ObjectMethods;
+import java.util.Optional;
+import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.random.WeightedEntry;
+import net.minecraft.util.InclusiveRange;
+import net.minecraft.util.random.SimpleWeightedRandomList;
 
-public class SpawnData extends WeightedEntry.IntrusiveBase {
-	public static final int DEFAULT_WEIGHT = 1;
+public final class SpawnData extends Record {
+	private final CompoundTag entityToSpawn;
+	private final Optional<SpawnData.CustomSpawnRules> customSpawnRules;
+	public static final Codec<SpawnData> CODEC = RecordCodecBuilder.create(
+		instance -> instance.group(
+					CompoundTag.CODEC.fieldOf("entity").forGetter(spawnData -> spawnData.entityToSpawn),
+					SpawnData.CustomSpawnRules.CODEC.optionalFieldOf("custom_spawn_rules").forGetter(spawnData -> spawnData.customSpawnRules)
+				)
+				.apply(instance, SpawnData::new)
+	);
+	public static final Codec<SimpleWeightedRandomList<SpawnData>> LIST_CODEC = SimpleWeightedRandomList.wrappedCodec(CODEC);
 	public static final String DEFAULT_TYPE = "minecraft:pig";
-	private final CompoundTag tag;
 
 	public SpawnData() {
-		super(1);
-		this.tag = new CompoundTag();
-		this.tag.putString("id", "minecraft:pig");
+		this(Util.make(new CompoundTag(), compoundTag -> compoundTag.putString("id", "minecraft:pig")), Optional.empty());
 	}
 
-	public SpawnData(CompoundTag compoundTag) {
-		this(compoundTag.contains("Weight", 99) ? compoundTag.getInt("Weight") : 1, compoundTag.getCompound("Entity"));
-	}
-
-	public SpawnData(int i, CompoundTag compoundTag) {
-		super(i);
-		this.tag = compoundTag;
+	public SpawnData(CompoundTag compoundTag, Optional<SpawnData.CustomSpawnRules> optional) {
 		ResourceLocation resourceLocation = ResourceLocation.tryParse(compoundTag.getString("id"));
-		if (resourceLocation != null) {
-			compoundTag.putString("id", resourceLocation.toString());
-		} else {
-			compoundTag.putString("id", "minecraft:pig");
+		compoundTag.putString("id", resourceLocation != null ? resourceLocation.toString() : "minecraft:pig");
+		this.entityToSpawn = compoundTag;
+		this.customSpawnRules = optional;
+	}
+
+	public CompoundTag getEntityToSpawn() {
+		return this.entityToSpawn;
+	}
+
+	public Optional<SpawnData.CustomSpawnRules> getCustomSpawnRules() {
+		return this.customSpawnRules;
+	}
+
+	public final String toString() {
+		return ObjectMethods.bootstrap<"toString",SpawnData,"entityToSpawn;customSpawnRules",SpawnData::entityToSpawn,SpawnData::customSpawnRules>(this);
+	}
+
+	public final int hashCode() {
+		return ObjectMethods.bootstrap<"hashCode",SpawnData,"entityToSpawn;customSpawnRules",SpawnData::entityToSpawn,SpawnData::customSpawnRules>(this);
+	}
+
+	public final boolean equals(Object object) {
+		return ObjectMethods.bootstrap<"equals",SpawnData,"entityToSpawn;customSpawnRules",SpawnData::entityToSpawn,SpawnData::customSpawnRules>(this, object);
+	}
+
+	public CompoundTag entityToSpawn() {
+		return this.entityToSpawn;
+	}
+
+	public Optional<SpawnData.CustomSpawnRules> customSpawnRules() {
+		return this.customSpawnRules;
+	}
+
+	public static final class CustomSpawnRules extends Record {
+		private final InclusiveRange<Integer> blockLightLimit;
+		private final InclusiveRange<Integer> skyLightLimit;
+		private static final InclusiveRange<Integer> LIGHT_RANGE = new InclusiveRange(0, 15);
+		public static final Codec<SpawnData.CustomSpawnRules> CODEC = RecordCodecBuilder.create(
+			instance -> instance.group(
+						InclusiveRange.INT
+							.optionalFieldOf("block_light_limit", LIGHT_RANGE)
+							.flatXmap(SpawnData.CustomSpawnRules::checkLightBoundaries, SpawnData.CustomSpawnRules::checkLightBoundaries)
+							.forGetter(customSpawnRules -> customSpawnRules.blockLightLimit),
+						InclusiveRange.INT
+							.optionalFieldOf("sky_light_limit", LIGHT_RANGE)
+							.flatXmap(SpawnData.CustomSpawnRules::checkLightBoundaries, SpawnData.CustomSpawnRules::checkLightBoundaries)
+							.forGetter(customSpawnRules -> customSpawnRules.skyLightLimit)
+					)
+					.apply(instance, SpawnData.CustomSpawnRules::new)
+		);
+
+		public CustomSpawnRules(InclusiveRange<Integer> inclusiveRange, InclusiveRange<Integer> inclusiveRange2) {
+			this.blockLightLimit = inclusiveRange;
+			this.skyLightLimit = inclusiveRange2;
 		}
-	}
 
-	public CompoundTag save() {
-		CompoundTag compoundTag = new CompoundTag();
-		compoundTag.put("Entity", this.tag);
-		compoundTag.putInt("Weight", this.getWeight().asInt());
-		return compoundTag;
-	}
+		private static DataResult<InclusiveRange<Integer>> checkLightBoundaries(InclusiveRange<Integer> inclusiveRange) {
+			return !LIGHT_RANGE.contains(inclusiveRange) ? DataResult.error("Light values must be withing range " + LIGHT_RANGE) : DataResult.success(inclusiveRange);
+		}
 
-	public CompoundTag getTag() {
-		return this.tag;
+		public final String toString() {
+			return ObjectMethods.bootstrap<"toString",SpawnData.CustomSpawnRules,"blockLightLimit;skyLightLimit",SpawnData.CustomSpawnRules::blockLightLimit,SpawnData.CustomSpawnRules::skyLightLimit>(
+				this
+			);
+		}
+
+		public final int hashCode() {
+			return ObjectMethods.bootstrap<"hashCode",SpawnData.CustomSpawnRules,"blockLightLimit;skyLightLimit",SpawnData.CustomSpawnRules::blockLightLimit,SpawnData.CustomSpawnRules::skyLightLimit>(
+				this
+			);
+		}
+
+		public final boolean equals(Object object) {
+			return ObjectMethods.bootstrap<"equals",SpawnData.CustomSpawnRules,"blockLightLimit;skyLightLimit",SpawnData.CustomSpawnRules::blockLightLimit,SpawnData.CustomSpawnRules::skyLightLimit>(
+				this, object
+			);
+		}
+
+		public InclusiveRange<Integer> blockLightLimit() {
+			return this.blockLightLimit;
+		}
+
+		public InclusiveRange<Integer> skyLightLimit() {
+			return this.skyLightLimit;
+		}
 	}
 }

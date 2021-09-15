@@ -5,7 +5,6 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import net.minecraft.core.Registry;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.placement.ConfiguredDecorator;
 
@@ -26,9 +25,7 @@ public class DecoratedFeatureConfiguration implements FeatureConfiguration {
 	}
 
 	public String toString() {
-		return String.format(
-			"< %s [%s | %s] >", this.getClass().getSimpleName(), Registry.FEATURE.getKey(((ConfiguredFeature)this.feature.get()).feature()), this.decorator
-		);
+		return String.format("< %s [%s | %s] >", this.getClass().getSimpleName(), this.feature.get(), this.decorator);
 	}
 
 	@Override

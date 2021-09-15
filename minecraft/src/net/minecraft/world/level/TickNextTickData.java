@@ -24,12 +24,11 @@ public class TickNextTickData<T> {
 	}
 
 	public boolean equals(Object object) {
-		if (!(object instanceof TickNextTickData)) {
-			return false;
-		} else {
-			TickNextTickData<?> tickNextTickData = (TickNextTickData)object;
-			return this.pos.equals(tickNextTickData.pos) && this.type == tickNextTickData.type;
+		if (object instanceof TickNextTickData tickNextTickData && this.pos.equals(tickNextTickData.pos) && this.type == tickNextTickData.type) {
+			return true;
 		}
+
+		return false;
 	}
 
 	public int hashCode() {

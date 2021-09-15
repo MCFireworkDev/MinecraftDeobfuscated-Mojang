@@ -1,6 +1,7 @@
 package net.minecraft.network.protocol.game;
 
 import com.google.common.collect.Sets;
+import java.lang.runtime.ObjectMethods;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -13,10 +14,8 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
 
-public class ClientboundLoginPacket implements Packet<ClientGamePacketListener> {
-	private static final int HARDCORE_FLAG = 8;
+public final class ClientboundLoginPacket extends Record implements Packet {
 	private final int playerId;
-	private final long seed;
 	private final boolean hardcore;
 	private final GameType gameType;
 	@Nullable
@@ -25,6 +24,7 @@ public class ClientboundLoginPacket implements Packet<ClientGamePacketListener> 
 	private final RegistryAccess.RegistryHolder registryHolder;
 	private final DimensionType dimensionType;
 	private final ResourceKey<Level> dimension;
+	private final long seed;
 	private final int maxPlayers;
 	private final int chunkRadius;
 	private final boolean reducedDebugInfo;
@@ -32,16 +32,38 @@ public class ClientboundLoginPacket implements Packet<ClientGamePacketListener> 
 	private final boolean isDebug;
 	private final boolean isFlat;
 
+	public ClientboundLoginPacket(FriendlyByteBuf friendlyByteBuf) {
+		this(
+			friendlyByteBuf.readInt(),
+			friendlyByteBuf.readBoolean(),
+			GameType.byId(friendlyByteBuf.readByte()),
+			GameType.byNullableId(friendlyByteBuf.readByte()),
+			friendlyByteBuf.readCollection(
+				Sets::newHashSetWithExpectedSize, friendlyByteBufx -> ResourceKey.create(Registry.DIMENSION_REGISTRY, friendlyByteBufx.readResourceLocation())
+			),
+			friendlyByteBuf.readWithCodec(RegistryAccess.RegistryHolder.NETWORK_CODEC),
+			(DimensionType)((Supplier)friendlyByteBuf.readWithCodec(DimensionType.CODEC)).get(),
+			ResourceKey.create(Registry.DIMENSION_REGISTRY, friendlyByteBuf.readResourceLocation()),
+			friendlyByteBuf.readLong(),
+			friendlyByteBuf.readVarInt(),
+			friendlyByteBuf.readVarInt(),
+			friendlyByteBuf.readBoolean(),
+			friendlyByteBuf.readBoolean(),
+			friendlyByteBuf.readBoolean(),
+			friendlyByteBuf.readBoolean()
+		);
+	}
+
 	public ClientboundLoginPacket(
 		int i,
+		boolean bl,
 		GameType gameType,
 		@Nullable GameType gameType2,
-		long l,
-		boolean bl,
 		Set<ResourceKey<Level>> set,
 		RegistryAccess.RegistryHolder registryHolder,
 		DimensionType dimensionType,
 		ResourceKey<Level> resourceKey,
+		long l,
 		int j,
 		int k,
 		boolean bl2,
@@ -50,40 +72,20 @@ public class ClientboundLoginPacket implements Packet<ClientGamePacketListener> 
 		boolean bl5
 	) {
 		this.playerId = i;
+		this.hardcore = bl;
+		this.gameType = gameType;
+		this.previousGameType = gameType2;
 		this.levels = set;
 		this.registryHolder = registryHolder;
 		this.dimensionType = dimensionType;
 		this.dimension = resourceKey;
 		this.seed = l;
-		this.gameType = gameType;
-		this.previousGameType = gameType2;
 		this.maxPlayers = j;
-		this.hardcore = bl;
 		this.chunkRadius = k;
 		this.reducedDebugInfo = bl2;
 		this.showDeathScreen = bl3;
 		this.isDebug = bl4;
 		this.isFlat = bl5;
-	}
-
-	public ClientboundLoginPacket(FriendlyByteBuf friendlyByteBuf) {
-		this.playerId = friendlyByteBuf.readInt();
-		this.hardcore = friendlyByteBuf.readBoolean();
-		this.gameType = GameType.byId(friendlyByteBuf.readByte());
-		this.previousGameType = GameType.byNullableId(friendlyByteBuf.readByte());
-		this.levels = friendlyByteBuf.readCollection(
-			Sets::newHashSetWithExpectedSize, friendlyByteBufx -> ResourceKey.create(Registry.DIMENSION_REGISTRY, friendlyByteBufx.readResourceLocation())
-		);
-		this.registryHolder = friendlyByteBuf.readWithCodec(RegistryAccess.RegistryHolder.NETWORK_CODEC);
-		this.dimensionType = (DimensionType)((Supplier)friendlyByteBuf.readWithCodec(DimensionType.CODEC)).get();
-		this.dimension = ResourceKey.create(Registry.DIMENSION_REGISTRY, friendlyByteBuf.readResourceLocation());
-		this.seed = friendlyByteBuf.readLong();
-		this.maxPlayers = friendlyByteBuf.readVarInt();
-		this.chunkRadius = friendlyByteBuf.readVarInt();
-		this.reducedDebugInfo = friendlyByteBuf.readBoolean();
-		this.showDeathScreen = friendlyByteBuf.readBoolean();
-		this.isDebug = friendlyByteBuf.readBoolean();
-		this.isFlat = friendlyByteBuf.readBoolean();
 	}
 
 	@Override
@@ -109,24 +111,38 @@ public class ClientboundLoginPacket implements Packet<ClientGamePacketListener> 
 		clientGamePacketListener.handleLogin(this);
 	}
 
-	public int getPlayerId() {
+	public final String toString() {
+		return ObjectMethods.bootstrap<"toString",ClientboundLoginPacket,"playerId;hardcore;gameType;previousGameType;levels;registryHolder;dimensionType;dimension;seed;maxPlayers;chunkRadius;reducedDebugInfo;showDeathScreen;isDebug;isFlat",ClientboundLoginPacket::playerId,ClientboundLoginPacket::hardcore,ClientboundLoginPacket::gameType,ClientboundLoginPacket::previousGameType,ClientboundLoginPacket::levels,ClientboundLoginPacket::registryHolder,ClientboundLoginPacket::dimensionType,ClientboundLoginPacket::dimension,ClientboundLoginPacket::seed,ClientboundLoginPacket::maxPlayers,ClientboundLoginPacket::chunkRadius,ClientboundLoginPacket::reducedDebugInfo,ClientboundLoginPacket::showDeathScreen,ClientboundLoginPacket::isDebug,ClientboundLoginPacket::isFlat>(
+			this
+		);
+	}
+
+	public final int hashCode() {
+		return ObjectMethods.bootstrap<"hashCode",ClientboundLoginPacket,"playerId;hardcore;gameType;previousGameType;levels;registryHolder;dimensionType;dimension;seed;maxPlayers;chunkRadius;reducedDebugInfo;showDeathScreen;isDebug;isFlat",ClientboundLoginPacket::playerId,ClientboundLoginPacket::hardcore,ClientboundLoginPacket::gameType,ClientboundLoginPacket::previousGameType,ClientboundLoginPacket::levels,ClientboundLoginPacket::registryHolder,ClientboundLoginPacket::dimensionType,ClientboundLoginPacket::dimension,ClientboundLoginPacket::seed,ClientboundLoginPacket::maxPlayers,ClientboundLoginPacket::chunkRadius,ClientboundLoginPacket::reducedDebugInfo,ClientboundLoginPacket::showDeathScreen,ClientboundLoginPacket::isDebug,ClientboundLoginPacket::isFlat>(
+			this
+		);
+	}
+
+	public final boolean equals(Object object) {
+		return ObjectMethods.bootstrap<"equals",ClientboundLoginPacket,"playerId;hardcore;gameType;previousGameType;levels;registryHolder;dimensionType;dimension;seed;maxPlayers;chunkRadius;reducedDebugInfo;showDeathScreen;isDebug;isFlat",ClientboundLoginPacket::playerId,ClientboundLoginPacket::hardcore,ClientboundLoginPacket::gameType,ClientboundLoginPacket::previousGameType,ClientboundLoginPacket::levels,ClientboundLoginPacket::registryHolder,ClientboundLoginPacket::dimensionType,ClientboundLoginPacket::dimension,ClientboundLoginPacket::seed,ClientboundLoginPacket::maxPlayers,ClientboundLoginPacket::chunkRadius,ClientboundLoginPacket::reducedDebugInfo,ClientboundLoginPacket::showDeathScreen,ClientboundLoginPacket::isDebug,ClientboundLoginPacket::isFlat>(
+			this, object
+		);
+	}
+
+	public int playerId() {
 		return this.playerId;
 	}
 
-	public long getSeed() {
-		return this.seed;
-	}
-
-	public boolean isHardcore() {
+	public boolean hardcore() {
 		return this.hardcore;
 	}
 
-	public GameType getGameType() {
+	public GameType gameType() {
 		return this.gameType;
 	}
 
 	@Nullable
-	public GameType getPreviousGameType() {
+	public GameType previousGameType() {
 		return this.previousGameType;
 	}
 
@@ -134,31 +150,35 @@ public class ClientboundLoginPacket implements Packet<ClientGamePacketListener> 
 		return this.levels;
 	}
 
-	public RegistryAccess registryAccess() {
+	public RegistryAccess.RegistryHolder registryHolder() {
 		return this.registryHolder;
 	}
 
-	public DimensionType getDimensionType() {
+	public DimensionType dimensionType() {
 		return this.dimensionType;
 	}
 
-	public ResourceKey<Level> getDimension() {
+	public ResourceKey<Level> dimension() {
 		return this.dimension;
 	}
 
-	public int getMaxPlayers() {
+	public long seed() {
+		return this.seed;
+	}
+
+	public int maxPlayers() {
 		return this.maxPlayers;
 	}
 
-	public int getChunkRadius() {
+	public int chunkRadius() {
 		return this.chunkRadius;
 	}
 
-	public boolean isReducedDebugInfo() {
+	public boolean reducedDebugInfo() {
 		return this.reducedDebugInfo;
 	}
 
-	public boolean shouldShowDeathScreen() {
+	public boolean showDeathScreen() {
 		return this.showDeathScreen;
 	}
 

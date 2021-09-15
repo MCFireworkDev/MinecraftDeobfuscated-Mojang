@@ -47,6 +47,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.FrameTimer;
 import net.minecraft.util.Mth;
@@ -57,9 +58,12 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.NaturalSpawner;
+import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -320,7 +324,12 @@ public class DebugScreenOverlay extends GuiComponent {
 
 			ServerLevel serverLevel = this.getServerLevel();
 			if (serverLevel != null) {
-				NaturalSpawner.SpawnState spawnState = serverLevel.getChunkSource().getLastSpawnState();
+				ServerChunkCache serverChunkCache = serverLevel.getChunkSource();
+				ChunkGenerator chunkGenerator = serverChunkCache.getGenerator();
+				Climate.Sampler sampler = chunkGenerator.climateSampler();
+				BiomeSource biomeSource = chunkGenerator.getBiomeSource();
+				biomeSource.addMultinoiseDebugInfo(list, blockPos, sampler);
+				NaturalSpawner.SpawnState spawnState = serverChunkCache.getLastSpawnState();
 				if (spawnState != null) {
 					Object2IntMap<MobCategory> object2IntMap = spawnState.getMobCategoryCounts();
 					int m = spawnState.getSpawnableChunkCount();

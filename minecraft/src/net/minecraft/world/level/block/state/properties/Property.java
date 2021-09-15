@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
+import java.lang.runtime.ObjectMethods;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -28,11 +29,11 @@ public abstract class Property<T extends Comparable<T>> {
 	}
 
 	public Property.Value<T> value(T comparable) {
-		return new Property.Value<>(this, comparable);
+		return new Property.Value(this, comparable);
 	}
 
 	public Property.Value<T> value(StateHolder<?, ?> stateHolder) {
-		return new Property.Value<>(this, stateHolder.getValue(this));
+		return new Property.Value(this, stateHolder.getValue(this));
 	}
 
 	public Stream<Property.Value<T>> getAllValues() {
@@ -93,11 +94,11 @@ public abstract class Property<T extends Comparable<T>> {
 		return dataResult.<S>map(comparable -> stateHolder.setValue(this, comparable)).setPartial(stateHolder);
 	}
 
-	public static final class Value<T extends Comparable<T>> {
+	public static final class Value extends Record {
 		private final Property<T> property;
 		private final T value;
 
-		Value(Property<T> property, T comparable) {
+		public Value(Property<T> property, T comparable) {
 			if (!property.getPossibleValues().contains(comparable)) {
 				throw new IllegalArgumentException("Value " + comparable + " does not belong to property " + property);
 			} else {
@@ -106,32 +107,24 @@ public abstract class Property<T extends Comparable<T>> {
 			}
 		}
 
-		public Property<T> getProperty() {
+		public String toString() {
+			return this.property.getName() + "=" + this.property.getName(this.value);
+		}
+
+		public final int hashCode() {
+			return ObjectMethods.bootstrap<"hashCode",Property.Value,"property;value",Property.Value::property,Property.Value::value>(this);
+		}
+
+		public final boolean equals(Object object) {
+			return ObjectMethods.bootstrap<"equals",Property.Value,"property;value",Property.Value::property,Property.Value::value>(this, object);
+		}
+
+		public Property<T> property() {
 			return this.property;
 		}
 
 		public T value() {
 			return this.value;
-		}
-
-		public String toString() {
-			return this.property.getName() + "=" + this.property.getName(this.value);
-		}
-
-		public boolean equals(Object object) {
-			if (this == object) {
-				return true;
-			} else if (!(object instanceof Property.Value)) {
-				return false;
-			} else {
-				Property.Value<?> value = (Property.Value)object;
-				return this.property == value.property && this.value.equals(value.value);
-			}
-		}
-
-		public int hashCode() {
-			int i = this.property.hashCode();
-			return 31 * i + this.value.hashCode();
 		}
 	}
 }

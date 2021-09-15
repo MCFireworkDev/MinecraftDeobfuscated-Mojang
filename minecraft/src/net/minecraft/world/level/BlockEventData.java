@@ -1,9 +1,10 @@
 package net.minecraft.world.level;
 
+import java.lang.runtime.ObjectMethods;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
 
-public class BlockEventData {
+public final class BlockEventData extends Record {
 	private final BlockPos pos;
 	private final Block block;
 	private final int paramA;
@@ -16,42 +17,37 @@ public class BlockEventData {
 		this.paramB = j;
 	}
 
-	public BlockPos getPos() {
+	public final String toString() {
+		return ObjectMethods.bootstrap<"toString",BlockEventData,"pos;block;paramA;paramB",BlockEventData::pos,BlockEventData::block,BlockEventData::paramA,BlockEventData::paramB>(
+			this
+		);
+	}
+
+	public final int hashCode() {
+		return ObjectMethods.bootstrap<"hashCode",BlockEventData,"pos;block;paramA;paramB",BlockEventData::pos,BlockEventData::block,BlockEventData::paramA,BlockEventData::paramB>(
+			this
+		);
+	}
+
+	public final boolean equals(Object object) {
+		return ObjectMethods.bootstrap<"equals",BlockEventData,"pos;block;paramA;paramB",BlockEventData::pos,BlockEventData::block,BlockEventData::paramA,BlockEventData::paramB>(
+			this, object
+		);
+	}
+
+	public BlockPos pos() {
 		return this.pos;
 	}
 
-	public Block getBlock() {
+	public Block block() {
 		return this.block;
 	}
 
-	public int getParamA() {
+	public int paramA() {
 		return this.paramA;
 	}
 
-	public int getParamB() {
+	public int paramB() {
 		return this.paramB;
-	}
-
-	public boolean equals(Object object) {
-		if (!(object instanceof BlockEventData)) {
-			return false;
-		} else {
-			BlockEventData blockEventData = (BlockEventData)object;
-			return this.pos.equals(blockEventData.pos)
-				&& this.paramA == blockEventData.paramA
-				&& this.paramB == blockEventData.paramB
-				&& this.block == blockEventData.block;
-		}
-	}
-
-	public int hashCode() {
-		int i = this.pos.hashCode();
-		i = 31 * i + this.block.hashCode();
-		i = 31 * i + this.paramA;
-		return 31 * i + this.paramB;
-	}
-
-	public String toString() {
-		return "TE(" + this.pos + ")," + this.paramA + "," + this.paramB + "," + this.block;
 	}
 }

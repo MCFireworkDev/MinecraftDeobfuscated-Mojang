@@ -25,9 +25,6 @@ import net.minecraft.tags.Tag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.BiomeZoomer;
-import net.minecraft.world.level.biome.FuzzyOffsetBiomeZoomer;
-import net.minecraft.world.level.biome.FuzzyOffsetConstantColumnBiomeZoomer;
 import net.minecraft.world.level.biome.MultiNoiseBiomeSource;
 import net.minecraft.world.level.biome.TheEndBiomeSource;
 import net.minecraft.world.level.block.Block;
@@ -89,10 +86,9 @@ public class DimensionType {
 		true,
 		false,
 		true,
-		0,
-		256,
-		256,
-		FuzzyOffsetConstantColumnBiomeZoomer.INSTANCE,
+		-64,
+		384,
+		384,
 		BlockTags.INFINIBURN_OVERWORLD.getName(),
 		OVERWORLD_EFFECTS,
 		0.0F
@@ -112,30 +108,12 @@ public class DimensionType {
 		0,
 		256,
 		128,
-		FuzzyOffsetBiomeZoomer.INSTANCE,
 		BlockTags.INFINIBURN_NETHER.getName(),
 		NETHER_EFFECTS,
 		0.1F
 	);
 	protected static final DimensionType DEFAULT_END = create(
-		OptionalLong.of(6000L),
-		false,
-		false,
-		false,
-		false,
-		1.0,
-		true,
-		false,
-		false,
-		false,
-		true,
-		0,
-		256,
-		256,
-		FuzzyOffsetBiomeZoomer.INSTANCE,
-		BlockTags.INFINIBURN_END.getName(),
-		END_EFFECTS,
-		0.0F
+		OptionalLong.of(6000L), false, false, false, false, 1.0, true, false, false, false, true, 0, 256, 256, BlockTags.INFINIBURN_END.getName(), END_EFFECTS, 0.0F
 	);
 	public static final ResourceKey<DimensionType> OVERWORLD_CAVES_LOCATION = ResourceKey.create(
 		Registry.DIMENSION_TYPE_REGISTRY, new ResourceLocation("overworld_caves")
@@ -152,10 +130,9 @@ public class DimensionType {
 		true,
 		false,
 		true,
-		0,
-		256,
-		256,
-		FuzzyOffsetConstantColumnBiomeZoomer.INSTANCE,
+		-64,
+		384,
+		384,
 		BlockTags.INFINIBURN_OVERWORLD.getName(),
 		OVERWORLD_EFFECTS,
 		0.0F
@@ -175,7 +152,6 @@ public class DimensionType {
 	private final int minY;
 	private final int height;
 	private final int logicalHeight;
-	private final BiomeZoomer biomeZoomer;
 	private final ResourceLocation infiniburn;
 	private final ResourceLocation effectsLocation;
 	private final float ambientLight;
@@ -213,7 +189,7 @@ public class DimensionType {
 		ResourceLocation resourceLocation2,
 		float f
 	) {
-		this(optionalLong, bl, bl2, bl3, bl4, d, false, bl5, bl6, bl7, bl8, i, j, k, FuzzyOffsetBiomeZoomer.INSTANCE, resourceLocation, resourceLocation2, f);
+		this(optionalLong, bl, bl2, bl3, bl4, d, false, bl5, bl6, bl7, bl8, i, j, k, resourceLocation, resourceLocation2, f);
 	}
 
 	public static DimensionType create(
@@ -231,14 +207,11 @@ public class DimensionType {
 		int i,
 		int j,
 		int k,
-		BiomeZoomer biomeZoomer,
 		ResourceLocation resourceLocation,
 		ResourceLocation resourceLocation2,
 		float f
 	) {
-		DimensionType dimensionType = new DimensionType(
-			optionalLong, bl, bl2, bl3, bl4, d, bl5, bl6, bl7, bl8, bl9, i, j, k, biomeZoomer, resourceLocation, resourceLocation2, f
-		);
+		DimensionType dimensionType = new DimensionType(optionalLong, bl, bl2, bl3, bl4, d, bl5, bl6, bl7, bl8, bl9, i, j, k, resourceLocation, resourceLocation2, f);
 		guardY(dimensionType).error().ifPresent(partialResult -> {
 			throw new IllegalStateException(partialResult.message());
 		});
@@ -261,7 +234,6 @@ public class DimensionType {
 		int i,
 		int j,
 		int k,
-		BiomeZoomer biomeZoomer,
 		ResourceLocation resourceLocation,
 		ResourceLocation resourceLocation2,
 		float f
@@ -280,7 +252,6 @@ public class DimensionType {
 		this.minY = i;
 		this.height = j;
 		this.logicalHeight = k;
-		this.biomeZoomer = biomeZoomer;
 		this.infiniburn = resourceLocation;
 		this.effectsLocation = resourceLocation2;
 		this.ambientLight = f;
@@ -334,9 +305,7 @@ public class DimensionType {
 	}
 
 	private static ChunkGenerator defaultNetherGenerator(Registry<Biome> registry, Registry<NoiseGeneratorSettings> registry2, long l) {
-		return new NoiseBasedChunkGenerator(
-			MultiNoiseBiomeSource.Preset.NETHER.biomeSource(registry, l), l, () -> registry2.getOrThrow(NoiseGeneratorSettings.NETHER)
-		);
+		return new NoiseBasedChunkGenerator(MultiNoiseBiomeSource.Preset.NETHER.biomeSource(registry), l, () -> registry2.getOrThrow(NoiseGeneratorSettings.NETHER));
 	}
 
 	public static MappedRegistry<LevelStem> defaultDimensions(
@@ -427,10 +396,6 @@ public class DimensionType {
 		return this.createDragonFight;
 	}
 
-	public BiomeZoomer getBiomeZoomer() {
-		return this.biomeZoomer;
-	}
-
 	public boolean hasFixedTime() {
 		return this.fixedTime.isPresent();
 	}
@@ -477,7 +442,6 @@ public class DimensionType {
 				&& this.logicalHeight == dimensionType.logicalHeight
 				&& Float.compare(dimensionType.ambientLight, this.ambientLight) == 0
 				&& this.fixedTime.equals(dimensionType.fixedTime)
-				&& this.biomeZoomer.equals(dimensionType.biomeZoomer)
 				&& this.infiniburn.equals(dimensionType.infiniburn)
 				&& this.effectsLocation.equals(dimensionType.effectsLocation);
 		}
