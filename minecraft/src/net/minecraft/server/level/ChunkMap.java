@@ -780,7 +780,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 		return this.visibleChunkMap.size();
 	}
 
-	protected net.minecraft.server.level.DistanceManager getDistanceManager() {
+	public net.minecraft.server.level.DistanceManager getDistanceManager() {
 		return this.distanceManager;
 	}
 
@@ -802,10 +802,14 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 			.addColumn("ticket")
 			.addColumn("spawning")
 			.addColumn("block_entity_count")
+			.addColumn("ticking_ticket")
+			.addColumn("ticking_level")
 			.build(writer);
+		TickingTracker tickingTracker = this.distanceManager.tickingTracker();
 
 		for(Entry<ChunkHolder> entry : this.visibleChunkMap.long2ObjectEntrySet()) {
-			ChunkPos chunkPos = new ChunkPos(entry.getLongKey());
+			long l = entry.getLongKey();
+			ChunkPos chunkPos = new ChunkPos(l);
 			ChunkHolder chunkHolder = (ChunkHolder)entry.getValue();
 			Optional<ChunkAccess> optional = Optional.ofNullable(chunkHolder.getLastAvailable());
 			Optional<LevelChunk> optional2 = optional.flatMap(
@@ -821,9 +825,11 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 				printFuture(chunkHolder.getFullChunkFuture()),
 				printFuture(chunkHolder.getTickingChunkFuture()),
 				printFuture(chunkHolder.getEntityTickingChunkFuture()),
-				this.distanceManager.getTicketDebugString(entry.getLongKey()),
+				this.distanceManager.getTicketDebugString(l),
 				!this.noPlayersCloseForSpawning(chunkPos),
-				optional2.map(levelChunk -> levelChunk.getBlockEntities().size()).orElse(0)
+				optional2.map(levelChunk -> levelChunk.getBlockEntities().size()).orElse(0),
+				tickingTracker.getTicketDebugString(l),
+				tickingTracker.getLevel(l)
 			);
 		}
 	}

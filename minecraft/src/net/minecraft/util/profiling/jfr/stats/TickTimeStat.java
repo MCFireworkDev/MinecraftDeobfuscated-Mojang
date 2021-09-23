@@ -1,20 +1,21 @@
 package net.minecraft.util.profiling.jfr.stats;
 
 import java.lang.runtime.ObjectMethods;
+import java.time.Duration;
 import java.time.Instant;
 import jdk.jfr.consumer.RecordedEvent;
 
 public final class TickTimeStat extends Record {
 	private final Instant timestamp;
-	private final float currentAverage;
+	private final Duration currentAverage;
 
-	public TickTimeStat(Instant instant, float f) {
+	public TickTimeStat(Instant instant, Duration duration) {
 		this.timestamp = instant;
-		this.currentAverage = f;
+		this.currentAverage = duration;
 	}
 
 	public static TickTimeStat from(RecordedEvent recordedEvent) {
-		return new TickTimeStat(recordedEvent.getStartTime(), recordedEvent.getFloat("averageTickMs"));
+		return new TickTimeStat(recordedEvent.getStartTime(), recordedEvent.getDuration("averageTickDuration"));
 	}
 
 	public final String toString() {
@@ -33,7 +34,7 @@ public final class TickTimeStat extends Record {
 		return this.timestamp;
 	}
 
-	public float currentAverage() {
+	public Duration currentAverage() {
 		return this.currentAverage;
 	}
 }

@@ -329,10 +329,14 @@ public class LevelChunk extends ChunkAccess {
 	boolean isTicking(BlockPos blockPos) {
 		if (!this.level.getWorldBorder().isWithinBounds(blockPos)) {
 			return false;
-		} else if (!(this.level instanceof ServerLevel)) {
-			return true;
 		} else {
-			return this.getFullStatus().isOrAfter(ChunkHolder.FullChunkStatus.TICKING) && ((ServerLevel)this.level).areEntitiesLoaded(ChunkPos.asLong(blockPos));
+			Level var3 = this.level;
+			if (!(var3 instanceof ServerLevel)) {
+				return true;
+			} else {
+				ServerLevel serverLevel = (ServerLevel)var3;
+				return this.getFullStatus().isOrAfter(ChunkHolder.FullChunkStatus.TICKING) && serverLevel.areEntitiesLoaded(ChunkPos.asLong(blockPos));
+			}
 		}
 	}
 
