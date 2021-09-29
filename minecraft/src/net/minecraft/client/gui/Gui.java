@@ -38,7 +38,9 @@ import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.gui.components.SubtitleOverlay;
 import net.minecraft.client.gui.components.spectator.SpectatorGui;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -196,7 +198,7 @@ public class Gui extends GuiComponent {
 		}
 
 		if (this.minecraft.gameMode.getPlayerMode() == GameType.SPECTATOR) {
-			this.spectatorGui.renderHotbar(poseStack, f);
+			this.spectatorGui.renderHotbar(poseStack);
 		} else if (!this.minecraft.options.hideGui) {
 			this.renderHotbar(f, poseStack);
 		}
@@ -441,6 +443,11 @@ public class Gui extends GuiComponent {
 	protected void renderEffects(PoseStack poseStack) {
 		Collection<MobEffectInstance> collection = this.minecraft.player.getActiveEffects();
 		if (!collection.isEmpty()) {
+			Screen j = this.minecraft.screen;
+			if (j instanceof EffectRenderingInventoryScreen effectRenderingInventoryScreen && effectRenderingInventoryScreen.canSeeEffects()) {
+				return;
+			}
+
 			RenderSystem.enableBlend();
 			int i = 0;
 			int j = 0;

@@ -216,6 +216,7 @@ public class Spider extends Monster {
 	}
 
 	public static class SpiderEffectsGroupData implements SpawnGroupData {
+		@Nullable
 		public MobEffect effect;
 
 		public void setRandomEffect(Random random) {

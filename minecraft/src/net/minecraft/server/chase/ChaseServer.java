@@ -2,6 +2,7 @@ package net.minecraft.server.chase;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.runtime.ObjectMethods;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -54,11 +55,14 @@ public class ChaseServer {
 	}
 
 	private void runSender() {
+		ChaseServer.PlayerPosition playerPosition = null;
+
 		while(this.wantsToRun) {
 			if (!this.clientSockets.isEmpty()) {
-				String string = this.formatPlayerPositionMessage();
-				if (string != null) {
-					byte[] bs = string.getBytes(StandardCharsets.US_ASCII);
+				ChaseServer.PlayerPosition playerPosition2 = this.getPlayerPosition();
+				if (playerPosition2 != null && !playerPosition2.equals(playerPosition)) {
+					playerPosition = playerPosition2;
+					byte[] bs = playerPosition2.format().getBytes(StandardCharsets.US_ASCII);
 
 					for(Socket socket : this.clientSockets) {
 						if (!socket.isClosed()) {
@@ -67,8 +71,8 @@ public class ChaseServer {
 									OutputStream outputStream = socket.getOutputStream();
 									outputStream.write(bs);
 									outputStream.flush();
-								} catch (IOException var3) {
-									LOGGER.info("Remote control client socket got an IO exception and will be closed", var3);
+								} catch (IOException var3xx) {
+									LOGGER.info("Remote control client socket got an IO exception and will be closed", var3xx);
 									IOUtils.closeQuietly(socket);
 								}
 							});
@@ -83,7 +87,7 @@ public class ChaseServer {
 			if (this.wantsToRun) {
 				try {
 					Thread.sleep((long)this.broadcastIntervalMs);
-				} catch (InterruptedException var5) {
+				} catch (InterruptedException var6) {
 				}
 			}
 		}
@@ -122,7 +126,7 @@ public class ChaseServer {
 	}
 
 	@Nullable
-	private String formatPlayerPositionMessage() {
+	private ChaseServer.PlayerPosition getPlayerPosition() {
 		List<ServerPlayer> list = this.playerList.getPlayers();
 		if (list.isEmpty()) {
 			return null;
@@ -131,16 +135,71 @@ public class ChaseServer {
 			String string = (String)ChaseCommand.DIMENSION_NAMES.inverse().get(serverPlayer.getLevel().dimension());
 			return string == null
 				? null
-				: String.format(
-					Locale.ROOT,
-					"t %s %.2f %.2f %.2f %.2f %.2f\n",
-					string,
-					serverPlayer.getX(),
-					serverPlayer.getY(),
-					serverPlayer.getZ(),
-					serverPlayer.getYRot(),
-					serverPlayer.getXRot()
-				);
+				: new ChaseServer.PlayerPosition(string, serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ(), serverPlayer.getYRot(), serverPlayer.getXRot());
+		}
+	}
+
+	static final class PlayerPosition extends Record {
+		private final String dimensionName;
+		private final double x;
+		private final double y;
+		private final double z;
+		private final float yRot;
+		private final float xRot;
+
+		PlayerPosition(String string, double d, double e, double f, float g, float h) {
+			this.dimensionName = string;
+			this.x = d;
+			this.y = e;
+			this.z = f;
+			this.yRot = g;
+			this.xRot = h;
+		}
+
+		String format() {
+			return String.format(Locale.ROOT, "t %s %.2f %.2f %.2f %.2f %.2f\n", this.dimensionName, this.x, this.y, this.z, this.yRot, this.xRot);
+		}
+
+		public final String toString() {
+			return ObjectMethods.bootstrap<"toString",ChaseServer.PlayerPosition,"dimensionName;x;y;z;yRot;xRot",ChaseServer.PlayerPosition::dimensionName,ChaseServer.PlayerPosition::x,ChaseServer.PlayerPosition::y,ChaseServer.PlayerPosition::z,ChaseServer.PlayerPosition::yRot,ChaseServer.PlayerPosition::xRot>(
+				this
+			);
+		}
+
+		public final int hashCode() {
+			return ObjectMethods.bootstrap<"hashCode",ChaseServer.PlayerPosition,"dimensionName;x;y;z;yRot;xRot",ChaseServer.PlayerPosition::dimensionName,ChaseServer.PlayerPosition::x,ChaseServer.PlayerPosition::y,ChaseServer.PlayerPosition::z,ChaseServer.PlayerPosition::yRot,ChaseServer.PlayerPosition::xRot>(
+				this
+			);
+		}
+
+		public final boolean equals(Object object) {
+			return ObjectMethods.bootstrap<"equals",ChaseServer.PlayerPosition,"dimensionName;x;y;z;yRot;xRot",ChaseServer.PlayerPosition::dimensionName,ChaseServer.PlayerPosition::x,ChaseServer.PlayerPosition::y,ChaseServer.PlayerPosition::z,ChaseServer.PlayerPosition::yRot,ChaseServer.PlayerPosition::xRot>(
+				this, object
+			);
+		}
+
+		public String dimensionName() {
+			return this.dimensionName;
+		}
+
+		public double x() {
+			return this.x;
+		}
+
+		public double y() {
+			return this.y;
+		}
+
+		public double z() {
+			return this.z;
+		}
+
+		public float yRot() {
+			return this.yRot;
+		}
+
+		public float xRot() {
+			return this.xRot;
 		}
 	}
 }

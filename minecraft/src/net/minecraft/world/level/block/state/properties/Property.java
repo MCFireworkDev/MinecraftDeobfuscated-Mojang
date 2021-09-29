@@ -8,11 +8,13 @@ import java.lang.runtime.ObjectMethods;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import net.minecraft.world.level.block.state.StateHolder;
 
 public abstract class Property<T extends Comparable<T>> {
 	private final Class<T> clazz;
 	private final String name;
+	@Nullable
 	private Integer hashCode;
 	private final Codec<T> codec = Codec.STRING
 		.comapFlatMap(

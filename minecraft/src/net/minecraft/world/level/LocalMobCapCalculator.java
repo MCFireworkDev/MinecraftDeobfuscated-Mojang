@@ -21,7 +21,7 @@ public class LocalMobCapCalculator {
 	}
 
 	private List<ServerPlayer> getPlayersNear(ChunkPos chunkPos) {
-		return (List<ServerPlayer>)this.playersNearChunk.computeIfAbsent(chunkPos.toLong(), l -> this.chunkMap.getPlayersCloseForSpawning(chunkPos).toList());
+		return (List<ServerPlayer>)this.playersNearChunk.computeIfAbsent(chunkPos.toLong(), l -> this.chunkMap.getPlayersCloseForSpawning(chunkPos));
 	}
 
 	public void addMob(ChunkPos chunkPos, MobCategory mobCategory) {

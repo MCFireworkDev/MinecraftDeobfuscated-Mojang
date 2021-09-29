@@ -78,6 +78,7 @@ public class EnderMan extends Monster implements NeutralMob {
 	private int targetChangeTime;
 	private static final UniformInt PERSISTENT_ANGER_TIME = TimeUtil.rangeOfSeconds(20, 39);
 	private int remainingPersistentAngerTime;
+	@Nullable
 	private UUID persistentAngerTarget;
 
 	public EnderMan(EntityType<? extends EnderMan> entityType, Level level) {
@@ -156,6 +157,7 @@ public class EnderMan extends Monster implements NeutralMob {
 		this.persistentAngerTarget = uUID;
 	}
 
+	@Nullable
 	@Override
 	public UUID getPersistentAngerTarget() {
 		return this.persistentAngerTarget;
@@ -401,6 +403,7 @@ public class EnderMan extends Monster implements NeutralMob {
 
 	static class EndermanFreezeWhenLookedAt extends Goal {
 		private final EnderMan enderman;
+		@Nullable
 		private LivingEntity target;
 
 		public EndermanFreezeWhenLookedAt(EnderMan enderMan) {
@@ -444,7 +447,7 @@ public class EnderMan extends Monster implements NeutralMob {
 			} else if (!this.enderman.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
 				return false;
 			} else {
-				return this.enderman.getRandom().nextInt(2000) == 0;
+				return this.enderman.getRandom().nextInt(reducedTickDelay(2000)) == 0;
 			}
 		}
 
@@ -482,6 +485,7 @@ public class EnderMan extends Monster implements NeutralMob {
 
 	static class EndermanLookForPlayerGoal extends NearestAttackableTargetGoal<Player> {
 		private final EnderMan enderman;
+		@Nullable
 		private Player pendingTarget;
 		private int aggroTime;
 		private int teleportTime;
@@ -504,7 +508,7 @@ public class EnderMan extends Monster implements NeutralMob {
 
 		@Override
 		public void start() {
-			this.aggroTime = 5;
+			this.aggroTime = this.adjustedTickDelay(5);
 			this.teleportTime = 0;
 			this.enderman.setBeingStaredAt();
 		}
@@ -549,7 +553,9 @@ public class EnderMan extends Monster implements NeutralMob {
 						}
 
 						this.teleportTime = 0;
-					} else if (this.target.distanceToSqr(this.enderman) > 256.0 && this.teleportTime++ >= 30 && this.enderman.teleportTowards(this.target)) {
+					} else if (this.target.distanceToSqr(this.enderman) > 256.0
+						&& this.teleportTime++ >= this.adjustedTickDelay(30)
+						&& this.enderman.teleportTowards(this.target)) {
 						this.teleportTime = 0;
 					}
 				}
@@ -573,7 +579,7 @@ public class EnderMan extends Monster implements NeutralMob {
 			} else if (!this.enderman.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
 				return false;
 			} else {
-				return this.enderman.getRandom().nextInt(20) == 0;
+				return this.enderman.getRandom().nextInt(reducedTickDelay(20)) == 0;
 			}
 		}
 

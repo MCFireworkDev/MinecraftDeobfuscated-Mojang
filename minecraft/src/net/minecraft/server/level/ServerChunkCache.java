@@ -6,6 +6,7 @@ import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import java.io.File;
 import java.io.IOException;
+import java.lang.runtime.ObjectMethods;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -337,53 +338,61 @@ public class ServerChunkCache extends ChunkSource {
 
 	private void tickChunks() {
 		long l = this.level.getGameTime();
-		long m = l - this.lastInhabitedUpdate;
 		this.lastInhabitedUpdate = l;
-		LevelData levelData = this.level.getLevelData();
 		boolean bl = this.level.isDebug();
-		boolean bl2 = this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING);
-		if (!bl) {
-			this.level.getProfiler().push("pollingChunks");
+		if (bl) {
+			this.chunkMap.tick();
+		} else {
+			LevelData levelData = this.level.getLevelData();
+			ProfilerFiller profilerFiller = this.level.getProfiler();
+			profilerFiller.push("pollingChunks");
 			int i = this.level.getGameRules().getInt(GameRules.RULE_RANDOMTICKING);
-			boolean bl3 = levelData.getGameTime() % 400L == 0L;
-			this.level.getProfiler().push("naturalSpawnCount");
+			boolean bl2 = levelData.getGameTime() % 400L == 0L;
+			profilerFiller.push("naturalSpawnCount");
 			int j = this.distanceManager.getNaturalSpawnChunkCount();
 			NaturalSpawner.SpawnState spawnState = NaturalSpawner.createState(
 				j, this.level.getAllEntities(), this::getFullChunk, new LocalMobCapCalculator(this.chunkMap)
 			);
 			this.lastSpawnState = spawnState;
-			this.level.getProfiler().pop();
-			List<ChunkHolder> list = Lists.<ChunkHolder>newArrayList(this.chunkMap.getChunks());
-			Collections.shuffle(list);
-			list.forEach(chunkHolder -> {
-				Optional<LevelChunk> optional = ((Either)chunkHolder.getTickingChunkFuture().getNow(ChunkHolder.UNLOADED_LEVEL_CHUNK)).left();
-				if (optional.isPresent()) {
-					LevelChunk levelChunk = (LevelChunk)optional.get();
-					ChunkPos chunkPos = levelChunk.getPos();
-					if (this.level.isPositionEntityTicking(chunkPos) && !this.chunkMap.noPlayersCloseForSpawning(chunkPos)) {
-						levelChunk.setInhabitedTime(levelChunk.getInhabitedTime() + m);
-						if (bl2 && (this.spawnEnemies || this.spawnFriendlies) && this.level.getWorldBorder().isWithinBounds(chunkPos)) {
-							NaturalSpawner.spawnForChunk(this.level, levelChunk, spawnState, this.spawnFriendlies, this.spawnEnemies, bl3);
-						}
+			profilerFiller.popPush("filteringLoadedChunks");
+			List<ServerChunkCache.ChunkAndHolder> list = Lists.newArrayListWithCapacity(j);
 
-						this.level.tickChunk(levelChunk, i);
-					}
+			for(ChunkHolder chunkHolder : this.chunkMap.getChunks()) {
+				LevelChunk levelChunk = chunkHolder.getTickingChunk();
+				if (levelChunk != null) {
+					list.add(new ServerChunkCache.ChunkAndHolder(levelChunk, chunkHolder));
 				}
-			});
-			this.level.getProfiler().push("customSpawners");
-			if (bl2) {
+			}
+
+			profilerFiller.popPush("spawnAndTick");
+			boolean bl3 = this.level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING);
+			long m = l - this.lastInhabitedUpdate;
+			Collections.shuffle(list);
+
+			for(ServerChunkCache.ChunkAndHolder chunkAndHolder : list) {
+				LevelChunk levelChunk2 = chunkAndHolder.chunk;
+				ChunkPos chunkPos = levelChunk2.getPos();
+				if (this.level.isPositionEntityTicking(chunkPos) && this.chunkMap.anyPlayerCloseEnoughForSpawning(chunkPos)) {
+					levelChunk2.incrementInhabitedTime(m);
+					if (bl3 && (this.spawnEnemies || this.spawnFriendlies) && this.level.getWorldBorder().isWithinBounds(chunkPos)) {
+						NaturalSpawner.spawnForChunk(this.level, levelChunk2, spawnState, this.spawnFriendlies, this.spawnEnemies, bl2);
+					}
+
+					this.level.tickChunk(levelChunk2, i);
+				}
+			}
+
+			profilerFiller.popPush("customSpawners");
+			if (bl3) {
 				this.level.tickCustomSpawners(this.spawnEnemies, this.spawnFriendlies);
 			}
 
-			this.level.getProfiler().popPush("broadcast");
-			list.forEach(
-				chunkHolder -> ((Either)chunkHolder.getTickingChunkFuture().getNow(ChunkHolder.UNLOADED_LEVEL_CHUNK)).left().ifPresent(chunkHolder::broadcastChanges)
-			);
-			this.level.getProfiler().pop();
-			this.level.getProfiler().pop();
+			profilerFiller.popPush("broadcast");
+			list.forEach(chunkAndHolderx -> chunkAndHolderx.holder.broadcastChanges(chunkAndHolderx.chunk));
+			profilerFiller.pop();
+			profilerFiller.pop();
+			this.chunkMap.tick();
 		}
-
-		this.chunkMap.tick();
 	}
 
 	private void getFullChunk(long l, Consumer<LevelChunk> consumer) {
@@ -494,6 +503,42 @@ public class ServerChunkCache extends ChunkSource {
 	@VisibleForDebug
 	public NaturalSpawner.SpawnState getLastSpawnState() {
 		return this.lastSpawnState;
+	}
+
+	static final class ChunkAndHolder extends Record {
+		final LevelChunk chunk;
+		final ChunkHolder holder;
+
+		ChunkAndHolder(LevelChunk levelChunk, ChunkHolder chunkHolder) {
+			this.chunk = levelChunk;
+			this.holder = chunkHolder;
+		}
+
+		public final String toString() {
+			return ObjectMethods.bootstrap<"toString",ServerChunkCache.ChunkAndHolder,"chunk;holder",ServerChunkCache.ChunkAndHolder::chunk,ServerChunkCache.ChunkAndHolder::holder>(
+				this
+			);
+		}
+
+		public final int hashCode() {
+			return ObjectMethods.bootstrap<"hashCode",ServerChunkCache.ChunkAndHolder,"chunk;holder",ServerChunkCache.ChunkAndHolder::chunk,ServerChunkCache.ChunkAndHolder::holder>(
+				this
+			);
+		}
+
+		public final boolean equals(Object object) {
+			return ObjectMethods.bootstrap<"equals",ServerChunkCache.ChunkAndHolder,"chunk;holder",ServerChunkCache.ChunkAndHolder::chunk,ServerChunkCache.ChunkAndHolder::holder>(
+				this, object
+			);
+		}
+
+		public LevelChunk chunk() {
+			return this.chunk;
+		}
+
+		public ChunkHolder holder() {
+			return this.holder;
+		}
 	}
 
 	final class MainThreadExecutor extends BlockableEventLoop<Runnable> {

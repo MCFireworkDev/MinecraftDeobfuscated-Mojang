@@ -2097,6 +2097,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 			clientPacketListener.cleanup();
 		}
 
+		this.playerSocialManager.stopOnlineMode();
 		IntegratedServer integratedServer = this.singleplayerServer;
 		this.singleplayerServer = null;
 		this.gameRenderer.resetData();
@@ -2868,6 +2869,10 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 
 	public boolean isTextFilteringEnabled() {
 		return false;
+	}
+
+	public void prepareForMultiplayer() {
+		this.playerSocialManager.startOnlineMode();
 	}
 
 	@Environment(EnvType.CLIENT)

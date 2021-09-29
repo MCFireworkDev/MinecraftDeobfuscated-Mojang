@@ -1,36 +1,35 @@
 package net.minecraft.world.level.levelgen.feature.configurations;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.util.List;
-import net.minecraft.world.level.block.state.BlockState;
+import java.lang.runtime.ObjectMethods;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
 
-public class SimpleBlockConfiguration implements FeatureConfiguration {
+public final class SimpleBlockConfiguration extends Record implements FeatureConfiguration {
+	private final BlockStateProvider toPlace;
 	public static final Codec<SimpleBlockConfiguration> CODEC = RecordCodecBuilder.create(
-		instance -> instance.group(
-					BlockStateProvider.CODEC.fieldOf("to_place").forGetter(simpleBlockConfiguration -> simpleBlockConfiguration.toPlace),
-					BlockState.CODEC.listOf().fieldOf("place_on").orElse(ImmutableList.of()).forGetter(simpleBlockConfiguration -> simpleBlockConfiguration.placeOn),
-					BlockState.CODEC.listOf().fieldOf("place_in").orElse(ImmutableList.of()).forGetter(simpleBlockConfiguration -> simpleBlockConfiguration.placeIn),
-					BlockState.CODEC.listOf().fieldOf("place_under").orElse(ImmutableList.of()).forGetter(simpleBlockConfiguration -> simpleBlockConfiguration.placeUnder)
-				)
+		instance -> instance.group(BlockStateProvider.CODEC.fieldOf("to_place").forGetter(simpleBlockConfiguration -> simpleBlockConfiguration.toPlace))
 				.apply(instance, SimpleBlockConfiguration::new)
 	);
-	public final BlockStateProvider toPlace;
-	public final List<BlockState> placeOn;
-	public final List<BlockState> placeIn;
-	public final List<BlockState> placeUnder;
-
-	public SimpleBlockConfiguration(BlockStateProvider blockStateProvider, List<BlockState> list, List<BlockState> list2, List<BlockState> list3) {
-		this.toPlace = blockStateProvider;
-		this.placeOn = list;
-		this.placeIn = list2;
-		this.placeUnder = list3;
-	}
 
 	public SimpleBlockConfiguration(BlockStateProvider blockStateProvider) {
-		this(blockStateProvider, ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
+		this.toPlace = blockStateProvider;
+	}
+
+	public final String toString() {
+		return ObjectMethods.bootstrap<"toString",SimpleBlockConfiguration,"toPlace",SimpleBlockConfiguration::toPlace>(this);
+	}
+
+	public final int hashCode() {
+		return ObjectMethods.bootstrap<"hashCode",SimpleBlockConfiguration,"toPlace",SimpleBlockConfiguration::toPlace>(this);
+	}
+
+	public final boolean equals(Object object) {
+		return ObjectMethods.bootstrap<"equals",SimpleBlockConfiguration,"toPlace",SimpleBlockConfiguration::toPlace>(this, object);
+	}
+
+	public BlockStateProvider toPlace() {
+		return this.toPlace;
 	}
 }
