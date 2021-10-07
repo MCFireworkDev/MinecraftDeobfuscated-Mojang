@@ -27,6 +27,7 @@ public final class ClientboundLoginPacket extends Record implements Packet {
 	private final long seed;
 	private final int maxPlayers;
 	private final int chunkRadius;
+	private final int simulationDistance;
 	private final boolean reducedDebugInfo;
 	private final boolean showDeathScreen;
 	private final boolean isDebug;
@@ -45,6 +46,7 @@ public final class ClientboundLoginPacket extends Record implements Packet {
 			(DimensionType)((Supplier)friendlyByteBuf.readWithCodec(DimensionType.CODEC)).get(),
 			ResourceKey.create(Registry.DIMENSION_REGISTRY, friendlyByteBuf.readResourceLocation()),
 			friendlyByteBuf.readLong(),
+			friendlyByteBuf.readVarInt(),
 			friendlyByteBuf.readVarInt(),
 			friendlyByteBuf.readVarInt(),
 			friendlyByteBuf.readBoolean(),
@@ -66,6 +68,7 @@ public final class ClientboundLoginPacket extends Record implements Packet {
 		long l,
 		int j,
 		int k,
+		int m,
 		boolean bl2,
 		boolean bl3,
 		boolean bl4,
@@ -82,6 +85,7 @@ public final class ClientboundLoginPacket extends Record implements Packet {
 		this.seed = l;
 		this.maxPlayers = j;
 		this.chunkRadius = k;
+		this.simulationDistance = m;
 		this.reducedDebugInfo = bl2;
 		this.showDeathScreen = bl3;
 		this.isDebug = bl4;
@@ -101,6 +105,7 @@ public final class ClientboundLoginPacket extends Record implements Packet {
 		friendlyByteBuf.writeLong(this.seed);
 		friendlyByteBuf.writeVarInt(this.maxPlayers);
 		friendlyByteBuf.writeVarInt(this.chunkRadius);
+		friendlyByteBuf.writeVarInt(this.simulationDistance);
 		friendlyByteBuf.writeBoolean(this.reducedDebugInfo);
 		friendlyByteBuf.writeBoolean(this.showDeathScreen);
 		friendlyByteBuf.writeBoolean(this.isDebug);
@@ -112,19 +117,19 @@ public final class ClientboundLoginPacket extends Record implements Packet {
 	}
 
 	public final String toString() {
-		return ObjectMethods.bootstrap<"toString",ClientboundLoginPacket,"playerId;hardcore;gameType;previousGameType;levels;registryHolder;dimensionType;dimension;seed;maxPlayers;chunkRadius;reducedDebugInfo;showDeathScreen;isDebug;isFlat",ClientboundLoginPacket::playerId,ClientboundLoginPacket::hardcore,ClientboundLoginPacket::gameType,ClientboundLoginPacket::previousGameType,ClientboundLoginPacket::levels,ClientboundLoginPacket::registryHolder,ClientboundLoginPacket::dimensionType,ClientboundLoginPacket::dimension,ClientboundLoginPacket::seed,ClientboundLoginPacket::maxPlayers,ClientboundLoginPacket::chunkRadius,ClientboundLoginPacket::reducedDebugInfo,ClientboundLoginPacket::showDeathScreen,ClientboundLoginPacket::isDebug,ClientboundLoginPacket::isFlat>(
+		return ObjectMethods.bootstrap<"toString",ClientboundLoginPacket,"playerId;hardcore;gameType;previousGameType;levels;registryHolder;dimensionType;dimension;seed;maxPlayers;chunkRadius;simulationDistance;reducedDebugInfo;showDeathScreen;isDebug;isFlat",ClientboundLoginPacket::playerId,ClientboundLoginPacket::hardcore,ClientboundLoginPacket::gameType,ClientboundLoginPacket::previousGameType,ClientboundLoginPacket::levels,ClientboundLoginPacket::registryHolder,ClientboundLoginPacket::dimensionType,ClientboundLoginPacket::dimension,ClientboundLoginPacket::seed,ClientboundLoginPacket::maxPlayers,ClientboundLoginPacket::chunkRadius,ClientboundLoginPacket::simulationDistance,ClientboundLoginPacket::reducedDebugInfo,ClientboundLoginPacket::showDeathScreen,ClientboundLoginPacket::isDebug,ClientboundLoginPacket::isFlat>(
 			this
 		);
 	}
 
 	public final int hashCode() {
-		return ObjectMethods.bootstrap<"hashCode",ClientboundLoginPacket,"playerId;hardcore;gameType;previousGameType;levels;registryHolder;dimensionType;dimension;seed;maxPlayers;chunkRadius;reducedDebugInfo;showDeathScreen;isDebug;isFlat",ClientboundLoginPacket::playerId,ClientboundLoginPacket::hardcore,ClientboundLoginPacket::gameType,ClientboundLoginPacket::previousGameType,ClientboundLoginPacket::levels,ClientboundLoginPacket::registryHolder,ClientboundLoginPacket::dimensionType,ClientboundLoginPacket::dimension,ClientboundLoginPacket::seed,ClientboundLoginPacket::maxPlayers,ClientboundLoginPacket::chunkRadius,ClientboundLoginPacket::reducedDebugInfo,ClientboundLoginPacket::showDeathScreen,ClientboundLoginPacket::isDebug,ClientboundLoginPacket::isFlat>(
+		return ObjectMethods.bootstrap<"hashCode",ClientboundLoginPacket,"playerId;hardcore;gameType;previousGameType;levels;registryHolder;dimensionType;dimension;seed;maxPlayers;chunkRadius;simulationDistance;reducedDebugInfo;showDeathScreen;isDebug;isFlat",ClientboundLoginPacket::playerId,ClientboundLoginPacket::hardcore,ClientboundLoginPacket::gameType,ClientboundLoginPacket::previousGameType,ClientboundLoginPacket::levels,ClientboundLoginPacket::registryHolder,ClientboundLoginPacket::dimensionType,ClientboundLoginPacket::dimension,ClientboundLoginPacket::seed,ClientboundLoginPacket::maxPlayers,ClientboundLoginPacket::chunkRadius,ClientboundLoginPacket::simulationDistance,ClientboundLoginPacket::reducedDebugInfo,ClientboundLoginPacket::showDeathScreen,ClientboundLoginPacket::isDebug,ClientboundLoginPacket::isFlat>(
 			this
 		);
 	}
 
 	public final boolean equals(Object object) {
-		return ObjectMethods.bootstrap<"equals",ClientboundLoginPacket,"playerId;hardcore;gameType;previousGameType;levels;registryHolder;dimensionType;dimension;seed;maxPlayers;chunkRadius;reducedDebugInfo;showDeathScreen;isDebug;isFlat",ClientboundLoginPacket::playerId,ClientboundLoginPacket::hardcore,ClientboundLoginPacket::gameType,ClientboundLoginPacket::previousGameType,ClientboundLoginPacket::levels,ClientboundLoginPacket::registryHolder,ClientboundLoginPacket::dimensionType,ClientboundLoginPacket::dimension,ClientboundLoginPacket::seed,ClientboundLoginPacket::maxPlayers,ClientboundLoginPacket::chunkRadius,ClientboundLoginPacket::reducedDebugInfo,ClientboundLoginPacket::showDeathScreen,ClientboundLoginPacket::isDebug,ClientboundLoginPacket::isFlat>(
+		return ObjectMethods.bootstrap<"equals",ClientboundLoginPacket,"playerId;hardcore;gameType;previousGameType;levels;registryHolder;dimensionType;dimension;seed;maxPlayers;chunkRadius;simulationDistance;reducedDebugInfo;showDeathScreen;isDebug;isFlat",ClientboundLoginPacket::playerId,ClientboundLoginPacket::hardcore,ClientboundLoginPacket::gameType,ClientboundLoginPacket::previousGameType,ClientboundLoginPacket::levels,ClientboundLoginPacket::registryHolder,ClientboundLoginPacket::dimensionType,ClientboundLoginPacket::dimension,ClientboundLoginPacket::seed,ClientboundLoginPacket::maxPlayers,ClientboundLoginPacket::chunkRadius,ClientboundLoginPacket::simulationDistance,ClientboundLoginPacket::reducedDebugInfo,ClientboundLoginPacket::showDeathScreen,ClientboundLoginPacket::isDebug,ClientboundLoginPacket::isFlat>(
 			this, object
 		);
 	}
@@ -172,6 +177,10 @@ public final class ClientboundLoginPacket extends Record implements Packet {
 
 	public int chunkRadius() {
 		return this.chunkRadius;
+	}
+
+	public int simulationDistance() {
+		return this.simulationDistance;
 	}
 
 	public boolean reducedDebugInfo() {

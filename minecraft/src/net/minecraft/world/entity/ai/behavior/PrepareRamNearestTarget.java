@@ -18,6 +18,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
+import net.minecraft.world.entity.ai.memory.NearestVisibleLivingEntities;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
@@ -65,7 +66,7 @@ public class PrepareRamNearestTarget<E extends PathfinderMob> extends Behavior<E
 	protected void start(ServerLevel serverLevel, PathfinderMob pathfinderMob, long l) {
 		Brain<?> brain = pathfinderMob.getBrain();
 		brain.getMemory(MemoryModuleType.NEAREST_VISIBLE_LIVING_ENTITIES)
-			.flatMap(list -> list.stream().filter(livingEntity -> this.ramTargeting.test(pathfinderMob, livingEntity)).findFirst())
+			.flatMap(nearestVisibleLivingEntities -> nearestVisibleLivingEntities.findClosest(livingEntity -> this.ramTargeting.test(pathfinderMob, livingEntity)))
 			.ifPresent(livingEntity -> this.chooseRamPosition(pathfinderMob, livingEntity));
 	}
 

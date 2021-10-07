@@ -5,30 +5,33 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.lang.runtime.ObjectMethods;
 import java.util.List;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.valueproviders.IntProvider;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
 
 public final class BlockColumnConfiguration extends Record implements FeatureConfiguration {
 	private final List<BlockColumnConfiguration.Layer> layers;
 	private final Direction direction;
-	private final boolean allowWater;
+	private final BlockPredicate allowedPlacement;
 	private final boolean prioritizeTip;
 	public static final Codec<BlockColumnConfiguration> CODEC = RecordCodecBuilder.create(
 		instance -> instance.group(
 					BlockColumnConfiguration.Layer.CODEC.listOf().fieldOf("layers").forGetter(BlockColumnConfiguration::layers),
 					Direction.CODEC.fieldOf("direction").forGetter(BlockColumnConfiguration::direction),
-					Codec.BOOL.fieldOf("allow_water").forGetter(BlockColumnConfiguration::allowWater),
+					BlockPredicate.CODEC.fieldOf("allowed_placement").forGetter(BlockColumnConfiguration::allowedPlacement),
 					Codec.BOOL.fieldOf("prioritize_tip").forGetter(BlockColumnConfiguration::prioritizeTip)
 				)
 				.apply(instance, BlockColumnConfiguration::new)
 	);
 
-	public BlockColumnConfiguration(List<BlockColumnConfiguration.Layer> list, Direction direction, boolean bl, boolean bl2) {
+	public BlockColumnConfiguration(List<BlockColumnConfiguration.Layer> list, Direction direction, BlockPredicate blockPredicate, boolean bl) {
 		this.layers = list;
 		this.direction = direction;
-		this.allowWater = bl;
-		this.prioritizeTip = bl2;
+		this.allowedPlacement = blockPredicate;
+		this.prioritizeTip = bl;
 	}
 
 	public static BlockColumnConfiguration.Layer layer(IntProvider intProvider, BlockStateProvider blockStateProvider) {
@@ -36,23 +39,25 @@ public final class BlockColumnConfiguration extends Record implements FeatureCon
 	}
 
 	public static BlockColumnConfiguration simple(IntProvider intProvider, BlockStateProvider blockStateProvider) {
-		return new BlockColumnConfiguration(List.of(layer(intProvider, blockStateProvider)), Direction.UP, false, false);
+		return new BlockColumnConfiguration(
+			List.of(layer(intProvider, blockStateProvider)), Direction.UP, BlockPredicate.matchesBlock(Blocks.AIR, BlockPos.ZERO), false
+		);
 	}
 
 	public final String toString() {
-		return ObjectMethods.bootstrap<"toString",BlockColumnConfiguration,"layers;direction;allowWater;prioritizeTip",BlockColumnConfiguration::layers,BlockColumnConfiguration::direction,BlockColumnConfiguration::allowWater,BlockColumnConfiguration::prioritizeTip>(
+		return ObjectMethods.bootstrap<"toString",BlockColumnConfiguration,"layers;direction;allowedPlacement;prioritizeTip",BlockColumnConfiguration::layers,BlockColumnConfiguration::direction,BlockColumnConfiguration::allowedPlacement,BlockColumnConfiguration::prioritizeTip>(
 			this
 		);
 	}
 
 	public final int hashCode() {
-		return ObjectMethods.bootstrap<"hashCode",BlockColumnConfiguration,"layers;direction;allowWater;prioritizeTip",BlockColumnConfiguration::layers,BlockColumnConfiguration::direction,BlockColumnConfiguration::allowWater,BlockColumnConfiguration::prioritizeTip>(
+		return ObjectMethods.bootstrap<"hashCode",BlockColumnConfiguration,"layers;direction;allowedPlacement;prioritizeTip",BlockColumnConfiguration::layers,BlockColumnConfiguration::direction,BlockColumnConfiguration::allowedPlacement,BlockColumnConfiguration::prioritizeTip>(
 			this
 		);
 	}
 
 	public final boolean equals(Object object) {
-		return ObjectMethods.bootstrap<"equals",BlockColumnConfiguration,"layers;direction;allowWater;prioritizeTip",BlockColumnConfiguration::layers,BlockColumnConfiguration::direction,BlockColumnConfiguration::allowWater,BlockColumnConfiguration::prioritizeTip>(
+		return ObjectMethods.bootstrap<"equals",BlockColumnConfiguration,"layers;direction;allowedPlacement;prioritizeTip",BlockColumnConfiguration::layers,BlockColumnConfiguration::direction,BlockColumnConfiguration::allowedPlacement,BlockColumnConfiguration::prioritizeTip>(
 			this, object
 		);
 	}
@@ -65,8 +70,8 @@ public final class BlockColumnConfiguration extends Record implements FeatureCon
 		return this.direction;
 	}
 
-	public boolean allowWater() {
-		return this.allowWater;
+	public BlockPredicate allowedPlacement() {
+		return this.allowedPlacement;
 	}
 
 	public boolean prioritizeTip() {
