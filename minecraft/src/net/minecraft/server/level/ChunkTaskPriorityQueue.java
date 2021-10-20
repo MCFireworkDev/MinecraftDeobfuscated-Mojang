@@ -3,6 +3,7 @@ package net.minecraft.server.level;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Either;
+import it.unimi.dsi.fastutil.longs.Long2ObjectFunction;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -42,14 +43,15 @@ public class ChunkTaskPriorityQueue<T> {
 			}
 
 			if (list != null && !list.isEmpty()) {
-				((List)((Long2ObjectLinkedOpenHashMap)this.taskQueue.get(j)).computeIfAbsent(chunkPos.toLong(), l -> Lists.newArrayList())).addAll(list);
+				((List)((Long2ObjectLinkedOpenHashMap)this.taskQueue.get(j)).computeIfAbsent(chunkPos.toLong(), (Long2ObjectFunction)(l -> Lists.newArrayList())))
+					.addAll(list);
 				this.firstQueue = Math.min(this.firstQueue, j);
 			}
 		}
 	}
 
 	protected void submit(Optional<T> optional, long l, int i) {
-		((List)((Long2ObjectLinkedOpenHashMap)this.taskQueue.get(i)).computeIfAbsent(l, lx -> Lists.newArrayList())).add(optional);
+		((List)((Long2ObjectLinkedOpenHashMap)this.taskQueue.get(i)).computeIfAbsent(l, (Long2ObjectFunction)(lx -> Lists.newArrayList()))).add(optional);
 		this.firstQueue = Math.min(this.firstQueue, i);
 	}
 

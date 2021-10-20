@@ -27,6 +27,7 @@ import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectFunction;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap.Entry;
@@ -1441,7 +1442,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 	}
 
 	private void renderChunkLayer(RenderType renderType, PoseStack poseStack, double d, double e, double f, Matrix4f matrix4f) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+		RenderSystem.assertOnRenderThread();
 		renderType.setupRenderState();
 		if (renderType == RenderType.translucent()) {
 			this.minecraft.getProfiler().push("translucent_sort");
@@ -3114,7 +3115,8 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 
 			blockDestructionProgress.setProgress(j);
 			blockDestructionProgress.updateTick(this.ticks);
-			((SortedSet)this.destructionProgress.computeIfAbsent(blockDestructionProgress.getPos().asLong(), l -> Sets.newTreeSet())).add(blockDestructionProgress);
+			((SortedSet)this.destructionProgress.computeIfAbsent(blockDestructionProgress.getPos().asLong(), (Long2ObjectFunction)(l -> Sets.newTreeSet())))
+				.add(blockDestructionProgress);
 		} else {
 			BlockDestructionProgress blockDestructionProgress = this.destroyingBlocks.remove(i);
 			if (blockDestructionProgress != null) {

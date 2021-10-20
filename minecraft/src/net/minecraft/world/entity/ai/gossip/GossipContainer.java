@@ -112,7 +112,7 @@ public class GossipContainer {
 
 	public void add(UUID uUID, GossipType gossipType, int i) {
 		GossipContainer.EntityGossips entityGossips = this.getOrCreate(uUID);
-		entityGossips.entries.mergeInt(gossipType, i, (integer, integer2) -> this.mergeValuesForAddition(gossipType, integer, integer2));
+		entityGossips.entries.mergeInt(gossipType, i, (ix, j) -> this.mergeValuesForAddition(gossipType, ix, j));
 		entityGossips.makeSureValueIsntTooLowOrTooHigh(gossipType);
 		if (entityGossips.isEmpty()) {
 			this.gossips.remove(uUID);

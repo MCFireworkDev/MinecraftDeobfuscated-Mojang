@@ -355,7 +355,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 	public HitResult hitResult;
 	private int rightClickDelay;
 	protected int missTime;
-	private boolean pause;
+	private volatile boolean pause;
 	private float pausePartialTick;
 	private long lastNanoTime = Util.getNanos();
 	private long lastTime;
@@ -1578,10 +1578,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 		}
 
 		this.profiler.push("gui");
-		if (!this.pause) {
-			this.gui.tick();
-		}
-
+		this.gui.tick(this.pause);
 		this.profiler.pop();
 		this.gameRenderer.pick(1.0F);
 		this.tutorial.onLookAt(this.level, this.hitResult);
