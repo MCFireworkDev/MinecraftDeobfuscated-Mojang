@@ -449,8 +449,8 @@ public abstract class AbstractContainerMenu {
 						if (itemStack2.getCount() > q) {
 							slot3.set(itemStack2.split(q));
 						} else {
-							slot3.set(itemStack2);
 							inventory.setItem(j, ItemStack.EMPTY);
+							slot3.set(itemStack2);
 						}
 					}
 				} else if (slot3.mayPickup(player) && slot3.mayPlace(itemStack2)) {
@@ -462,8 +462,8 @@ public abstract class AbstractContainerMenu {
 							player.drop(itemStack, true);
 						}
 					} else {
-						slot3.set(itemStack2);
 						inventory.setItem(j, itemStack);
+						slot3.set(itemStack2);
 						slot3.onTake(player, itemStack);
 					}
 				}

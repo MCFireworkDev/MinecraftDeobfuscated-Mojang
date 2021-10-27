@@ -1,5 +1,6 @@
 package net.minecraft.util;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Either;
@@ -11,6 +12,7 @@ import com.mojang.serialization.Lifecycle;
 import com.mojang.serialization.Codec.ResultFunction;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
+import java.lang.runtime.ObjectMethods;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -136,6 +138,10 @@ public class ExtraCodecs {
 		};
 	}
 
+	public static <A> Codec<A> lazyInitializedCodec(Supplier<Codec<A>> supplier) {
+		return new ExtraCodecs.LazyInitializedCodec(supplier);
+	}
+
 	static final class EitherCodec<F, S> implements Codec<Either<F, S>> {
 		private final Codec<F> first;
 		private final Codec<S> second;
@@ -177,6 +183,41 @@ public class ExtraCodecs {
 
 		public String toString() {
 			return "EitherCodec[" + this.first + ", " + this.second + "]";
+		}
+	}
+
+	static final class LazyInitializedCodec extends Record implements Codec {
+		private final Supplier<Codec<A>> delegate;
+
+		LazyInitializedCodec(Supplier<Codec<A>> supplier) {
+			Supplier<Codec<A>> var2 = Suppliers.memoize(supplier::get);
+			this.delegate = var2;
+		}
+
+		@Override
+		public <T> DataResult<Pair<A, T>> decode(DynamicOps<T> dynamicOps, T object) {
+			return ((Codec)this.delegate.get()).decode(dynamicOps, object);
+		}
+
+		@Override
+		public <T> DataResult<T> encode(A object, DynamicOps<T> dynamicOps, T object2) {
+			return ((Codec)this.delegate.get()).encode(object, dynamicOps, object2);
+		}
+
+		public final String toString() {
+			return ObjectMethods.bootstrap<"toString",ExtraCodecs.LazyInitializedCodec,"delegate",ExtraCodecs.LazyInitializedCodec::delegate>(this);
+		}
+
+		public final int hashCode() {
+			return ObjectMethods.bootstrap<"hashCode",ExtraCodecs.LazyInitializedCodec,"delegate",ExtraCodecs.LazyInitializedCodec::delegate>(this);
+		}
+
+		public final boolean equals(Object object) {
+			return ObjectMethods.bootstrap<"equals",ExtraCodecs.LazyInitializedCodec,"delegate",ExtraCodecs.LazyInitializedCodec::delegate>(this, object);
+		}
+
+		public Supplier<Codec<A>> delegate() {
+			return this.delegate;
 		}
 	}
 

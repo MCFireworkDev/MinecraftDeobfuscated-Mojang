@@ -137,7 +137,7 @@ public class SculkSensorBlock extends BaseEntityBlock implements SimpleWaterlogg
 				level.setBlock(blockPos, blockState.setValue(POWER, Integer.valueOf(0)), 18);
 			}
 
-			level.getBlockTicks().scheduleTick(new BlockPos(blockPos), blockState.getBlock(), 1);
+			level.scheduleTick(new BlockPos(blockPos), blockState.getBlock(), 1);
 		}
 	}
 
@@ -157,7 +157,7 @@ public class SculkSensorBlock extends BaseEntityBlock implements SimpleWaterlogg
 		BlockState blockState, Direction direction, BlockState blockState2, LevelAccessor levelAccessor, BlockPos blockPos, BlockPos blockPos2
 	) {
 		if (blockState.getValue(WATERLOGGED)) {
-			levelAccessor.getLiquidTicks().scheduleTick(blockPos, Fluids.WATER, Fluids.WATER.getTickDelay(levelAccessor));
+			levelAccessor.scheduleTick(blockPos, Fluids.WATER, Fluids.WATER.getTickDelay(levelAccessor));
 		}
 
 		return super.updateShape(blockState, direction, blockState2, levelAccessor, blockPos, blockPos2);
@@ -222,7 +222,7 @@ public class SculkSensorBlock extends BaseEntityBlock implements SimpleWaterlogg
 
 	public static void deactivate(Level level, BlockPos blockPos, BlockState blockState) {
 		level.setBlock(blockPos, blockState.setValue(PHASE, SculkSensorPhase.COOLDOWN).setValue(POWER, Integer.valueOf(0)), 3);
-		level.getBlockTicks().scheduleTick(new BlockPos(blockPos), blockState.getBlock(), 1);
+		level.scheduleTick(new BlockPos(blockPos), blockState.getBlock(), 1);
 		if (!blockState.getValue(WATERLOGGED)) {
 			level.playSound(null, blockPos, SoundEvents.SCULK_CLICKING_STOP, SoundSource.BLOCKS, 1.0F, level.random.nextFloat() * 0.2F + 0.8F);
 		}
@@ -232,7 +232,7 @@ public class SculkSensorBlock extends BaseEntityBlock implements SimpleWaterlogg
 
 	public static void activate(Level level, BlockPos blockPos, BlockState blockState, int i) {
 		level.setBlock(blockPos, blockState.setValue(PHASE, SculkSensorPhase.ACTIVE).setValue(POWER, Integer.valueOf(i)), 3);
-		level.getBlockTicks().scheduleTick(new BlockPos(blockPos), blockState.getBlock(), 40);
+		level.scheduleTick(new BlockPos(blockPos), blockState.getBlock(), 40);
 		updateNeighbours(level, blockPos);
 		if (!blockState.getValue(WATERLOGGED)) {
 			level.playSound(

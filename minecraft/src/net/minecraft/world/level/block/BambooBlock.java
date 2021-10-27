@@ -147,7 +147,7 @@ public class BambooBlock extends Block implements BonemealableBlock {
 		BlockState blockState, Direction direction, BlockState blockState2, LevelAccessor levelAccessor, BlockPos blockPos, BlockPos blockPos2
 	) {
 		if (!blockState.canSurvive(levelAccessor, blockPos)) {
-			levelAccessor.getBlockTicks().scheduleTick(blockPos, this, 1);
+			levelAccessor.scheduleTick(blockPos, this, 1);
 		}
 
 		if (direction == Direction.UP && blockState2.is(Blocks.BAMBOO) && blockState2.getValue(AGE) > blockState.getValue(AGE)) {
