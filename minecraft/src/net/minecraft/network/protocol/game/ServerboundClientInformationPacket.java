@@ -1,12 +1,12 @@
 package net.minecraft.network.protocol.game;
 
+import java.lang.runtime.ObjectMethods;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.ChatVisiblity;
 
-public class ServerboundClientInformationPacket implements Packet<ServerGamePacketListener> {
-	public static final int MAX_LANGUAGE_LENGTH = 16;
+public final class ServerboundClientInformationPacket extends Record implements Packet<ServerGamePacketListener> {
 	private final String language;
 	private final int viewDistance;
 	private final ChatVisiblity chatVisibility;
@@ -14,8 +14,25 @@ public class ServerboundClientInformationPacket implements Packet<ServerGamePack
 	private final int modelCustomisation;
 	private final HumanoidArm mainHand;
 	private final boolean textFilteringEnabled;
+	private final boolean allowsListing;
+	public static final int MAX_LANGUAGE_LENGTH = 16;
 
-	public ServerboundClientInformationPacket(String string, int i, ChatVisiblity chatVisiblity, boolean bl, int j, HumanoidArm humanoidArm, boolean bl2) {
+	public ServerboundClientInformationPacket(FriendlyByteBuf friendlyByteBuf) {
+		this(
+			friendlyByteBuf.readUtf(16),
+			friendlyByteBuf.readByte(),
+			friendlyByteBuf.readEnum(ChatVisiblity.class),
+			friendlyByteBuf.readBoolean(),
+			friendlyByteBuf.readUnsignedByte(),
+			friendlyByteBuf.readEnum(HumanoidArm.class),
+			friendlyByteBuf.readBoolean(),
+			friendlyByteBuf.readBoolean()
+		);
+	}
+
+	public ServerboundClientInformationPacket(
+		String string, int i, ChatVisiblity chatVisiblity, boolean bl, int j, HumanoidArm humanoidArm, boolean bl2, boolean bl3
+	) {
 		this.language = string;
 		this.viewDistance = i;
 		this.chatVisibility = chatVisiblity;
@@ -23,16 +40,7 @@ public class ServerboundClientInformationPacket implements Packet<ServerGamePack
 		this.modelCustomisation = j;
 		this.mainHand = humanoidArm;
 		this.textFilteringEnabled = bl2;
-	}
-
-	public ServerboundClientInformationPacket(FriendlyByteBuf friendlyByteBuf) {
-		this.language = friendlyByteBuf.readUtf(16);
-		this.viewDistance = friendlyByteBuf.readByte();
-		this.chatVisibility = friendlyByteBuf.readEnum(ChatVisiblity.class);
-		this.chatColors = friendlyByteBuf.readBoolean();
-		this.modelCustomisation = friendlyByteBuf.readUnsignedByte();
-		this.mainHand = friendlyByteBuf.readEnum(HumanoidArm.class);
-		this.textFilteringEnabled = friendlyByteBuf.readBoolean();
+		this.allowsListing = bl3;
 	}
 
 	@Override
@@ -44,37 +52,60 @@ public class ServerboundClientInformationPacket implements Packet<ServerGamePack
 		friendlyByteBuf.writeByte(this.modelCustomisation);
 		friendlyByteBuf.writeEnum(this.mainHand);
 		friendlyByteBuf.writeBoolean(this.textFilteringEnabled);
+		friendlyByteBuf.writeBoolean(this.allowsListing);
 	}
 
 	public void handle(ServerGamePacketListener serverGamePacketListener) {
 		serverGamePacketListener.handleClientInformation(this);
 	}
 
-	public String getLanguage() {
+	public final String toString() {
+		return ObjectMethods.bootstrap<"toString",ServerboundClientInformationPacket,"language;viewDistance;chatVisibility;chatColors;modelCustomisation;mainHand;textFilteringEnabled;allowsListing",ServerboundClientInformationPacket::language,ServerboundClientInformationPacket::viewDistance,ServerboundClientInformationPacket::chatVisibility,ServerboundClientInformationPacket::chatColors,ServerboundClientInformationPacket::modelCustomisation,ServerboundClientInformationPacket::mainHand,ServerboundClientInformationPacket::textFilteringEnabled,ServerboundClientInformationPacket::allowsListing>(
+			this
+		);
+	}
+
+	public final int hashCode() {
+		return ObjectMethods.bootstrap<"hashCode",ServerboundClientInformationPacket,"language;viewDistance;chatVisibility;chatColors;modelCustomisation;mainHand;textFilteringEnabled;allowsListing",ServerboundClientInformationPacket::language,ServerboundClientInformationPacket::viewDistance,ServerboundClientInformationPacket::chatVisibility,ServerboundClientInformationPacket::chatColors,ServerboundClientInformationPacket::modelCustomisation,ServerboundClientInformationPacket::mainHand,ServerboundClientInformationPacket::textFilteringEnabled,ServerboundClientInformationPacket::allowsListing>(
+			this
+		);
+	}
+
+	public final boolean equals(Object object) {
+		return ObjectMethods.bootstrap<"equals",ServerboundClientInformationPacket,"language;viewDistance;chatVisibility;chatColors;modelCustomisation;mainHand;textFilteringEnabled;allowsListing",ServerboundClientInformationPacket::language,ServerboundClientInformationPacket::viewDistance,ServerboundClientInformationPacket::chatVisibility,ServerboundClientInformationPacket::chatColors,ServerboundClientInformationPacket::modelCustomisation,ServerboundClientInformationPacket::mainHand,ServerboundClientInformationPacket::textFilteringEnabled,ServerboundClientInformationPacket::allowsListing>(
+			this, object
+		);
+	}
+
+	public String language() {
 		return this.language;
 	}
 
-	public int getViewDistance() {
+	public int viewDistance() {
 		return this.viewDistance;
 	}
 
-	public ChatVisiblity getChatVisibility() {
+	public ChatVisiblity chatVisibility() {
 		return this.chatVisibility;
 	}
 
-	public boolean getChatColors() {
+	public boolean chatColors() {
 		return this.chatColors;
 	}
 
-	public int getModelCustomisation() {
+	public int modelCustomisation() {
 		return this.modelCustomisation;
 	}
 
-	public HumanoidArm getMainHand() {
+	public HumanoidArm mainHand() {
 		return this.mainHand;
 	}
 
-	public boolean isTextFilteringEnabled() {
+	public boolean textFilteringEnabled() {
 		return this.textFilteringEnabled;
+	}
+
+	public boolean allowsListing() {
+		return this.allowsListing;
 	}
 }

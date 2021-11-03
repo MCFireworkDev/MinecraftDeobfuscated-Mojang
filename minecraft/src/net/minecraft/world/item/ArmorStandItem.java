@@ -9,7 +9,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -37,7 +36,7 @@ public class ArmorStandItem extends Item {
 			ItemStack itemStack = useOnContext.getItemInHand();
 			Vec3 vec3 = Vec3.atBottomCenterOf(blockPos);
 			AABB aABB = EntityType.ARMOR_STAND.getDimensions().makeBoundingBox(vec3.x(), vec3.y(), vec3.z());
-			if (level.noCollision(null, aABB, entity -> true) && level.getEntities(null, aABB).isEmpty()) {
+			if (level.noCollision(null, aABB) && level.getEntities(null, aABB).isEmpty()) {
 				if (level instanceof ServerLevel serverLevel) {
 					ArmorStand armorStand = EntityType.ARMOR_STAND
 						.create(serverLevel, itemStack.getTag(), null, useOnContext.getPlayer(), blockPos, MobSpawnType.SPAWN_EGG, true, true);

@@ -15,7 +15,7 @@ import net.minecraft.util.profiling.jfr.stats.ChunkGenStat;
 import net.minecraft.util.profiling.jfr.stats.CpuLoadStat;
 import net.minecraft.util.profiling.jfr.stats.FileIOStat;
 import net.minecraft.util.profiling.jfr.stats.GcHeapStat;
-import net.minecraft.util.profiling.jfr.stats.PacketStat;
+import net.minecraft.util.profiling.jfr.stats.NetworkPacketSummary;
 import net.minecraft.util.profiling.jfr.stats.ThreadAllocationStat;
 import net.minecraft.util.profiling.jfr.stats.TickTimeStat;
 import net.minecraft.util.profiling.jfr.stats.TimedStatSummary;
@@ -31,8 +31,8 @@ public final class JfrStatsResult extends Record {
 	private final List<CpuLoadStat> cpuLoadStats;
 	private final GcHeapStat.Summary heapSummary;
 	private final ThreadAllocationStat.Summary threadAllocationSummary;
-	private final PacketStat.Summary receivedPackets;
-	private final PacketStat.Summary sentPackets;
+	private final NetworkPacketSummary receivedPacketsSummary;
+	private final NetworkPacketSummary sentPacketsSummary;
 	private final FileIOStat.Summary fileWrites;
 	private final FileIOStat.Summary fileReads;
 	private final List<ChunkGenStat> chunkGenStats;
@@ -46,10 +46,10 @@ public final class JfrStatsResult extends Record {
 		List<CpuLoadStat> list2,
 		GcHeapStat.Summary summary,
 		ThreadAllocationStat.Summary summary2,
-		PacketStat.Summary summary3,
-		PacketStat.Summary summary4,
-		FileIOStat.Summary summary5,
-		FileIOStat.Summary summary6,
+		NetworkPacketSummary networkPacketSummary,
+		NetworkPacketSummary networkPacketSummary2,
+		FileIOStat.Summary summary3,
+		FileIOStat.Summary summary4,
 		List<ChunkGenStat> list3
 	) {
 		this.recordingStarted = instant;
@@ -60,10 +60,10 @@ public final class JfrStatsResult extends Record {
 		this.cpuLoadStats = list2;
 		this.heapSummary = summary;
 		this.threadAllocationSummary = summary2;
-		this.receivedPackets = summary3;
-		this.sentPackets = summary4;
-		this.fileWrites = summary5;
-		this.fileReads = summary6;
+		this.receivedPacketsSummary = networkPacketSummary;
+		this.sentPacketsSummary = networkPacketSummary2;
+		this.fileWrites = summary3;
+		this.fileReads = summary4;
 		this.chunkGenStats = list3;
 	}
 
@@ -81,19 +81,19 @@ public final class JfrStatsResult extends Record {
 	}
 
 	public final String toString() {
-		return ObjectMethods.bootstrap<"toString",JfrStatsResult,"recordingStarted;recordingEnded;recordingDuration;worldCreationDuration;tickTimes;cpuLoadStats;heapSummary;threadAllocationSummary;receivedPackets;sentPackets;fileWrites;fileReads;chunkGenStats",JfrStatsResult::recordingStarted,JfrStatsResult::recordingEnded,JfrStatsResult::recordingDuration,JfrStatsResult::worldCreationDuration,JfrStatsResult::tickTimes,JfrStatsResult::cpuLoadStats,JfrStatsResult::heapSummary,JfrStatsResult::threadAllocationSummary,JfrStatsResult::receivedPackets,JfrStatsResult::sentPackets,JfrStatsResult::fileWrites,JfrStatsResult::fileReads,JfrStatsResult::chunkGenStats>(
+		return ObjectMethods.bootstrap<"toString",JfrStatsResult,"recordingStarted;recordingEnded;recordingDuration;worldCreationDuration;tickTimes;cpuLoadStats;heapSummary;threadAllocationSummary;receivedPacketsSummary;sentPacketsSummary;fileWrites;fileReads;chunkGenStats",JfrStatsResult::recordingStarted,JfrStatsResult::recordingEnded,JfrStatsResult::recordingDuration,JfrStatsResult::worldCreationDuration,JfrStatsResult::tickTimes,JfrStatsResult::cpuLoadStats,JfrStatsResult::heapSummary,JfrStatsResult::threadAllocationSummary,JfrStatsResult::receivedPacketsSummary,JfrStatsResult::sentPacketsSummary,JfrStatsResult::fileWrites,JfrStatsResult::fileReads,JfrStatsResult::chunkGenStats>(
 			this
 		);
 	}
 
 	public final int hashCode() {
-		return ObjectMethods.bootstrap<"hashCode",JfrStatsResult,"recordingStarted;recordingEnded;recordingDuration;worldCreationDuration;tickTimes;cpuLoadStats;heapSummary;threadAllocationSummary;receivedPackets;sentPackets;fileWrites;fileReads;chunkGenStats",JfrStatsResult::recordingStarted,JfrStatsResult::recordingEnded,JfrStatsResult::recordingDuration,JfrStatsResult::worldCreationDuration,JfrStatsResult::tickTimes,JfrStatsResult::cpuLoadStats,JfrStatsResult::heapSummary,JfrStatsResult::threadAllocationSummary,JfrStatsResult::receivedPackets,JfrStatsResult::sentPackets,JfrStatsResult::fileWrites,JfrStatsResult::fileReads,JfrStatsResult::chunkGenStats>(
+		return ObjectMethods.bootstrap<"hashCode",JfrStatsResult,"recordingStarted;recordingEnded;recordingDuration;worldCreationDuration;tickTimes;cpuLoadStats;heapSummary;threadAllocationSummary;receivedPacketsSummary;sentPacketsSummary;fileWrites;fileReads;chunkGenStats",JfrStatsResult::recordingStarted,JfrStatsResult::recordingEnded,JfrStatsResult::recordingDuration,JfrStatsResult::worldCreationDuration,JfrStatsResult::tickTimes,JfrStatsResult::cpuLoadStats,JfrStatsResult::heapSummary,JfrStatsResult::threadAllocationSummary,JfrStatsResult::receivedPacketsSummary,JfrStatsResult::sentPacketsSummary,JfrStatsResult::fileWrites,JfrStatsResult::fileReads,JfrStatsResult::chunkGenStats>(
 			this
 		);
 	}
 
 	public final boolean equals(Object object) {
-		return ObjectMethods.bootstrap<"equals",JfrStatsResult,"recordingStarted;recordingEnded;recordingDuration;worldCreationDuration;tickTimes;cpuLoadStats;heapSummary;threadAllocationSummary;receivedPackets;sentPackets;fileWrites;fileReads;chunkGenStats",JfrStatsResult::recordingStarted,JfrStatsResult::recordingEnded,JfrStatsResult::recordingDuration,JfrStatsResult::worldCreationDuration,JfrStatsResult::tickTimes,JfrStatsResult::cpuLoadStats,JfrStatsResult::heapSummary,JfrStatsResult::threadAllocationSummary,JfrStatsResult::receivedPackets,JfrStatsResult::sentPackets,JfrStatsResult::fileWrites,JfrStatsResult::fileReads,JfrStatsResult::chunkGenStats>(
+		return ObjectMethods.bootstrap<"equals",JfrStatsResult,"recordingStarted;recordingEnded;recordingDuration;worldCreationDuration;tickTimes;cpuLoadStats;heapSummary;threadAllocationSummary;receivedPacketsSummary;sentPacketsSummary;fileWrites;fileReads;chunkGenStats",JfrStatsResult::recordingStarted,JfrStatsResult::recordingEnded,JfrStatsResult::recordingDuration,JfrStatsResult::worldCreationDuration,JfrStatsResult::tickTimes,JfrStatsResult::cpuLoadStats,JfrStatsResult::heapSummary,JfrStatsResult::threadAllocationSummary,JfrStatsResult::receivedPacketsSummary,JfrStatsResult::sentPacketsSummary,JfrStatsResult::fileWrites,JfrStatsResult::fileReads,JfrStatsResult::chunkGenStats>(
 			this, object
 		);
 	}
@@ -131,12 +131,12 @@ public final class JfrStatsResult extends Record {
 		return this.threadAllocationSummary;
 	}
 
-	public PacketStat.Summary receivedPackets() {
-		return this.receivedPackets;
+	public NetworkPacketSummary receivedPacketsSummary() {
+		return this.receivedPacketsSummary;
 	}
 
-	public PacketStat.Summary sentPackets() {
-		return this.sentPackets;
+	public NetworkPacketSummary sentPacketsSummary() {
+		return this.sentPacketsSummary;
 	}
 
 	public FileIOStat.Summary fileWrites() {

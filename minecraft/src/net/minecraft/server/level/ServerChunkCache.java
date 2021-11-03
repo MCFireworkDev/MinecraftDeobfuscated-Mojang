@@ -305,6 +305,8 @@ public class ServerChunkCache extends ChunkSource {
 		ChunkHolder chunkHolder = this.getVisibleChunkIfPresent(l);
 		if (chunkHolder == null) {
 			return false;
+		} else if (!this.level.shouldTickBlocksAt(l)) {
+			return false;
 		} else {
 			Either<LevelChunk, ChunkHolder.ChunkLoadingFailure> either = (Either)chunkHolder.getTickingChunkFuture().getNow(null);
 			return either != null && either.left().isPresent();
