@@ -4,8 +4,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.List;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
+import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 
@@ -13,12 +13,12 @@ class MatchingFluidsPredicate extends StateTestingPredicate {
 	private final List<Fluid> fluids;
 	public static final Codec<MatchingFluidsPredicate> CODEC = RecordCodecBuilder.create(
 		instance -> stateTestingCodec(instance)
-				.and(Registry.FLUID.listOf().fieldOf("fluids").forGetter(matchingFluidsPredicate -> matchingFluidsPredicate.fluids))
+				.and(Registry.FLUID.byNameCodec().listOf().fieldOf("fluids").forGetter(matchingFluidsPredicate -> matchingFluidsPredicate.fluids))
 				.apply(instance, MatchingFluidsPredicate::new)
 	);
 
-	public MatchingFluidsPredicate(BlockPos blockPos, List<Fluid> list) {
-		super(blockPos);
+	public MatchingFluidsPredicate(Vec3i vec3i, List<Fluid> list) {
+		super(vec3i);
 		this.fluids = list;
 	}
 

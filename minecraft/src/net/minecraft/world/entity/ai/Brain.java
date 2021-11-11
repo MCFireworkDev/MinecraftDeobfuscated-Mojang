@@ -84,7 +84,7 @@ public class Brain<E extends LivingEntity> {
 						mapLike.entries()
 							.forEach(
 								pair -> {
-									DataResult<MemoryModuleType<?>> dataResult = Registry.MEMORY_MODULE_TYPE.parse(dynamicOps, (T)pair.getFirst());
+									DataResult<MemoryModuleType<?>> dataResult = Registry.MEMORY_MODULE_TYPE.byNameCodec().parse(dynamicOps, (T)pair.getFirst());
 									DataResult<? extends Brain.MemoryValue<?>> dataResult2 = dataResult.flatMap(
 										memoryModuleType -> this.captureRead(memoryModuleType, dynamicOps, (T)pair.getSecond())
 									);
@@ -490,7 +490,9 @@ public class Brain<E extends LivingEntity> {
 				.ifPresent(
 					codec -> this.value
 							.ifPresent(
-								expirableValue -> recordBuilder.add(Registry.MEMORY_MODULE_TYPE.encodeStart(dynamicOps, this.type), codec.encodeStart(dynamicOps, expirableValue))
+								expirableValue -> recordBuilder.add(
+										Registry.MEMORY_MODULE_TYPE.byNameCodec().encodeStart(dynamicOps, this.type), codec.encodeStart(dynamicOps, expirableValue)
+									)
 							)
 				);
 		}

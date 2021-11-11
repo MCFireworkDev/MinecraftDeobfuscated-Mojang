@@ -5,13 +5,13 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.function.Supplier;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
+import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 
 public class RootSystemConfiguration implements FeatureConfiguration {
 	public static final Codec<RootSystemConfiguration> CODEC = RecordCodecBuilder.create(
 		instance -> instance.group(
-					ConfiguredFeature.CODEC.fieldOf("feature").forGetter(rootSystemConfiguration -> rootSystemConfiguration.treeFeature),
+					PlacedFeature.CODEC.fieldOf("feature").forGetter(rootSystemConfiguration -> rootSystemConfiguration.treeFeature),
 					Codec.intRange(1, 64)
 						.fieldOf("required_vertical_space_for_tree")
 						.forGetter(rootSystemConfiguration -> rootSystemConfiguration.requiredVerticalSpaceForTree),
@@ -32,7 +32,7 @@ public class RootSystemConfiguration implements FeatureConfiguration {
 				)
 				.apply(instance, RootSystemConfiguration::new)
 	);
-	public final Supplier<ConfiguredFeature<?, ?>> treeFeature;
+	public final Supplier<PlacedFeature> treeFeature;
 	public final int requiredVerticalSpaceForTree;
 	public final int rootRadius;
 	public final ResourceLocation rootReplaceable;
@@ -46,7 +46,7 @@ public class RootSystemConfiguration implements FeatureConfiguration {
 	public final int allowedVerticalWaterForTree;
 
 	public RootSystemConfiguration(
-		Supplier<ConfiguredFeature<?, ?>> supplier,
+		Supplier<PlacedFeature> supplier,
 		int i,
 		int j,
 		ResourceLocation resourceLocation,

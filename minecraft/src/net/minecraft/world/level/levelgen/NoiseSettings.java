@@ -8,6 +8,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.lang.runtime.ObjectMethods;
 import java.util.function.Function;
+import net.minecraft.core.QuartPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.biome.TerrainShaper;
 import net.minecraft.world.level.dimension.DimensionType;
 
@@ -110,6 +112,22 @@ public final class NoiseSettings extends Record {
 	@Deprecated
 	public boolean largeBiomes() {
 		return this.largeBiomes;
+	}
+
+	public int getCellHeight() {
+		return QuartPos.toBlock(this.noiseSizeVertical());
+	}
+
+	public int getCellWidth() {
+		return QuartPos.toBlock(this.noiseSizeHorizontal());
+	}
+
+	public int getCellCountY() {
+		return this.height() / this.getCellHeight();
+	}
+
+	public int getMinCellY() {
+		return Mth.intFloorDiv(this.minY(), this.getCellHeight());
 	}
 
 	public final String toString() {

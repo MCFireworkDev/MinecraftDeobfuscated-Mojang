@@ -22,7 +22,7 @@ public final class SpawnData extends Record {
 				)
 				.apply(instance, SpawnData::new)
 	);
-	public static final Codec<SimpleWeightedRandomList<SpawnData>> LIST_CODEC = SimpleWeightedRandomList.wrappedCodec(CODEC);
+	public static final Codec<SimpleWeightedRandomList<SpawnData>> LIST_CODEC = SimpleWeightedRandomList.wrappedCodecAllowingEmpty(CODEC);
 	public static final String DEFAULT_TYPE = "minecraft:pig";
 
 	public SpawnData() {
