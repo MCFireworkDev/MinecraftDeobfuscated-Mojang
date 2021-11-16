@@ -8,6 +8,7 @@ import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Dynamic;
+import java.lang.runtime.ObjectMethods;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -1380,8 +1381,12 @@ public abstract class LivingEntity extends Entity {
 		return SoundEvents.GENERIC_DEATH;
 	}
 
-	protected SoundEvent getFallDamageSound(int i) {
-		return i > 4 ? SoundEvents.GENERIC_BIG_FALL : SoundEvents.GENERIC_SMALL_FALL;
+	private SoundEvent getFallDamageSound(int i) {
+		return i > 4 ? this.getFallSounds().big() : this.getFallSounds().small();
+	}
+
+	public LivingEntity.Fallsounds getFallSounds() {
+		return new LivingEntity.Fallsounds(SoundEvents.GENERIC_SMALL_FALL, SoundEvents.GENERIC_BIG_FALL);
 	}
 
 	protected SoundEvent getDrinkingSound(ItemStack itemStack) {
@@ -3331,5 +3336,35 @@ public abstract class LivingEntity extends Entity {
 			(double)((float)clientboundAddMobPacket.getYd() / 8000.0F),
 			(double)((float)clientboundAddMobPacket.getZd() / 8000.0F)
 		);
+	}
+
+	public static final class Fallsounds extends Record {
+		private final SoundEvent small;
+		private final SoundEvent big;
+
+		public Fallsounds(SoundEvent soundEvent, SoundEvent soundEvent2) {
+			this.small = soundEvent;
+			this.big = soundEvent2;
+		}
+
+		public final String toString() {
+			return ObjectMethods.bootstrap<"toString",LivingEntity.Fallsounds,"small;big",LivingEntity.Fallsounds::small,LivingEntity.Fallsounds::big>(this);
+		}
+
+		public final int hashCode() {
+			return ObjectMethods.bootstrap<"hashCode",LivingEntity.Fallsounds,"small;big",LivingEntity.Fallsounds::small,LivingEntity.Fallsounds::big>(this);
+		}
+
+		public final boolean equals(Object object) {
+			return ObjectMethods.bootstrap<"equals",LivingEntity.Fallsounds,"small;big",LivingEntity.Fallsounds::small,LivingEntity.Fallsounds::big>(this, object);
+		}
+
+		public SoundEvent small() {
+			return this.small;
+		}
+
+		public SoundEvent big() {
+			return this.big;
+		}
 	}
 }
