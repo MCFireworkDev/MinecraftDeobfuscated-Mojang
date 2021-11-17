@@ -39,6 +39,7 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.storage.ChunkScanAccess;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.storage.DimensionDataStorage;
@@ -82,10 +83,9 @@ public class ServerChunkCache extends ChunkSource {
 		this.level = serverLevel;
 		this.mainThreadProcessor = new ServerChunkCache.MainThreadExecutor(serverLevel);
 		this.mainThread = Thread.currentThread();
-		File file = levelStorageAccess.getDimensionPath(serverLevel.dimension());
-		File file2 = new File(file, "data");
-		file2.mkdirs();
-		this.dataStorage = new DimensionDataStorage(file2, dataFixer);
+		File file = levelStorageAccess.getDimensionPath(serverLevel.dimension()).resolve("data").toFile();
+		file.mkdirs();
+		this.dataStorage = new DimensionDataStorage(file, dataFixer);
 		this.chunkMap = new ChunkMap(
 			serverLevel,
 			levelStorageAccess,
@@ -501,6 +501,10 @@ public class ServerChunkCache extends ChunkSource {
 
 	public PoiManager getPoiManager() {
 		return this.chunkMap.getPoiManager();
+	}
+
+	public ChunkScanAccess chunkScanner() {
+		return this.chunkMap.chunkScanner();
 	}
 
 	@Nullable

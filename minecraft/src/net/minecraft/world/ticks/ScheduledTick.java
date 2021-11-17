@@ -58,10 +58,6 @@ public final class ScheduledTick extends Record {
 		return new ScheduledTick(object, blockPos, 0L, TickPriority.NORMAL, 0L);
 	}
 
-	public static <T> ScheduledTick<T> worldgen(T object, BlockPos blockPos, long l) {
-		return new ScheduledTick(object, blockPos, 0L, TickPriority.NORMAL, l);
-	}
-
 	public final String toString() {
 		return ObjectMethods.bootstrap<"toString",ScheduledTick,"type;pos;triggerTick;priority;subTickOrder",ScheduledTick::type,ScheduledTick::pos,ScheduledTick::triggerTick,ScheduledTick::priority,ScheduledTick::subTickOrder>(
 			this

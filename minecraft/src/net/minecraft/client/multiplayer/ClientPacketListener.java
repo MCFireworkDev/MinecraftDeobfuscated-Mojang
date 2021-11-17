@@ -681,6 +681,8 @@ public class ClientPacketListener implements ClientGamePacketListener {
 			levelLightEngine.updateSectionStatus(SectionPos.of(chunkPos, l), levelChunkSection.hasOnlyAir());
 			this.level.setSectionDirtyWithNeighbors(i, l, j);
 		}
+
+		this.level.setLightReady(i, j);
 	}
 
 	@Override
@@ -703,6 +705,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 			}
 
 			levelLightEngine.enableLightSources(new ChunkPos(clientboundForgetLevelChunkPacket.getX(), clientboundForgetLevelChunkPacket.getZ()), false);
+			this.level.setLightReady(clientboundForgetLevelChunkPacket.getX(), clientboundForgetLevelChunkPacket.getZ());
 		});
 	}
 
@@ -2302,6 +2305,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		BitSet bitSet4 = clientboundLightUpdatePacketData.getEmptyBlockYMask();
 		Iterator<byte[]> iterator2 = clientboundLightUpdatePacketData.getBlockUpdates().iterator();
 		this.readSectionList(i, j, levelLightEngine, LightLayer.BLOCK, bitSet3, bitSet4, iterator2, clientboundLightUpdatePacketData.getTrustEdges());
+		this.level.setLightReady(i, j);
 	}
 
 	@Override

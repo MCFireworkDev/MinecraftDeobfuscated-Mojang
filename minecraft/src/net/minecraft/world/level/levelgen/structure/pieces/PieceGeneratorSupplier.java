@@ -1,0 +1,143 @@
+package net.minecraft.world.level.levelgen.structure.pieces;
+
+import java.lang.runtime.ObjectMethods;
+import java.util.Optional;
+import java.util.function.Predicate;
+import net.minecraft.core.QuartPos;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
+
+@FunctionalInterface
+public interface PieceGeneratorSupplier<C extends FeatureConfiguration> {
+	Optional<PieceGenerator<C>> createGenerator(PieceGeneratorSupplier.Context<C> context);
+
+	static <C extends FeatureConfiguration> PieceGeneratorSupplier<C> simple(
+		Predicate<PieceGeneratorSupplier.Context<C>> predicate, PieceGenerator<C> pieceGenerator
+	) {
+		Optional<PieceGenerator<C>> optional = Optional.of(pieceGenerator);
+		return context -> predicate.test(context) ? optional : Optional.empty();
+	}
+
+	static <C extends FeatureConfiguration> Predicate<PieceGeneratorSupplier.Context<C>> checkForBiomeOnTop(Heightmap.Types types) {
+		return context -> context.validBiomeOnTop(types);
+	}
+
+	public static final class Context extends Record {
+		private final ChunkGenerator chunkGenerator;
+		private final BiomeSource biomeSource;
+		private final long seed;
+		private final ChunkPos chunkPos;
+		private final C config;
+		private final LevelHeightAccessor heightAccessor;
+		private final Predicate<Biome> validBiome;
+		private final StructureManager structureManager;
+		private final RegistryAccess registryAccess;
+
+		public Context(
+			ChunkGenerator chunkGenerator,
+			BiomeSource biomeSource,
+			long l,
+			ChunkPos chunkPos,
+			C featureConfiguration,
+			LevelHeightAccessor levelHeightAccessor,
+			Predicate<Biome> predicate,
+			StructureManager structureManager,
+			RegistryAccess registryAccess
+		) {
+			this.chunkGenerator = chunkGenerator;
+			this.biomeSource = biomeSource;
+			this.seed = l;
+			this.chunkPos = chunkPos;
+			this.config = featureConfiguration;
+			this.heightAccessor = levelHeightAccessor;
+			this.validBiome = predicate;
+			this.structureManager = structureManager;
+			this.registryAccess = registryAccess;
+		}
+
+		public boolean validBiomeOnTop(Heightmap.Types types) {
+			int i = this.chunkPos.getMiddleBlockX();
+			int j = this.chunkPos.getMiddleBlockZ();
+			int k = this.chunkGenerator.getFirstOccupiedHeight(i, j, types, this.heightAccessor);
+			Biome biome = this.chunkGenerator.getNoiseBiome(QuartPos.fromBlock(i), QuartPos.fromBlock(k), QuartPos.fromBlock(j));
+			return this.validBiome.test(biome);
+		}
+
+		public int[] getCornerHeights(int i, int j, int k, int l) {
+			return new int[]{
+				this.chunkGenerator.getFirstOccupiedHeight(i, k, Heightmap.Types.WORLD_SURFACE_WG, this.heightAccessor),
+				this.chunkGenerator.getFirstOccupiedHeight(i, k + l, Heightmap.Types.WORLD_SURFACE_WG, this.heightAccessor),
+				this.chunkGenerator.getFirstOccupiedHeight(i + j, k, Heightmap.Types.WORLD_SURFACE_WG, this.heightAccessor),
+				this.chunkGenerator.getFirstOccupiedHeight(i + j, k + l, Heightmap.Types.WORLD_SURFACE_WG, this.heightAccessor)
+			};
+		}
+
+		public int getLowestY(int i, int j) {
+			int k = this.chunkPos.getMinBlockX();
+			int l = this.chunkPos.getMinBlockZ();
+			int[] is = this.getCornerHeights(k, i, l, j);
+			return Math.min(Math.min(is[0], is[1]), Math.min(is[2], is[3]));
+		}
+
+		public final String toString() {
+			return ObjectMethods.bootstrap<"toString",PieceGeneratorSupplier.Context,"chunkGenerator;biomeSource;seed;chunkPos;config;heightAccessor;validBiome;structureManager;registryAccess",PieceGeneratorSupplier.Context::chunkGenerator,PieceGeneratorSupplier.Context::biomeSource,PieceGeneratorSupplier.Context::seed,PieceGeneratorSupplier.Context::chunkPos,PieceGeneratorSupplier.Context::config,PieceGeneratorSupplier.Context::heightAccessor,PieceGeneratorSupplier.Context::validBiome,PieceGeneratorSupplier.Context::structureManager,PieceGeneratorSupplier.Context::registryAccess>(
+				this
+			);
+		}
+
+		public final int hashCode() {
+			return ObjectMethods.bootstrap<"hashCode",PieceGeneratorSupplier.Context,"chunkGenerator;biomeSource;seed;chunkPos;config;heightAccessor;validBiome;structureManager;registryAccess",PieceGeneratorSupplier.Context::chunkGenerator,PieceGeneratorSupplier.Context::biomeSource,PieceGeneratorSupplier.Context::seed,PieceGeneratorSupplier.Context::chunkPos,PieceGeneratorSupplier.Context::config,PieceGeneratorSupplier.Context::heightAccessor,PieceGeneratorSupplier.Context::validBiome,PieceGeneratorSupplier.Context::structureManager,PieceGeneratorSupplier.Context::registryAccess>(
+				this
+			);
+		}
+
+		public final boolean equals(Object object) {
+			return ObjectMethods.bootstrap<"equals",PieceGeneratorSupplier.Context,"chunkGenerator;biomeSource;seed;chunkPos;config;heightAccessor;validBiome;structureManager;registryAccess",PieceGeneratorSupplier.Context::chunkGenerator,PieceGeneratorSupplier.Context::biomeSource,PieceGeneratorSupplier.Context::seed,PieceGeneratorSupplier.Context::chunkPos,PieceGeneratorSupplier.Context::config,PieceGeneratorSupplier.Context::heightAccessor,PieceGeneratorSupplier.Context::validBiome,PieceGeneratorSupplier.Context::structureManager,PieceGeneratorSupplier.Context::registryAccess>(
+				this, object
+			);
+		}
+
+		public ChunkGenerator chunkGenerator() {
+			return this.chunkGenerator;
+		}
+
+		public BiomeSource biomeSource() {
+			return this.biomeSource;
+		}
+
+		public long seed() {
+			return this.seed;
+		}
+
+		public ChunkPos chunkPos() {
+			return this.chunkPos;
+		}
+
+		public C config() {
+			return this.config;
+		}
+
+		public LevelHeightAccessor heightAccessor() {
+			return this.heightAccessor;
+		}
+
+		public Predicate<Biome> validBiome() {
+			return this.validBiome;
+		}
+
+		public StructureManager structureManager() {
+			return this.structureManager;
+		}
+
+		public RegistryAccess registryAccess() {
+			return this.registryAccess;
+		}
+	}
+}
