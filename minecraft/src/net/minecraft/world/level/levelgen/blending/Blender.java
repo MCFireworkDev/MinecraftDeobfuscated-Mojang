@@ -167,8 +167,8 @@ public class Blender {
 			for(Blender.PositionedBlendingData positionedBlendingData : this.densityData) {
 				positionedBlendingData.blendingData
 					.iterateDensities(
-						QuartPos.fromSection(positionedBlendingData.chunkX), QuartPos.fromSection(positionedBlendingData.chunkZ), m - 2, m + 2, (lx, mx, nx, dx) -> {
-							double exx = Mth.length((double)(l - lx), (double)(m - mx), (double)(n - nx));
+						QuartPos.fromSection(positionedBlendingData.chunkX), QuartPos.fromSection(positionedBlendingData.chunkZ), m - 1, m + 1, (lx, mx, nx, dx) -> {
+							double exx = Mth.length((double)(l - lx), (double)((m - mx) * 2), (double)(n - nx));
 							if (!(exx > 2.0)) {
 								if (exx < mutableDouble3.doubleValue()) {
 									mutableDouble3.setValue(exx);

@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.SharedConstants;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Options;
@@ -361,7 +362,9 @@ public class SoundEngine {
 									.createHandle(sound.shouldStream() ? Library.Pool.STREAMING : Library.Pool.STATIC);
 								ChannelAccess.ChannelHandle channelHandle = (ChannelAccess.ChannelHandle)completableFuture.join();
 								if (channelHandle == null) {
-									LOGGER.warn("Failed to create new sound handle");
+									if (SharedConstants.IS_RUNNING_IN_IDE) {
+										LOGGER.warn("Failed to create new sound handle");
+									}
 								} else {
 									LOGGER.debug(MARKER, "Playing sound {} for event {}", sound.getLocation(), resourceLocation);
 									this.soundDeleteTime.put(soundInstance, this.tickCount + 20);

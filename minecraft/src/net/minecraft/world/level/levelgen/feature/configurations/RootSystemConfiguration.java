@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.function.Supplier;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 
@@ -28,7 +29,8 @@ public class RootSystemConfiguration implements FeatureConfiguration {
 						.forGetter(rootSystemConfiguration -> rootSystemConfiguration.hangingRootPlacementAttempts),
 					Codec.intRange(1, 64)
 						.fieldOf("allowed_vertical_water_for_tree")
-						.forGetter(rootSystemConfiguration -> rootSystemConfiguration.allowedVerticalWaterForTree)
+						.forGetter(rootSystemConfiguration -> rootSystemConfiguration.allowedVerticalWaterForTree),
+					BlockPredicate.CODEC.fieldOf("allowed_tree_position").forGetter(rootSystemConfiguration -> rootSystemConfiguration.allowedTreePosition)
 				)
 				.apply(instance, RootSystemConfiguration::new)
 	);
@@ -44,6 +46,7 @@ public class RootSystemConfiguration implements FeatureConfiguration {
 	public final BlockStateProvider hangingRootStateProvider;
 	public final int hangingRootPlacementAttempts;
 	public final int allowedVerticalWaterForTree;
+	public final BlockPredicate allowedTreePosition;
 
 	public RootSystemConfiguration(
 		Supplier<PlacedFeature> supplier,
@@ -57,7 +60,8 @@ public class RootSystemConfiguration implements FeatureConfiguration {
 		int n,
 		BlockStateProvider blockStateProvider2,
 		int o,
-		int p
+		int p,
+		BlockPredicate blockPredicate
 	) {
 		this.treeFeature = supplier;
 		this.requiredVerticalSpaceForTree = i;
@@ -71,5 +75,6 @@ public class RootSystemConfiguration implements FeatureConfiguration {
 		this.hangingRootStateProvider = blockStateProvider2;
 		this.hangingRootPlacementAttempts = o;
 		this.allowedVerticalWaterForTree = p;
+		this.allowedTreePosition = blockPredicate;
 	}
 }
