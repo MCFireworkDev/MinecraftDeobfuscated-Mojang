@@ -1,7 +1,6 @@
 package net.minecraft.world.level.levelgen.blending;
 
 import com.google.common.collect.Lists;
-import java.lang.runtime.ObjectMethods;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -386,45 +385,9 @@ public class Blender {
 		double getDistance(double d, double e, double f);
 	}
 
-	static final class PositionedBlendingData extends Record {
+	static record PositionedBlendingData(int chunkX, int chunkZ, BlendingData blendingData) {
 		final int chunkX;
 		final int chunkZ;
 		final BlendingData blendingData;
-
-		PositionedBlendingData(int i, int j, BlendingData blendingData) {
-			this.chunkX = i;
-			this.chunkZ = j;
-			this.blendingData = blendingData;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",Blender.PositionedBlendingData,"chunkX;chunkZ;blendingData",Blender.PositionedBlendingData::chunkX,Blender.PositionedBlendingData::chunkZ,Blender.PositionedBlendingData::blendingData>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",Blender.PositionedBlendingData,"chunkX;chunkZ;blendingData",Blender.PositionedBlendingData::chunkX,Blender.PositionedBlendingData::chunkZ,Blender.PositionedBlendingData::blendingData>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",Blender.PositionedBlendingData,"chunkX;chunkZ;blendingData",Blender.PositionedBlendingData::chunkX,Blender.PositionedBlendingData::chunkZ,Blender.PositionedBlendingData::blendingData>(
-				this, object
-			);
-		}
-
-		public int chunkX() {
-			return this.chunkX;
-		}
-
-		public int chunkZ() {
-			return this.chunkZ;
-		}
-
-		public BlendingData blendingData() {
-			return this.blendingData;
-		}
 	}
 }

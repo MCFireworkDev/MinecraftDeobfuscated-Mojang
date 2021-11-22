@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.lang.runtime.ObjectMethods;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -142,17 +141,12 @@ public class SurfaceRules {
 		}
 	}
 
-	static final class BiomeConditionSource extends Record implements SurfaceRules.ConditionSource {
-		private final List<ResourceKey<Biome>> biomes;
+	static record BiomeConditionSource(List<ResourceKey<Biome>> biomes) implements SurfaceRules.ConditionSource {
 		static final Codec<SurfaceRules.BiomeConditionSource> CODEC = ResourceKey.codec(Registry.BIOME_REGISTRY)
 			.listOf()
 			.fieldOf("biome_is")
 			.<SurfaceRules.BiomeConditionSource>xmap(SurfaceRules::isBiome, SurfaceRules.BiomeConditionSource::biomes)
 			.codec();
-
-		BiomeConditionSource(List<ResourceKey<Biome>> list) {
-			this.biomes = list;
-		}
 
 		@Override
 		public Codec<? extends SurfaceRules.ConditionSource> codec() {
@@ -175,27 +169,9 @@ public class SurfaceRules {
 
 			return new BiomeCondition();
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.BiomeConditionSource,"biomes",SurfaceRules.BiomeConditionSource::biomes>(this);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.BiomeConditionSource,"biomes",SurfaceRules.BiomeConditionSource::biomes>(this);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.BiomeConditionSource,"biomes",SurfaceRules.BiomeConditionSource::biomes>(this, object);
-		}
-
-		public List<ResourceKey<Biome>> biomes() {
-			return this.biomes;
-		}
 	}
 
-	static final class BlockRuleSource extends Record implements SurfaceRules.RuleSource {
-		private final BlockState resultState;
-		private final SurfaceRules.StateRule rule;
+	static record BlockRuleSource(BlockState resultState, SurfaceRules.StateRule rule) implements SurfaceRules.RuleSource {
 		static final Codec<SurfaceRules.BlockRuleSource> CODEC = BlockState.CODEC
 			.<SurfaceRules.BlockRuleSource>xmap(SurfaceRules.BlockRuleSource::new, SurfaceRules.BlockRuleSource::resultState)
 			.fieldOf("result_state")
@@ -205,43 +181,12 @@ public class SurfaceRules {
 			this(blockState, new SurfaceRules.StateRule(blockState));
 		}
 
-		private BlockRuleSource(BlockState blockState, SurfaceRules.StateRule stateRule) {
-			this.resultState = blockState;
-			this.rule = stateRule;
-		}
-
 		@Override
 		public Codec<? extends SurfaceRules.RuleSource> codec() {
 			return CODEC;
 		}
 
 		public SurfaceRules.SurfaceRule apply(SurfaceRules.Context context) {
-			return this.rule;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.BlockRuleSource,"resultState;rule",SurfaceRules.BlockRuleSource::resultState,SurfaceRules.BlockRuleSource::rule>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.BlockRuleSource,"resultState;rule",SurfaceRules.BlockRuleSource::resultState,SurfaceRules.BlockRuleSource::rule>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.BlockRuleSource,"resultState;rule",SurfaceRules.BlockRuleSource::resultState,SurfaceRules.BlockRuleSource::rule>(
-				this, object
-			);
-		}
-
-		public BlockState resultState() {
-			return this.resultState;
-		}
-
-		public SurfaceRules.StateRule rule() {
 			return this.rule;
 		}
 	}
@@ -441,7 +386,7 @@ public class SurfaceRules {
 
 			@Override
 			protected boolean compute() {
-				return ((Biome)this.context.biome.get()).getTemperature(this.context.pos.set(this.context.blockX, this.context.blockY, this.context.blockZ)) < 0.15F;
+				return ((Biome)this.context.biome.get()).coldEnoughToSnow(this.context.pos.set(this.context.blockX, this.context.blockY, this.context.blockZ));
 			}
 		}
 	}
@@ -515,8 +460,8 @@ public class SurfaceRules {
 		}
 	}
 
-	static final class NoiseThresholdConditionSource extends Record implements SurfaceRules.ConditionSource {
-		private final ResourceKey<NormalNoise.NoiseParameters> noise;
+	static record NoiseThresholdConditionSource(ResourceKey<NormalNoise.NoiseParameters> noise, double minThreshold, double maxThreshold)
+		implements SurfaceRules.ConditionSource {
 		final double minThreshold;
 		final double maxThreshold;
 		static final Codec<SurfaceRules.NoiseThresholdConditionSource> CODEC = RecordCodecBuilder.create(
@@ -527,12 +472,6 @@ public class SurfaceRules {
 					)
 					.apply(instance, SurfaceRules.NoiseThresholdConditionSource::new)
 		);
-
-		NoiseThresholdConditionSource(ResourceKey<NormalNoise.NoiseParameters> resourceKey, double d, double e) {
-			this.noise = resourceKey;
-			this.minThreshold = d;
-			this.maxThreshold = e;
-		}
 
 		@Override
 		public Codec<? extends SurfaceRules.ConditionSource> codec() {
@@ -556,77 +495,20 @@ public class SurfaceRules {
 
 			return new NoiseThresholdCondition();
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.NoiseThresholdConditionSource,"noise;minThreshold;maxThreshold",SurfaceRules.NoiseThresholdConditionSource::noise,SurfaceRules.NoiseThresholdConditionSource::minThreshold,SurfaceRules.NoiseThresholdConditionSource::maxThreshold>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.NoiseThresholdConditionSource,"noise;minThreshold;maxThreshold",SurfaceRules.NoiseThresholdConditionSource::noise,SurfaceRules.NoiseThresholdConditionSource::minThreshold,SurfaceRules.NoiseThresholdConditionSource::maxThreshold>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.NoiseThresholdConditionSource,"noise;minThreshold;maxThreshold",SurfaceRules.NoiseThresholdConditionSource::noise,SurfaceRules.NoiseThresholdConditionSource::minThreshold,SurfaceRules.NoiseThresholdConditionSource::maxThreshold>(
-				this, object
-			);
-		}
-
-		public ResourceKey<NormalNoise.NoiseParameters> noise() {
-			return this.noise;
-		}
-
-		public double minThreshold() {
-			return this.minThreshold;
-		}
-
-		public double maxThreshold() {
-			return this.maxThreshold;
-		}
 	}
 
-	static final class NotCondition extends Record implements SurfaceRules.Condition {
-		private final SurfaceRules.Condition target;
-
-		NotCondition(SurfaceRules.Condition condition) {
-			this.target = condition;
-		}
-
+	static record NotCondition(SurfaceRules.Condition target) implements SurfaceRules.Condition {
 		@Override
 		public boolean test() {
 			return !this.target.test();
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.NotCondition,"target",SurfaceRules.NotCondition::target>(this);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.NotCondition,"target",SurfaceRules.NotCondition::target>(this);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.NotCondition,"target",SurfaceRules.NotCondition::target>(this, object);
-		}
-
-		public SurfaceRules.Condition target() {
-			return this.target;
-		}
 	}
 
-	static final class NotConditionSource extends Record implements SurfaceRules.ConditionSource {
-		private final SurfaceRules.ConditionSource target;
+	static record NotConditionSource(SurfaceRules.ConditionSource target) implements SurfaceRules.ConditionSource {
 		static final Codec<SurfaceRules.NotConditionSource> CODEC = SurfaceRules.ConditionSource.CODEC
 			.<SurfaceRules.NotConditionSource>xmap(SurfaceRules.NotConditionSource::new, SurfaceRules.NotConditionSource::target)
 			.fieldOf("invert")
 			.codec();
-
-		NotConditionSource(SurfaceRules.ConditionSource conditionSource) {
-			this.target = conditionSource;
-		}
 
 		@Override
 		public Codec<? extends SurfaceRules.ConditionSource> codec() {
@@ -635,22 +517,6 @@ public class SurfaceRules {
 
 		public SurfaceRules.Condition apply(SurfaceRules.Context context) {
 			return new SurfaceRules.NotCondition((SurfaceRules.Condition)this.target.apply(context));
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.NotConditionSource,"target",SurfaceRules.NotConditionSource::target>(this);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.NotConditionSource,"target",SurfaceRules.NotConditionSource::target>(this);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.NotConditionSource,"target",SurfaceRules.NotConditionSource::target>(this, object);
-		}
-
-		public SurfaceRules.ConditionSource target() {
-			return this.target;
 		}
 	}
 
@@ -668,13 +534,7 @@ public class SurfaceRules {
 		Codec<? extends SurfaceRules.RuleSource> codec();
 	}
 
-	static final class SequenceRule extends Record implements SurfaceRules.SurfaceRule {
-		private final List<SurfaceRules.SurfaceRule> rules;
-
-		SequenceRule(List<SurfaceRules.SurfaceRule> list) {
-			this.rules = list;
-		}
-
+	static record SequenceRule(List<SurfaceRules.SurfaceRule> rules) implements SurfaceRules.SurfaceRule {
 		@Nullable
 		@Override
 		public BlockState tryApply(int i, int j, int k) {
@@ -687,35 +547,14 @@ public class SurfaceRules {
 
 			return null;
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.SequenceRule,"rules",SurfaceRules.SequenceRule::rules>(this);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.SequenceRule,"rules",SurfaceRules.SequenceRule::rules>(this);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.SequenceRule,"rules",SurfaceRules.SequenceRule::rules>(this, object);
-		}
-
-		public List<SurfaceRules.SurfaceRule> rules() {
-			return this.rules;
-		}
 	}
 
-	static final class SequenceRuleSource extends Record implements SurfaceRules.RuleSource {
-		private final List<SurfaceRules.RuleSource> sequence;
+	static record SequenceRuleSource(List<SurfaceRules.RuleSource> sequence) implements SurfaceRules.RuleSource {
 		static final Codec<SurfaceRules.SequenceRuleSource> CODEC = SurfaceRules.RuleSource.CODEC
 			.listOf()
 			.<SurfaceRules.SequenceRuleSource>xmap(SurfaceRules.SequenceRuleSource::new, SurfaceRules.SequenceRuleSource::sequence)
 			.fieldOf("sequence")
 			.codec();
-
-		SequenceRuleSource(List<SurfaceRules.RuleSource> list) {
-			this.sequence = list;
-		}
 
 		@Override
 		public Codec<? extends SurfaceRules.RuleSource> codec() {
@@ -735,49 +574,11 @@ public class SurfaceRules {
 				return new SurfaceRules.SequenceRule(builder.build());
 			}
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.SequenceRuleSource,"sequence",SurfaceRules.SequenceRuleSource::sequence>(this);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.SequenceRuleSource,"sequence",SurfaceRules.SequenceRuleSource::sequence>(this);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.SequenceRuleSource,"sequence",SurfaceRules.SequenceRuleSource::sequence>(this, object);
-		}
-
-		public List<SurfaceRules.RuleSource> sequence() {
-			return this.sequence;
-		}
 	}
 
-	static final class StateRule extends Record implements SurfaceRules.SurfaceRule {
-		private final BlockState state;
-
-		StateRule(BlockState blockState) {
-			this.state = blockState;
-		}
-
+	static record StateRule(BlockState state) implements SurfaceRules.SurfaceRule {
 		@Override
 		public BlockState tryApply(int i, int j, int k) {
-			return this.state;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.StateRule,"state",SurfaceRules.StateRule::state>(this);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.StateRule,"state",SurfaceRules.StateRule::state>(this);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.StateRule,"state",SurfaceRules.StateRule::state>(this, object);
-		}
-
-		public BlockState state() {
 			return this.state;
 		}
 	}
@@ -797,11 +598,11 @@ public class SurfaceRules {
 		}
 	}
 
-	static final class StoneDepthCheck extends Record implements SurfaceRules.ConditionSource {
+	static record StoneDepthCheck(int offset, boolean addSurfaceDepth, boolean addSurfaceSecondaryDepth, CaveSurface surfaceType)
+		implements SurfaceRules.ConditionSource {
 		final int offset;
 		final boolean addSurfaceDepth;
 		final boolean addSurfaceSecondaryDepth;
-		private final CaveSurface surfaceType;
 		static final Codec<SurfaceRules.StoneDepthCheck> CODEC = RecordCodecBuilder.create(
 			instance -> instance.group(
 						Codec.INT.fieldOf("offset").forGetter(SurfaceRules.StoneDepthCheck::offset),
@@ -811,13 +612,6 @@ public class SurfaceRules {
 					)
 					.apply(instance, SurfaceRules.StoneDepthCheck::new)
 		);
-
-		StoneDepthCheck(int i, boolean bl, boolean bl2, CaveSurface caveSurface) {
-			this.offset = i;
-			this.addSurfaceDepth = bl;
-			this.addSurfaceSecondaryDepth = bl2;
-			this.surfaceType = caveSurface;
-		}
 
 		@Override
 		public Codec<? extends SurfaceRules.ConditionSource> codec() {
@@ -844,40 +638,6 @@ public class SurfaceRules {
 
 			return new StoneDepthCondition();
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.StoneDepthCheck,"offset;addSurfaceDepth;addSurfaceSecondaryDepth;surfaceType",SurfaceRules.StoneDepthCheck::offset,SurfaceRules.StoneDepthCheck::addSurfaceDepth,SurfaceRules.StoneDepthCheck::addSurfaceSecondaryDepth,SurfaceRules.StoneDepthCheck::surfaceType>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.StoneDepthCheck,"offset;addSurfaceDepth;addSurfaceSecondaryDepth;surfaceType",SurfaceRules.StoneDepthCheck::offset,SurfaceRules.StoneDepthCheck::addSurfaceDepth,SurfaceRules.StoneDepthCheck::addSurfaceSecondaryDepth,SurfaceRules.StoneDepthCheck::surfaceType>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.StoneDepthCheck,"offset;addSurfaceDepth;addSurfaceSecondaryDepth;surfaceType",SurfaceRules.StoneDepthCheck::offset,SurfaceRules.StoneDepthCheck::addSurfaceDepth,SurfaceRules.StoneDepthCheck::addSurfaceSecondaryDepth,SurfaceRules.StoneDepthCheck::surfaceType>(
-				this, object
-			);
-		}
-
-		public int offset() {
-			return this.offset;
-		}
-
-		public boolean addSurfaceDepth() {
-			return this.addSurfaceDepth;
-		}
-
-		public boolean addSurfaceSecondaryDepth() {
-			return this.addSurfaceSecondaryDepth;
-		}
-
-		public CaveSurface surfaceType() {
-			return this.surfaceType;
-		}
 	}
 
 	protected interface SurfaceRule {
@@ -900,47 +660,15 @@ public class SurfaceRules {
 		}
 	}
 
-	static final class TestRule extends Record implements SurfaceRules.SurfaceRule {
-		private final SurfaceRules.Condition condition;
-		private final SurfaceRules.SurfaceRule followup;
-
-		TestRule(SurfaceRules.Condition condition, SurfaceRules.SurfaceRule surfaceRule) {
-			this.condition = condition;
-			this.followup = surfaceRule;
-		}
-
+	static record TestRule(SurfaceRules.Condition condition, SurfaceRules.SurfaceRule followup) implements SurfaceRules.SurfaceRule {
 		@Nullable
 		@Override
 		public BlockState tryApply(int i, int j, int k) {
 			return !this.condition.test() ? null : this.followup.tryApply(i, j, k);
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.TestRule,"condition;followup",SurfaceRules.TestRule::condition,SurfaceRules.TestRule::followup>(this);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.TestRule,"condition;followup",SurfaceRules.TestRule::condition,SurfaceRules.TestRule::followup>(this);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.TestRule,"condition;followup",SurfaceRules.TestRule::condition,SurfaceRules.TestRule::followup>(
-				this, object
-			);
-		}
-
-		public SurfaceRules.Condition condition() {
-			return this.condition;
-		}
-
-		public SurfaceRules.SurfaceRule followup() {
-			return this.followup;
-		}
 	}
 
-	static final class TestRuleSource extends Record implements SurfaceRules.RuleSource {
-		private final SurfaceRules.ConditionSource ifTrue;
-		private final SurfaceRules.RuleSource thenRun;
+	static record TestRuleSource(SurfaceRules.ConditionSource ifTrue, SurfaceRules.RuleSource thenRun) implements SurfaceRules.RuleSource {
 		static final Codec<SurfaceRules.TestRuleSource> CODEC = RecordCodecBuilder.create(
 			instance -> instance.group(
 						SurfaceRules.ConditionSource.CODEC.fieldOf("if_true").forGetter(SurfaceRules.TestRuleSource::ifTrue),
@@ -948,11 +676,6 @@ public class SurfaceRules {
 					)
 					.apply(instance, SurfaceRules.TestRuleSource::new)
 		);
-
-		TestRuleSource(SurfaceRules.ConditionSource conditionSource, SurfaceRules.RuleSource ruleSource) {
-			this.ifTrue = conditionSource;
-			this.thenRun = ruleSource;
-		}
 
 		@Override
 		public Codec<? extends SurfaceRules.RuleSource> codec() {
@@ -962,38 +685,10 @@ public class SurfaceRules {
 		public SurfaceRules.SurfaceRule apply(SurfaceRules.Context context) {
 			return new SurfaceRules.TestRule((SurfaceRules.Condition)this.ifTrue.apply(context), (SurfaceRules.SurfaceRule)this.thenRun.apply(context));
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.TestRuleSource,"ifTrue;thenRun",SurfaceRules.TestRuleSource::ifTrue,SurfaceRules.TestRuleSource::thenRun>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.TestRuleSource,"ifTrue;thenRun",SurfaceRules.TestRuleSource::ifTrue,SurfaceRules.TestRuleSource::thenRun>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.TestRuleSource,"ifTrue;thenRun",SurfaceRules.TestRuleSource::ifTrue,SurfaceRules.TestRuleSource::thenRun>(
-				this, object
-			);
-		}
-
-		public SurfaceRules.ConditionSource ifTrue() {
-			return this.ifTrue;
-		}
-
-		public SurfaceRules.RuleSource thenRun() {
-			return this.thenRun;
-		}
 	}
 
-	static final class VerticalGradientConditionSource extends Record implements SurfaceRules.ConditionSource {
-		private final ResourceLocation randomName;
-		private final VerticalAnchor trueAtAndBelow;
-		private final VerticalAnchor falseAtAndAbove;
+	static record VerticalGradientConditionSource(ResourceLocation randomName, VerticalAnchor trueAtAndBelow, VerticalAnchor falseAtAndAbove)
+		implements SurfaceRules.ConditionSource {
 		static final Codec<SurfaceRules.VerticalGradientConditionSource> CODEC = RecordCodecBuilder.create(
 			instance -> instance.group(
 						ResourceLocation.CODEC.fieldOf("random_name").forGetter(SurfaceRules.VerticalGradientConditionSource::randomName),
@@ -1002,12 +697,6 @@ public class SurfaceRules {
 					)
 					.apply(instance, SurfaceRules.VerticalGradientConditionSource::new)
 		);
-
-		VerticalGradientConditionSource(ResourceLocation resourceLocation, VerticalAnchor verticalAnchor, VerticalAnchor verticalAnchor2) {
-			this.randomName = resourceLocation;
-			this.trueAtAndBelow = verticalAnchor;
-			this.falseAtAndAbove = verticalAnchor2;
-		}
 
 		@Override
 		public Codec<? extends SurfaceRules.ConditionSource> codec() {
@@ -1041,39 +730,9 @@ public class SurfaceRules {
 
 			return new VerticalGradientCondition();
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.VerticalGradientConditionSource,"randomName;trueAtAndBelow;falseAtAndAbove",SurfaceRules.VerticalGradientConditionSource::randomName,SurfaceRules.VerticalGradientConditionSource::trueAtAndBelow,SurfaceRules.VerticalGradientConditionSource::falseAtAndAbove>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.VerticalGradientConditionSource,"randomName;trueAtAndBelow;falseAtAndAbove",SurfaceRules.VerticalGradientConditionSource::randomName,SurfaceRules.VerticalGradientConditionSource::trueAtAndBelow,SurfaceRules.VerticalGradientConditionSource::falseAtAndAbove>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.VerticalGradientConditionSource,"randomName;trueAtAndBelow;falseAtAndAbove",SurfaceRules.VerticalGradientConditionSource::randomName,SurfaceRules.VerticalGradientConditionSource::trueAtAndBelow,SurfaceRules.VerticalGradientConditionSource::falseAtAndAbove>(
-				this, object
-			);
-		}
-
-		public ResourceLocation randomName() {
-			return this.randomName;
-		}
-
-		public VerticalAnchor trueAtAndBelow() {
-			return this.trueAtAndBelow;
-		}
-
-		public VerticalAnchor falseAtAndAbove() {
-			return this.falseAtAndAbove;
-		}
 	}
 
-	static final class WaterConditionSource extends Record implements SurfaceRules.ConditionSource {
+	static record WaterConditionSource(int offset, int surfaceDepthMultiplier, boolean addStoneDepth) implements SurfaceRules.ConditionSource {
 		final int offset;
 		final int surfaceDepthMultiplier;
 		final boolean addStoneDepth;
@@ -1085,12 +744,6 @@ public class SurfaceRules {
 					)
 					.apply(instance, SurfaceRules.WaterConditionSource::new)
 		);
-
-		WaterConditionSource(int i, int j, boolean bl) {
-			this.offset = i;
-			this.surfaceDepthMultiplier = j;
-			this.addStoneDepth = bl;
-		}
 
 		@Override
 		public Codec<? extends SurfaceRules.ConditionSource> codec() {
@@ -1113,39 +766,9 @@ public class SurfaceRules {
 
 			return new WaterCondition();
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.WaterConditionSource,"offset;surfaceDepthMultiplier;addStoneDepth",SurfaceRules.WaterConditionSource::offset,SurfaceRules.WaterConditionSource::surfaceDepthMultiplier,SurfaceRules.WaterConditionSource::addStoneDepth>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.WaterConditionSource,"offset;surfaceDepthMultiplier;addStoneDepth",SurfaceRules.WaterConditionSource::offset,SurfaceRules.WaterConditionSource::surfaceDepthMultiplier,SurfaceRules.WaterConditionSource::addStoneDepth>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.WaterConditionSource,"offset;surfaceDepthMultiplier;addStoneDepth",SurfaceRules.WaterConditionSource::offset,SurfaceRules.WaterConditionSource::surfaceDepthMultiplier,SurfaceRules.WaterConditionSource::addStoneDepth>(
-				this, object
-			);
-		}
-
-		public int offset() {
-			return this.offset;
-		}
-
-		public int surfaceDepthMultiplier() {
-			return this.surfaceDepthMultiplier;
-		}
-
-		public boolean addStoneDepth() {
-			return this.addStoneDepth;
-		}
 	}
 
-	static final class YConditionSource extends Record implements SurfaceRules.ConditionSource {
+	static record YConditionSource(VerticalAnchor anchor, int surfaceDepthMultiplier, boolean addStoneDepth) implements SurfaceRules.ConditionSource {
 		final VerticalAnchor anchor;
 		final int surfaceDepthMultiplier;
 		final boolean addStoneDepth;
@@ -1157,12 +780,6 @@ public class SurfaceRules {
 					)
 					.apply(instance, SurfaceRules.YConditionSource::new)
 		);
-
-		YConditionSource(VerticalAnchor verticalAnchor, int i, boolean bl) {
-			this.anchor = verticalAnchor;
-			this.surfaceDepthMultiplier = i;
-			this.addStoneDepth = bl;
-		}
 
 		@Override
 		public Codec<? extends SurfaceRules.ConditionSource> codec() {
@@ -1183,36 +800,6 @@ public class SurfaceRules {
 			}
 
 			return new YCondition();
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",SurfaceRules.YConditionSource,"anchor;surfaceDepthMultiplier;addStoneDepth",SurfaceRules.YConditionSource::anchor,SurfaceRules.YConditionSource::surfaceDepthMultiplier,SurfaceRules.YConditionSource::addStoneDepth>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",SurfaceRules.YConditionSource,"anchor;surfaceDepthMultiplier;addStoneDepth",SurfaceRules.YConditionSource::anchor,SurfaceRules.YConditionSource::surfaceDepthMultiplier,SurfaceRules.YConditionSource::addStoneDepth>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",SurfaceRules.YConditionSource,"anchor;surfaceDepthMultiplier;addStoneDepth",SurfaceRules.YConditionSource::anchor,SurfaceRules.YConditionSource::surfaceDepthMultiplier,SurfaceRules.YConditionSource::addStoneDepth>(
-				this, object
-			);
-		}
-
-		public VerticalAnchor anchor() {
-			return this.anchor;
-		}
-
-		public int surfaceDepthMultiplier() {
-			return this.surfaceDepthMultiplier;
-		}
-
-		public boolean addStoneDepth() {
-			return this.addStoneDepth;
 		}
 	}
 }

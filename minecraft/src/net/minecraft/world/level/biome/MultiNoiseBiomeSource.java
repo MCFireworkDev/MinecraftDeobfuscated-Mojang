@@ -10,7 +10,6 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.lang.runtime.ObjectMethods;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
@@ -188,9 +187,7 @@ public class MultiNoiseBiomeSource extends BiomeSource {
 		}
 	}
 
-	static final class PresetInstance extends Record {
-		private final MultiNoiseBiomeSource.Preset preset;
-		private final Registry<Biome> biomes;
+	static record PresetInstance(MultiNoiseBiomeSource.Preset preset, Registry<Biome> biomes) {
 		public static final MapCodec<MultiNoiseBiomeSource.PresetInstance> CODEC = RecordCodecBuilder.mapCodec(
 			instance -> instance.group(
 						ResourceLocation.CODEC
@@ -208,39 +205,8 @@ public class MultiNoiseBiomeSource extends BiomeSource {
 					.apply(instance, instance.stable(MultiNoiseBiomeSource.PresetInstance::new))
 		);
 
-		PresetInstance(MultiNoiseBiomeSource.Preset preset, Registry<Biome> registry) {
-			this.preset = preset;
-			this.biomes = registry;
-		}
-
 		public MultiNoiseBiomeSource biomeSource() {
 			return this.preset.biomeSource(this, true);
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",MultiNoiseBiomeSource.PresetInstance,"preset;biomes",MultiNoiseBiomeSource.PresetInstance::preset,MultiNoiseBiomeSource.PresetInstance::biomes>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",MultiNoiseBiomeSource.PresetInstance,"preset;biomes",MultiNoiseBiomeSource.PresetInstance::preset,MultiNoiseBiomeSource.PresetInstance::biomes>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",MultiNoiseBiomeSource.PresetInstance,"preset;biomes",MultiNoiseBiomeSource.PresetInstance::preset,MultiNoiseBiomeSource.PresetInstance::biomes>(
-				this, object
-			);
-		}
-
-		public MultiNoiseBiomeSource.Preset preset() {
-			return this.preset;
-		}
-
-		public Registry<Biome> biomes() {
-			return this.biomes;
 		}
 	}
 }

@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import java.lang.runtime.ObjectMethods;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
@@ -51,60 +50,20 @@ public final class NetworkPacketSummary {
 		return this.largestSizeContributors;
 	}
 
-	public static final class PacketCountAndSize extends Record {
+	public static record PacketCountAndSize(long totalCount, long totalSize) {
 		final long totalCount;
 		final long totalSize;
 		static final Comparator<NetworkPacketSummary.PacketCountAndSize> SIZE_THEN_COUNT = Comparator.comparing(NetworkPacketSummary.PacketCountAndSize::totalSize)
 			.thenComparing(NetworkPacketSummary.PacketCountAndSize::totalCount)
 			.reversed();
 
-		public PacketCountAndSize(long l, long m) {
-			this.totalCount = l;
-			this.totalSize = m;
-		}
-
 		NetworkPacketSummary.PacketCountAndSize add(NetworkPacketSummary.PacketCountAndSize packetCountAndSize) {
 			return new NetworkPacketSummary.PacketCountAndSize(this.totalCount + packetCountAndSize.totalCount, this.totalSize + packetCountAndSize.totalSize);
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",NetworkPacketSummary.PacketCountAndSize,"totalCount;totalSize",NetworkPacketSummary.PacketCountAndSize::totalCount,NetworkPacketSummary.PacketCountAndSize::totalSize>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",NetworkPacketSummary.PacketCountAndSize,"totalCount;totalSize",NetworkPacketSummary.PacketCountAndSize::totalCount,NetworkPacketSummary.PacketCountAndSize::totalSize>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",NetworkPacketSummary.PacketCountAndSize,"totalCount;totalSize",NetworkPacketSummary.PacketCountAndSize::totalCount,NetworkPacketSummary.PacketCountAndSize::totalSize>(
-				this, object
-			);
-		}
-
-		public long totalCount() {
-			return this.totalCount;
-		}
-
-		public long totalSize() {
-			return this.totalSize;
-		}
 	}
 
-	public static final class PacketIdentification extends Record {
-		private final PacketFlow direction;
-		private final int protocolId;
-		private final int packetId;
+	public static record PacketIdentification(PacketFlow direction, int protocolId, int packetId) {
 		private static final Map<NetworkPacketSummary.PacketIdentification, String> PACKET_NAME_BY_ID;
-
-		public PacketIdentification(PacketFlow packetFlow, int i, int j) {
-			this.direction = packetFlow;
-			this.protocolId = i;
-			this.packetId = j;
-		}
 
 		public String packetName() {
 			return (String)PACKET_NAME_BY_ID.getOrDefault(this, "unknown");
@@ -116,36 +75,6 @@ public final class NetworkPacketSummary {
 				recordedEvent.getInt("protocolId"),
 				recordedEvent.getInt("packetId")
 			);
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",NetworkPacketSummary.PacketIdentification,"direction;protocolId;packetId",NetworkPacketSummary.PacketIdentification::direction,NetworkPacketSummary.PacketIdentification::protocolId,NetworkPacketSummary.PacketIdentification::packetId>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",NetworkPacketSummary.PacketIdentification,"direction;protocolId;packetId",NetworkPacketSummary.PacketIdentification::direction,NetworkPacketSummary.PacketIdentification::protocolId,NetworkPacketSummary.PacketIdentification::packetId>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",NetworkPacketSummary.PacketIdentification,"direction;protocolId;packetId",NetworkPacketSummary.PacketIdentification::direction,NetworkPacketSummary.PacketIdentification::protocolId,NetworkPacketSummary.PacketIdentification::packetId>(
-				this, object
-			);
-		}
-
-		public PacketFlow direction() {
-			return this.direction;
-		}
-
-		public int protocolId() {
-			return this.protocolId;
-		}
-
-		public int packetId() {
-			return this.packetId;
 		}
 
 		static {

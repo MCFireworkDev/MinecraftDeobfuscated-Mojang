@@ -16,7 +16,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
-import java.lang.runtime.ObjectMethods;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -249,45 +248,6 @@ public class MappedRegistry<T> extends WritableRegistry<T> {
 		}, mappedRegistry -> ImmutableMap.copyOf(mappedRegistry.keyStorage));
 	}
 
-	static final class RegistryEntry extends Record {
-		private final ResourceKey<T> key;
-		private final int id;
-		private final T value;
-
-		RegistryEntry(ResourceKey<T> resourceKey, int i, T object) {
-			this.key = resourceKey;
-			this.id = i;
-			this.value = object;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",MappedRegistry.RegistryEntry,"key;id;value",MappedRegistry.RegistryEntry::key,MappedRegistry.RegistryEntry::id,MappedRegistry.RegistryEntry::value>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",MappedRegistry.RegistryEntry,"key;id;value",MappedRegistry.RegistryEntry::key,MappedRegistry.RegistryEntry::id,MappedRegistry.RegistryEntry::value>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",MappedRegistry.RegistryEntry,"key;id;value",MappedRegistry.RegistryEntry::key,MappedRegistry.RegistryEntry::id,MappedRegistry.RegistryEntry::value>(
-				this, object
-			);
-		}
-
-		public ResourceKey<T> key() {
-			return this.key;
-		}
-
-		public int id() {
-			return this.id;
-		}
-
-		public T value() {
-			return this.value;
-		}
+	static record RegistryEntry<T>(ResourceKey<T> key, int id, T value) {
 	}
 }

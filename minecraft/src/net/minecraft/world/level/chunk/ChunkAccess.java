@@ -6,7 +6,6 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortList;
-import java.lang.runtime.ObjectMethods;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -421,35 +420,6 @@ public abstract class ChunkAccess implements BlockGetter, BiomeManager.NoiseBiom
 		return this;
 	}
 
-	public static final class TicksToSave extends Record {
-		private final SerializableTickContainer<Block> blocks;
-		private final SerializableTickContainer<Fluid> fluids;
-
-		public TicksToSave(SerializableTickContainer<Block> serializableTickContainer, SerializableTickContainer<Fluid> serializableTickContainer2) {
-			this.blocks = serializableTickContainer;
-			this.fluids = serializableTickContainer2;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",ChunkAccess.TicksToSave,"blocks;fluids",ChunkAccess.TicksToSave::blocks,ChunkAccess.TicksToSave::fluids>(this);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",ChunkAccess.TicksToSave,"blocks;fluids",ChunkAccess.TicksToSave::blocks,ChunkAccess.TicksToSave::fluids>(this);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",ChunkAccess.TicksToSave,"blocks;fluids",ChunkAccess.TicksToSave::blocks,ChunkAccess.TicksToSave::fluids>(
-				this, object
-			);
-		}
-
-		public SerializableTickContainer<Block> blocks() {
-			return this.blocks;
-		}
-
-		public SerializableTickContainer<Fluid> fluids() {
-			return this.fluids;
-		}
+	public static record TicksToSave(SerializableTickContainer<Block> blocks, SerializableTickContainer<Fluid> fluids) {
 	}
 }

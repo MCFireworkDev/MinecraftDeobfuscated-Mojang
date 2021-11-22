@@ -3,7 +3,6 @@ package net.minecraft.world.level.levelgen.feature;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.lang.runtime.ObjectMethods;
 import java.util.Random;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -157,9 +156,7 @@ public class LakeFeature extends Feature<LakeFeature.Configuration> {
 		return !blockState.is(BlockTags.FEATURES_CANNOT_REPLACE);
 	}
 
-	public static final class Configuration extends Record implements FeatureConfiguration {
-		private final BlockStateProvider fluid;
-		private final BlockStateProvider barrier;
+	public static record Configuration(BlockStateProvider fluid, BlockStateProvider barrier) implements FeatureConfiguration {
 		public static final Codec<LakeFeature.Configuration> CODEC = RecordCodecBuilder.create(
 			instance -> instance.group(
 						BlockStateProvider.CODEC.fieldOf("fluid").forGetter(LakeFeature.Configuration::fluid),
@@ -167,36 +164,5 @@ public class LakeFeature extends Feature<LakeFeature.Configuration> {
 					)
 					.apply(instance, LakeFeature.Configuration::new)
 		);
-
-		public Configuration(BlockStateProvider blockStateProvider, BlockStateProvider blockStateProvider2) {
-			this.fluid = blockStateProvider;
-			this.barrier = blockStateProvider2;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",LakeFeature.Configuration,"fluid;barrier",LakeFeature.Configuration::fluid,LakeFeature.Configuration::barrier>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",LakeFeature.Configuration,"fluid;barrier",LakeFeature.Configuration::fluid,LakeFeature.Configuration::barrier>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",LakeFeature.Configuration,"fluid;barrier",LakeFeature.Configuration::fluid,LakeFeature.Configuration::barrier>(
-				this, object
-			);
-		}
-
-		public BlockStateProvider fluid() {
-			return this.fluid;
-		}
-
-		public BlockStateProvider barrier() {
-			return this.barrier;
-		}
 	}
 }

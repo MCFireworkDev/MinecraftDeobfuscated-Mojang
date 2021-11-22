@@ -6,7 +6,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.lang.runtime.ObjectMethods;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -389,51 +388,6 @@ public final class TerrainShaper {
 		}
 	}
 
-	public static final class Point extends Record {
-		private final float continents;
-		private final float erosion;
-		private final float ridges;
-		private final float weirdness;
-
-		public Point(float f, float g, float h, float i) {
-			this.continents = f;
-			this.erosion = g;
-			this.ridges = h;
-			this.weirdness = i;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",TerrainShaper.Point,"continents;erosion;ridges;weirdness",TerrainShaper.Point::continents,TerrainShaper.Point::erosion,TerrainShaper.Point::ridges,TerrainShaper.Point::weirdness>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",TerrainShaper.Point,"continents;erosion;ridges;weirdness",TerrainShaper.Point::continents,TerrainShaper.Point::erosion,TerrainShaper.Point::ridges,TerrainShaper.Point::weirdness>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",TerrainShaper.Point,"continents;erosion;ridges;weirdness",TerrainShaper.Point::continents,TerrainShaper.Point::erosion,TerrainShaper.Point::ridges,TerrainShaper.Point::weirdness>(
-				this, object
-			);
-		}
-
-		public float continents() {
-			return this.continents;
-		}
-
-		public float erosion() {
-			return this.erosion;
-		}
-
-		public float ridges() {
-			return this.ridges;
-		}
-
-		public float weirdness() {
-			return this.weirdness;
-		}
+	public static record Point(float continents, float erosion, float ridges, float weirdness) {
 	}
 }

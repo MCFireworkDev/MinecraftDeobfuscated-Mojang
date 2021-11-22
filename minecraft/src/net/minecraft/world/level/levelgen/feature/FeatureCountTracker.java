@@ -6,7 +6,6 @@ import com.google.common.cache.LoadingCache;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import java.lang.runtime.ObjectMethods;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import net.minecraft.core.Registry;
@@ -80,75 +79,9 @@ public class FeatureCountTracker {
 			);
 	}
 
-	static final class FeatureData extends Record {
-		private final ConfiguredFeature<?, ?> feature;
-		private final Optional<PlacedFeature> topFeature;
-
-		FeatureData(ConfiguredFeature<?, ?> configuredFeature, Optional<PlacedFeature> optional) {
-			this.feature = configuredFeature;
-			this.topFeature = optional;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",FeatureCountTracker.FeatureData,"feature;topFeature",FeatureCountTracker.FeatureData::feature,FeatureCountTracker.FeatureData::topFeature>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",FeatureCountTracker.FeatureData,"feature;topFeature",FeatureCountTracker.FeatureData::feature,FeatureCountTracker.FeatureData::topFeature>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",FeatureCountTracker.FeatureData,"feature;topFeature",FeatureCountTracker.FeatureData::feature,FeatureCountTracker.FeatureData::topFeature>(
-				this, object
-			);
-		}
-
-		public ConfiguredFeature<?, ?> feature() {
-			return this.feature;
-		}
-
-		public Optional<PlacedFeature> topFeature() {
-			return this.topFeature;
-		}
+	static record FeatureData(ConfiguredFeature<?, ?> feature, Optional<PlacedFeature> topFeature) {
 	}
 
-	static final class LevelData extends Record {
-		private final Object2IntMap<FeatureCountTracker.FeatureData> featureData;
-		private final MutableInt chunksWithFeatures;
-
-		LevelData(Object2IntMap<FeatureCountTracker.FeatureData> object2IntMap, MutableInt mutableInt) {
-			this.featureData = object2IntMap;
-			this.chunksWithFeatures = mutableInt;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",FeatureCountTracker.LevelData,"featureData;chunksWithFeatures",FeatureCountTracker.LevelData::featureData,FeatureCountTracker.LevelData::chunksWithFeatures>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",FeatureCountTracker.LevelData,"featureData;chunksWithFeatures",FeatureCountTracker.LevelData::featureData,FeatureCountTracker.LevelData::chunksWithFeatures>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",FeatureCountTracker.LevelData,"featureData;chunksWithFeatures",FeatureCountTracker.LevelData::featureData,FeatureCountTracker.LevelData::chunksWithFeatures>(
-				this, object
-			);
-		}
-
-		public Object2IntMap<FeatureCountTracker.FeatureData> featureData() {
-			return this.featureData;
-		}
-
-		public MutableInt chunksWithFeatures() {
-			return this.chunksWithFeatures;
-		}
+	static record LevelData(Object2IntMap<FeatureCountTracker.FeatureData> featureData, MutableInt chunksWithFeatures) {
 	}
 }

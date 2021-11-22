@@ -2,7 +2,6 @@ package net.minecraft.world.level.levelgen.structure.pieces;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import java.lang.runtime.ObjectMethods;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -18,8 +17,7 @@ import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public final class PiecesContainer extends Record {
-	private final List<StructurePiece> pieces;
+public record PiecesContainer(List<StructurePiece> pieces) {
 	private static final Logger LOGGER = LogManager.getLogger();
 	private static final ResourceLocation JIGSAW_RENAME = new ResourceLocation("jigsaw");
 	private static final Map<ResourceLocation, ResourceLocation> RENAMES = ImmutableMap.<ResourceLocation, ResourceLocation>builder()
@@ -83,21 +81,5 @@ public final class PiecesContainer extends Record {
 
 	public BoundingBox calculateBoundingBox() {
 		return StructurePiece.createBoundingBox(this.pieces.stream());
-	}
-
-	public final String toString() {
-		return ObjectMethods.bootstrap<"toString",PiecesContainer,"pieces",PiecesContainer::pieces>(this);
-	}
-
-	public final int hashCode() {
-		return ObjectMethods.bootstrap<"hashCode",PiecesContainer,"pieces",PiecesContainer::pieces>(this);
-	}
-
-	public final boolean equals(Object object) {
-		return ObjectMethods.bootstrap<"equals",PiecesContainer,"pieces",PiecesContainer::pieces>(this, object);
-	}
-
-	public List<StructurePiece> pieces() {
-		return this.pieces;
 	}
 }

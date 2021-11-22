@@ -8,7 +8,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.lang.runtime.ObjectMethods;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -71,9 +70,7 @@ public class Climate {
 		long distance(Climate.RTree.Node<T> node, long[] ls);
 	}
 
-	public static final class Parameter extends Record {
-		private final long min;
-		private final long max;
+	public static record Parameter(long min, long max) {
 		public static final Codec<Climate.Parameter> CODEC = ExtraCodecs.intervalCodec(
 			Codec.floatRange(-2.0F, 2.0F),
 			"min",
@@ -84,11 +81,6 @@ public class Climate {
 			parameter -> Climate.unquantizeCoord(parameter.min()),
 			parameter -> Climate.unquantizeCoord(parameter.max())
 		);
-
-		public Parameter(long l, long m) {
-			this.min = l;
-			this.max = m;
-		}
 
 		public static Climate.Parameter point(float f) {
 			return span(f, f);
@@ -128,22 +120,6 @@ public class Climate {
 
 		public Climate.Parameter span(@Nullable Climate.Parameter parameter) {
 			return parameter == null ? this : new Climate.Parameter(Math.min(this.min, parameter.min()), Math.max(this.max, parameter.max()));
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",Climate.Parameter,"min;max",Climate.Parameter::min,Climate.Parameter::max>(this);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",Climate.Parameter,"min;max",Climate.Parameter::min,Climate.Parameter::max>(this, object);
-		}
-
-		public long min() {
-			return this.min;
-		}
-
-		public long max() {
-			return this.max;
 		}
 	}
 
@@ -189,14 +165,15 @@ public class Climate {
 		}
 	}
 
-	public static final class ParameterPoint extends Record {
-		private final Climate.Parameter temperature;
-		private final Climate.Parameter humidity;
-		private final Climate.Parameter continentalness;
-		private final Climate.Parameter erosion;
-		private final Climate.Parameter depth;
-		private final Climate.Parameter weirdness;
-		private final long offset;
+	public static record ParameterPoint(
+		Climate.Parameter temperature,
+		Climate.Parameter humidity,
+		Climate.Parameter continentalness,
+		Climate.Parameter erosion,
+		Climate.Parameter depth,
+		Climate.Parameter weirdness,
+		long offset
+	) {
 		public static final Codec<Climate.ParameterPoint> CODEC = RecordCodecBuilder.create(
 			instance -> instance.group(
 						Climate.Parameter.CODEC.fieldOf("temperature").forGetter(parameterPoint -> parameterPoint.temperature),
@@ -209,24 +186,6 @@ public class Climate {
 					)
 					.apply(instance, Climate.ParameterPoint::new)
 		);
-
-		public ParameterPoint(
-			Climate.Parameter parameter,
-			Climate.Parameter parameter2,
-			Climate.Parameter parameter3,
-			Climate.Parameter parameter4,
-			Climate.Parameter parameter5,
-			Climate.Parameter parameter6,
-			long l
-		) {
-			this.temperature = parameter;
-			this.humidity = parameter2;
-			this.continentalness = parameter3;
-			this.erosion = parameter4;
-			this.depth = parameter5;
-			this.weirdness = parameter6;
-			this.offset = l;
-		}
 
 		long fitness(Climate.TargetPoint targetPoint) {
 			return Mth.square(this.temperature.distance(targetPoint.temperature))
@@ -242,52 +201,6 @@ public class Climate {
 			return ImmutableList.of(
 				this.temperature, this.humidity, this.continentalness, this.erosion, this.depth, this.weirdness, new Climate.Parameter(this.offset, this.offset)
 			);
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",Climate.ParameterPoint,"temperature;humidity;continentalness;erosion;depth;weirdness;offset",Climate.ParameterPoint::temperature,Climate.ParameterPoint::humidity,Climate.ParameterPoint::continentalness,Climate.ParameterPoint::erosion,Climate.ParameterPoint::depth,Climate.ParameterPoint::weirdness,Climate.ParameterPoint::offset>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",Climate.ParameterPoint,"temperature;humidity;continentalness;erosion;depth;weirdness;offset",Climate.ParameterPoint::temperature,Climate.ParameterPoint::humidity,Climate.ParameterPoint::continentalness,Climate.ParameterPoint::erosion,Climate.ParameterPoint::depth,Climate.ParameterPoint::weirdness,Climate.ParameterPoint::offset>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",Climate.ParameterPoint,"temperature;humidity;continentalness;erosion;depth;weirdness;offset",Climate.ParameterPoint::temperature,Climate.ParameterPoint::humidity,Climate.ParameterPoint::continentalness,Climate.ParameterPoint::erosion,Climate.ParameterPoint::depth,Climate.ParameterPoint::weirdness,Climate.ParameterPoint::offset>(
-				this, object
-			);
-		}
-
-		public Climate.Parameter temperature() {
-			return this.temperature;
-		}
-
-		public Climate.Parameter humidity() {
-			return this.humidity;
-		}
-
-		public Climate.Parameter continentalness() {
-			return this.continentalness;
-		}
-
-		public Climate.Parameter erosion() {
-			return this.erosion;
-		}
-
-		public Climate.Parameter depth() {
-			return this.depth;
-		}
-
-		public Climate.Parameter weirdness() {
-			return this.weirdness;
-		}
-
-		public long offset() {
-			return this.offset;
 		}
 	}
 
@@ -564,44 +477,11 @@ public class Climate {
 			return new Climate.SpawnFinder.Result(new BlockPos(i, 0, j), l + m);
 		}
 
-		static final class Result extends Record {
-			private final BlockPos location;
-			private final long fitness;
-
-			Result(BlockPos blockPos, long l) {
-				this.location = blockPos;
-				this.fitness = l;
-			}
-
-			public final String toString() {
-				return ObjectMethods.bootstrap<"toString",Climate.SpawnFinder.Result,"location;fitness",Climate.SpawnFinder.Result::location,Climate.SpawnFinder.Result::fitness>(
-					this
-				);
-			}
-
-			public final int hashCode() {
-				return ObjectMethods.bootstrap<"hashCode",Climate.SpawnFinder.Result,"location;fitness",Climate.SpawnFinder.Result::location,Climate.SpawnFinder.Result::fitness>(
-					this
-				);
-			}
-
-			public final boolean equals(Object object) {
-				return ObjectMethods.bootstrap<"equals",Climate.SpawnFinder.Result,"location;fitness",Climate.SpawnFinder.Result::location,Climate.SpawnFinder.Result::fitness>(
-					this, object
-				);
-			}
-
-			public BlockPos location() {
-				return this.location;
-			}
-
-			public long fitness() {
-				return this.fitness;
-			}
+		static record Result(BlockPos location, long fitness) {
 		}
 	}
 
-	public static final class TargetPoint extends Record {
+	public static record TargetPoint(long temperature, long humidity, long continentalness, long erosion, long depth, long weirdness) {
 		final long temperature;
 		final long humidity;
 		final long continentalness;
@@ -609,60 +489,9 @@ public class Climate {
 		final long depth;
 		final long weirdness;
 
-		public TargetPoint(long l, long m, long n, long o, long p, long q) {
-			this.temperature = l;
-			this.humidity = m;
-			this.continentalness = n;
-			this.erosion = o;
-			this.depth = p;
-			this.weirdness = q;
-		}
-
 		@VisibleForTesting
 		protected long[] toParameterArray() {
 			return new long[]{this.temperature, this.humidity, this.continentalness, this.erosion, this.depth, this.weirdness, 0L};
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",Climate.TargetPoint,"temperature;humidity;continentalness;erosion;depth;weirdness",Climate.TargetPoint::temperature,Climate.TargetPoint::humidity,Climate.TargetPoint::continentalness,Climate.TargetPoint::erosion,Climate.TargetPoint::depth,Climate.TargetPoint::weirdness>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",Climate.TargetPoint,"temperature;humidity;continentalness;erosion;depth;weirdness",Climate.TargetPoint::temperature,Climate.TargetPoint::humidity,Climate.TargetPoint::continentalness,Climate.TargetPoint::erosion,Climate.TargetPoint::depth,Climate.TargetPoint::weirdness>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",Climate.TargetPoint,"temperature;humidity;continentalness;erosion;depth;weirdness",Climate.TargetPoint::temperature,Climate.TargetPoint::humidity,Climate.TargetPoint::continentalness,Climate.TargetPoint::erosion,Climate.TargetPoint::depth,Climate.TargetPoint::weirdness>(
-				this, object
-			);
-		}
-
-		public long temperature() {
-			return this.temperature;
-		}
-
-		public long humidity() {
-			return this.humidity;
-		}
-
-		public long continentalness() {
-			return this.continentalness;
-		}
-
-		public long erosion() {
-			return this.erosion;
-		}
-
-		public long depth() {
-			return this.depth;
-		}
-
-		public long weirdness() {
-			return this.weirdness;
 		}
 	}
 }

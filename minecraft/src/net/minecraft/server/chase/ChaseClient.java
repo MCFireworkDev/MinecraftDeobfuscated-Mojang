@@ -5,7 +5,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.lang.runtime.ObjectMethods;
 import java.net.Socket;
 import java.util.List;
 import java.util.Locale;
@@ -191,45 +190,9 @@ public class ChaseClient {
 			);
 	}
 
-	static final class TeleportTarget extends Record {
+	static record TeleportTarget(ResourceKey<Level> level, Vec3 pos, Vec2 rot) {
 		final ResourceKey<Level> level;
 		final Vec3 pos;
 		final Vec2 rot;
-
-		TeleportTarget(ResourceKey<Level> resourceKey, Vec3 vec3, Vec2 vec2) {
-			this.level = resourceKey;
-			this.pos = vec3;
-			this.rot = vec2;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",ChaseClient.TeleportTarget,"level;pos;rot",ChaseClient.TeleportTarget::level,ChaseClient.TeleportTarget::pos,ChaseClient.TeleportTarget::rot>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",ChaseClient.TeleportTarget,"level;pos;rot",ChaseClient.TeleportTarget::level,ChaseClient.TeleportTarget::pos,ChaseClient.TeleportTarget::rot>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",ChaseClient.TeleportTarget,"level;pos;rot",ChaseClient.TeleportTarget::level,ChaseClient.TeleportTarget::pos,ChaseClient.TeleportTarget::rot>(
-				this, object
-			);
-		}
-
-		public ResourceKey<Level> level() {
-			return this.level;
-		}
-
-		public Vec3 pos() {
-			return this.pos;
-		}
-
-		public Vec2 rot() {
-			return this.rot;
-		}
 	}
 }

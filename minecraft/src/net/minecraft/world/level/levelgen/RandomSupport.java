@@ -1,7 +1,6 @@
 package net.minecraft.world.level.levelgen;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.lang.runtime.ObjectMethods;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class RandomSupport {
@@ -26,35 +25,6 @@ public final class RandomSupport {
 		return SEED_UNIQUIFIER.updateAndGet(l -> l * 1181783497276652981L) ^ System.nanoTime();
 	}
 
-	public static final class Seed128bit extends Record {
-		private final long seedLo;
-		private final long seedHi;
-
-		public Seed128bit(long l, long m) {
-			this.seedLo = l;
-			this.seedHi = m;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",RandomSupport.Seed128bit,"seedLo;seedHi",RandomSupport.Seed128bit::seedLo,RandomSupport.Seed128bit::seedHi>(this);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",RandomSupport.Seed128bit,"seedLo;seedHi",RandomSupport.Seed128bit::seedLo,RandomSupport.Seed128bit::seedHi>(this);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",RandomSupport.Seed128bit,"seedLo;seedHi",RandomSupport.Seed128bit::seedLo,RandomSupport.Seed128bit::seedHi>(
-				this, object
-			);
-		}
-
-		public long seedLo() {
-			return this.seedLo;
-		}
-
-		public long seedHi() {
-			return this.seedHi;
-		}
+	public static record Seed128bit(long seedLo, long seedHi) {
 	}
 }

@@ -15,7 +15,6 @@ import com.mojang.serialization.DataResult.PartialResult;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.lang.runtime.ObjectMethods;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashSet;
@@ -155,90 +154,20 @@ public interface RegistryResourceAccess {
 				);
 		}
 
-		static final class Entry extends Record {
+		static record Entry(JsonElement data, int id, Lifecycle lifecycle) {
 			final JsonElement data;
 			final int id;
 			final Lifecycle lifecycle;
-
-			Entry(JsonElement jsonElement, int i, Lifecycle lifecycle) {
-				this.data = jsonElement;
-				this.id = i;
-				this.lifecycle = lifecycle;
-			}
-
-			public final String toString() {
-				return ObjectMethods.bootstrap<"toString",RegistryResourceAccess.InMemoryStorage.Entry,"data;id;lifecycle",RegistryResourceAccess.InMemoryStorage.Entry::data,RegistryResourceAccess.InMemoryStorage.Entry::id,RegistryResourceAccess.InMemoryStorage.Entry::lifecycle>(
-					this
-				);
-			}
-
-			public final int hashCode() {
-				return ObjectMethods.bootstrap<"hashCode",RegistryResourceAccess.InMemoryStorage.Entry,"data;id;lifecycle",RegistryResourceAccess.InMemoryStorage.Entry::data,RegistryResourceAccess.InMemoryStorage.Entry::id,RegistryResourceAccess.InMemoryStorage.Entry::lifecycle>(
-					this
-				);
-			}
-
-			public final boolean equals(Object object) {
-				return ObjectMethods.bootstrap<"equals",RegistryResourceAccess.InMemoryStorage.Entry,"data;id;lifecycle",RegistryResourceAccess.InMemoryStorage.Entry::data,RegistryResourceAccess.InMemoryStorage.Entry::id,RegistryResourceAccess.InMemoryStorage.Entry::lifecycle>(
-					this, object
-				);
-			}
-
-			public JsonElement data() {
-				return this.data;
-			}
-
-			public int id() {
-				return this.id;
-			}
-
-			public Lifecycle lifecycle() {
-				return this.lifecycle;
-			}
 		}
 	}
 
-	public static final class ParsedEntry extends Record {
-		private final E value;
-		private final OptionalInt fixedId;
-
-		public ParsedEntry(E object, OptionalInt optionalInt) {
-			this.value = object;
-			this.fixedId = optionalInt;
-		}
-
+	public static record ParsedEntry<E>(E value, OptionalInt fixedId) {
 		public static <E> RegistryResourceAccess.ParsedEntry<E> createWithoutId(E object) {
-			return new RegistryResourceAccess.ParsedEntry(object, OptionalInt.empty());
+			return new RegistryResourceAccess.ParsedEntry<>(object, OptionalInt.empty());
 		}
 
 		public static <E> RegistryResourceAccess.ParsedEntry<E> createWithId(E object, int i) {
-			return new RegistryResourceAccess.ParsedEntry(object, OptionalInt.of(i));
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",RegistryResourceAccess.ParsedEntry,"value;fixedId",RegistryResourceAccess.ParsedEntry::value,RegistryResourceAccess.ParsedEntry::fixedId>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",RegistryResourceAccess.ParsedEntry,"value;fixedId",RegistryResourceAccess.ParsedEntry::value,RegistryResourceAccess.ParsedEntry::fixedId>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",RegistryResourceAccess.ParsedEntry,"value;fixedId",RegistryResourceAccess.ParsedEntry::value,RegistryResourceAccess.ParsedEntry::fixedId>(
-				this, object
-			);
-		}
-
-		public E value() {
-			return this.value;
-		}
-
-		public OptionalInt fixedId() {
-			return this.fixedId;
+			return new RegistryResourceAccess.ParsedEntry<>(object, OptionalInt.of(i));
 		}
 	}
 }

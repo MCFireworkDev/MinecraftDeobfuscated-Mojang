@@ -2,7 +2,6 @@ package net.minecraft.server.chase;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.runtime.ObjectMethods;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -139,67 +138,9 @@ public class ChaseServer {
 		}
 	}
 
-	static final class PlayerPosition extends Record {
-		private final String dimensionName;
-		private final double x;
-		private final double y;
-		private final double z;
-		private final float yRot;
-		private final float xRot;
-
-		PlayerPosition(String string, double d, double e, double f, float g, float h) {
-			this.dimensionName = string;
-			this.x = d;
-			this.y = e;
-			this.z = f;
-			this.yRot = g;
-			this.xRot = h;
-		}
-
+	static record PlayerPosition(String dimensionName, double x, double y, double z, float yRot, float xRot) {
 		String format() {
 			return String.format(Locale.ROOT, "t %s %.2f %.2f %.2f %.2f %.2f\n", this.dimensionName, this.x, this.y, this.z, this.yRot, this.xRot);
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",ChaseServer.PlayerPosition,"dimensionName;x;y;z;yRot;xRot",ChaseServer.PlayerPosition::dimensionName,ChaseServer.PlayerPosition::x,ChaseServer.PlayerPosition::y,ChaseServer.PlayerPosition::z,ChaseServer.PlayerPosition::yRot,ChaseServer.PlayerPosition::xRot>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",ChaseServer.PlayerPosition,"dimensionName;x;y;z;yRot;xRot",ChaseServer.PlayerPosition::dimensionName,ChaseServer.PlayerPosition::x,ChaseServer.PlayerPosition::y,ChaseServer.PlayerPosition::z,ChaseServer.PlayerPosition::yRot,ChaseServer.PlayerPosition::xRot>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",ChaseServer.PlayerPosition,"dimensionName;x;y;z;yRot;xRot",ChaseServer.PlayerPosition::dimensionName,ChaseServer.PlayerPosition::x,ChaseServer.PlayerPosition::y,ChaseServer.PlayerPosition::z,ChaseServer.PlayerPosition::yRot,ChaseServer.PlayerPosition::xRot>(
-				this, object
-			);
-		}
-
-		public String dimensionName() {
-			return this.dimensionName;
-		}
-
-		public double x() {
-			return this.x;
-		}
-
-		public double y() {
-			return this.y;
-		}
-
-		public double z() {
-			return this.z;
-		}
-
-		public float yRot() {
-			return this.yRot;
-		}
-
-		public float xRot() {
-			return this.xRot;
 		}
 	}
 }

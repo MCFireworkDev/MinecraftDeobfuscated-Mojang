@@ -9,7 +9,6 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
-import java.lang.runtime.ObjectMethods;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -23,40 +22,7 @@ public interface CubicSpline<C> extends ToFloatFunction<C> {
 	static <C> Codec<CubicSpline<C>> codec(Codec<ToFloatFunction<C>> codec) {
 		MutableObject<Codec<CubicSpline<C>>> mutableObject = new MutableObject<>();
 
-		final class Point extends Record {
-			private final float location;
-			private final CubicSpline<C> value;
-			private final float derivative;
-
-			Point(float f, CubicSpline<C> cubicSpline, float g) {
-				this.location = f;
-				this.value = cubicSpline;
-				this.derivative = g;
-			}
-
-			public final String toString() {
-				return ObjectMethods.bootstrap<"toString",Point,"location;value;derivative",Point::location,Point::value,Point::derivative>(this);
-			}
-
-			public final int hashCode() {
-				return ObjectMethods.bootstrap<"hashCode",Point,"location;value;derivative",Point::location,Point::value,Point::derivative>(this);
-			}
-
-			public final boolean equals(Object object) {
-				return ObjectMethods.bootstrap<"equals",Point,"location;value;derivative",Point::location,Point::value,Point::derivative>(this, object);
-			}
-
-			public float location() {
-				return this.location;
-			}
-
-			public CubicSpline<C> value() {
-				return this.value;
-			}
-
-			public float derivative() {
-				return this.derivative;
-			}
+		record Point<C>(float location, CubicSpline<C> value, float derivative) {
 		}
 
 		Codec<Point<C>> codec2 = RecordCodecBuilder.create(
@@ -70,7 +36,7 @@ public interface CubicSpline<C> extends ToFloatFunction<C> {
 		Codec<CubicSpline.Multipoint<C>> codec3 = RecordCodecBuilder.create(
 			instance -> instance.group(
 						codec.fieldOf("coordinate").forGetter(CubicSpline.Multipoint::coordinate),
-						codec2.listOf()
+						ExtraCodecs.nonEmptyList(codec2.listOf())
 							.fieldOf("points")
 							.forGetter(
 								multipoint -> IntStream.range(0, multipoint.locations.length)
@@ -150,19 +116,13 @@ public interface CubicSpline<C> extends ToFloatFunction<C> {
 			if (this.locations.isEmpty()) {
 				throw new IllegalStateException("No elements added");
 			} else {
-				return new CubicSpline.Multipoint(this.coordinate, this.locations.toFloatArray(), ImmutableList.copyOf(this.values), this.derivatives.toFloatArray());
+				return new CubicSpline.Multipoint<>(this.coordinate, this.locations.toFloatArray(), ImmutableList.copyOf(this.values), this.derivatives.toFloatArray());
 			}
 		}
 	}
 
 	@VisibleForDebug
-	public static final class Constant<C> extends Record implements CubicSpline<C> {
-		private final float value;
-
-		public Constant(float f) {
-			this.value = f;
-		}
-
+	public static record Constant<C>(float value) implements CubicSpline<C> {
 		@Override
 		public float apply(C object) {
 			return this.value;
@@ -172,30 +132,12 @@ public interface CubicSpline<C> extends ToFloatFunction<C> {
 		public String parityString() {
 			return String.format("k=%.3f", this.value);
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",CubicSpline.Constant,"value",CubicSpline.Constant::value>(this);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",CubicSpline.Constant,"value",CubicSpline.Constant::value>(this);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",CubicSpline.Constant,"value",CubicSpline.Constant::value>(this, object);
-		}
-
-		public float value() {
-			return this.value;
-		}
 	}
 
 	@VisibleForDebug
-	public static final class Multipoint extends Record implements CubicSpline {
-		private final ToFloatFunction<C> coordinate;
+	public static record Multipoint<C>(ToFloatFunction<C> coordinate, float[] locations, List<CubicSpline<C>> values, float[] derivatives)
+		implements CubicSpline<C> {
 		final float[] locations;
-		private final List<CubicSpline<C>> values;
-		private final float[] derivatives;
 
 		public Multipoint(ToFloatFunction<C> toFloatFunction, float[] fs, List<CubicSpline<C>> list, float[] gs) {
 			if (fs.length == list.size() && fs.length == gs.length) {
@@ -254,40 +196,6 @@ public interface CubicSpline<C> extends ToFloatFunction<C> {
 					.mapToObj(d -> String.format(Locale.ROOT, "%.3f", d))
 					.collect(Collectors.joining(", "))
 				+ "]";
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",CubicSpline.Multipoint,"coordinate;locations;values;derivatives",CubicSpline.Multipoint::coordinate,CubicSpline.Multipoint::locations,CubicSpline.Multipoint::values,CubicSpline.Multipoint::derivatives>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",CubicSpline.Multipoint,"coordinate;locations;values;derivatives",CubicSpline.Multipoint::coordinate,CubicSpline.Multipoint::locations,CubicSpline.Multipoint::values,CubicSpline.Multipoint::derivatives>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",CubicSpline.Multipoint,"coordinate;locations;values;derivatives",CubicSpline.Multipoint::coordinate,CubicSpline.Multipoint::locations,CubicSpline.Multipoint::values,CubicSpline.Multipoint::derivatives>(
-				this, object
-			);
-		}
-
-		public ToFloatFunction<C> coordinate() {
-			return this.coordinate;
-		}
-
-		public float[] locations() {
-			return this.locations;
-		}
-
-		public List<CubicSpline<C>> values() {
-			return this.values;
-		}
-
-		public float[] derivatives() {
-			return this.derivatives;
 		}
 	}
 }

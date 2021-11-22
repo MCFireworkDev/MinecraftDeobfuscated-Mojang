@@ -4,7 +4,6 @@ import com.mojang.authlib.minecraft.TelemetryEvent;
 import com.mojang.authlib.minecraft.TelemetryPropertyContainer;
 import com.mojang.authlib.minecraft.TelemetrySession;
 import com.mojang.authlib.minecraft.UserApiService;
-import java.lang.runtime.ObjectMethods;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -111,15 +110,7 @@ public class ClientTelemetryManager {
 	}
 
 	@Environment(EnvType.CLIENT)
-	static final class PlayerInfo extends Record {
-		private final GameType gameType;
-		private final boolean hardcore;
-
-		PlayerInfo(GameType gameType, boolean bl) {
-			this.gameType = gameType;
-			this.hardcore = bl;
-		}
-
+	static record PlayerInfo(GameType gameType, boolean hardcore) {
 		public int getGameModeId() {
 			if (this.hardcore && this.gameType == GameType.SURVIVAL) {
 				return 99;
@@ -131,32 +122,6 @@ public class ClientTelemetryManager {
 					case SPECTATOR -> 6;
 				};
 			}
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",ClientTelemetryManager.PlayerInfo,"gameType;hardcore",ClientTelemetryManager.PlayerInfo::gameType,ClientTelemetryManager.PlayerInfo::hardcore>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",ClientTelemetryManager.PlayerInfo,"gameType;hardcore",ClientTelemetryManager.PlayerInfo::gameType,ClientTelemetryManager.PlayerInfo::hardcore>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",ClientTelemetryManager.PlayerInfo,"gameType;hardcore",ClientTelemetryManager.PlayerInfo::gameType,ClientTelemetryManager.PlayerInfo::hardcore>(
-				this, object
-			);
-		}
-
-		public GameType gameType() {
-			return this.gameType;
-		}
-
-		public boolean hardcore() {
-			return this.hardcore;
 		}
 	}
 }

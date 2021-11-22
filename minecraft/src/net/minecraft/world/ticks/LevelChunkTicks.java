@@ -33,7 +33,7 @@ public class LevelChunkTicks<T> implements SerializableTickContainer<T>, TickCon
 		this.pendingTicks = list;
 
 		for(SavedTick<T> savedTick : list) {
-			this.ticksPerPosition.add(ScheduledTick.<Object>probe(savedTick.type(), savedTick.pos()));
+			this.ticksPerPosition.add(ScheduledTick.probe(savedTick.type(), savedTick.pos()));
 		}
 	}
 

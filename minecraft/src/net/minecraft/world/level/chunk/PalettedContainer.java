@@ -10,7 +10,6 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
-import java.lang.runtime.ObjectMethods;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -70,7 +69,7 @@ public class PalettedContainer<T> implements PaletteResize<T> {
 		this.registry = idMap;
 		this.strategy = strategy;
 		Palette<T> palette = configuration.factory().create(configuration.bits(), idMap, this, list);
-		this.data = new PalettedContainer.Data(configuration, bitStorage, palette);
+		this.data = new PalettedContainer.Data<>(configuration, bitStorage, palette);
 	}
 
 	public PalettedContainer(IdMap<T> idMap, T object, PalettedContainer.Strategy strategy) {
@@ -263,45 +262,11 @@ public class PalettedContainer<T> implements PaletteResize<T> {
 		int2IntMap.int2IntEntrySet().forEach(entry -> countConsumer.accept(this.data.palette.valueFor(entry.getIntKey()), entry.getIntValue()));
 	}
 
-	static final class Configuration<T> extends Record {
-		private final Palette.Factory factory;
-		private final int bits;
-
-		Configuration(Palette.Factory factory, int i) {
-			this.factory = factory;
-			this.bits = i;
-		}
-
+	static record Configuration<T>(Palette.Factory factory, int bits) {
 		public PalettedContainer.Data<T> createData(IdMap<T> idMap, PaletteResize<T> paletteResize, int i) {
 			BitStorage bitStorage = (BitStorage)(this.bits == 0 ? new ZeroBitStorage(i) : new SimpleBitStorage(this.bits, i));
 			Palette<T> palette = this.factory.create(this.bits, idMap, paletteResize, List.of());
-			return new PalettedContainer.Data(this, bitStorage, palette);
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",PalettedContainer.Configuration,"factory;bits",PalettedContainer.Configuration::factory,PalettedContainer.Configuration::bits>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",PalettedContainer.Configuration,"factory;bits",PalettedContainer.Configuration::factory,PalettedContainer.Configuration::bits>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",PalettedContainer.Configuration,"factory;bits",PalettedContainer.Configuration::factory,PalettedContainer.Configuration::bits>(
-				this, object
-			);
-		}
-
-		public Palette.Factory factory() {
-			return this.factory;
-		}
-
-		public int bits() {
-			return this.bits;
+			return new PalettedContainer.Data<>(this, bitStorage, palette);
 		}
 	}
 
@@ -310,16 +275,9 @@ public class PalettedContainer<T> implements PaletteResize<T> {
 		void accept(T object, int i);
 	}
 
-	static final class Data extends Record {
-		private final PalettedContainer.Configuration<T> configuration;
+	static record Data<T>(PalettedContainer.Configuration<T> configuration, BitStorage storage, Palette<T> palette) {
 		final BitStorage storage;
 		final Palette<T> palette;
-
-		Data(PalettedContainer.Configuration<T> configuration, BitStorage bitStorage, Palette<T> palette) {
-			this.configuration = configuration;
-			this.storage = bitStorage;
-			this.palette = palette;
-		}
 
 		public void copyFrom(Palette<T> palette, BitStorage bitStorage) {
 			for(int i = 0; i < bitStorage.getSize(); ++i) {
@@ -337,72 +295,9 @@ public class PalettedContainer<T> implements PaletteResize<T> {
 			this.palette.write(friendlyByteBuf);
 			friendlyByteBuf.writeLongArray(this.storage.getRaw());
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",PalettedContainer.Data,"configuration;storage;palette",PalettedContainer.Data::configuration,PalettedContainer.Data::storage,PalettedContainer.Data::palette>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",PalettedContainer.Data,"configuration;storage;palette",PalettedContainer.Data::configuration,PalettedContainer.Data::storage,PalettedContainer.Data::palette>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",PalettedContainer.Data,"configuration;storage;palette",PalettedContainer.Data::configuration,PalettedContainer.Data::storage,PalettedContainer.Data::palette>(
-				this, object
-			);
-		}
-
-		public PalettedContainer.Configuration<T> configuration() {
-			return this.configuration;
-		}
-
-		public BitStorage storage() {
-			return this.storage;
-		}
-
-		public Palette<T> palette() {
-			return this.palette;
-		}
 	}
 
-	static final class DiscData extends Record {
-		private final List<T> paletteEntries;
-		private final Optional<LongStream> storage;
-
-		DiscData(List<T> list, Optional<LongStream> optional) {
-			this.paletteEntries = list;
-			this.storage = optional;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",PalettedContainer.DiscData,"paletteEntries;storage",PalettedContainer.DiscData::paletteEntries,PalettedContainer.DiscData::storage>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",PalettedContainer.DiscData,"paletteEntries;storage",PalettedContainer.DiscData::paletteEntries,PalettedContainer.DiscData::storage>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",PalettedContainer.DiscData,"paletteEntries;storage",PalettedContainer.DiscData::paletteEntries,PalettedContainer.DiscData::storage>(
-				this, object
-			);
-		}
-
-		public List<T> paletteEntries() {
-			return this.paletteEntries;
-		}
-
-		public Optional<LongStream> storage() {
-			return this.storage;
-		}
+	static record DiscData<T>(List<T> paletteEntries, Optional<LongStream> storage) {
 	}
 
 	public abstract static class Strategy {

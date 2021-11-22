@@ -10,7 +10,6 @@ import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.Lifecycle;
 import com.mojang.serialization.DataResult.PartialResult;
 import com.mojang.serialization.codecs.UnboundedMapCodec;
-import java.lang.runtime.ObjectMethods;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Map.Entry;
@@ -83,7 +82,7 @@ public abstract class RegistryAccess {
 	private static <E> void put(
 		Builder<ResourceKey<? extends Registry<?>>, RegistryAccess.RegistryData<?>> builder, ResourceKey<? extends Registry<E>> resourceKey, Codec<E> codec
 	) {
-		builder.put(resourceKey, new RegistryAccess.RegistryData(resourceKey, codec, null));
+		builder.put(resourceKey, new RegistryAccess.RegistryData<E>(resourceKey, codec, null));
 	}
 
 	private static <E> void put(
@@ -92,7 +91,7 @@ public abstract class RegistryAccess {
 		Codec<E> codec,
 		Codec<E> codec2
 	) {
-		builder.put(resourceKey, new RegistryAccess.RegistryData(resourceKey, codec, codec2));
+		builder.put(resourceKey, new RegistryAccess.RegistryData<E>(resourceKey, codec, codec2));
 	}
 
 	public static Iterable<RegistryAccess.RegistryData<?>> knownRegistries() {
@@ -160,51 +159,9 @@ public abstract class RegistryAccess {
 		});
 	}
 
-	public static final class RegistryData extends Record {
-		private final ResourceKey<? extends Registry<E>> key;
-		private final Codec<E> codec;
-		@Nullable
-		private final Codec<E> networkCodec;
-
-		public RegistryData(ResourceKey<? extends Registry<E>> resourceKey, Codec<E> codec, @Nullable Codec<E> codec2) {
-			this.key = resourceKey;
-			this.codec = codec;
-			this.networkCodec = codec2;
-		}
-
+	public static record RegistryData<E>(ResourceKey<? extends Registry<E>> key, Codec<E> codec, @Nullable Codec<E> networkCodec) {
 		public boolean sendToClient() {
 			return this.networkCodec != null;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",RegistryAccess.RegistryData,"key;codec;networkCodec",RegistryAccess.RegistryData::key,RegistryAccess.RegistryData::codec,RegistryAccess.RegistryData::networkCodec>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",RegistryAccess.RegistryData,"key;codec;networkCodec",RegistryAccess.RegistryData::key,RegistryAccess.RegistryData::codec,RegistryAccess.RegistryData::networkCodec>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",RegistryAccess.RegistryData,"key;codec;networkCodec",RegistryAccess.RegistryData::key,RegistryAccess.RegistryData::codec,RegistryAccess.RegistryData::networkCodec>(
-				this, object
-			);
-		}
-
-		public ResourceKey<? extends Registry<E>> key() {
-			return this.key;
-		}
-
-		public Codec<E> codec() {
-			return this.codec;
-		}
-
-		@Nullable
-		public Codec<E> networkCodec() {
-			return this.networkCodec;
 		}
 	}
 

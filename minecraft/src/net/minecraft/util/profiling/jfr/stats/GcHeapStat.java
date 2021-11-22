@@ -1,6 +1,5 @@
 package net.minecraft.util.profiling.jfr.stats;
 
-import java.lang.runtime.ObjectMethods;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -8,17 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import jdk.jfr.consumer.RecordedEvent;
 
-public final class GcHeapStat extends Record {
-	private final Instant timestamp;
-	private final long heapUsed;
-	private final GcHeapStat.Timing timing;
-
-	public GcHeapStat(Instant instant, long l, GcHeapStat.Timing timing) {
-		this.timestamp = instant;
-		this.heapUsed = l;
-		this.timing = timing;
-	}
-
+public record GcHeapStat(Instant timestamp, long heapUsed, GcHeapStat.Timing timing) {
 	public static GcHeapStat from(RecordedEvent recordedEvent) {
 		return new GcHeapStat(
 			recordedEvent.getStartTime(),
@@ -47,79 +36,9 @@ public final class GcHeapStat extends Record {
 		return (double)l / (double)duration.getSeconds();
 	}
 
-	public final String toString() {
-		return ObjectMethods.bootstrap<"toString",GcHeapStat,"timestamp;heapUsed;timing",GcHeapStat::timestamp,GcHeapStat::heapUsed,GcHeapStat::timing>(this);
-	}
-
-	public final int hashCode() {
-		return ObjectMethods.bootstrap<"hashCode",GcHeapStat,"timestamp;heapUsed;timing",GcHeapStat::timestamp,GcHeapStat::heapUsed,GcHeapStat::timing>(this);
-	}
-
-	public final boolean equals(Object object) {
-		return ObjectMethods.bootstrap<"equals",GcHeapStat,"timestamp;heapUsed;timing",GcHeapStat::timestamp,GcHeapStat::heapUsed,GcHeapStat::timing>(this, object);
-	}
-
-	public Instant timestamp() {
-		return this.timestamp;
-	}
-
-	public long heapUsed() {
-		return this.heapUsed;
-	}
-
-	public GcHeapStat.Timing timing() {
-		return this.timing;
-	}
-
-	public static final class Summary extends Record {
-		private final Duration duration;
-		private final Duration gcTotalDuration;
-		private final int totalGCs;
-		private final double allocationRateBytesPerSecond;
-
-		public Summary(Duration duration, Duration duration2, int i, double d) {
-			this.duration = duration;
-			this.gcTotalDuration = duration2;
-			this.totalGCs = i;
-			this.allocationRateBytesPerSecond = d;
-		}
-
+	public static record Summary(Duration duration, Duration gcTotalDuration, int totalGCs, double allocationRateBytesPerSecond) {
 		public float gcOverHead() {
 			return (float)this.gcTotalDuration.toMillis() / (float)this.duration.toMillis();
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",GcHeapStat.Summary,"duration;gcTotalDuration;totalGCs;allocationRateBytesPerSecond",GcHeapStat.Summary::duration,GcHeapStat.Summary::gcTotalDuration,GcHeapStat.Summary::totalGCs,GcHeapStat.Summary::allocationRateBytesPerSecond>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",GcHeapStat.Summary,"duration;gcTotalDuration;totalGCs;allocationRateBytesPerSecond",GcHeapStat.Summary::duration,GcHeapStat.Summary::gcTotalDuration,GcHeapStat.Summary::totalGCs,GcHeapStat.Summary::allocationRateBytesPerSecond>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",GcHeapStat.Summary,"duration;gcTotalDuration;totalGCs;allocationRateBytesPerSecond",GcHeapStat.Summary::duration,GcHeapStat.Summary::gcTotalDuration,GcHeapStat.Summary::totalGCs,GcHeapStat.Summary::allocationRateBytesPerSecond>(
-				this, object
-			);
-		}
-
-		public Duration duration() {
-			return this.duration;
-		}
-
-		public Duration gcTotalDuration() {
-			return this.gcTotalDuration;
-		}
-
-		public int totalGCs() {
-			return this.totalGCs;
-		}
-
-		public double allocationRateBytesPerSecond() {
-			return this.allocationRateBytesPerSecond;
 		}
 	}
 

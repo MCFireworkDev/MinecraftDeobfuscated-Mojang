@@ -1,17 +1,11 @@
 package net.minecraft.world.ticks;
 
 import it.unimi.dsi.fastutil.Hash.Strategy;
-import java.lang.runtime.ObjectMethods;
 import java.util.Comparator;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 
-public final class ScheduledTick extends Record {
-	private final T type;
-	private final BlockPos pos;
-	private final long triggerTick;
-	private final TickPriority priority;
-	private final long subTickOrder;
+public record ScheduledTick<T>(T type, BlockPos pos, long triggerTick, TickPriority priority, long subTickOrder) {
 	public static final Comparator<ScheduledTick<?>> DRAIN_ORDER = (scheduledTick, scheduledTick2) -> {
 		int i = Long.compare(scheduledTick.triggerTick, scheduledTick2.triggerTick);
 		if (i != 0) {
@@ -55,44 +49,6 @@ public final class ScheduledTick extends Record {
 	}
 
 	public static <T> ScheduledTick<T> probe(T object, BlockPos blockPos) {
-		return new ScheduledTick(object, blockPos, 0L, TickPriority.NORMAL, 0L);
-	}
-
-	public final String toString() {
-		return ObjectMethods.bootstrap<"toString",ScheduledTick,"type;pos;triggerTick;priority;subTickOrder",ScheduledTick::type,ScheduledTick::pos,ScheduledTick::triggerTick,ScheduledTick::priority,ScheduledTick::subTickOrder>(
-			this
-		);
-	}
-
-	public final int hashCode() {
-		return ObjectMethods.bootstrap<"hashCode",ScheduledTick,"type;pos;triggerTick;priority;subTickOrder",ScheduledTick::type,ScheduledTick::pos,ScheduledTick::triggerTick,ScheduledTick::priority,ScheduledTick::subTickOrder>(
-			this
-		);
-	}
-
-	public final boolean equals(Object object) {
-		return ObjectMethods.bootstrap<"equals",ScheduledTick,"type;pos;triggerTick;priority;subTickOrder",ScheduledTick::type,ScheduledTick::pos,ScheduledTick::triggerTick,ScheduledTick::priority,ScheduledTick::subTickOrder>(
-			this, object
-		);
-	}
-
-	public T type() {
-		return this.type;
-	}
-
-	public BlockPos pos() {
-		return this.pos;
-	}
-
-	public long triggerTick() {
-		return this.triggerTick;
-	}
-
-	public TickPriority priority() {
-		return this.priority;
-	}
-
-	public long subTickOrder() {
-		return this.subTickOrder;
+		return new ScheduledTick<>(object, blockPos, 0L, TickPriority.NORMAL, 0L);
 	}
 }

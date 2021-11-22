@@ -1,6 +1,5 @@
 package net.minecraft.world.level.levelgen;
 
-import java.lang.runtime.ObjectMethods;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -539,64 +538,7 @@ public class NoiseSampler implements Climate.Sampler {
 		}
 	}
 
-	public static final class FlatNoiseData extends Record {
-		private final double shiftedX;
-		private final double shiftedZ;
-		private final double continentalness;
-		private final double weirdness;
-		private final double erosion;
-		private final TerrainInfo terrainInfo;
-
-		public FlatNoiseData(double d, double e, double f, double g, double h, TerrainInfo terrainInfo) {
-			this.shiftedX = d;
-			this.shiftedZ = e;
-			this.continentalness = f;
-			this.weirdness = g;
-			this.erosion = h;
-			this.terrainInfo = terrainInfo;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",NoiseSampler.FlatNoiseData,"shiftedX;shiftedZ;continentalness;weirdness;erosion;terrainInfo",NoiseSampler.FlatNoiseData::shiftedX,NoiseSampler.FlatNoiseData::shiftedZ,NoiseSampler.FlatNoiseData::continentalness,NoiseSampler.FlatNoiseData::weirdness,NoiseSampler.FlatNoiseData::erosion,NoiseSampler.FlatNoiseData::terrainInfo>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",NoiseSampler.FlatNoiseData,"shiftedX;shiftedZ;continentalness;weirdness;erosion;terrainInfo",NoiseSampler.FlatNoiseData::shiftedX,NoiseSampler.FlatNoiseData::shiftedZ,NoiseSampler.FlatNoiseData::continentalness,NoiseSampler.FlatNoiseData::weirdness,NoiseSampler.FlatNoiseData::erosion,NoiseSampler.FlatNoiseData::terrainInfo>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",NoiseSampler.FlatNoiseData,"shiftedX;shiftedZ;continentalness;weirdness;erosion;terrainInfo",NoiseSampler.FlatNoiseData::shiftedX,NoiseSampler.FlatNoiseData::shiftedZ,NoiseSampler.FlatNoiseData::continentalness,NoiseSampler.FlatNoiseData::weirdness,NoiseSampler.FlatNoiseData::erosion,NoiseSampler.FlatNoiseData::terrainInfo>(
-				this, object
-			);
-		}
-
-		public double shiftedX() {
-			return this.shiftedX;
-		}
-
-		public double shiftedZ() {
-			return this.shiftedZ;
-		}
-
-		public double continentalness() {
-			return this.continentalness;
-		}
-
-		public double weirdness() {
-			return this.weirdness;
-		}
-
-		public double erosion() {
-			return this.erosion;
-		}
-
-		public TerrainInfo terrainInfo() {
-			return this.terrainInfo;
-		}
+	public static record FlatNoiseData(double shiftedX, double shiftedZ, double continentalness, double weirdness, double erosion, TerrainInfo terrainInfo) {
 	}
 
 	static final class QuantizedSpaghettiRarity {

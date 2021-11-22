@@ -1,18 +1,9 @@
 package net.minecraft.util;
 
-import java.lang.runtime.ObjectMethods;
 import java.util.function.Supplier;
 import org.apache.commons.lang3.ObjectUtils;
 
-public final class ModCheck extends Record {
-	private final ModCheck.Confidence confidence;
-	private final String description;
-
-	public ModCheck(ModCheck.Confidence confidence, String string) {
-		this.confidence = confidence;
-		this.description = string;
-	}
-
+public record ModCheck(ModCheck.Confidence confidence, String description) {
 	public static ModCheck identify(String string, Supplier<String> supplier, String string2, Class<?> class_) {
 		String string3 = (String)supplier.get();
 		if (!string.equals(string3)) {
@@ -34,26 +25,6 @@ public final class ModCheck extends Record {
 
 	public String fullDescription() {
 		return this.confidence.description + " " + this.description;
-	}
-
-	public final String toString() {
-		return ObjectMethods.bootstrap<"toString",ModCheck,"confidence;description",ModCheck::confidence,ModCheck::description>(this);
-	}
-
-	public final int hashCode() {
-		return ObjectMethods.bootstrap<"hashCode",ModCheck,"confidence;description",ModCheck::confidence,ModCheck::description>(this);
-	}
-
-	public final boolean equals(Object object) {
-		return ObjectMethods.bootstrap<"equals",ModCheck,"confidence;description",ModCheck::confidence,ModCheck::description>(this, object);
-	}
-
-	public ModCheck.Confidence confidence() {
-		return this.confidence;
-	}
-
-	public String description() {
-		return this.description;
 	}
 
 	public static enum Confidence {

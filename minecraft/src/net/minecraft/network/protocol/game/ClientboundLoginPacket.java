@@ -1,7 +1,6 @@
 package net.minecraft.network.protocol.game;
 
 import com.google.common.collect.Sets;
-import java.lang.runtime.ObjectMethods;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -14,25 +13,24 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
 
-public final class ClientboundLoginPacket extends Record implements Packet {
-	private final int playerId;
-	private final boolean hardcore;
-	private final GameType gameType;
-	@Nullable
-	private final GameType previousGameType;
-	private final Set<ResourceKey<Level>> levels;
-	private final RegistryAccess.RegistryHolder registryHolder;
-	private final DimensionType dimensionType;
-	private final ResourceKey<Level> dimension;
-	private final long seed;
-	private final int maxPlayers;
-	private final int chunkRadius;
-	private final int simulationDistance;
-	private final boolean reducedDebugInfo;
-	private final boolean showDeathScreen;
-	private final boolean isDebug;
-	private final boolean isFlat;
-
+public record ClientboundLoginPacket(
+	int playerId,
+	boolean hardcore,
+	GameType gameType,
+	@Nullable GameType previousGameType,
+	Set<ResourceKey<Level>> levels,
+	RegistryAccess.RegistryHolder registryHolder,
+	DimensionType dimensionType,
+	ResourceKey<Level> dimension,
+	long seed,
+	int maxPlayers,
+	int chunkRadius,
+	int simulationDistance,
+	boolean reducedDebugInfo,
+	boolean showDeathScreen,
+	boolean isDebug,
+	boolean isFlat
+) implements Packet<ClientGamePacketListener> {
 	public ClientboundLoginPacket(FriendlyByteBuf friendlyByteBuf) {
 		this(
 			friendlyByteBuf.readInt(),
@@ -54,42 +52,6 @@ public final class ClientboundLoginPacket extends Record implements Packet {
 			friendlyByteBuf.readBoolean(),
 			friendlyByteBuf.readBoolean()
 		);
-	}
-
-	public ClientboundLoginPacket(
-		int i,
-		boolean bl,
-		GameType gameType,
-		@Nullable GameType gameType2,
-		Set<ResourceKey<Level>> set,
-		RegistryAccess.RegistryHolder registryHolder,
-		DimensionType dimensionType,
-		ResourceKey<Level> resourceKey,
-		long l,
-		int j,
-		int k,
-		int m,
-		boolean bl2,
-		boolean bl3,
-		boolean bl4,
-		boolean bl5
-	) {
-		this.playerId = i;
-		this.hardcore = bl;
-		this.gameType = gameType;
-		this.previousGameType = gameType2;
-		this.levels = set;
-		this.registryHolder = registryHolder;
-		this.dimensionType = dimensionType;
-		this.dimension = resourceKey;
-		this.seed = l;
-		this.maxPlayers = j;
-		this.chunkRadius = k;
-		this.simulationDistance = m;
-		this.reducedDebugInfo = bl2;
-		this.showDeathScreen = bl3;
-		this.isDebug = bl4;
-		this.isFlat = bl5;
 	}
 
 	@Override
@@ -114,88 +76,5 @@ public final class ClientboundLoginPacket extends Record implements Packet {
 
 	public void handle(ClientGamePacketListener clientGamePacketListener) {
 		clientGamePacketListener.handleLogin(this);
-	}
-
-	public final String toString() {
-		return ObjectMethods.bootstrap<"toString",ClientboundLoginPacket,"playerId;hardcore;gameType;previousGameType;levels;registryHolder;dimensionType;dimension;seed;maxPlayers;chunkRadius;simulationDistance;reducedDebugInfo;showDeathScreen;isDebug;isFlat",ClientboundLoginPacket::playerId,ClientboundLoginPacket::hardcore,ClientboundLoginPacket::gameType,ClientboundLoginPacket::previousGameType,ClientboundLoginPacket::levels,ClientboundLoginPacket::registryHolder,ClientboundLoginPacket::dimensionType,ClientboundLoginPacket::dimension,ClientboundLoginPacket::seed,ClientboundLoginPacket::maxPlayers,ClientboundLoginPacket::chunkRadius,ClientboundLoginPacket::simulationDistance,ClientboundLoginPacket::reducedDebugInfo,ClientboundLoginPacket::showDeathScreen,ClientboundLoginPacket::isDebug,ClientboundLoginPacket::isFlat>(
-			this
-		);
-	}
-
-	public final int hashCode() {
-		return ObjectMethods.bootstrap<"hashCode",ClientboundLoginPacket,"playerId;hardcore;gameType;previousGameType;levels;registryHolder;dimensionType;dimension;seed;maxPlayers;chunkRadius;simulationDistance;reducedDebugInfo;showDeathScreen;isDebug;isFlat",ClientboundLoginPacket::playerId,ClientboundLoginPacket::hardcore,ClientboundLoginPacket::gameType,ClientboundLoginPacket::previousGameType,ClientboundLoginPacket::levels,ClientboundLoginPacket::registryHolder,ClientboundLoginPacket::dimensionType,ClientboundLoginPacket::dimension,ClientboundLoginPacket::seed,ClientboundLoginPacket::maxPlayers,ClientboundLoginPacket::chunkRadius,ClientboundLoginPacket::simulationDistance,ClientboundLoginPacket::reducedDebugInfo,ClientboundLoginPacket::showDeathScreen,ClientboundLoginPacket::isDebug,ClientboundLoginPacket::isFlat>(
-			this
-		);
-	}
-
-	public final boolean equals(Object object) {
-		return ObjectMethods.bootstrap<"equals",ClientboundLoginPacket,"playerId;hardcore;gameType;previousGameType;levels;registryHolder;dimensionType;dimension;seed;maxPlayers;chunkRadius;simulationDistance;reducedDebugInfo;showDeathScreen;isDebug;isFlat",ClientboundLoginPacket::playerId,ClientboundLoginPacket::hardcore,ClientboundLoginPacket::gameType,ClientboundLoginPacket::previousGameType,ClientboundLoginPacket::levels,ClientboundLoginPacket::registryHolder,ClientboundLoginPacket::dimensionType,ClientboundLoginPacket::dimension,ClientboundLoginPacket::seed,ClientboundLoginPacket::maxPlayers,ClientboundLoginPacket::chunkRadius,ClientboundLoginPacket::simulationDistance,ClientboundLoginPacket::reducedDebugInfo,ClientboundLoginPacket::showDeathScreen,ClientboundLoginPacket::isDebug,ClientboundLoginPacket::isFlat>(
-			this, object
-		);
-	}
-
-	public int playerId() {
-		return this.playerId;
-	}
-
-	public boolean hardcore() {
-		return this.hardcore;
-	}
-
-	public GameType gameType() {
-		return this.gameType;
-	}
-
-	@Nullable
-	public GameType previousGameType() {
-		return this.previousGameType;
-	}
-
-	public Set<ResourceKey<Level>> levels() {
-		return this.levels;
-	}
-
-	public RegistryAccess.RegistryHolder registryHolder() {
-		return this.registryHolder;
-	}
-
-	public DimensionType dimensionType() {
-		return this.dimensionType;
-	}
-
-	public ResourceKey<Level> dimension() {
-		return this.dimension;
-	}
-
-	public long seed() {
-		return this.seed;
-	}
-
-	public int maxPlayers() {
-		return this.maxPlayers;
-	}
-
-	public int chunkRadius() {
-		return this.chunkRadius;
-	}
-
-	public int simulationDistance() {
-		return this.simulationDistance;
-	}
-
-	public boolean reducedDebugInfo() {
-		return this.reducedDebugInfo;
-	}
-
-	public boolean showDeathScreen() {
-		return this.showDeathScreen;
-	}
-
-	public boolean isDebug() {
-		return this.isDebug;
-	}
-
-	public boolean isFlat() {
-		return this.isFlat;
 	}
 }

@@ -2,7 +2,6 @@ package net.minecraft.nbt.visitors;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
-import java.lang.runtime.ObjectMethods;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
@@ -84,19 +83,12 @@ public class CollectFields extends CollectToTag {
 		return this.fieldsToGetCount;
 	}
 
-	static final class StackFrame extends Record {
-		private final int depth;
+	static record StackFrame(int depth, Map<String, TagType<?>> fieldsToGet, Map<String, CollectFields.StackFrame> fieldsToRecurse) {
 		final Map<String, TagType<?>> fieldsToGet;
 		final Map<String, CollectFields.StackFrame> fieldsToRecurse;
 
 		public StackFrame(int i) {
 			this(i, new HashMap(), new HashMap());
-		}
-
-		private StackFrame(int i, Map<String, TagType<?>> map, Map<String, CollectFields.StackFrame> map2) {
-			this.depth = i;
-			this.fieldsToGet = map;
-			this.fieldsToRecurse = map2;
 		}
 
 		public void addEntry(CollectFields.WantedField wantedField) {
@@ -108,39 +100,9 @@ public class CollectFields extends CollectToTag {
 				this.fieldsToGet.put(wantedField.name, wantedField.type);
 			}
 		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",CollectFields.StackFrame,"depth;fieldsToGet;fieldsToRecurse",CollectFields.StackFrame::depth,CollectFields.StackFrame::fieldsToGet,CollectFields.StackFrame::fieldsToRecurse>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",CollectFields.StackFrame,"depth;fieldsToGet;fieldsToRecurse",CollectFields.StackFrame::depth,CollectFields.StackFrame::fieldsToGet,CollectFields.StackFrame::fieldsToRecurse>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",CollectFields.StackFrame,"depth;fieldsToGet;fieldsToRecurse",CollectFields.StackFrame::depth,CollectFields.StackFrame::fieldsToGet,CollectFields.StackFrame::fieldsToRecurse>(
-				this, object
-			);
-		}
-
-		public int depth() {
-			return this.depth;
-		}
-
-		public Map<String, TagType<?>> fieldsToGet() {
-			return this.fieldsToGet;
-		}
-
-		public Map<String, CollectFields.StackFrame> fieldsToRecurse() {
-			return this.fieldsToRecurse;
-		}
 	}
 
-	public static final class WantedField extends Record {
+	public static record WantedField(List<String> path, TagType<?> type, String name) {
 		final List<String> path;
 		final TagType<?> type;
 		final String name;
@@ -155,42 +117,6 @@ public class CollectFields extends CollectToTag {
 
 		public WantedField(String string, String string2, TagType<?> tagType, String string3) {
 			this(List.of(string, string2), tagType, string3);
-		}
-
-		public WantedField(List<String> list, TagType<?> tagType, String string) {
-			this.path = list;
-			this.type = tagType;
-			this.name = string;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",CollectFields.WantedField,"path;type;name",CollectFields.WantedField::path,CollectFields.WantedField::type,CollectFields.WantedField::name>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",CollectFields.WantedField,"path;type;name",CollectFields.WantedField::path,CollectFields.WantedField::type,CollectFields.WantedField::name>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",CollectFields.WantedField,"path;type;name",CollectFields.WantedField::path,CollectFields.WantedField::type,CollectFields.WantedField::name>(
-				this, object
-			);
-		}
-
-		public List<String> path() {
-			return this.path;
-		}
-
-		public TagType<?> type() {
-			return this.type;
-		}
-
-		public String name() {
-			return this.name;
 		}
 	}
 }

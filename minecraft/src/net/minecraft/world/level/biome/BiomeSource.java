@@ -10,7 +10,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
-import java.lang.runtime.ObjectMethods;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -55,42 +54,7 @@ public abstract class BiomeSource implements BiomeResolver {
 		Object2IntMap<PlacedFeature> object2IntMap = new Object2IntOpenHashMap<>();
 		MutableInt mutableInt = new MutableInt(0);
 
-		final class FeatureData extends Record {
-			private final int featureIndex;
-			private final int step;
-			private final PlacedFeature feature;
-
-			FeatureData(int i, int j, PlacedFeature placedFeature) {
-				this.featureIndex = i;
-				this.step = j;
-				this.feature = placedFeature;
-			}
-
-			public final String toString() {
-				return ObjectMethods.bootstrap<"toString",FeatureData,"featureIndex;step;feature",FeatureData::featureIndex,FeatureData::step,FeatureData::feature>(this);
-			}
-
-			public final int hashCode() {
-				return ObjectMethods.bootstrap<"hashCode",FeatureData,"featureIndex;step;feature",FeatureData::featureIndex,FeatureData::step,FeatureData::feature>(this);
-			}
-
-			public final boolean equals(Object object) {
-				return ObjectMethods.bootstrap<"equals",FeatureData,"featureIndex;step;feature",FeatureData::featureIndex,FeatureData::step,FeatureData::feature>(
-					this, object
-				);
-			}
-
-			public int featureIndex() {
-				return this.featureIndex;
-			}
-
-			public int step() {
-				return this.step;
-			}
-
-			public PlacedFeature feature() {
-				return this.feature;
-			}
+		record FeatureData(int featureIndex, int step, PlacedFeature feature) {
 		}
 
 		Comparator<FeatureData> comparator = Comparator.comparingInt(FeatureData::step).thenComparingInt(FeatureData::featureIndex);
@@ -276,39 +240,6 @@ public abstract class BiomeSource implements BiomeResolver {
 		Registry.register(Registry.BIOME_SOURCE, "the_end", TheEndBiomeSource.CODEC);
 	}
 
-	public static final class StepFeatureData extends Record {
-		private final List<PlacedFeature> features;
-		private final ToIntFunction<PlacedFeature> indexMapping;
-
-		public StepFeatureData(List<PlacedFeature> list, ToIntFunction<PlacedFeature> toIntFunction) {
-			this.features = list;
-			this.indexMapping = toIntFunction;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",BiomeSource.StepFeatureData,"features;indexMapping",BiomeSource.StepFeatureData::features,BiomeSource.StepFeatureData::indexMapping>(
-				this
-			);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",BiomeSource.StepFeatureData,"features;indexMapping",BiomeSource.StepFeatureData::features,BiomeSource.StepFeatureData::indexMapping>(
-				this
-			);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",BiomeSource.StepFeatureData,"features;indexMapping",BiomeSource.StepFeatureData::features,BiomeSource.StepFeatureData::indexMapping>(
-				this, object
-			);
-		}
-
-		public List<PlacedFeature> features() {
-			return this.features;
-		}
-
-		public ToIntFunction<PlacedFeature> indexMapping() {
-			return this.indexMapping;
-		}
+	public static record StepFeatureData(List<PlacedFeature> features, ToIntFunction<PlacedFeature> indexMapping) {
 	}
 }
