@@ -362,7 +362,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 	private Thread gameThread;
 	private volatile boolean running = true;
 	@Nullable
-	private CrashReport delayedCrash;
+	private Supplier<CrashReport> delayedCrash;
 	private static int fps;
 	public String fpsString = "";
 	public boolean wireframe;
@@ -653,7 +653,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 
 			while(this.running) {
 				if (this.delayedCrash != null) {
-					crash(this.delayedCrash);
+					crash((CrashReport)this.delayedCrash.get());
 					return;
 				}
 
@@ -760,8 +760,8 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 		return this.versionType;
 	}
 
-	public void delayCrash(CrashReport crashReport) {
-		this.delayedCrash = crashReport;
+	public void delayCrash(Supplier<CrashReport> supplier) {
+		this.delayedCrash = supplier;
 	}
 
 	public static void crash(CrashReport crashReport) {
@@ -1958,7 +1958,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 				}
 
 				if (this.delayedCrash != null) {
-					crash(this.delayedCrash);
+					crash((CrashReport)this.delayedCrash.get());
 					return;
 				}
 			}
