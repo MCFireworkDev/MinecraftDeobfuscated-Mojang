@@ -4,7 +4,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -258,9 +257,13 @@ public class PalettedContainer<T> implements PaletteResize<T> {
 	}
 
 	public void count(PalettedContainer.CountConsumer<T> countConsumer) {
-		Int2IntMap int2IntMap = new Int2IntOpenHashMap();
-		this.data.storage.getAll(i -> int2IntMap.put(i, int2IntMap.get(i) + 1));
-		int2IntMap.int2IntEntrySet().forEach(entry -> countConsumer.accept(this.data.palette.valueFor(entry.getIntKey()), entry.getIntValue()));
+		if (this.data.palette.getSize() == 1) {
+			countConsumer.accept(this.data.palette.valueFor(0), this.data.storage.getSize());
+		} else {
+			Int2IntOpenHashMap int2IntOpenHashMap = new Int2IntOpenHashMap();
+			this.data.storage.getAll(i -> int2IntOpenHashMap.addTo(i, 1));
+			int2IntOpenHashMap.int2IntEntrySet().forEach(entry -> countConsumer.accept(this.data.palette.valueFor(entry.getIntKey()), entry.getIntValue()));
+		}
 	}
 
 	static record Configuration<T>(Palette.Factory factory, int bits) {
