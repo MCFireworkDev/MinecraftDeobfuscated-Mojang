@@ -926,8 +926,8 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 			}
 		}
 
-		for(int k = i - this.viewDistance; k <= i + this.viewDistance; ++k) {
-			for(int l = j - this.viewDistance; l <= j + this.viewDistance; ++l) {
+		for(int k = i - this.viewDistance - 1; k <= i + this.viewDistance + 1; ++k) {
+			for(int l = j - this.viewDistance - 1; l <= j + this.viewDistance + 1; ++l) {
 				if (isChunkInRange(k, l, i, j, this.viewDistance)) {
 					ChunkPos chunkPos = new ChunkPos(k, l);
 					this.updateChunkTracking(serverPlayer, chunkPos, new MutableObject<>(), !bl, bl);
@@ -987,10 +987,10 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 		int k = sectionPos.x();
 		int n = sectionPos.z();
 		if (Math.abs(k - i) <= this.viewDistance * 2 && Math.abs(n - j) <= this.viewDistance * 2) {
-			int o = Math.min(i, k) - this.viewDistance;
-			int p = Math.min(j, n) - this.viewDistance;
-			int q = Math.max(i, k) + this.viewDistance;
-			int r = Math.max(j, n) + this.viewDistance;
+			int o = Math.min(i, k) - this.viewDistance - 1;
+			int p = Math.min(j, n) - this.viewDistance - 1;
+			int q = Math.max(i, k) + this.viewDistance + 1;
+			int r = Math.max(j, n) + this.viewDistance + 1;
 
 			for(int s = o; s <= q; ++s) {
 				for(int t = p; t <= r; ++t) {
@@ -1000,8 +1000,8 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 				}
 			}
 		} else {
-			for(int o = k - this.viewDistance; o <= k + this.viewDistance; ++o) {
-				for(int p = n - this.viewDistance; p <= n + this.viewDistance; ++p) {
+			for(int o = k - this.viewDistance - 1; o <= k + this.viewDistance + 1; ++o) {
+				for(int p = n - this.viewDistance - 1; p <= n + this.viewDistance + 1; ++p) {
 					if (isChunkInRange(o, p, k, n, this.viewDistance)) {
 						boolean bl6 = true;
 						boolean bl7 = false;
@@ -1010,8 +1010,8 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 				}
 			}
 
-			for(int o = i - this.viewDistance; o <= i + this.viewDistance; ++o) {
-				for(int p = j - this.viewDistance; p <= j + this.viewDistance; ++p) {
+			for(int o = i - this.viewDistance - 1; o <= i + this.viewDistance + 1; ++o) {
+				for(int p = j - this.viewDistance - 1; p <= j + this.viewDistance + 1; ++p) {
 					if (isChunkInRange(o, p, i, j, this.viewDistance)) {
 						boolean bl6 = false;
 						boolean bl7 = true;
