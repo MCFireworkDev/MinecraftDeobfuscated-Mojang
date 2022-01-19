@@ -16,6 +16,7 @@ import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
 import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
@@ -59,7 +60,7 @@ public class InteractWithDoor extends Behavior<LivingEntity> {
 		Node node2 = path.getNextNode();
 		BlockPos blockPos = node.asBlockPos();
 		BlockState blockState = serverLevel.getBlockState(blockPos);
-		if (blockState.is(BlockTags.WOODEN_DOORS)) {
+		if (blockState.is(BlockTags.WOODEN_DOORS, blockStateBase -> blockStateBase.getBlock() instanceof DoorBlock)) {
 			DoorBlock doorBlock = (DoorBlock)blockState.getBlock();
 			if (!doorBlock.isOpen(blockState)) {
 				doorBlock.setOpen(livingEntity, serverLevel, blockState, blockPos, true);
@@ -70,7 +71,7 @@ public class InteractWithDoor extends Behavior<LivingEntity> {
 
 		BlockPos blockPos2 = node2.asBlockPos();
 		BlockState blockState2 = serverLevel.getBlockState(blockPos2);
-		if (blockState2.is(BlockTags.WOODEN_DOORS)) {
+		if (blockState2.is(BlockTags.WOODEN_DOORS, blockStateBase -> blockStateBase.getBlock() instanceof DoorBlock)) {
 			DoorBlock doorBlock2 = (DoorBlock)blockState2.getBlock();
 			if (!doorBlock2.isOpen(blockState2)) {
 				doorBlock2.setOpen(livingEntity, serverLevel, blockState2, blockPos2, true);
@@ -94,7 +95,7 @@ public class InteractWithDoor extends Behavior<LivingEntity> {
 						iterator.remove();
 					} else {
 						BlockState blockState = serverLevel.getBlockState(blockPos);
-						if (!blockState.is(BlockTags.WOODEN_DOORS)) {
+						if (!blockState.is(BlockTags.WOODEN_DOORS, blockStateBase -> blockStateBase.getBlock() instanceof DoorBlock)) {
 							iterator.remove();
 						} else {
 							DoorBlock doorBlock = (DoorBlock)blockState.getBlock();

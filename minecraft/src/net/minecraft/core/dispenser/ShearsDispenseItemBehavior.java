@@ -14,6 +14,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
@@ -35,7 +36,9 @@ public class ShearsDispenseItemBehavior extends OptionalDispenseItemBehavior {
 
 	private static boolean tryShearBeehive(ServerLevel serverLevel, BlockPos blockPos) {
 		BlockState blockState = serverLevel.getBlockState(blockPos);
-		if (blockState.is(BlockTags.BEEHIVES)) {
+		if (blockState.is(
+			BlockTags.BEEHIVES, blockStateBase -> blockStateBase.hasProperty(BeehiveBlock.HONEY_LEVEL) && blockStateBase.getBlock() instanceof BeehiveBlock
+		)) {
 			int i = blockState.getValue(BeehiveBlock.HONEY_LEVEL);
 			if (i >= 5) {
 				serverLevel.playSound(null, blockPos, SoundEvents.BEEHIVE_SHEAR, SoundSource.BLOCKS, 1.0F, 1.0F);

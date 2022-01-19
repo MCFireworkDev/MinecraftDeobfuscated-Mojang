@@ -24,6 +24,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.FireBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class BeehiveBlockEntity extends BlockEntity {
@@ -208,7 +209,7 @@ public class BeehiveBlockEntity extends BlockEntity {
 
 							if (beeReleaseStatus == BeehiveBlockEntity.BeeReleaseStatus.HONEY_DELIVERED) {
 								bee.dropOffNectar();
-								if (blockState.is(BlockTags.BEEHIVES)) {
+								if (blockState.is(BlockTags.BEEHIVES, blockStateBase -> blockStateBase.hasProperty(BeehiveBlock.HONEY_LEVEL))) {
 									int i = getHoneyLevel(blockState);
 									if (i < 5) {
 										int j = level.random.nextInt(100) == 0 ? 2 : 1;
