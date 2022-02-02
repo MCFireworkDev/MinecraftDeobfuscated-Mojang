@@ -451,7 +451,7 @@ public class MineShaftPieces {
 					mutableBlockPos.move(Direction.DOWN);
 				}
 
-				if (this.canPlaceColumnOnTopOf(worldGenLevel.getBlockState(mutableBlockPos))) {
+				if (this.canPlaceColumnOnTopOf(worldGenLevel, mutableBlockPos, worldGenLevel.getBlockState(mutableBlockPos))) {
 					while(mutableBlockPos.getY() < l) {
 						mutableBlockPos.move(Direction.UP);
 						worldGenLevel.setBlock(mutableBlockPos, blockState, 2);
@@ -472,7 +472,7 @@ public class MineShaftPieces {
 						mutableBlockPos.setY(l - m);
 						BlockState blockState2 = worldGenLevel.getBlockState(mutableBlockPos);
 						boolean bl3 = this.isReplaceableByStructures(blockState2) && !blockState2.is(Blocks.LAVA);
-						if (!bl3 && this.canPlaceColumnOnTopOf(blockState2)) {
+						if (!bl3 && this.canPlaceColumnOnTopOf(worldGenLevel, mutableBlockPos, blockState2)) {
 							fillColumnBetween(worldGenLevel, blockState, mutableBlockPos, l - m + 1, l);
 							return;
 						}
@@ -502,8 +502,8 @@ public class MineShaftPieces {
 			}
 		}
 
-		private boolean canPlaceColumnOnTopOf(BlockState blockState) {
-			return !blockState.is(Blocks.RAIL) && !blockState.is(Blocks.LAVA);
+		private boolean canPlaceColumnOnTopOf(LevelReader levelReader, BlockPos blockPos, BlockState blockState) {
+			return blockState.isFaceSturdy(levelReader, blockPos, Direction.UP);
 		}
 
 		private boolean canHangChainBelow(LevelReader levelReader, BlockPos blockPos, BlockState blockState) {
@@ -928,7 +928,7 @@ public class MineShaftPieces {
 			if (this.isInterior(worldGenLevel, i, j, k, boundingBox)) {
 				BlockPos blockPos = this.getWorldPos(i, j, k);
 				BlockState blockState2 = worldGenLevel.getBlockState(blockPos);
-				if (blockState2.isAir() || blockState2.is(Blocks.CHAIN)) {
+				if (!blockState2.isFaceSturdy(worldGenLevel, blockPos, Direction.UP)) {
 					worldGenLevel.setBlock(blockPos, blockState, 2);
 				}
 			}

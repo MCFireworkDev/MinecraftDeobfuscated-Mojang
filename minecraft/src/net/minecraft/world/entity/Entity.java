@@ -3022,6 +3022,10 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		return !EntityTypeTags.FREEZE_IMMUNE_ENTITY_TYPES.contains(this.getType());
 	}
 
+	public boolean isFreezing() {
+		return (this.isInPowderSnow || this.wasInPowderSnow) && this.canFreeze();
+	}
+
 	public float getYRot() {
 		return this.yRot;
 	}

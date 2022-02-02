@@ -116,7 +116,7 @@ public class MoveThroughVillageGoal extends Goal {
 		if (this.mob.getNavigation().isDone()) {
 			return false;
 		} else {
-			return !this.poiPos.closerThan(this.mob.position(), (double)(this.mob.getBbWidth() + (float)this.distanceToPoi));
+			return !this.poiPos.closerToCenterThan(this.mob.position(), (double)(this.mob.getBbWidth() + (float)this.distanceToPoi));
 		}
 	}
 
@@ -127,7 +127,7 @@ public class MoveThroughVillageGoal extends Goal {
 
 	@Override
 	public void stop() {
-		if (this.mob.getNavigation().isDone() || this.poiPos.closerThan(this.mob.position(), (double)this.distanceToPoi)) {
+		if (this.mob.getNavigation().isDone() || this.poiPos.closerToCenterThan(this.mob.position(), (double)this.distanceToPoi)) {
 			this.visited.add(this.poiPos);
 		}
 	}

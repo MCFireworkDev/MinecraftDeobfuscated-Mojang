@@ -1,8 +1,10 @@
 package net.minecraft.server.level;
 
 import com.mojang.datafixers.util.Either;
+import com.mojang.datafixers.util.Pair;
 import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Optional;
@@ -254,6 +256,10 @@ public class ChunkHolder {
 		CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> completableFuture = (CompletableFuture)this.futures.get(i);
 		if (completableFuture != null) {
 			Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure> either = (Either)completableFuture.getNow(null);
+			if (either == null && completableFuture.isDone()) {
+				throw new IllegalStateException("future for status: " + chunkStatus + " was incorrectly set to null at chunk: " + this.pos);
+			}
+
 			boolean bl = either != null && either.right().isPresent();
 			if (!bl) {
 				return completableFuture;
@@ -424,13 +430,23 @@ public class ChunkHolder {
 			CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> completableFuture = (CompletableFuture)this.futures.get(i);
 			if (completableFuture != null) {
 				Optional<ChunkAccess> optional = ((Either)completableFuture.getNow(UNLOADED_CHUNK)).left();
-				if (optional.isPresent() && optional.get() instanceof ProtoChunk) {
+				if (!optional.isEmpty() && optional.get() instanceof ProtoChunk) {
 					this.futures.set(i, CompletableFuture.completedFuture(Either.left(imposterProtoChunk)));
 				}
 			}
 		}
 
 		this.updateChunkToSave(CompletableFuture.completedFuture(Either.left(imposterProtoChunk.getWrapped())), "replaceProto");
+	}
+
+	public List<Pair<ChunkStatus, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>>> getAllFutures() {
+		List<Pair<ChunkStatus, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>>> list = new ArrayList();
+
+		for(int i = 0; i < CHUNK_STATUSES.size(); ++i) {
+			list.add(Pair.of((ChunkStatus)CHUNK_STATUSES.get(i), (CompletableFuture)this.futures.get(i)));
+		}
+
+		return list;
 	}
 
 	public interface ChunkLoadingFailure {

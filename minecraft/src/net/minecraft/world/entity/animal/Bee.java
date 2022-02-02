@@ -723,7 +723,7 @@ public class Bee extends Animal implements NeutralMob, FlyingAnimal {
 	class BeeEnterHiveGoal extends Bee.BaseBeeGoal {
 		@Override
 		public boolean canBeeUse() {
-			if (Bee.this.hasHive() && Bee.this.wantsToEnterHive() && Bee.this.hivePos.closerThan(Bee.this.position(), 2.0)) {
+			if (Bee.this.hasHive() && Bee.this.wantsToEnterHive() && Bee.this.hivePos.closerToCenterThan(Bee.this.position(), 2.0)) {
 				BlockEntity blockEntity = Bee.this.level.getBlockEntity(Bee.this.hivePos);
 				if (blockEntity instanceof BeehiveBlockEntity beehiveBlockEntity) {
 					if (!beehiveBlockEntity.isFull()) {
