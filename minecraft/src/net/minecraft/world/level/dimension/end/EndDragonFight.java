@@ -49,6 +49,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.EndPodiumFeature;
 import net.minecraft.world.level.levelgen.feature.SpikeFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
@@ -393,7 +394,7 @@ public class EndDragonFight {
 
 	private void spawnNewGateway(BlockPos blockPos) {
 		this.level.levelEvent(3000, blockPos, 0);
-		EndFeatures.END_GATEWAY_DELAYED.place(this.level, this.level.getChunkSource().getGenerator(), new Random(), blockPos);
+		((ConfiguredFeature)EndFeatures.END_GATEWAY_DELAYED.value()).place(this.level, this.level.getChunkSource().getGenerator(), new Random(), blockPos);
 	}
 
 	private void spawnExitPortal(boolean bl) {
@@ -406,7 +407,7 @@ public class EndDragonFight {
 			}
 		}
 
-		endPodiumFeature.configured(FeatureConfiguration.NONE).place(this.level, this.level.getChunkSource().getGenerator(), new Random(), this.portalLocation);
+		endPodiumFeature.place(FeatureConfiguration.NONE, this.level, this.level.getChunkSource().getGenerator(), new Random(), this.portalLocation);
 	}
 
 	private EnderDragon createNewDragon() {

@@ -50,7 +50,7 @@ public class PlaceFeatureCommand {
 		CommandSourceStack commandSourceStack, ResourceLocationArgument.LocatedResource<ConfiguredFeature<?, ?>> locatedResource, BlockPos blockPos
 	) throws CommandSyntaxException {
 		ServerLevel serverLevel = commandSourceStack.getLevel();
-		ConfiguredFeature<?, ?> configuredFeature = locatedResource.resource();
+		ConfiguredFeature<?, ?> configuredFeature = (ConfiguredFeature)locatedResource.resource();
 		if (!configuredFeature.place(serverLevel, serverLevel.getChunkSource().getGenerator(), serverLevel.getRandom(), blockPos)) {
 			throw ERROR_FAILED.create();
 		} else {

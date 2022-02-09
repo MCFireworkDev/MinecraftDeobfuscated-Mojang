@@ -4,8 +4,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
+import net.minecraft.core.Holder;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.WeightedPlacedFeature;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
@@ -19,22 +19,18 @@ public class RandomFeatureConfiguration implements FeatureConfiguration {
 			)
 	);
 	public final List<WeightedPlacedFeature> features;
-	public final Supplier<PlacedFeature> defaultFeature;
+	public final Holder<PlacedFeature> defaultFeature;
 
-	public RandomFeatureConfiguration(List<WeightedPlacedFeature> list, PlacedFeature placedFeature) {
-		this(list, () -> placedFeature);
-	}
-
-	private RandomFeatureConfiguration(List<WeightedPlacedFeature> list, Supplier<PlacedFeature> supplier) {
+	public RandomFeatureConfiguration(List<WeightedPlacedFeature> list, Holder<PlacedFeature> holder) {
 		this.features = list;
-		this.defaultFeature = supplier;
+		this.defaultFeature = holder;
 	}
 
 	@Override
 	public Stream<ConfiguredFeature<?, ?>> getFeatures() {
 		return Stream.concat(
-			this.features.stream().flatMap(weightedPlacedFeature -> ((PlacedFeature)weightedPlacedFeature.feature.get()).getFeatures()),
-			((PlacedFeature)this.defaultFeature.get()).getFeatures()
+			this.features.stream().flatMap(weightedPlacedFeature -> ((PlacedFeature)weightedPlacedFeature.feature.value()).getFeatures()),
+			((PlacedFeature)this.defaultFeature.value()).getFeatures()
 		);
 	}
 }

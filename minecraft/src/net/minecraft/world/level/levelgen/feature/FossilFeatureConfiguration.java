@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.List;
-import java.util.function.Supplier;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorList;
@@ -23,12 +23,12 @@ public class FossilFeatureConfiguration implements FeatureConfiguration {
 	);
 	public final List<ResourceLocation> fossilStructures;
 	public final List<ResourceLocation> overlayStructures;
-	public final Supplier<StructureProcessorList> fossilProcessors;
-	public final Supplier<StructureProcessorList> overlayProcessors;
+	public final Holder<StructureProcessorList> fossilProcessors;
+	public final Holder<StructureProcessorList> overlayProcessors;
 	public final int maxEmptyCornersAllowed;
 
 	public FossilFeatureConfiguration(
-		List<ResourceLocation> list, List<ResourceLocation> list2, Supplier<StructureProcessorList> supplier, Supplier<StructureProcessorList> supplier2, int i
+		List<ResourceLocation> list, List<ResourceLocation> list2, Holder<StructureProcessorList> holder, Holder<StructureProcessorList> holder2, int i
 	) {
 		if (list.isEmpty()) {
 			throw new IllegalArgumentException("Fossil structure lists need at least one entry");
@@ -37,19 +37,9 @@ public class FossilFeatureConfiguration implements FeatureConfiguration {
 		} else {
 			this.fossilStructures = list;
 			this.overlayStructures = list2;
-			this.fossilProcessors = supplier;
-			this.overlayProcessors = supplier2;
+			this.fossilProcessors = holder;
+			this.overlayProcessors = holder2;
 			this.maxEmptyCornersAllowed = i;
 		}
-	}
-
-	public FossilFeatureConfiguration(
-		List<ResourceLocation> list,
-		List<ResourceLocation> list2,
-		StructureProcessorList structureProcessorList,
-		StructureProcessorList structureProcessorList2,
-		int i
-	) {
-		this(list, list2, () -> structureProcessorList, () -> structureProcessorList2, i);
 	}
 }

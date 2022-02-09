@@ -11,6 +11,7 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.lighting.LayerLightEngine;
 
 public class NyliumBlock extends Block implements BonemealableBlock {
@@ -50,12 +51,12 @@ public class NyliumBlock extends Block implements BonemealableBlock {
 		BlockPos blockPos2 = blockPos.above();
 		ChunkGenerator chunkGenerator = serverLevel.getChunkSource().getGenerator();
 		if (blockState2.is(Blocks.CRIMSON_NYLIUM)) {
-			NetherFeatures.CRIMSON_FOREST_VEGETATION_BONEMEAL.place(serverLevel, chunkGenerator, random, blockPos2);
+			((ConfiguredFeature)NetherFeatures.CRIMSON_FOREST_VEGETATION_BONEMEAL.value()).place(serverLevel, chunkGenerator, random, blockPos2);
 		} else if (blockState2.is(Blocks.WARPED_NYLIUM)) {
-			NetherFeatures.WARPED_FOREST_VEGETATION_BONEMEAL.place(serverLevel, chunkGenerator, random, blockPos2);
-			NetherFeatures.NETHER_SPROUTS_BONEMEAL.place(serverLevel, chunkGenerator, random, blockPos2);
+			((ConfiguredFeature)NetherFeatures.WARPED_FOREST_VEGETATION_BONEMEAL.value()).place(serverLevel, chunkGenerator, random, blockPos2);
+			((ConfiguredFeature)NetherFeatures.NETHER_SPROUTS_BONEMEAL.value()).place(serverLevel, chunkGenerator, random, blockPos2);
 			if (random.nextInt(8) == 0) {
-				NetherFeatures.TWISTING_VINES_BONEMEAL.place(serverLevel, chunkGenerator, random, blockPos2);
+				((ConfiguredFeature)NetherFeatures.TWISTING_VINES_BONEMEAL.value()).place(serverLevel, chunkGenerator, random, blockPos2);
 			}
 		}
 	}

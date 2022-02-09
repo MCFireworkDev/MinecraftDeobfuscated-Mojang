@@ -24,6 +24,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.EndGatewayConfiguration;
 import net.minecraft.world.phys.AABB;
@@ -203,7 +204,8 @@ public class TheEndGatewayBlockEntity extends TheEndPortalBlockEntity {
 		if (blockPos2 == null) {
 			blockPos2 = new BlockPos(vec3.x + 0.5, 75.0, vec3.z + 0.5);
 			LOGGER.debug("Failed to find a suitable block to teleport to, spawning an island on {}", blockPos2);
-			EndFeatures.END_ISLAND.place(serverLevel, serverLevel.getChunkSource().getGenerator(), new Random(blockPos2.asLong()), blockPos2);
+			((ConfiguredFeature)EndFeatures.END_ISLAND.value())
+				.place(serverLevel, serverLevel.getChunkSource().getGenerator(), new Random(blockPos2.asLong()), blockPos2);
 		} else {
 			LOGGER.debug("Found suitable block to teleport to: {}", blockPos2);
 		}
@@ -285,7 +287,7 @@ public class TheEndGatewayBlockEntity extends TheEndPortalBlockEntity {
 	}
 
 	private static void spawnGatewayPortal(ServerLevel serverLevel, BlockPos blockPos, EndGatewayConfiguration endGatewayConfiguration) {
-		Feature.END_GATEWAY.configured(endGatewayConfiguration).place(serverLevel, serverLevel.getChunkSource().getGenerator(), new Random(), blockPos);
+		Feature.END_GATEWAY.place(endGatewayConfiguration, serverLevel, serverLevel.getChunkSource().getGenerator(), new Random(), blockPos);
 	}
 
 	@Override

@@ -112,7 +112,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	@Nullable
 	private Player lastTradedPlayer;
 	private boolean chasing;
-	private byte foodLevel;
+	private int foodLevel;
 	private final GossipContainer gossips = new GossipContainer();
 	private long lastGossipTime;
 	private long lastGossipDecayTime;
@@ -480,7 +480,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 			.encodeStart(NbtOps.INSTANCE, this.getVillagerData())
 			.resultOrPartial(LOGGER::error)
 			.ifPresent(tag -> compoundTag.put("VillagerData", tag));
-		compoundTag.putByte("FoodLevel", this.foodLevel);
+		compoundTag.putByte("FoodLevel", (byte)this.foodLevel);
 		compoundTag.put("Gossips", this.gossips.store(NbtOps.INSTANCE).getValue());
 		compoundTag.putInt("Xp", this.villagerXp);
 		compoundTag.putLong("LastRestock", this.lastRestockGameTime);
@@ -677,7 +677,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 						int j = itemStack.getCount();
 
 						for(int k = j; k > 0; --k) {
-							this.foodLevel = (byte)(this.foodLevel + integer);
+							this.foodLevel += integer;
 							this.getInventory().removeItem(i, 1);
 							if (!this.hungry()) {
 								return;
@@ -694,7 +694,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	}
 
 	private void digestFood(int i) {
-		this.foodLevel = (byte)(this.foodLevel - i);
+		this.foodLevel -= i;
 	}
 
 	public void eatAndDigestFood() {
@@ -755,7 +755,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 			|| mobSpawnType == MobSpawnType.SPAWN_EGG
 			|| mobSpawnType == MobSpawnType.SPAWNER
 			|| mobSpawnType == MobSpawnType.DISPENSER) {
-			this.setVillagerData(this.getVillagerData().setType(VillagerType.byBiome(serverLevelAccessor.getBiomeName(this.blockPosition()))));
+			this.setVillagerData(this.getVillagerData().setType(VillagerType.byBiome(serverLevelAccessor.getBiome(this.blockPosition()))));
 		}
 
 		if (mobSpawnType == MobSpawnType.STRUCTURE) {
@@ -769,7 +769,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 		double d = this.random.nextDouble();
 		VillagerType villagerType;
 		if (d < 0.5) {
-			villagerType = VillagerType.byBiome(serverLevel.getBiomeName(this.blockPosition()));
+			villagerType = VillagerType.byBiome(serverLevel.getBiome(this.blockPosition()));
 		} else if (d < 0.75) {
 			villagerType = this.getVillagerData().getType();
 		} else {

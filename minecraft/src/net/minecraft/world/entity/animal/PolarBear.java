@@ -1,16 +1,14 @@
 package net.minecraft.world.entity.animal;
 
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -104,8 +102,8 @@ public class PolarBear extends Animal implements NeutralMob {
 	public static boolean checkPolarBearSpawnRules(
 		EntityType<PolarBear> entityType, LevelAccessor levelAccessor, MobSpawnType mobSpawnType, BlockPos blockPos, Random random
 	) {
-		Optional<ResourceKey<Biome>> optional = levelAccessor.getBiomeName(blockPos);
-		if (!Objects.equals(optional, Optional.of(Biomes.FROZEN_OCEAN)) && !Objects.equals(optional, Optional.of(Biomes.DEEP_FROZEN_OCEAN))) {
+		Holder<Biome> holder = levelAccessor.getBiome(blockPos);
+		if (!holder.is(Biomes.FROZEN_OCEAN) && !holder.is(Biomes.DEEP_FROZEN_OCEAN)) {
 			return checkAnimalSpawnRules(entityType, levelAccessor, mobSpawnType, blockPos, random);
 		} else {
 			return isBrightEnoughToSpawn(levelAccessor, blockPos)

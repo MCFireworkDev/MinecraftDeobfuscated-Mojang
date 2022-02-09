@@ -8,6 +8,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 
 public class MossBlock extends Block implements BonemealableBlock {
 	public MossBlock(BlockBehaviour.Properties properties) {
@@ -26,6 +27,6 @@ public class MossBlock extends Block implements BonemealableBlock {
 
 	@Override
 	public void performBonemeal(ServerLevel serverLevel, Random random, BlockPos blockPos, BlockState blockState) {
-		CaveFeatures.MOSS_PATCH_BONEMEAL.place(serverLevel, serverLevel.getChunkSource().getGenerator(), random, blockPos.above());
+		((ConfiguredFeature)CaveFeatures.MOSS_PATCH_BONEMEAL.value()).place(serverLevel, serverLevel.getChunkSource().getGenerator(), random, blockPos.above());
 	}
 }

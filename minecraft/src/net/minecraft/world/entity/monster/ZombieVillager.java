@@ -7,6 +7,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
@@ -68,7 +69,9 @@ public class ZombieVillager extends Zombie implements VillagerDataHolder {
 
 	public ZombieVillager(EntityType<? extends ZombieVillager> entityType, Level level) {
 		super(entityType, level);
-		this.setVillagerData(this.getVillagerData().setProfession(Registry.VILLAGER_PROFESSION.getRandom(this.random)));
+		Registry.VILLAGER_PROFESSION
+			.getRandom(this.random)
+			.ifPresent(holder -> this.setVillagerData(this.getVillagerData().setProfession((VillagerProfession)holder.value())));
 	}
 
 	@Override
@@ -320,7 +323,7 @@ public class ZombieVillager extends Zombie implements VillagerDataHolder {
 		@Nullable SpawnGroupData spawnGroupData,
 		@Nullable CompoundTag compoundTag
 	) {
-		this.setVillagerData(this.getVillagerData().setType(VillagerType.byBiome(serverLevelAccessor.getBiomeName(this.blockPosition()))));
+		this.setVillagerData(this.getVillagerData().setType(VillagerType.byBiome(serverLevelAccessor.getBiome(this.blockPosition()))));
 		return super.finalizeSpawn(serverLevelAccessor, difficultyInstance, mobSpawnType, spawnGroupData, compoundTag);
 	}
 
