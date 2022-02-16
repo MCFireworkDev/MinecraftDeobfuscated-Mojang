@@ -2,22 +2,14 @@ package net.minecraft.world.level.levelgen;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.ImmutableMultimap.Builder;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import javax.annotation.Nullable;
 import net.minecraft.core.Registry;
 import net.minecraft.core.Vec3i;
-import net.minecraft.data.worldgen.StructureFeatures;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.placement.ConcentricRingsStructurePlacement;
 import net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement;
@@ -59,18 +51,9 @@ public class StructureSettings {
 		.put(StructureFeature.STRONGHOLD, DEFAULT_STRONGHOLD)
 		.build();
 	private final Map<StructureFeature<?>, StructurePlacement> structureConfig;
-	private final ImmutableMap<StructureFeature<?>, ImmutableMultimap<ResourceKey<ConfiguredStructureFeature<?, ?>>, ResourceKey<Biome>>> configuredStructures;
 
 	public StructureSettings(Map<StructureFeature<?>, StructurePlacement> map) {
 		this.structureConfig = map;
-		HashMap<StructureFeature<?>, Builder<ResourceKey<ConfiguredStructureFeature<?, ?>>, ResourceKey<Biome>>> hashMap = new HashMap();
-		StructureFeatures.registerStructures(
-			(structureFeature, resourceKey, resourceKey2) -> ((Builder)hashMap.computeIfAbsent(structureFeature, structureFeaturex -> ImmutableMultimap.builder()))
-					.put(resourceKey, resourceKey2)
-		);
-		this.configuredStructures = (ImmutableMap)hashMap.entrySet()
-			.stream()
-			.collect(ImmutableMap.toImmutableMap(Entry::getKey, entry -> ((Builder)entry.getValue()).build()));
 	}
 
 	public StructureSettings(boolean bl) {
@@ -85,9 +68,5 @@ public class StructureSettings {
 	@Nullable
 	public StructurePlacement getConfig(StructureFeature<?> structureFeature) {
 		return (StructurePlacement)this.structureConfig.get(structureFeature);
-	}
-
-	public ImmutableMultimap<ResourceKey<ConfiguredStructureFeature<?, ?>>, ResourceKey<Biome>> structures(StructureFeature<?> structureFeature) {
-		return this.configuredStructures.getOrDefault(structureFeature, ImmutableMultimap.of());
 	}
 }

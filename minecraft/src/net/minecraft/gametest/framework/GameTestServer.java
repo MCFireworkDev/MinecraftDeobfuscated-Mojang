@@ -35,6 +35,7 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
 import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.PrimaryLevelData;
@@ -75,7 +76,8 @@ public class GameTestServer extends MinecraftServer {
 						(resourceManager, dataPackConfig) -> {
 							RegistryAccess.Frozen frozen = (RegistryAccess.Frozen)RegistryAccess.BUILTIN.get();
 							Registry<Biome> registry = frozen.registryOrThrow(Registry.BIOME_REGISTRY);
-							Registry<DimensionType> registry2 = frozen.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY);
+							Registry<ConfiguredStructureFeature<?, ?>> registry2 = frozen.registryOrThrow(Registry.CONFIGURED_STRUCTURE_FEATURE_REGISTRY);
+							Registry<DimensionType> registry3 = frozen.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY);
 							WorldData worldData = new PrimaryLevelData(
 								TEST_SETTINGS,
 								new WorldGenSettings(
@@ -83,7 +85,7 @@ public class GameTestServer extends MinecraftServer {
 									false,
 									false,
 									WorldGenSettings.withOverworld(
-										registry2, DimensionType.defaultDimensions(frozen, 0L), new FlatLevelSource(FlatLevelGeneratorSettings.getDefault(registry))
+										registry3, DimensionType.defaultDimensions(frozen, 0L), new FlatLevelSource(registry2, FlatLevelGeneratorSettings.getDefault(registry))
 									)
 								),
 								Lifecycle.stable()

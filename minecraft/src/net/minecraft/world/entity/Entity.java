@@ -3064,7 +3064,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 	}
 
 	@Override
-	public void setRemoved(Entity.RemovalReason removalReason) {
+	public final void setRemoved(Entity.RemovalReason removalReason) {
 		if (this.removalReason == null) {
 			this.removalReason = removalReason;
 		}

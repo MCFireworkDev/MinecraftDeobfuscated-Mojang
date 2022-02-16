@@ -163,6 +163,13 @@ public class PeriodicNotificationManager
 		final long period;
 		final String title;
 		final String message;
+
+		public Notification(long l, long m, String string, String string2) {
+			this.delay = l != 0L ? l : m;
+			this.period = m;
+			this.title = string;
+			this.message = string2;
+		}
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -188,7 +195,7 @@ public class PeriodicNotificationManager
 			long m = this.elapsed.get();
 
 			for(PeriodicNotificationManager.Notification notification : this.notifications) {
-				if (m >= notification.delay) {
+				if (l >= notification.delay) {
 					long n = l / notification.period;
 					long o = m / notification.period;
 					if (n != o) {
@@ -197,8 +204,8 @@ public class PeriodicNotificationManager
 								() -> SystemToast.add(
 										Minecraft.getInstance().getToasts(),
 										SystemToast.SystemToastIds.PERIODIC_NOTIFICATION,
-										new TranslatableComponent(notification.title, o),
-										new TranslatableComponent(notification.message, o)
+										new TranslatableComponent(notification.title, n),
+										new TranslatableComponent(notification.message, n)
 									)
 							);
 						return;
