@@ -214,7 +214,7 @@ public final class NaturalSpawner {
 			.closerThan(new Vec3((double)mutableBlockPos.getX() + 0.5, (double)mutableBlockPos.getY(), (double)mutableBlockPos.getZ() + 0.5), 24.0)) {
 			return false;
 		} else {
-			return Objects.equals(new ChunkPos(mutableBlockPos), chunkAccess.getPos()) || serverLevel.isPositionEntityTicking(mutableBlockPos);
+			return Objects.equals(new ChunkPos(mutableBlockPos), chunkAccess.getPos()) || serverLevel.isNaturalSpawningAllowed(mutableBlockPos);
 		}
 	}
 

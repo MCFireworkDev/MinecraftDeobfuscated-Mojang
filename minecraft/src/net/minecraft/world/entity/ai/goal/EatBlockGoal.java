@@ -10,7 +10,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.predicate.BlockStatePredicate;
-import net.minecraft.world.level.gameevent.GameEvent;
 
 public class EatBlockGoal extends Goal {
 	private static final int EAT_ANIMATION_TICKS = 40;
@@ -71,7 +70,6 @@ public class EatBlockGoal extends Goal {
 				}
 
 				this.mob.ate();
-				this.mob.gameEvent(GameEvent.EAT, this.mob.eyeBlockPosition());
 			} else {
 				BlockPos blockPos2 = blockPos.below();
 				if (this.level.getBlockState(blockPos2).is(Blocks.GRASS_BLOCK)) {
@@ -81,7 +79,6 @@ public class EatBlockGoal extends Goal {
 					}
 
 					this.mob.ate();
-					this.mob.gameEvent(GameEvent.EAT, this.mob.eyeBlockPosition());
 				}
 			}
 		}

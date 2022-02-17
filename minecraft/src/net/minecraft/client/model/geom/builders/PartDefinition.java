@@ -42,6 +42,7 @@ public class PartDefinition {
 			);
 		List<ModelPart.Cube> list = (List)this.cubes.stream().map(cubeDefinition -> cubeDefinition.bake(i, j)).collect(ImmutableList.toImmutableList());
 		ModelPart modelPart = new ModelPart(list, object2ObjectArrayMap);
+		modelPart.setInitialPose(this.partPose);
 		modelPart.loadPose(this.partPose);
 		return modelPart;
 	}
