@@ -9,8 +9,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
 import net.minecraft.world.level.levelgen.feature.NoiseEffect;
-import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece;
 import net.minecraft.world.level.levelgen.structure.StructurePiece;
@@ -18,7 +18,7 @@ import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.pools.JigsawJunction;
 import net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool;
 
-public class Beardifier implements DensityFunction.SimpleFunction {
+public class Beardifier implements DensityFunctions.BeardifierOrMarker {
 	public static final int BEARD_KERNEL_RADIUS = 12;
 	private static final int BEARD_KERNEL_SIZE = 24;
 	private static final float[] BEARD_KERNEL = Util.make(new float[13824], fs -> {
@@ -41,9 +41,8 @@ public class Beardifier implements DensityFunction.SimpleFunction {
 		int j = chunkPos.getMinBlockZ();
 		this.junctions = new ObjectArrayList<>(32);
 		this.rigids = new ObjectArrayList<>(10);
-
-		for(StructureFeature<?> structureFeature : StructureFeature.NOISE_AFFECTING_FEATURES) {
-			structureFeatureManager.startsForFeature(SectionPos.bottomOf(chunkAccess), structureFeature).forEach(structureStart -> {
+		structureFeatureManager.startsForFeature(SectionPos.bottomOf(chunkAccess), configuredStructureFeature -> configuredStructureFeature.adaptNoise)
+			.forEach(structureStart -> {
 				for(StructurePiece structurePiece : structureStart.getPieces()) {
 					if (structurePiece.isCloseToChunk(chunkPos, 12)) {
 						if (structurePiece instanceof PoolElementStructurePiece poolElementStructurePiece) {
@@ -51,7 +50,7 @@ public class Beardifier implements DensityFunction.SimpleFunction {
 							if (projection == StructureTemplatePool.Projection.RIGID) {
 								this.rigids.add(poolElementStructurePiece);
 							}
-
+	
 							for(JigsawJunction jigsawJunction : poolElementStructurePiece.getJunctions()) {
 								int k = jigsawJunction.getSourceX();
 								int l = jigsawJunction.getSourceZ();
@@ -65,8 +64,6 @@ public class Beardifier implements DensityFunction.SimpleFunction {
 					}
 				}
 			});
-		}
-
 		this.pieceIterator = this.rigids.iterator();
 		this.junctionIterator = this.junctions.iterator();
 	}

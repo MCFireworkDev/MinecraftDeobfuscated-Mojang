@@ -51,7 +51,9 @@ public class Blender {
 			return biomeResolver;
 		}
 	};
-	private static final NormalNoise SHIFT_NOISE = NormalNoise.create(new XoroshiroRandomSource(42L), BuiltinRegistries.NOISE.getOrThrow(Noises.SHIFT));
+	private static final NormalNoise SHIFT_NOISE = NormalNoise.create(
+		new XoroshiroRandomSource(42L), (NormalNoise.NoiseParameters)BuiltinRegistries.NOISE.getOrThrow(Noises.SHIFT)
+	);
 	private static final int HEIGHT_BLENDING_RANGE_CELLS = QuartPos.fromSection(7) - 1;
 	private static final int HEIGHT_BLENDING_RANGE_CHUNKS = QuartPos.toSection(HEIGHT_BLENDING_RANGE_CELLS + 3);
 	private static final int DENSITY_BLENDING_RANGE_CELLS = 2;

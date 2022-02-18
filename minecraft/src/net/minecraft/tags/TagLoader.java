@@ -170,7 +170,7 @@ public class TagLoader<T> {
 									collection -> LOGGER.error(
 											"Couldn't load tag {} as it is missing following references: {}",
 											resourceLocationx,
-											collection.stream().map(Objects::toString).collect(Collectors.joining(","))
+											collection.stream().map(Objects::toString).collect(Collectors.joining(", "))
 										)
 								)
 								.ifRight(tag -> map2.put(resourceLocationx, tag))
