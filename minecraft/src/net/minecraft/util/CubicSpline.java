@@ -23,6 +23,8 @@ public interface CubicSpline<C> extends ToFloatFunction<C> {
 
 	float max();
 
+	CubicSpline<C> mapAll(CubicSpline.CoordinateVisitor<C> coordinateVisitor);
+
 	static <C> Codec<CubicSpline<C>> codec(Codec<ToFloatFunction<C>> codec) {
 		MutableObject<Codec<CubicSpline<C>>> mutableObject = new MutableObject<>();
 
@@ -146,6 +148,15 @@ public interface CubicSpline<C> extends ToFloatFunction<C> {
 		public float max() {
 			return this.value;
 		}
+
+		@Override
+		public CubicSpline<C> mapAll(CubicSpline.CoordinateVisitor<C> coordinateVisitor) {
+			return this;
+		}
+	}
+
+	public interface CoordinateVisitor<C> {
+		ToFloatFunction<C> visit(ToFloatFunction<C> toFloatFunction);
 	}
 
 	@VisibleForDebug
@@ -220,6 +231,16 @@ public interface CubicSpline<C> extends ToFloatFunction<C> {
 		@Override
 		public float max() {
 			return (float)this.values().stream().mapToDouble(CubicSpline::max).max().orElseThrow();
+		}
+
+		@Override
+		public CubicSpline<C> mapAll(CubicSpline.CoordinateVisitor<C> coordinateVisitor) {
+			return new CubicSpline.Multipoint<>(
+				coordinateVisitor.visit(this.coordinate),
+				this.locations,
+				this.values().stream().map(cubicSpline -> cubicSpline.mapAll(coordinateVisitor)).toList(),
+				this.derivatives
+			);
 		}
 	}
 }
