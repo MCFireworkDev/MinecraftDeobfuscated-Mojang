@@ -87,14 +87,9 @@ public class ResourceOrTagLocationArgument<T> implements ArgumentType<ResourceOr
 	@Override
 	public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> commandContext, SuggestionsBuilder suggestionsBuilder) {
 		Object var4 = commandContext.getSource();
-		if (var4 instanceof SharedSuggestionProvider sharedSuggestionProvider) {
-			sharedSuggestionProvider.registryAccess().registry(this.registryKey).ifPresent(registry -> {
-				SharedSuggestionProvider.suggestResource(registry.getTagNames().map(TagKey::location), suggestionsBuilder, "#");
-				SharedSuggestionProvider.suggestResource(registry.keySet(), suggestionsBuilder);
-			});
-		}
-
-		return suggestionsBuilder.buildFuture();
+		return var4 instanceof SharedSuggestionProvider sharedSuggestionProvider
+			? sharedSuggestionProvider.suggestRegistryElements(this.registryKey, SharedSuggestionProvider.ElementSuggestionType.ALL, suggestionsBuilder, commandContext)
+			: suggestionsBuilder.buildFuture();
 	}
 
 	@Override

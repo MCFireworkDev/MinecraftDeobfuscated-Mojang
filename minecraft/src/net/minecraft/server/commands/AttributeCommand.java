@@ -9,14 +9,11 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.Dynamic2CommandExceptionType;
 import com.mojang.brigadier.exceptions.Dynamic3CommandExceptionType;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import java.util.UUID;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.ResourceKeyArgument;
 import net.minecraft.commands.arguments.UuidArgument;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -28,9 +25,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
 public class AttributeCommand {
-	private static final SuggestionProvider<CommandSourceStack> AVAILABLE_ATTRIBUTES = (commandContext, suggestionsBuilder) -> SharedSuggestionProvider.suggestResource(
-			Registry.ATTRIBUTE.keySet(), suggestionsBuilder
-		);
 	private static final DynamicCommandExceptionType ERROR_NOT_LIVING_ENTITY = new DynamicCommandExceptionType(
 		object -> new TranslatableComponent("commands.attribute.failed.entity", object)
 	);
@@ -51,15 +45,14 @@ public class AttributeCommand {
 				.then(
 					Commands.argument("target", EntityArgument.entity())
 						.then(
-							Commands.argument("attribute", ResourceLocationArgument.id())
-								.suggests(AVAILABLE_ATTRIBUTES)
+							Commands.argument("attribute", ResourceKeyArgument.key(Registry.ATTRIBUTE_REGISTRY))
 								.then(
 									Commands.literal("get")
 										.executes(
 											commandContext -> getAttributeValue(
 													commandContext.getSource(),
 													EntityArgument.getEntity(commandContext, "target"),
-													ResourceLocationArgument.getAttribute(commandContext, "attribute"),
+													ResourceKeyArgument.getAttribute(commandContext, "attribute"),
 													1.0
 												)
 										)
@@ -69,7 +62,7 @@ public class AttributeCommand {
 													commandContext -> getAttributeValue(
 															commandContext.getSource(),
 															EntityArgument.getEntity(commandContext, "target"),
-															ResourceLocationArgument.getAttribute(commandContext, "attribute"),
+															ResourceKeyArgument.getAttribute(commandContext, "attribute"),
 															DoubleArgumentType.getDouble(commandContext, "scale")
 														)
 												)
@@ -85,7 +78,7 @@ public class AttributeCommand {
 															commandContext -> setAttributeBase(
 																	commandContext.getSource(),
 																	EntityArgument.getEntity(commandContext, "target"),
-																	ResourceLocationArgument.getAttribute(commandContext, "attribute"),
+																	ResourceKeyArgument.getAttribute(commandContext, "attribute"),
 																	DoubleArgumentType.getDouble(commandContext, "value")
 																)
 														)
@@ -97,7 +90,7 @@ public class AttributeCommand {
 													commandContext -> getAttributeBase(
 															commandContext.getSource(),
 															EntityArgument.getEntity(commandContext, "target"),
-															ResourceLocationArgument.getAttribute(commandContext, "attribute"),
+															ResourceKeyArgument.getAttribute(commandContext, "attribute"),
 															1.0
 														)
 												)
@@ -107,7 +100,7 @@ public class AttributeCommand {
 															commandContext -> getAttributeBase(
 																	commandContext.getSource(),
 																	EntityArgument.getEntity(commandContext, "target"),
-																	ResourceLocationArgument.getAttribute(commandContext, "attribute"),
+																	ResourceKeyArgument.getAttribute(commandContext, "attribute"),
 																	DoubleArgumentType.getDouble(commandContext, "scale")
 																)
 														)
@@ -130,7 +123,7 @@ public class AttributeCommand {
 																							commandContext -> addModifier(
 																									commandContext.getSource(),
 																									EntityArgument.getEntity(commandContext, "target"),
-																									ResourceLocationArgument.getAttribute(commandContext, "attribute"),
+																									ResourceKeyArgument.getAttribute(commandContext, "attribute"),
 																									UuidArgument.getUuid(commandContext, "uuid"),
 																									StringArgumentType.getString(commandContext, "name"),
 																									DoubleArgumentType.getDouble(commandContext, "value"),
@@ -144,7 +137,7 @@ public class AttributeCommand {
 																						commandContext -> addModifier(
 																								commandContext.getSource(),
 																								EntityArgument.getEntity(commandContext, "target"),
-																								ResourceLocationArgument.getAttribute(commandContext, "attribute"),
+																								ResourceKeyArgument.getAttribute(commandContext, "attribute"),
 																								UuidArgument.getUuid(commandContext, "uuid"),
 																								StringArgumentType.getString(commandContext, "name"),
 																								DoubleArgumentType.getDouble(commandContext, "value"),
@@ -158,7 +151,7 @@ public class AttributeCommand {
 																					commandContext -> addModifier(
 																							commandContext.getSource(),
 																							EntityArgument.getEntity(commandContext, "target"),
-																							ResourceLocationArgument.getAttribute(commandContext, "attribute"),
+																							ResourceKeyArgument.getAttribute(commandContext, "attribute"),
 																							UuidArgument.getUuid(commandContext, "uuid"),
 																							StringArgumentType.getString(commandContext, "name"),
 																							DoubleArgumentType.getDouble(commandContext, "value"),
@@ -178,7 +171,7 @@ public class AttributeCommand {
 															commandContext -> removeModifier(
 																	commandContext.getSource(),
 																	EntityArgument.getEntity(commandContext, "target"),
-																	ResourceLocationArgument.getAttribute(commandContext, "attribute"),
+																	ResourceKeyArgument.getAttribute(commandContext, "attribute"),
 																	UuidArgument.getUuid(commandContext, "uuid")
 																)
 														)
@@ -194,7 +187,7 @@ public class AttributeCommand {
 																	commandContext -> getAttributeModifier(
 																			commandContext.getSource(),
 																			EntityArgument.getEntity(commandContext, "target"),
-																			ResourceLocationArgument.getAttribute(commandContext, "attribute"),
+																			ResourceKeyArgument.getAttribute(commandContext, "attribute"),
 																			UuidArgument.getUuid(commandContext, "uuid"),
 																			1.0
 																		)
@@ -205,7 +198,7 @@ public class AttributeCommand {
 																			commandContext -> getAttributeModifier(
 																					commandContext.getSource(),
 																					EntityArgument.getEntity(commandContext, "target"),
-																					ResourceLocationArgument.getAttribute(commandContext, "attribute"),
+																					ResourceKeyArgument.getAttribute(commandContext, "attribute"),
 																					UuidArgument.getUuid(commandContext, "uuid"),
 																					DoubleArgumentType.getDouble(commandContext, "scale")
 																				)
