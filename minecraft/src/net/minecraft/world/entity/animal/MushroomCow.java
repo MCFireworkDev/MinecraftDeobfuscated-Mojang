@@ -205,7 +205,7 @@ public class MushroomCow extends Cow implements Shearable {
 		super.addAdditionalSaveData(compoundTag);
 		compoundTag.putString("Type", this.getMushroomType().type);
 		if (this.effect != null) {
-			compoundTag.putByte("EffectId", (byte)MobEffect.getId(this.effect));
+			compoundTag.putInt("EffectId", MobEffect.getId(this.effect));
 			compoundTag.putInt("EffectDuration", this.effectDuration);
 		}
 	}
@@ -215,7 +215,7 @@ public class MushroomCow extends Cow implements Shearable {
 		super.readAdditionalSaveData(compoundTag);
 		this.setMushroomType(MushroomCow.MushroomType.byType(compoundTag.getString("Type")));
 		if (compoundTag.contains("EffectId", 1)) {
-			this.effect = MobEffect.byId(compoundTag.getByte("EffectId"));
+			this.effect = MobEffect.byId(compoundTag.getInt("EffectId"));
 		}
 
 		if (compoundTag.contains("EffectDuration", 3)) {

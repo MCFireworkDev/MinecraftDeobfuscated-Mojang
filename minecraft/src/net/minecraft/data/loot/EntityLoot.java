@@ -307,6 +307,7 @@ public class EntityLoot implements Consumer<BiConsumer<ResourceLocation, LootTab
 				)
 		);
 		this.add(EntityType.FOX, LootTable.lootTable());
+		this.add(EntityType.FROG, LootTable.lootTable());
 		this.add(
 			EntityType.GHAST,
 			LootTable.lootTable()
@@ -822,6 +823,7 @@ public class EntityLoot implements Consumer<BiConsumer<ResourceLocation, LootTab
 						)
 				)
 		);
+		this.add(EntityType.TADPOLE, LootTable.lootTable());
 		this.add(
 			EntityType.TRADER_LLAMA,
 			LootTable.lootTable()

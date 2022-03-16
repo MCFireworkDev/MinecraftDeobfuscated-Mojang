@@ -856,7 +856,7 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 		} else {
 			double d = 70.0;
 			if (bl) {
-				d = this.minecraft.options.fov;
+				d = (double)((Integer)this.minecraft.options.fov().get()).intValue();
 				d *= (double)Mth.lerp(f, this.oldFov, this.fov);
 			}
 
@@ -1225,7 +1225,11 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 			RenderSystem.setInverseViewRotationMatrix(matrix3f);
 		}
 
-		this.minecraft.levelRenderer.prepareCullFrustum(poseStack, camera.getPosition(), this.getProjectionMatrix(Math.max(d, this.minecraft.options.fov)));
+		this.minecraft
+			.levelRenderer
+			.prepareCullFrustum(
+				poseStack, camera.getPosition(), this.getProjectionMatrix(Math.max(d, (double)((Integer)this.minecraft.options.fov().get()).intValue()))
+			);
 		this.minecraft.levelRenderer.renderLevel(poseStack, f, l, bl, camera, this, this.lightTexture, matrix4f);
 		this.minecraft.getProfiler().popPush("hand");
 		if (this.renderHand) {

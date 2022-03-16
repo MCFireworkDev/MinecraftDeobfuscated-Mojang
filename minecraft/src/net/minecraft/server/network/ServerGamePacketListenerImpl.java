@@ -43,6 +43,7 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketUtils;
+import net.minecraft.network.protocol.game.ClientboundBlockChangedAckPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundChatPacket;
 import net.minecraft.network.protocol.game.ClientboundCommandSuggestionsPacket;
@@ -132,7 +133,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.BaseCommandBlock;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
@@ -158,10 +158,13 @@ import org.slf4j.Logger;
 public class ServerGamePacketListenerImpl implements ServerPlayerConnection, ServerGamePacketListener {
 	static final Logger LOGGER = LogUtils.getLogger();
 	private static final int LATENCY_CHECK_INTERVAL = 15000;
+	public static final double MAX_INTERACTION_DISTANCE = Mth.square(6.0);
+	private static final int NO_BLOCK_UPDATES_TO_ACK = -1;
 	public final Connection connection;
 	private final MinecraftServer server;
 	public ServerPlayer player;
 	private int tickCount;
+	private int ackBlockChangesUpTo = -1;
 	private long keepAliveTime;
 	private boolean keepAlivePending;
 	private long keepAliveChallenge;
@@ -203,6 +206,11 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
 	}
 
 	public void tick() {
+		if (this.ackBlockChangesUpTo > -1) {
+			this.send(new ClientboundBlockChangedAckPacket(this.ackBlockChangesUpTo));
+			this.ackBlockChangesUpTo = -1;
+		}
+
 		this.resetPosition();
 		this.player.xo = this.player.getX();
 		this.player.yo = this.player.getY();
@@ -995,7 +1003,12 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
 			case START_DESTROY_BLOCK:
 			case ABORT_DESTROY_BLOCK:
 			case STOP_DESTROY_BLOCK:
-				this.player.gameMode.handleBlockBreakAction(blockPos, action, serverboundPlayerActionPacket.getDirection(), this.player.level.getMaxBuildHeight());
+				this.player
+					.gameMode
+					.handleBlockBreakAction(
+						blockPos, action, serverboundPlayerActionPacket.getDirection(), this.player.level.getMaxBuildHeight(), serverboundPlayerActionPacket.getSequence()
+					);
+				this.player.connection.ackBlockChangesUpTo(serverboundPlayerActionPacket.getSequence());
 				return;
 			default:
 				throw new IllegalArgumentException("Invalid player action");
@@ -1014,17 +1027,18 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
 	@Override
 	public void handleUseItemOn(ServerboundUseItemOnPacket serverboundUseItemOnPacket) {
 		PacketUtils.ensureRunningOnSameThread(serverboundUseItemOnPacket, this, this.player.getLevel());
+		this.player.connection.ackBlockChangesUpTo(serverboundUseItemOnPacket.getSequence());
 		ServerLevel serverLevel = this.player.getLevel();
 		InteractionHand interactionHand = serverboundUseItemOnPacket.getHand();
 		ItemStack itemStack = this.player.getItemInHand(interactionHand);
 		BlockHitResult blockHitResult = serverboundUseItemOnPacket.getHitResult();
 		Vec3 vec3 = blockHitResult.getLocation();
 		BlockPos blockPos = blockHitResult.getBlockPos();
-		Vec3 vec32 = vec3.subtract(Vec3.atCenterOf(blockPos));
-		if (this.player.level.getServer() != null
-			&& this.player.chunkPosition().getChessboardDistance(new ChunkPos(blockPos)) < this.player.level.getServer().getPlayerList().getViewDistance()) {
+		Vec3 vec32 = Vec3.atCenterOf(blockPos);
+		if (!(this.player.getEyePosition().distanceToSqr(vec32) > MAX_INTERACTION_DISTANCE)) {
+			Vec3 vec33 = vec3.subtract(vec32);
 			double d = 1.0000001;
-			if (Math.abs(vec32.x()) < 1.0000001 && Math.abs(vec32.y()) < 1.0000001 && Math.abs(vec32.z()) < 1.0000001) {
+			if (Math.abs(vec33.x()) < 1.0000001 && Math.abs(vec33.y()) < 1.0000001 && Math.abs(vec33.z()) < 1.0000001) {
 				Direction direction = blockHitResult.getDirection();
 				this.player.resetLastActionTime();
 				int i = this.player.level.getMaxBuildHeight();
@@ -1048,21 +1062,15 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
 				this.player.connection.send(new ClientboundBlockUpdatePacket(serverLevel, blockPos));
 				this.player.connection.send(new ClientboundBlockUpdatePacket(serverLevel, blockPos.relative(direction)));
 			} else {
-				LOGGER.warn("Ignoring UseItemOnPacket from {}: Location {} too far away from hit block {}.", this.player.getGameProfile().getName(), vec3, blockPos);
+				LOGGER.warn("Rejecting UseItemOnPacket from {}: Location {} too far away from hit block {}.", this.player.getGameProfile().getName(), vec3, blockPos);
 			}
-		} else {
-			LOGGER.warn(
-				"Ignoring UseItemOnPacket from {}: hit position {} too far away from player {}.",
-				this.player.getGameProfile().getName(),
-				blockPos,
-				this.player.blockPosition()
-			);
 		}
 	}
 
 	@Override
 	public void handleUseItem(ServerboundUseItemPacket serverboundUseItemPacket) {
 		PacketUtils.ensureRunningOnSameThread(serverboundUseItemPacket, this, this.player.getLevel());
+		this.ackBlockChangesUpTo(serverboundUseItemPacket.getSequence());
 		ServerLevel serverLevel = this.player.getLevel();
 		InteractionHand interactionHand = serverboundUseItemPacket.getHand();
 		ItemStack itemStack = this.player.getItemInHand(interactionHand);
@@ -1126,6 +1134,14 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
 		if (this.isSingleplayerOwner()) {
 			LOGGER.info("Stopping singleplayer server as player logged out");
 			this.server.halt(false);
+		}
+	}
+
+	public void ackBlockChangesUpTo(int i) {
+		if (i < 0) {
+			throw new IllegalArgumentException("Expected packet sequence nr >= 0");
+		} else {
+			this.ackBlockChangesUpTo = Math.max(i, this.ackBlockChangesUpTo);
 		}
 	}
 
@@ -1279,8 +1295,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
 				return;
 			}
 
-			double d = 36.0;
-			if (this.player.distanceToSqr(entity) < 36.0) {
+			if (entity.distanceToSqr(this.player.getEyePosition()) < MAX_INTERACTION_DISTANCE) {
 				serverboundInteractPacket.dispatch(
 					new ServerboundInteractPacket.Handler() {
 						private void performInteraction(InteractionHand interactionHand, ServerGamePacketListenerImpl.EntityInteraction entityInteraction) {

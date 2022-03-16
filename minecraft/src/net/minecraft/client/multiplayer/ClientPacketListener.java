@@ -76,6 +76,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.searchtree.MutableSearchTree;
 import net.minecraft.client.searchtree.SearchRegistry;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -103,7 +104,7 @@ import net.minecraft.network.protocol.game.ClientboundAddPlayerPacket;
 import net.minecraft.network.protocol.game.ClientboundAddVibrationSignalPacket;
 import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
 import net.minecraft.network.protocol.game.ClientboundAwardStatsPacket;
-import net.minecraft.network.protocol.game.ClientboundBlockBreakAckPacket;
+import net.minecraft.network.protocol.game.ClientboundBlockChangedAckPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockEventPacket;
@@ -630,7 +631,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 	public void handleChunkBlocksUpdate(ClientboundSectionBlocksUpdatePacket clientboundSectionBlocksUpdatePacket) {
 		PacketUtils.ensureRunningOnSameThread(clientboundSectionBlocksUpdatePacket, this, this.minecraft);
 		int i = 19 | (clientboundSectionBlocksUpdatePacket.shouldSuppressLightUpdates() ? 128 : 0);
-		clientboundSectionBlocksUpdatePacket.runUpdates((blockPos, blockState) -> this.level.setBlock(blockPos, blockState, i));
+		clientboundSectionBlocksUpdatePacket.runUpdates((blockPos, blockState) -> this.level.setServerVerifiedBlockState(blockPos, blockState, i));
 	}
 
 	@Override
@@ -708,7 +709,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 	@Override
 	public void handleBlockUpdate(ClientboundBlockUpdatePacket clientboundBlockUpdatePacket) {
 		PacketUtils.ensureRunningOnSameThread(clientboundBlockUpdatePacket, this, this.minecraft);
-		this.level.setKnownState(clientboundBlockUpdatePacket.getPos(), clientboundBlockUpdatePacket.getBlockState());
+		this.level.setServerVerifiedBlockState(clientboundBlockUpdatePacket.getPos(), clientboundBlockUpdatePacket.getBlockState(), 19);
 	}
 
 	@Override
@@ -819,7 +820,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 	@Override
 	public void handleAddMob(ClientboundAddMobPacket clientboundAddMobPacket) {
 		PacketUtils.ensureRunningOnSameThread(clientboundAddMobPacket, this, this.minecraft);
-		LivingEntity livingEntity = (LivingEntity)EntityType.create(clientboundAddMobPacket.getType(), this.level);
+		LivingEntity livingEntity = (LivingEntity)EntityType.create(this.level, clientboundAddMobPacket.getType());
 		if (livingEntity != null) {
 			livingEntity.recreateFromPacket(clientboundAddMobPacket);
 			this.level.putNonPlayerEntity(clientboundAddMobPacket.getId(), livingEntity);
@@ -1301,7 +1302,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 	@Override
 	public void handleCommands(ClientboundCommandsPacket clientboundCommandsPacket) {
 		PacketUtils.ensureRunningOnSameThread(clientboundCommandsPacket, this, this.minecraft);
-		this.commands = new CommandDispatcher<>(clientboundCommandsPacket.getRoot());
+		this.commands = new CommandDispatcher<>(clientboundCommandsPacket.getRoot(new CommandBuildContext(this.registryAccess)));
 	}
 
 	@Override
@@ -1402,7 +1403,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		PacketUtils.ensureRunningOnSameThread(clientboundUpdateMobEffectPacket, this, this.minecraft);
 		Entity entity = this.level.getEntity(clientboundUpdateMobEffectPacket.getEntityId());
 		if (entity instanceof LivingEntity) {
-			MobEffect mobEffect = MobEffect.byId(clientboundUpdateMobEffectPacket.getEffectId());
+			MobEffect mobEffect = clientboundUpdateMobEffectPacket.getEffect();
 			if (mobEffect != null) {
 				MobEffectInstance mobEffectInstance = new MobEffectInstance(
 					mobEffect,
@@ -2352,17 +2353,9 @@ public class ClientPacketListener implements ClientGamePacketListener {
 	}
 
 	@Override
-	public void handleBlockBreakAck(ClientboundBlockBreakAckPacket clientboundBlockBreakAckPacket) {
-		PacketUtils.ensureRunningOnSameThread(clientboundBlockBreakAckPacket, this, this.minecraft);
-		this.minecraft
-			.gameMode
-			.handleBlockBreakAck(
-				this.level,
-				clientboundBlockBreakAckPacket.pos(),
-				clientboundBlockBreakAckPacket.state(),
-				clientboundBlockBreakAckPacket.action(),
-				clientboundBlockBreakAckPacket.allGood()
-			);
+	public void handleBlockChangedAck(ClientboundBlockChangedAckPacket clientboundBlockChangedAckPacket) {
+		PacketUtils.ensureRunningOnSameThread(clientboundBlockChangedAckPacket, this, this.minecraft);
+		this.level.handleBlockChangedAck(clientboundBlockChangedAckPacket.sequence());
 	}
 
 	private void readSectionList(

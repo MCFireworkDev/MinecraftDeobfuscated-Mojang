@@ -225,6 +225,8 @@ public class Boat extends Entity {
 				return Items.ACACIA_BOAT;
 			case DARK_OAK:
 				return Items.DARK_OAK_BOAT;
+			case MANGROVE:
+				return Items.MANGROVE_BOAT;
 		}
 	}
 
@@ -878,7 +880,8 @@ public class Boat extends Entity {
 		BIRCH(Blocks.BIRCH_PLANKS, "birch"),
 		JUNGLE(Blocks.JUNGLE_PLANKS, "jungle"),
 		ACACIA(Blocks.ACACIA_PLANKS, "acacia"),
-		DARK_OAK(Blocks.DARK_OAK_PLANKS, "dark_oak");
+		DARK_OAK(Blocks.DARK_OAK_PLANKS, "dark_oak"),
+		MANGROVE(Blocks.MANGROVE_PLANKS, "mangrove");
 
 		private final String name;
 		private final Block planks;

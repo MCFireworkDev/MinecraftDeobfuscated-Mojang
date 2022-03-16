@@ -18,12 +18,11 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.NoiseColumn;
-import net.minecraft.world.level.StructureFeatureManager;
+import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.biome.Biomes;
-import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.biome.FixedBiomeSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -66,16 +65,11 @@ public class DebugLevelSource extends ChunkGenerator {
 	}
 
 	@Override
-	public ChunkGenerator withSeed(long l) {
-		return this;
+	public void buildSurface(WorldGenRegion worldGenRegion, StructureManager structureManager, RandomState randomState, ChunkAccess chunkAccess) {
 	}
 
 	@Override
-	public void buildSurface(WorldGenRegion worldGenRegion, StructureFeatureManager structureFeatureManager, ChunkAccess chunkAccess) {
-	}
-
-	@Override
-	public void applyBiomeDecoration(WorldGenLevel worldGenLevel, ChunkAccess chunkAccess, StructureFeatureManager structureFeatureManager) {
+	public void applyBiomeDecoration(WorldGenLevel worldGenLevel, ChunkAccess chunkAccess, StructureManager structureManager) {
 		BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
 		ChunkPos chunkPos = chunkAccess.getPos();
 		int i = chunkPos.x;
@@ -94,23 +88,23 @@ public class DebugLevelSource extends ChunkGenerator {
 
 	@Override
 	public CompletableFuture<ChunkAccess> fillFromNoise(
-		Executor executor, Blender blender, StructureFeatureManager structureFeatureManager, ChunkAccess chunkAccess
+		Executor executor, Blender blender, RandomState randomState, StructureManager structureManager, ChunkAccess chunkAccess
 	) {
 		return CompletableFuture.completedFuture(chunkAccess);
 	}
 
 	@Override
-	public int getBaseHeight(int i, int j, Heightmap.Types types, LevelHeightAccessor levelHeightAccessor) {
+	public int getBaseHeight(int i, int j, Heightmap.Types types, LevelHeightAccessor levelHeightAccessor, RandomState randomState) {
 		return 0;
 	}
 
 	@Override
-	public NoiseColumn getBaseColumn(int i, int j, LevelHeightAccessor levelHeightAccessor) {
+	public NoiseColumn getBaseColumn(int i, int j, LevelHeightAccessor levelHeightAccessor, RandomState randomState) {
 		return new NoiseColumn(0, new BlockState[0]);
 	}
 
 	@Override
-	public void addDebugScreenInfo(List<String> list, BlockPos blockPos) {
+	public void addDebugScreenInfo(List<String> list, RandomState randomState, BlockPos blockPos) {
 	}
 
 	public static BlockState getBlockStateFor(int i, int j) {
@@ -130,16 +124,12 @@ public class DebugLevelSource extends ChunkGenerator {
 	}
 
 	@Override
-	public Climate.Sampler climateSampler() {
-		return Climate.empty();
-	}
-
-	@Override
 	public void applyCarvers(
 		WorldGenRegion worldGenRegion,
 		long l,
+		RandomState randomState,
 		BiomeManager biomeManager,
-		StructureFeatureManager structureFeatureManager,
+		StructureManager structureManager,
 		ChunkAccess chunkAccess,
 		GenerationStep.Carving carving
 	) {

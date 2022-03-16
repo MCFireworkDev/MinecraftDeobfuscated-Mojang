@@ -85,8 +85,11 @@ import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.level.chunk.storage.ChunkStorage;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
+import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
+import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.phys.Vec3;
@@ -114,6 +117,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 	private final ThreadedLevelLightEngine lightEngine;
 	private final BlockableEventLoop<Runnable> mainThreadExecutor;
 	private ChunkGenerator generator;
+	private RandomState randomState;
 	private final Supplier<DimensionDataStorage> overworldDataStorage;
 	private final PoiManager poiManager;
 	final LongSet toDrop = new LongOpenHashSet();
@@ -125,7 +129,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 	private final ChunkStatusUpdateListener chunkStatusListener;
 	private final ChunkMap.DistanceManager distanceManager;
 	private final AtomicInteger tickingGenerated = new AtomicInteger();
-	private final StructureManager structureManager;
+	private final StructureTemplateManager structureTemplateManager;
 	private final String storageName;
 	private final PlayerMap playerMap = new PlayerMap();
 	private final Int2ObjectMap<ChunkMap.TrackedEntity> entityMap = new Int2ObjectOpenHashMap<>();
@@ -138,7 +142,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 		ServerLevel serverLevel,
 		LevelStorageSource.LevelStorageAccess levelStorageAccess,
 		DataFixer dataFixer,
-		StructureManager structureManager,
+		StructureTemplateManager structureTemplateManager,
 		Executor executor,
 		BlockableEventLoop<Runnable> blockableEventLoop,
 		LightChunkGetter lightChunkGetter,
@@ -150,11 +154,21 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 		boolean bl
 	) {
 		super(levelStorageAccess.getDimensionPath(serverLevel.dimension()).resolve("region"), dataFixer, bl);
-		this.structureManager = structureManager;
+		this.structureTemplateManager = structureTemplateManager;
 		Path path = levelStorageAccess.getDimensionPath(serverLevel.dimension());
 		this.storageName = path.getFileName().toString();
 		this.level = serverLevel;
 		this.generator = chunkGenerator;
+		if (chunkGenerator instanceof NoiseBasedChunkGenerator noiseBasedChunkGenerator) {
+			this.randomState = RandomState.create(
+				(NoiseGeneratorSettings)noiseBasedChunkGenerator.generatorSettings().value(),
+				serverLevel.registryAccess().registryOrThrow(Registry.NOISE_REGISTRY),
+				serverLevel.getSeed()
+			);
+		} else {
+			this.randomState = RandomState.create(serverLevel.registryAccess(), NoiseGeneratorSettings.OVERWORLD, serverLevel.getSeed());
+		}
+
 		this.mainThreadExecutor = blockableEventLoop;
 		ProcessorMailbox<Runnable> processorMailbox = ProcessorMailbox.create(executor, "worldgen");
 		ProcessorHandle<Runnable> processorHandle = ProcessorHandle.of("main", blockableEventLoop::tell);
@@ -175,6 +189,10 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 
 	protected ChunkGenerator generator() {
 		return this.generator;
+	}
+
+	protected RandomState randomState() {
+		return this.randomState;
 	}
 
 	public void debugReloadGenerator() {
@@ -541,7 +559,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 			Optional<ChunkAccess> optional = ((Either)chunkHolder.getOrScheduleFuture(chunkStatus.getParent(), this).getNow(ChunkHolder.UNLOADED_CHUNK)).left();
 			if (optional.isPresent() && ((ChunkAccess)optional.get()).getStatus().isOrAfter(chunkStatus)) {
 				CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> completableFuture = chunkStatus.load(
-					this.level, this.structureManager, this.lightEngine, chunkAccess -> this.protoChunkToFullChunk(chunkHolder), (ChunkAccess)optional.get()
+					this.level, this.structureTemplateManager, this.lightEngine, chunkAccess -> this.protoChunkToFullChunk(chunkHolder), (ChunkAccess)optional.get()
 				);
 				this.progressListener.onStatusChange(chunkPos, chunkStatus);
 				return completableFuture;
@@ -603,7 +621,14 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 					list -> {
 						try {
 							CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> completableFuturexx = chunkStatus.generate(
-								executor, this.level, this.generator, this.structureManager, this.lightEngine, chunkAccess -> this.protoChunkToFullChunk(chunkHolder), list, false
+								executor,
+								this.level,
+								this.generator,
+								this.structureTemplateManager,
+								this.lightEngine,
+								chunkAccess -> this.protoChunkToFullChunk(chunkHolder),
+								list,
+								false
 							);
 							this.progressListener.onStatusChange(chunkPos, chunkStatus);
 							return completableFuturexx;
@@ -633,7 +658,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 		this.mainThreadExecutor
 			.tell(
 				Util.name(
-					() -> this.distanceManager.removeTicket(TicketType.LIGHT, chunkPos, 33 + ChunkStatus.getDistance(ChunkStatus.LIGHT), chunkPos),
+					(Runnable)(() -> this.distanceManager.removeTicket(TicketType.LIGHT, chunkPos, 33 + ChunkStatus.getDistance(ChunkStatus.LIGHT), chunkPos)),
 					() -> "release light ticket " + chunkPos
 				)
 			);
@@ -1309,7 +1334,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 
 		public void updatePlayer(ServerPlayer serverPlayer) {
 			if (serverPlayer != this.entity) {
-				Vec3 vec3 = serverPlayer.position().subtract(this.serverEntity.sentPos());
+				Vec3 vec3 = serverPlayer.position().subtract(this.entity.position());
 				double d = (double)Math.min(this.getEffectiveRange(), (ChunkMap.this.viewDistance - 1) * 16);
 				double e = vec3.x * vec3.x + vec3.z * vec3.z;
 				double f = d * d;

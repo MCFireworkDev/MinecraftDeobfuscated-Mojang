@@ -222,8 +222,9 @@ public class Vex extends Monster {
 
 		@Override
 		public boolean canUse() {
-			if (Vex.this.getTarget() != null && !Vex.this.getMoveControl().hasWanted() && Vex.this.random.nextInt(reducedTickDelay(7)) == 0) {
-				return Vex.this.distanceToSqr(Vex.this.getTarget()) > 4.0;
+			LivingEntity livingEntity = Vex.this.getTarget();
+			if (livingEntity != null && livingEntity.isAlive() && !Vex.this.getMoveControl().hasWanted() && Vex.this.random.nextInt(reducedTickDelay(7)) == 0) {
+				return Vex.this.distanceToSqr(livingEntity) > 4.0;
 			} else {
 				return false;
 			}

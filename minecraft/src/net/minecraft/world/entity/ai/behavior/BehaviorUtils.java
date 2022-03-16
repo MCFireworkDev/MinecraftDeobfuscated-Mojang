@@ -177,4 +177,8 @@ public class BehaviorUtils {
 
 		return vec3;
 	}
+
+	public static boolean isBreeding(LivingEntity livingEntity) {
+		return livingEntity.getBrain().hasMemoryValue(MemoryModuleType.BREED_TARGET);
+	}
 }
