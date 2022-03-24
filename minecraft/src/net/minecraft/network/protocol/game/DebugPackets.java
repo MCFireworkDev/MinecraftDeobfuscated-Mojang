@@ -27,6 +27,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.Brain;
@@ -39,6 +40,7 @@ import net.minecraft.world.entity.ai.memory.ExpirableValue;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
 import net.minecraft.world.entity.animal.Bee;
+import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.npc.InventoryCarrier;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
@@ -53,6 +55,7 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.gameevent.GameEventListener;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
 public class DebugPackets {
@@ -114,7 +117,7 @@ public class DebugPackets {
 	public static void sendBeeInfo(Bee bee) {
 	}
 
-	public static void sendGameEventInfo(Level level, GameEvent gameEvent, BlockPos blockPos) {
+	public static void sendGameEventInfo(Level level, GameEvent gameEvent, Vec3 vec3) {
 	}
 
 	public static void sendGameEventListenerInfo(Level level, GameEventListener gameEventListener) {
@@ -146,6 +149,13 @@ public class DebugPackets {
 			friendlyByteBuf.writeBoolean(bl);
 		} else {
 			friendlyByteBuf.writeBoolean(false);
+		}
+
+		if (livingEntity.getType() == EntityType.WARDEN) {
+			Warden warden = (Warden)livingEntity;
+			friendlyByteBuf.writeInt(warden.getClientAngerLevel());
+		} else {
+			friendlyByteBuf.writeInt(-1);
 		}
 
 		friendlyByteBuf.writeCollection(brain.getActiveActivities(), (friendlyByteBufx, activity) -> friendlyByteBufx.writeUtf(activity.getName()));

@@ -112,9 +112,9 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.HasCustomInventoryScreen;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.PlayerRideableJumping;
-import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.entity.player.Inventory;
@@ -1269,8 +1269,9 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Ser
 				}
 				break;
 			case OPEN_INVENTORY:
-				if (this.player.getVehicle() instanceof AbstractHorse) {
-					((AbstractHorse)this.player.getVehicle()).openInventory(this.player);
+				Entity i = this.player.getVehicle();
+				if (i instanceof HasCustomInventoryScreen hasCustomInventoryScreen) {
+					hasCustomInventoryScreen.openCustomInventoryScreen(this.player);
 				}
 				break;
 			case START_FALL_FLYING:

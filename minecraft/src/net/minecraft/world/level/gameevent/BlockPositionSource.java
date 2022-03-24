@@ -7,25 +7,22 @@ import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 public class BlockPositionSource implements PositionSource {
 	public static final Codec<BlockPositionSource> CODEC = RecordCodecBuilder.create(
-		instance -> instance.group(BlockPos.CODEC.fieldOf("pos").xmap(Optional::of, Optional::get).forGetter(blockPositionSource -> blockPositionSource.pos))
+		instance -> instance.group(BlockPos.CODEC.fieldOf("pos").forGetter(blockPositionSource -> blockPositionSource.pos))
 				.apply(instance, BlockPositionSource::new)
 	);
-	final Optional<BlockPos> pos;
+	final BlockPos pos;
 
 	public BlockPositionSource(BlockPos blockPos) {
-		this(Optional.of(blockPos));
-	}
-
-	public BlockPositionSource(Optional<BlockPos> optional) {
-		this.pos = optional;
+		this.pos = blockPos;
 	}
 
 	@Override
-	public Optional<BlockPos> getPosition(Level level) {
-		return this.pos;
+	public Optional<Vec3> getPosition(Level level) {
+		return Optional.of(Vec3.atCenterOf(this.pos));
 	}
 
 	@Override
@@ -35,11 +32,11 @@ public class BlockPositionSource implements PositionSource {
 
 	public static class Type implements PositionSourceType<BlockPositionSource> {
 		public BlockPositionSource read(FriendlyByteBuf friendlyByteBuf) {
-			return new BlockPositionSource(Optional.of(friendlyByteBuf.readBlockPos()));
+			return new BlockPositionSource(friendlyByteBuf.readBlockPos());
 		}
 
 		public void write(FriendlyByteBuf friendlyByteBuf, BlockPositionSource blockPositionSource) {
-			blockPositionSource.pos.ifPresent(friendlyByteBuf::writeBlockPos);
+			friendlyByteBuf.writeBlockPos(blockPositionSource.pos);
 		}
 
 		@Override
