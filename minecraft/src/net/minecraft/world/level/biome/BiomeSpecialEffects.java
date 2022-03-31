@@ -3,11 +3,8 @@ package net.minecraft.world.level.biome;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
@@ -236,13 +233,7 @@ public class BiomeSpecialEffects {
 		};
 
 		private final String name;
-		public static final Codec<BiomeSpecialEffects.GrassColorModifier> CODEC = StringRepresentable.fromEnum(
-			BiomeSpecialEffects.GrassColorModifier::values, BiomeSpecialEffects.GrassColorModifier::byName
-		);
-		private static final Map<String, BiomeSpecialEffects.GrassColorModifier> BY_NAME = (Map<String, BiomeSpecialEffects.GrassColorModifier>)Arrays.stream(
-				values()
-			)
-			.collect(Collectors.toMap(BiomeSpecialEffects.GrassColorModifier::getName, grassColorModifier -> grassColorModifier));
+		public static final Codec<BiomeSpecialEffects.GrassColorModifier> CODEC = StringRepresentable.fromEnum(BiomeSpecialEffects.GrassColorModifier::values);
 
 		public abstract int modifyColor(double d, double e, int i);
 
@@ -257,10 +248,6 @@ public class BiomeSpecialEffects {
 		@Override
 		public String getSerializedName() {
 			return this.name;
-		}
-
-		public static BiomeSpecialEffects.GrassColorModifier byName(String string) {
-			return (BiomeSpecialEffects.GrassColorModifier)BY_NAME.get(string);
 		}
 	}
 }

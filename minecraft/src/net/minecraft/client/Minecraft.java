@@ -2057,11 +2057,11 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 	}
 
 	public static boolean useFancyGraphics() {
-		return ((GraphicsStatus)instance.options.graphicsMode().get()).getId() >= GraphicsStatus.FANCY.getId();
+		return instance.options.graphicsMode().get().getId() >= GraphicsStatus.FANCY.getId();
 	}
 
 	public static boolean useShaderTransparency() {
-		return !instance.gameRenderer.isPanoramicMode() && ((GraphicsStatus)instance.options.graphicsMode().get()).getId() >= GraphicsStatus.FABULOUS.getId();
+		return !instance.gameRenderer.isPanoramicMode() && instance.options.graphicsMode().get().getId() >= GraphicsStatus.FABULOUS.getId();
 	}
 
 	public static boolean useAmbientOcclusion() {
@@ -2195,7 +2195,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 				}
 			}
 
-			systemReport.setDetail("Graphics mode", ((GraphicsStatus)options.graphicsMode().get()).toString());
+			systemReport.setDetail("Graphics mode", options.graphicsMode().get().toString());
 			systemReport.setDetail("Resource Packs", (Supplier<String>)(() -> {
 				StringBuilder stringBuilder = new StringBuilder();
 

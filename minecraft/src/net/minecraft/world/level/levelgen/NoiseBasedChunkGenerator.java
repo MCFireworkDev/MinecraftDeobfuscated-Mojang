@@ -113,7 +113,12 @@ public final class NoiseBasedChunkGenerator extends ChunkGenerator {
 
 	private NoiseChunk createNoiseChunk(ChunkAccess chunkAccess, StructureManager structureManager, Blender blender, RandomState randomState) {
 		return NoiseChunk.forChunk(
-			chunkAccess, randomState, new Beardifier(structureManager, chunkAccess), (NoiseGeneratorSettings)this.settings.value(), this.globalFluidPicker, blender
+			chunkAccess,
+			randomState,
+			Beardifier.forStructuresInChunk(structureManager, chunkAccess.getPos()),
+			(NoiseGeneratorSettings)this.settings.value(),
+			this.globalFluidPicker,
+			blender
 		);
 	}
 

@@ -6,10 +6,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import it.unimi.dsi.fastutil.longs.Long2FloatLinkedOpenHashMap;
-import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -397,9 +394,7 @@ public final class Biome {
 		RAIN("rain"),
 		SNOW("snow");
 
-		public static final Codec<Biome.Precipitation> CODEC = StringRepresentable.fromEnum(Biome.Precipitation::values, Biome.Precipitation::byName);
-		private static final Map<String, Biome.Precipitation> BY_NAME = (Map<String, Biome.Precipitation>)Arrays.stream(values())
-			.collect(Collectors.toMap(Biome.Precipitation::getName, precipitation -> precipitation));
+		public static final Codec<Biome.Precipitation> CODEC = StringRepresentable.fromEnum(Biome.Precipitation::values);
 		private final String name;
 
 		private Precipitation(String string2) {
@@ -408,10 +403,6 @@ public final class Biome {
 
 		public String getName() {
 			return this.name;
-		}
-
-		public static Biome.Precipitation byName(String string) {
-			return (Biome.Precipitation)BY_NAME.get(string);
 		}
 
 		@Override
@@ -445,11 +436,7 @@ public final class Biome {
 		};
 
 		private final String name;
-		public static final Codec<Biome.TemperatureModifier> CODEC = StringRepresentable.fromEnum(
-			Biome.TemperatureModifier::values, Biome.TemperatureModifier::byName
-		);
-		private static final Map<String, Biome.TemperatureModifier> BY_NAME = (Map<String, Biome.TemperatureModifier>)Arrays.stream(values())
-			.collect(Collectors.toMap(Biome.TemperatureModifier::getName, temperatureModifier -> temperatureModifier));
+		public static final Codec<Biome.TemperatureModifier> CODEC = StringRepresentable.fromEnum(Biome.TemperatureModifier::values);
 
 		public abstract float modifyTemperature(BlockPos blockPos, float f);
 
@@ -464,10 +451,6 @@ public final class Biome {
 		@Override
 		public String getSerializedName() {
 			return this.name;
-		}
-
-		public static Biome.TemperatureModifier byName(String string) {
-			return (Biome.TemperatureModifier)BY_NAME.get(string);
 		}
 	}
 }

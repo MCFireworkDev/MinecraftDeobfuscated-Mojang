@@ -2661,7 +2661,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 	}
 
 	private ParticleStatus calculateParticleLevel(boolean bl) {
-		ParticleStatus particleStatus = (ParticleStatus)this.minecraft.options.particles().get();
+		ParticleStatus particleStatus = this.minecraft.options.particles().get();
 		if (bl && particleStatus == ParticleStatus.MINIMAL && this.level.random.nextInt(10) == 0) {
 			particleStatus = ParticleStatus.DECREASED;
 		}
@@ -3181,6 +3181,9 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 						0.6F + this.level.random.nextFloat() * 0.4F,
 						false
 					);
+				break;
+			case 3008:
+				ParticleUtils.spawnParticlesOnBlockFaces(this.level, blockPos, ParticleTypes.ALLAY_DUST, UniformInt.of(3, 5));
 		}
 	}
 

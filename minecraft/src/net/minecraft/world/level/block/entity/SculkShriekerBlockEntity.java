@@ -59,8 +59,19 @@ public class SculkShriekerBlockEntity extends BlockEntity implements VibrationLi
 
 	@Override
 	public void onSignalReceive(
-		ServerLevel serverLevel, GameEventListener gameEventListener, BlockPos blockPos, GameEvent gameEvent, @Nullable Entity entity, int i
+		ServerLevel serverLevel,
+		GameEventListener gameEventListener,
+		BlockPos blockPos,
+		GameEvent gameEvent,
+		@Nullable Entity entity,
+		@Nullable Entity entity2,
+		int i
 	) {
 		SculkShriekerBlock.shriek(serverLevel, this.getBlockState(), this.getBlockPos());
+	}
+
+	@Override
+	public void onSignalSchedule() {
+		this.setChanged();
 	}
 }

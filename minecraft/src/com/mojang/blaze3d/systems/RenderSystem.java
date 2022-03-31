@@ -747,7 +747,7 @@ public class RenderSystem {
 			runnable.run();
 		} else {
 			OptionInstance<GraphicsStatus> optionInstance = Minecraft.getInstance().options.graphicsMode();
-			GraphicsStatus graphicsStatus = (GraphicsStatus)optionInstance.get();
+			GraphicsStatus graphicsStatus = optionInstance.get();
 			optionInstance.set(GraphicsStatus.FANCY);
 			runnable.run();
 			optionInstance.set(graphicsStatus);
