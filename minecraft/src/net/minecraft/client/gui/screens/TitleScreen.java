@@ -47,7 +47,7 @@ import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.levelgen.presets.WorldPresets;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.LevelSummary;
 import org.slf4j.Logger;
@@ -87,7 +87,7 @@ public class TitleScreen extends Screen {
 	}
 
 	private boolean realmsNotificationsEnabled() {
-		return this.minecraft.options.realmsNotifications().get() && this.realmsNotificationsScreen != null;
+		return this.minecraft.options.realmsNotifications && this.realmsNotificationsScreen != null;
 	}
 
 	@Override
@@ -196,7 +196,7 @@ public class TitleScreen extends Screen {
 			new PlainTextButton(j, this.height - 10, i, 10, COPYRIGHT_TEXT, button -> this.minecraft.setScreen(new WinScreen(false, Runnables.doNothing())), this.font)
 		);
 		this.minecraft.setConnectedToRealms(false);
-		if (this.minecraft.options.realmsNotifications().get() && this.realmsNotificationsScreen == null) {
+		if (this.minecraft.options.realmsNotifications && this.realmsNotificationsScreen == null) {
 			this.realmsNotificationsScreen = new RealmsNotificationsScreen();
 		}
 
@@ -260,25 +260,14 @@ public class TitleScreen extends Screen {
 
 	private void createDemoMenuOptions(int i, int j) {
 		boolean bl = this.checkDemoWorldPresence();
-		this.addRenderableWidget(
-			new Button(
-				this.width / 2 - 100,
-				i,
-				200,
-				20,
-				new TranslatableComponent("menu.playdemo"),
-				button -> {
-					if (bl) {
-						this.minecraft.createWorldOpenFlows().loadLevel(this, "Demo_World");
-					} else {
-						RegistryAccess registryAccess = (RegistryAccess)RegistryAccess.BUILTIN.get();
-						this.minecraft
-							.createWorldOpenFlows()
-							.createFreshLevel("Demo_World", MinecraftServer.DEMO_SETTINGS, registryAccess, WorldPresets.demoSettings(registryAccess));
-					}
-				}
-			)
-		);
+		this.addRenderableWidget(new Button(this.width / 2 - 100, i, 200, 20, new TranslatableComponent("menu.playdemo"), button -> {
+			if (bl) {
+				this.minecraft.loadLevel("Demo_World");
+			} else {
+				RegistryAccess registryAccess = (RegistryAccess)RegistryAccess.BUILTIN.get();
+				this.minecraft.createLevel("Demo_World", MinecraftServer.DEMO_SETTINGS, registryAccess, WorldGenSettings.demoSettings(registryAccess));
+			}
+		}));
 		this.resetDemoButton = this.addRenderableWidget(
 			new Button(
 				this.width / 2 - 100,

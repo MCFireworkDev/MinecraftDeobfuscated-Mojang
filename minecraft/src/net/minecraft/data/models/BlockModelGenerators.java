@@ -46,7 +46,6 @@ import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
-import net.minecraft.world.level.block.MangrovePropaguleBlock;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.BambooLeaves;
 import net.minecraft.world.level.block.state.properties.BellAttachType;
@@ -78,7 +77,6 @@ public class BlockModelGenerators {
 		)
 		.put(Blocks.STONE, BlockModelGenerators::createMirroredCubeGenerator)
 		.put(Blocks.DEEPSLATE, BlockModelGenerators::createMirroredColumnGenerator)
-		.put(Blocks.MUD_BRICKS, BlockModelGenerators::createNorthWestMirroredCubeGenerator)
 		.build();
 	final Map<Block, TexturedModel> texturedModels = ImmutableMap.<Block, TexturedModel>builder()
 		.put(Blocks.SANDSTONE, TexturedModel.TOP_BOTTOM_WITH_WALL.get(Blocks.SANDSTONE))
@@ -177,13 +175,6 @@ public class BlockModelGenerators {
 	) {
 		ResourceLocation resourceLocation2 = ModelTemplates.CUBE_MIRRORED_ALL.create(block, textureMapping, biConsumer);
 		return createRotatedVariant(block, resourceLocation, resourceLocation2);
-	}
-
-	private static BlockStateGenerator createNorthWestMirroredCubeGenerator(
-		Block block, ResourceLocation resourceLocation, TextureMapping textureMapping, BiConsumer<ResourceLocation, Supplier<JsonElement>> biConsumer
-	) {
-		ResourceLocation resourceLocation2 = ModelTemplates.CUBE_NORTH_WEST_MIRRORED_ALL.create(block, textureMapping, biConsumer);
-		return createSimpleBlock(block, resourceLocation2);
 	}
 
 	private static BlockStateGenerator createMirroredColumnGenerator(
@@ -367,9 +358,7 @@ public class BlockModelGenerators {
 		PropertyDispatch.C4<Direction, DoubleBlockHalf, DoorHingeSide, Boolean> c4,
 		DoubleBlockHalf doubleBlockHalf,
 		ResourceLocation resourceLocation,
-		ResourceLocation resourceLocation2,
-		ResourceLocation resourceLocation3,
-		ResourceLocation resourceLocation4
+		ResourceLocation resourceLocation2
 	) {
 		return c4.select(Direction.EAST, doubleBlockHalf, DoorHingeSide.LEFT, false, Variant.variant().with(VariantProperties.MODEL, resourceLocation))
 			.select(
@@ -393,27 +382,27 @@ public class BlockModelGenerators {
 				false,
 				Variant.variant().with(VariantProperties.MODEL, resourceLocation).with(VariantProperties.Y_ROT, VariantProperties.Rotation.R270)
 			)
-			.select(Direction.EAST, doubleBlockHalf, DoorHingeSide.RIGHT, false, Variant.variant().with(VariantProperties.MODEL, resourceLocation3))
+			.select(Direction.EAST, doubleBlockHalf, DoorHingeSide.RIGHT, false, Variant.variant().with(VariantProperties.MODEL, resourceLocation2))
 			.select(
 				Direction.SOUTH,
 				doubleBlockHalf,
 				DoorHingeSide.RIGHT,
 				false,
-				Variant.variant().with(VariantProperties.MODEL, resourceLocation3).with(VariantProperties.Y_ROT, VariantProperties.Rotation.R90)
+				Variant.variant().with(VariantProperties.MODEL, resourceLocation2).with(VariantProperties.Y_ROT, VariantProperties.Rotation.R90)
 			)
 			.select(
 				Direction.WEST,
 				doubleBlockHalf,
 				DoorHingeSide.RIGHT,
 				false,
-				Variant.variant().with(VariantProperties.MODEL, resourceLocation3).with(VariantProperties.Y_ROT, VariantProperties.Rotation.R180)
+				Variant.variant().with(VariantProperties.MODEL, resourceLocation2).with(VariantProperties.Y_ROT, VariantProperties.Rotation.R180)
 			)
 			.select(
 				Direction.NORTH,
 				doubleBlockHalf,
 				DoorHingeSide.RIGHT,
 				false,
-				Variant.variant().with(VariantProperties.MODEL, resourceLocation3).with(VariantProperties.Y_ROT, VariantProperties.Rotation.R270)
+				Variant.variant().with(VariantProperties.MODEL, resourceLocation2).with(VariantProperties.Y_ROT, VariantProperties.Rotation.R270)
 			)
 			.select(
 				Direction.EAST,
@@ -442,35 +431,27 @@ public class BlockModelGenerators {
 				doubleBlockHalf,
 				DoorHingeSide.RIGHT,
 				true,
-				Variant.variant().with(VariantProperties.MODEL, resourceLocation4).with(VariantProperties.Y_ROT, VariantProperties.Rotation.R270)
+				Variant.variant().with(VariantProperties.MODEL, resourceLocation).with(VariantProperties.Y_ROT, VariantProperties.Rotation.R270)
 			)
-			.select(Direction.SOUTH, doubleBlockHalf, DoorHingeSide.RIGHT, true, Variant.variant().with(VariantProperties.MODEL, resourceLocation4))
+			.select(Direction.SOUTH, doubleBlockHalf, DoorHingeSide.RIGHT, true, Variant.variant().with(VariantProperties.MODEL, resourceLocation))
 			.select(
 				Direction.WEST,
 				doubleBlockHalf,
 				DoorHingeSide.RIGHT,
 				true,
-				Variant.variant().with(VariantProperties.MODEL, resourceLocation4).with(VariantProperties.Y_ROT, VariantProperties.Rotation.R90)
+				Variant.variant().with(VariantProperties.MODEL, resourceLocation).with(VariantProperties.Y_ROT, VariantProperties.Rotation.R90)
 			)
 			.select(
 				Direction.NORTH,
 				doubleBlockHalf,
 				DoorHingeSide.RIGHT,
 				true,
-				Variant.variant().with(VariantProperties.MODEL, resourceLocation4).with(VariantProperties.Y_ROT, VariantProperties.Rotation.R180)
+				Variant.variant().with(VariantProperties.MODEL, resourceLocation).with(VariantProperties.Y_ROT, VariantProperties.Rotation.R180)
 			);
 	}
 
 	private static BlockStateGenerator createDoor(
-		Block block,
-		ResourceLocation resourceLocation,
-		ResourceLocation resourceLocation2,
-		ResourceLocation resourceLocation3,
-		ResourceLocation resourceLocation4,
-		ResourceLocation resourceLocation5,
-		ResourceLocation resourceLocation6,
-		ResourceLocation resourceLocation7,
-		ResourceLocation resourceLocation8
+		Block block, ResourceLocation resourceLocation, ResourceLocation resourceLocation2, ResourceLocation resourceLocation3, ResourceLocation resourceLocation4
 	) {
 		return MultiVariantGenerator.multiVariant(block)
 			.with(
@@ -481,15 +462,11 @@ public class BlockModelGenerators {
 						),
 						DoubleBlockHalf.LOWER,
 						resourceLocation,
-						resourceLocation2,
-						resourceLocation3,
-						resourceLocation4
+						resourceLocation2
 					),
 					DoubleBlockHalf.UPPER,
-					resourceLocation5,
-					resourceLocation6,
-					resourceLocation7,
-					resourceLocation8
+					resourceLocation3,
+					resourceLocation4
 				)
 			);
 	}
@@ -1189,29 +1166,12 @@ public class BlockModelGenerators {
 
 	void createDoor(Block block) {
 		TextureMapping textureMapping = TextureMapping.door(block);
-		ResourceLocation resourceLocation = ModelTemplates.DOOR_BOTTOM_LEFT.create(block, textureMapping, this.modelOutput);
-		ResourceLocation resourceLocation2 = ModelTemplates.DOOR_BOTTOM_LEFT_OPEN.create(block, textureMapping, this.modelOutput);
-		ResourceLocation resourceLocation3 = ModelTemplates.DOOR_BOTTOM_RIGHT.create(block, textureMapping, this.modelOutput);
-		ResourceLocation resourceLocation4 = ModelTemplates.DOOR_BOTTOM_RIGHT_OPEN.create(block, textureMapping, this.modelOutput);
-		ResourceLocation resourceLocation5 = ModelTemplates.DOOR_TOP_LEFT.create(block, textureMapping, this.modelOutput);
-		ResourceLocation resourceLocation6 = ModelTemplates.DOOR_TOP_LEFT_OPEN.create(block, textureMapping, this.modelOutput);
-		ResourceLocation resourceLocation7 = ModelTemplates.DOOR_TOP_RIGHT.create(block, textureMapping, this.modelOutput);
-		ResourceLocation resourceLocation8 = ModelTemplates.DOOR_TOP_RIGHT_OPEN.create(block, textureMapping, this.modelOutput);
+		ResourceLocation resourceLocation = ModelTemplates.DOOR_BOTTOM.create(block, textureMapping, this.modelOutput);
+		ResourceLocation resourceLocation2 = ModelTemplates.DOOR_BOTTOM_HINGE.create(block, textureMapping, this.modelOutput);
+		ResourceLocation resourceLocation3 = ModelTemplates.DOOR_TOP.create(block, textureMapping, this.modelOutput);
+		ResourceLocation resourceLocation4 = ModelTemplates.DOOR_TOP_HINGE.create(block, textureMapping, this.modelOutput);
 		this.createSimpleFlatItemModel(block.asItem());
-		this.blockStateOutput
-			.accept(
-				createDoor(
-					block,
-					resourceLocation,
-					resourceLocation2,
-					resourceLocation3,
-					resourceLocation4,
-					resourceLocation5,
-					resourceLocation6,
-					resourceLocation7,
-					resourceLocation8
-				)
-			);
+		this.blockStateOutput.accept(createDoor(block, resourceLocation, resourceLocation2, resourceLocation3, resourceLocation4));
 	}
 
 	void createOrientableTrapdoor(Block block) {
@@ -2267,16 +2227,10 @@ public class BlockModelGenerators {
 
 	private void createEndPortalFrame() {
 		ResourceLocation resourceLocation = ModelLocationUtils.getModelLocation(Blocks.END_PORTAL_FRAME);
-		ResourceLocation resourceLocation2 = ModelLocationUtils.getModelLocation(Blocks.END_PORTAL_FRAME, "_filled");
 		this.blockStateOutput
 			.accept(
-				MultiVariantGenerator.multiVariant(Blocks.END_PORTAL_FRAME)
-					.with(
-						PropertyDispatch.property(BlockStateProperties.EYE)
-							.select(false, Variant.variant().with(VariantProperties.MODEL, resourceLocation))
-							.select(true, Variant.variant().with(VariantProperties.MODEL, resourceLocation2))
-					)
-					.with(createHorizontalFacingDispatchAlt())
+				MultiVariantGenerator.multiVariant(Blocks.END_PORTAL_FRAME, Variant.variant().with(VariantProperties.MODEL, resourceLocation))
+					.with(this.createColumnWithFacing())
 			);
 	}
 
@@ -2683,29 +2637,6 @@ public class BlockModelGenerators {
 			.accept(MultiVariantGenerator.multiVariant(block).with(createBooleanModelDispatch(BlockStateProperties.HANGING, resourceLocation2, resourceLocation)));
 	}
 
-	private void createMuddyMangroveRoots() {
-		TextureMapping textureMapping = TextureMapping.column(
-			TextureMapping.getBlockTexture(Blocks.MUDDY_MANGROVE_ROOTS, "_side"), TextureMapping.getBlockTexture(Blocks.MUDDY_MANGROVE_ROOTS, "_top")
-		);
-		ResourceLocation resourceLocation = ModelTemplates.CUBE_COLUMN.create(Blocks.MUDDY_MANGROVE_ROOTS, textureMapping, this.modelOutput);
-		this.blockStateOutput.accept(createAxisAlignedPillarBlock(Blocks.MUDDY_MANGROVE_ROOTS, resourceLocation));
-	}
-
-	private void createMangrovePropagule() {
-		this.createSimpleFlatItemModel(Items.MANGROVE_PROPAGULE);
-		Block block = Blocks.MANGROVE_PROPAGULE;
-		PropertyDispatch.C2<Boolean, Integer> c2 = PropertyDispatch.properties(MangrovePropaguleBlock.HANGING, MangrovePropaguleBlock.AGE);
-		ResourceLocation resourceLocation = ModelLocationUtils.getModelLocation(block);
-
-		for(int i = 0; i <= 4; ++i) {
-			ResourceLocation resourceLocation2 = ModelLocationUtils.getModelLocation(block, "_hanging_" + i);
-			c2.select(true, i, Variant.variant().with(VariantProperties.MODEL, resourceLocation2));
-			c2.select(false, i, Variant.variant().with(VariantProperties.MODEL, resourceLocation));
-		}
-
-		this.blockStateOutput.accept(MultiVariantGenerator.multiVariant(Blocks.MANGROVE_PROPAGULE).with(c2));
-	}
-
 	private void createFrostedIce() {
 		this.blockStateOutput
 			.accept(
@@ -2945,11 +2876,6 @@ public class BlockModelGenerators {
 		this.blockStateOutput.accept(createRotatedVariant(Blocks.LILY_PAD, ModelLocationUtils.getModelLocation(Blocks.LILY_PAD)));
 	}
 
-	private void createFrogspawnBlock() {
-		this.createSimpleFlatItemModel(Blocks.FROGSPAWN);
-		this.blockStateOutput.accept(createSimpleBlock(Blocks.FROGSPAWN, ModelLocationUtils.getModelLocation(Blocks.FROGSPAWN)));
-	}
-
 	private void createNetherPortalBlock() {
 		this.blockStateOutput
 			.accept(
@@ -3111,18 +3037,6 @@ public class BlockModelGenerators {
 										.with(VariantProperties.MODEL, sculkSensorPhase == SculkSensorPhase.ACTIVE ? resourceLocation2 : resourceLocation)
 							)
 					)
-			);
-	}
-
-	private void createSculkShrieker() {
-		ResourceLocation resourceLocation = ModelTemplates.SCULK_SHRIEKER.create(Blocks.SCULK_SHRIEKER, TextureMapping.sculkShrieker(false), this.modelOutput);
-		ResourceLocation resourceLocation2 = ModelTemplates.SCULK_SHRIEKER
-			.createWithSuffix(Blocks.SCULK_SHRIEKER, "_can_summon", TextureMapping.sculkShrieker(true), this.modelOutput);
-		this.delegateItemModel(Blocks.SCULK_SHRIEKER, resourceLocation);
-		this.blockStateOutput
-			.accept(
-				MultiVariantGenerator.multiVariant(Blocks.SCULK_SHRIEKER)
-					.with(createBooleanModelDispatch(BlockStateProperties.CAN_SUMMON, resourceLocation2, resourceLocation))
 			);
 	}
 
@@ -3882,8 +3796,6 @@ public class BlockModelGenerators {
 		this.createTrivialBlock(Blocks.JUKEBOX, TexturedModel.CUBE_TOP);
 		this.createTrivialBlock(Blocks.LODESTONE, TexturedModel.COLUMN);
 		this.createTrivialBlock(Blocks.MELON, TexturedModel.COLUMN);
-		this.createNonTemplateModelBlock(Blocks.MANGROVE_ROOTS);
-		this.createNonTemplateModelBlock(Blocks.POTTED_MANGROVE_PROPAGULE);
 		this.createTrivialCube(Blocks.NETHER_WART_BLOCK);
 		this.createTrivialCube(Blocks.NOTE_BLOCK);
 		this.createTrivialCube(Blocks.PACKED_ICE);
@@ -3973,10 +3885,6 @@ public class BlockModelGenerators {
 		this.createMagmaBlock();
 		this.createJigsaw();
 		this.createSculkSensor();
-		this.createSculkShrieker();
-		this.createFrogspawnBlock();
-		this.createMangrovePropagule();
-		this.createMuddyMangroveRoots();
 		this.createNonTemplateHorizontalBlock(Blocks.LADDER);
 		this.createSimpleFlatItemModel(Blocks.LADDER);
 		this.createNonTemplateHorizontalBlock(Blocks.LECTERN);
@@ -4002,13 +3910,9 @@ public class BlockModelGenerators {
 		this.createRotatedVariantBlock(Blocks.SAND);
 		this.createRotatedVariantBlock(Blocks.RED_SAND);
 		this.createRotatedMirroredVariantBlock(Blocks.BEDROCK);
-		this.createTrivialBlock(Blocks.REINFORCED_DEEPSLATE, TexturedModel.CUBE_TOP_BOTTOM);
 		this.createRotatedPillarWithHorizontalVariant(Blocks.HAY_BLOCK, TexturedModel.COLUMN, TexturedModel.COLUMN_HORIZONTAL);
 		this.createRotatedPillarWithHorizontalVariant(Blocks.PURPUR_PILLAR, TexturedModel.COLUMN_ALT, TexturedModel.COLUMN_HORIZONTAL_ALT);
 		this.createRotatedPillarWithHorizontalVariant(Blocks.QUARTZ_PILLAR, TexturedModel.COLUMN_ALT, TexturedModel.COLUMN_HORIZONTAL_ALT);
-		this.createRotatedPillarWithHorizontalVariant(Blocks.OCHRE_FROGLIGHT, TexturedModel.COLUMN, TexturedModel.COLUMN_HORIZONTAL);
-		this.createRotatedPillarWithHorizontalVariant(Blocks.VERDANT_FROGLIGHT, TexturedModel.COLUMN, TexturedModel.COLUMN_HORIZONTAL);
-		this.createRotatedPillarWithHorizontalVariant(Blocks.PEARLESCENT_FROGLIGHT, TexturedModel.COLUMN, TexturedModel.COLUMN_HORIZONTAL);
 		this.createHorizontallyRotatedBlock(Blocks.LOOM, TexturedModel.ORIENTABLE);
 		this.createPumpkins();
 		this.createBeeNest(Blocks.BEE_NEST, TextureMapping::orientableCube);
@@ -4217,6 +4121,8 @@ public class BlockModelGenerators {
 			Blocks.RED_GLAZED_TERRACOTTA,
 			Blocks.BLACK_GLAZED_TERRACOTTA
 		);
+		this.blockStateOutput
+			.accept(createSimpleBlock(Blocks.GENERIC_ITEM_BLOCK, TexturedModel.CARPET.get(Blocks.WHITE_WOOL).create(Blocks.GENERIC_ITEM_BLOCK, this.modelOutput)));
 		this.createFullAndCarpetBlocks(Blocks.WHITE_WOOL, Blocks.WHITE_CARPET);
 		this.createFullAndCarpetBlocks(Blocks.ORANGE_WOOL, Blocks.ORANGE_CARPET);
 		this.createFullAndCarpetBlocks(Blocks.MAGENTA_WOOL, Blocks.MAGENTA_CARPET);
@@ -4233,8 +4139,6 @@ public class BlockModelGenerators {
 		this.createFullAndCarpetBlocks(Blocks.GREEN_WOOL, Blocks.GREEN_CARPET);
 		this.createFullAndCarpetBlocks(Blocks.RED_WOOL, Blocks.RED_CARPET);
 		this.createFullAndCarpetBlocks(Blocks.BLACK_WOOL, Blocks.BLACK_CARPET);
-		this.createTrivialCube(Blocks.MUD);
-		this.createTrivialCube(Blocks.PACKED_MUD);
 		this.createPlant(Blocks.FERN, Blocks.POTTED_FERN, BlockModelGenerators.TintState.TINTED);
 		this.createPlant(Blocks.DANDELION, Blocks.POTTED_DANDELION, BlockModelGenerators.TintState.NOT_TINTED);
 		this.createPlant(Blocks.POPPY, Blocks.POTTED_POPPY, BlockModelGenerators.TintState.NOT_TINTED);
@@ -4336,9 +4240,6 @@ public class BlockModelGenerators {
 		);
 		this.createStems(Blocks.MELON_STEM, Blocks.ATTACHED_MELON_STEM);
 		this.createStems(Blocks.PUMPKIN_STEM, Blocks.ATTACHED_PUMPKIN_STEM);
-		this.woodProvider(Blocks.MANGROVE_LOG).logWithHorizontal(Blocks.MANGROVE_LOG).wood(Blocks.MANGROVE_WOOD);
-		this.woodProvider(Blocks.STRIPPED_MANGROVE_LOG).logWithHorizontal(Blocks.STRIPPED_MANGROVE_LOG).wood(Blocks.STRIPPED_MANGROVE_WOOD);
-		this.createTrivialBlock(Blocks.MANGROVE_LEAVES, TexturedModel.LEAVES);
 		this.woodProvider(Blocks.ACACIA_LOG).logWithHorizontal(Blocks.ACACIA_LOG).wood(Blocks.ACACIA_WOOD);
 		this.woodProvider(Blocks.STRIPPED_ACACIA_LOG).logWithHorizontal(Blocks.STRIPPED_ACACIA_LOG).wood(Blocks.STRIPPED_ACACIA_WOOD);
 		this.createPlant(Blocks.ACACIA_SAPLING, Blocks.POTTED_ACACIA_SAPLING, BlockModelGenerators.TintState.NOT_TINTED);

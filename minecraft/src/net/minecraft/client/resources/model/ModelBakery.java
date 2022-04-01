@@ -56,7 +56,6 @@ import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.resources.ResourceThunk;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.block.Block;
@@ -362,57 +361,37 @@ public class ModelBakery {
 					List<Pair<String, BlockModelDefinition>> list2;
 					try {
 						list2 = (List)this.resourceManager
-							.getResourceStack(resourceLocation3)
+							.getResources(resourceLocation3)
 							.stream()
 							.map(
-								resourceThunk -> {
+								resource -> {
 									try {
-										Resource resource = resourceThunk.open();
+										InputStream inputStream = resource.getInputStream();
 		
-										Pair var5x;
+										Pair var3x;
 										try {
-											InputStream inputStream = resource.getInputStream();
-		
-											try {
-												var5x = Pair.of(
-													resourceThunk.sourcePackId(), BlockModelDefinition.fromStream(this.context, new InputStreamReader(inputStream, StandardCharsets.UTF_8))
-												);
-											} catch (Throwable var9xx) {
-												if (inputStream != null) {
-													try {
-														inputStream.close();
-													} catch (Throwable var8xx) {
-														var9xx.addSuppressed(var8xx);
-													}
-												}
-		
-												throw var9xx;
-											}
-		
+											var3x = Pair.of(resource.getSourceName(), BlockModelDefinition.fromStream(this.context, new InputStreamReader(inputStream, StandardCharsets.UTF_8)));
+										} catch (Throwable var6xx) {
 											if (inputStream != null) {
-												inputStream.close();
-											}
-										} catch (Throwable var10xx) {
-											if (resource != null) {
 												try {
-													resource.close();
-												} catch (Throwable var7xx) {
-													var10xx.addSuppressed(var7xx);
+													inputStream.close();
+												} catch (Throwable var5xx) {
+													var6xx.addSuppressed(var5xx);
 												}
 											}
 		
-											throw var10xx;
+											throw var6xx;
 										}
 		
-										if (resource != null) {
-											resource.close();
+										if (inputStream != null) {
+											inputStream.close();
 										}
 		
-										return var5x;
-									} catch (Exception var11xx) {
+										return var3x;
+									} catch (Exception var7xx) {
 										throw new ModelBakery.BlockStateDefinitionException(
 											String.format(
-												"Exception loading blockstate definition: '%s' in resourcepack: '%s': %s", resourceLocation3, resourceThunk.sourcePackId(), var11xx.getMessage()
+												"Exception loading blockstate definition: '%s' in resourcepack: '%s': %s", resource.getLocation(), resource.getSourceName(), var7xx.getMessage()
 											)
 										);
 									}

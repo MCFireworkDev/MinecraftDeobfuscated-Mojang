@@ -186,6 +186,17 @@ public class Strider extends Animal implements ItemSteerable, Saddleable {
 	}
 
 	@Override
+	public boolean canBeControlledByRider() {
+		Entity entity = this.getControllingPassenger();
+		if (!(entity instanceof Player)) {
+			return false;
+		} else {
+			Player player = (Player)entity;
+			return player.getMainHandItem().is(Items.WARPED_FUNGUS_ON_A_STICK) || player.getOffhandItem().is(Items.WARPED_FUNGUS_ON_A_STICK);
+		}
+	}
+
+	@Override
 	public boolean checkSpawnObstruction(LevelReader levelReader) {
 		return levelReader.isUnobstructed(this);
 	}
@@ -193,17 +204,7 @@ public class Strider extends Animal implements ItemSteerable, Saddleable {
 	@Nullable
 	@Override
 	public Entity getControllingPassenger() {
-		Entity entity = this.getFirstPassenger();
-		return entity != null && this.canBeControlledBy(entity) ? entity : null;
-	}
-
-	private boolean canBeControlledBy(Entity entity) {
-		if (!(entity instanceof Player)) {
-			return false;
-		} else {
-			Player player = (Player)entity;
-			return player.getMainHandItem().is(Items.WARPED_FUNGUS_ON_A_STICK) || player.getOffhandItem().is(Items.WARPED_FUNGUS_ON_A_STICK);
-		}
+		return this.getFirstPassenger();
 	}
 
 	@Override
@@ -302,13 +303,10 @@ public class Strider extends Animal implements ItemSteerable, Saddleable {
 			this.playSound(SoundEvents.STRIDER_RETREAT, 1.0F, this.getVoicePitch());
 		}
 
-		if (!this.isNoAi()) {
-			BlockState blockState = this.level.getBlockState(this.blockPosition());
-			BlockState blockState2 = this.getBlockStateOn();
-			boolean bl = blockState.is(BlockTags.STRIDER_WARM_BLOCKS) || blockState2.is(BlockTags.STRIDER_WARM_BLOCKS) || this.getFluidHeight(FluidTags.LAVA) > 0.0;
-			this.setSuffocating(!bl);
-		}
-
+		BlockState blockState = this.level.getBlockState(this.blockPosition());
+		BlockState blockState2 = this.getBlockStateOn();
+		boolean bl = blockState.is(BlockTags.STRIDER_WARM_BLOCKS) || blockState2.is(BlockTags.STRIDER_WARM_BLOCKS) || this.getFluidHeight(FluidTags.LAVA) > 0.0;
+		this.setSuffocating(!bl);
 		super.tick();
 		this.floatStrider();
 		this.checkInsideBlocks();

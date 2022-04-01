@@ -4,7 +4,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.Arrays;
@@ -19,7 +18,6 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.KeyDispatchDataCodec;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.biome.Biome;
@@ -121,17 +119,13 @@ public class SurfaceRules {
 		return SurfaceRules.Bandlands.INSTANCE;
 	}
 
-	static <A> Codec<? extends A> register(Registry<Codec<? extends A>> registry, String string, KeyDispatchDataCodec<? extends A> keyDispatchDataCodec) {
-		return Registry.register(registry, string, keyDispatchDataCodec.codec());
-	}
-
 	static enum AbovePreliminarySurface implements SurfaceRules.ConditionSource {
 		INSTANCE;
 
-		static final KeyDispatchDataCodec<SurfaceRules.AbovePreliminarySurface> CODEC = KeyDispatchDataCodec.of(MapCodec.unit(INSTANCE));
+		static final Codec<SurfaceRules.AbovePreliminarySurface> CODEC = Codec.unit(INSTANCE);
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.ConditionSource> codec() {
+		public Codec<? extends SurfaceRules.ConditionSource> codec() {
 			return CODEC;
 		}
 
@@ -143,10 +137,10 @@ public class SurfaceRules {
 	static enum Bandlands implements SurfaceRules.RuleSource {
 		INSTANCE;
 
-		static final KeyDispatchDataCodec<SurfaceRules.Bandlands> CODEC = KeyDispatchDataCodec.of(MapCodec.unit(INSTANCE));
+		static final Codec<SurfaceRules.Bandlands> CODEC = Codec.unit(INSTANCE);
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.RuleSource> codec() {
+		public Codec<? extends SurfaceRules.RuleSource> codec() {
 			return CODEC;
 		}
 
@@ -156,9 +150,11 @@ public class SurfaceRules {
 	}
 
 	static final class BiomeConditionSource implements SurfaceRules.ConditionSource {
-		static final KeyDispatchDataCodec<SurfaceRules.BiomeConditionSource> CODEC = KeyDispatchDataCodec.of(
-			ResourceKey.codec(Registry.BIOME_REGISTRY).listOf().fieldOf("biome_is").xmap(SurfaceRules::isBiome, biomeConditionSource -> biomeConditionSource.biomes)
-		);
+		static final Codec<SurfaceRules.BiomeConditionSource> CODEC = ResourceKey.codec(Registry.BIOME_REGISTRY)
+			.listOf()
+			.fieldOf("biome_is")
+			.<SurfaceRules.BiomeConditionSource>xmap(SurfaceRules::isBiome, biomeConditionSource -> biomeConditionSource.biomes)
+			.codec();
 		private final List<ResourceKey<Biome>> biomes;
 		final Predicate<ResourceKey<Biome>> biomeNameTest;
 
@@ -168,7 +164,7 @@ public class SurfaceRules {
 		}
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.ConditionSource> codec() {
+		public Codec<? extends SurfaceRules.ConditionSource> codec() {
 			return CODEC;
 		}
 
@@ -205,16 +201,17 @@ public class SurfaceRules {
 	}
 
 	static record BlockRuleSource(BlockState resultState, SurfaceRules.StateRule rule) implements SurfaceRules.RuleSource {
-		static final KeyDispatchDataCodec<SurfaceRules.BlockRuleSource> CODEC = KeyDispatchDataCodec.of(
-			BlockState.CODEC.<SurfaceRules.BlockRuleSource>xmap(SurfaceRules.BlockRuleSource::new, SurfaceRules.BlockRuleSource::resultState).fieldOf("result_state")
-		);
+		static final Codec<SurfaceRules.BlockRuleSource> CODEC = BlockState.CODEC
+			.<SurfaceRules.BlockRuleSource>xmap(SurfaceRules.BlockRuleSource::new, SurfaceRules.BlockRuleSource::resultState)
+			.fieldOf("result_state")
+			.codec();
 
 		BlockRuleSource(BlockState blockState) {
 			this(blockState, new SurfaceRules.StateRule(blockState));
 		}
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.RuleSource> codec() {
+		public Codec<? extends SurfaceRules.RuleSource> codec() {
 			return CODEC;
 		}
 
@@ -228,25 +225,23 @@ public class SurfaceRules {
 	}
 
 	public interface ConditionSource extends Function<SurfaceRules.Context, SurfaceRules.Condition> {
-		Codec<SurfaceRules.ConditionSource> CODEC = Registry.CONDITION
-			.byNameCodec()
-			.dispatch(conditionSource -> conditionSource.codec().codec(), Function.identity());
+		Codec<SurfaceRules.ConditionSource> CODEC = Registry.CONDITION.byNameCodec().dispatch(SurfaceRules.ConditionSource::codec, Function.identity());
 
 		static Codec<? extends SurfaceRules.ConditionSource> bootstrap(Registry<Codec<? extends SurfaceRules.ConditionSource>> registry) {
-			SurfaceRules.register(registry, "biome", SurfaceRules.BiomeConditionSource.CODEC);
-			SurfaceRules.register(registry, "noise_threshold", SurfaceRules.NoiseThresholdConditionSource.CODEC);
-			SurfaceRules.register(registry, "vertical_gradient", SurfaceRules.VerticalGradientConditionSource.CODEC);
-			SurfaceRules.register(registry, "y_above", SurfaceRules.YConditionSource.CODEC);
-			SurfaceRules.register(registry, "water", SurfaceRules.WaterConditionSource.CODEC);
-			SurfaceRules.register(registry, "temperature", SurfaceRules.Temperature.CODEC);
-			SurfaceRules.register(registry, "steep", SurfaceRules.Steep.CODEC);
-			SurfaceRules.register(registry, "not", SurfaceRules.NotConditionSource.CODEC);
-			SurfaceRules.register(registry, "hole", SurfaceRules.Hole.CODEC);
-			SurfaceRules.register(registry, "above_preliminary_surface", SurfaceRules.AbovePreliminarySurface.CODEC);
-			return SurfaceRules.register(registry, "stone_depth", SurfaceRules.StoneDepthCheck.CODEC);
+			Registry.register(registry, "biome", SurfaceRules.BiomeConditionSource.CODEC);
+			Registry.register(registry, "noise_threshold", SurfaceRules.NoiseThresholdConditionSource.CODEC);
+			Registry.register(registry, "vertical_gradient", SurfaceRules.VerticalGradientConditionSource.CODEC);
+			Registry.register(registry, "y_above", SurfaceRules.YConditionSource.CODEC);
+			Registry.register(registry, "water", SurfaceRules.WaterConditionSource.CODEC);
+			Registry.register(registry, "temperature", SurfaceRules.Temperature.CODEC);
+			Registry.register(registry, "steep", SurfaceRules.Steep.CODEC);
+			Registry.register(registry, "not", SurfaceRules.NotConditionSource.CODEC);
+			Registry.register(registry, "hole", SurfaceRules.Hole.CODEC);
+			Registry.register(registry, "above_preliminary_surface", SurfaceRules.AbovePreliminarySurface.CODEC);
+			return Registry.register(registry, "stone_depth", SurfaceRules.StoneDepthCheck.CODEC);
 		}
 
-		KeyDispatchDataCodec<? extends SurfaceRules.ConditionSource> codec();
+		Codec<? extends SurfaceRules.ConditionSource> codec();
 	}
 
 	protected static final class Context {
@@ -259,7 +254,6 @@ public class SurfaceRules {
 		final SurfaceRules.Condition steep = new SurfaceRules.Context.SteepMaterialCondition(this);
 		final SurfaceRules.Condition hole = new SurfaceRules.Context.HoleCondition(this);
 		final SurfaceRules.Condition abovePreliminarySurface = new SurfaceRules.Context.AbovePreliminarySurfaceCondition();
-		final RandomState randomState;
 		final ChunkAccess chunk;
 		private final NoiseChunk noiseChunk;
 		private final Function<BlockPos, Holder<Biome>> biomeGetter;
@@ -284,7 +278,6 @@ public class SurfaceRules {
 
 		protected Context(
 			SurfaceSystem surfaceSystem,
-			RandomState randomState,
 			ChunkAccess chunkAccess,
 			NoiseChunk noiseChunk,
 			Function<BlockPos, Holder<Biome>> function,
@@ -292,7 +285,6 @@ public class SurfaceRules {
 			WorldGenerationContext worldGenerationContext
 		) {
 			this.system = surfaceSystem;
-			this.randomState = randomState;
 			this.chunk = chunkAccess;
 			this.noiseChunk = noiseChunk;
 			this.biomeGetter = function;
@@ -423,10 +415,10 @@ public class SurfaceRules {
 	static enum Hole implements SurfaceRules.ConditionSource {
 		INSTANCE;
 
-		static final KeyDispatchDataCodec<SurfaceRules.Hole> CODEC = KeyDispatchDataCodec.of(MapCodec.unit(INSTANCE));
+		static final Codec<SurfaceRules.Hole> CODEC = Codec.unit(INSTANCE);
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.ConditionSource> codec() {
+		public Codec<? extends SurfaceRules.ConditionSource> codec() {
 			return CODEC;
 		}
 
@@ -493,24 +485,22 @@ public class SurfaceRules {
 		implements SurfaceRules.ConditionSource {
 		final double minThreshold;
 		final double maxThreshold;
-		static final KeyDispatchDataCodec<SurfaceRules.NoiseThresholdConditionSource> CODEC = KeyDispatchDataCodec.of(
-			RecordCodecBuilder.mapCodec(
-				instance -> instance.group(
-							ResourceKey.codec(Registry.NOISE_REGISTRY).fieldOf("noise").forGetter(SurfaceRules.NoiseThresholdConditionSource::noise),
-							Codec.DOUBLE.fieldOf("min_threshold").forGetter(SurfaceRules.NoiseThresholdConditionSource::minThreshold),
-							Codec.DOUBLE.fieldOf("max_threshold").forGetter(SurfaceRules.NoiseThresholdConditionSource::maxThreshold)
-						)
-						.apply(instance, SurfaceRules.NoiseThresholdConditionSource::new)
-			)
+		static final Codec<SurfaceRules.NoiseThresholdConditionSource> CODEC = RecordCodecBuilder.create(
+			instance -> instance.group(
+						ResourceKey.codec(Registry.NOISE_REGISTRY).fieldOf("noise").forGetter(SurfaceRules.NoiseThresholdConditionSource::noise),
+						Codec.DOUBLE.fieldOf("min_threshold").forGetter(SurfaceRules.NoiseThresholdConditionSource::minThreshold),
+						Codec.DOUBLE.fieldOf("max_threshold").forGetter(SurfaceRules.NoiseThresholdConditionSource::maxThreshold)
+					)
+					.apply(instance, SurfaceRules.NoiseThresholdConditionSource::new)
 		);
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.ConditionSource> codec() {
+		public Codec<? extends SurfaceRules.ConditionSource> codec() {
 			return CODEC;
 		}
 
 		public SurfaceRules.Condition apply(SurfaceRules.Context context) {
-			final NormalNoise normalNoise = context.randomState.getOrCreateNoise(this.noise);
+			final NormalNoise normalNoise = context.system.getOrCreateNoise(this.noise);
 
 			class NoiseThresholdCondition extends SurfaceRules.LazyXZCondition {
 				NoiseThresholdCondition() {
@@ -536,14 +526,13 @@ public class SurfaceRules {
 	}
 
 	static record NotConditionSource(SurfaceRules.ConditionSource target) implements SurfaceRules.ConditionSource {
-		static final KeyDispatchDataCodec<SurfaceRules.NotConditionSource> CODEC = KeyDispatchDataCodec.of(
-			SurfaceRules.ConditionSource.CODEC
-				.<SurfaceRules.NotConditionSource>xmap(SurfaceRules.NotConditionSource::new, SurfaceRules.NotConditionSource::target)
-				.fieldOf("invert")
-		);
+		static final Codec<SurfaceRules.NotConditionSource> CODEC = SurfaceRules.ConditionSource.CODEC
+			.<SurfaceRules.NotConditionSource>xmap(SurfaceRules.NotConditionSource::new, SurfaceRules.NotConditionSource::target)
+			.fieldOf("invert")
+			.codec();
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.ConditionSource> codec() {
+		public Codec<? extends SurfaceRules.ConditionSource> codec() {
 			return CODEC;
 		}
 
@@ -553,16 +542,16 @@ public class SurfaceRules {
 	}
 
 	public interface RuleSource extends Function<SurfaceRules.Context, SurfaceRules.SurfaceRule> {
-		Codec<SurfaceRules.RuleSource> CODEC = Registry.RULE.byNameCodec().dispatch(ruleSource -> ruleSource.codec().codec(), Function.identity());
+		Codec<SurfaceRules.RuleSource> CODEC = Registry.RULE.byNameCodec().dispatch(SurfaceRules.RuleSource::codec, Function.identity());
 
 		static Codec<? extends SurfaceRules.RuleSource> bootstrap(Registry<Codec<? extends SurfaceRules.RuleSource>> registry) {
-			SurfaceRules.register(registry, "bandlands", SurfaceRules.Bandlands.CODEC);
-			SurfaceRules.register(registry, "block", SurfaceRules.BlockRuleSource.CODEC);
-			SurfaceRules.register(registry, "sequence", SurfaceRules.SequenceRuleSource.CODEC);
-			return SurfaceRules.register(registry, "condition", SurfaceRules.TestRuleSource.CODEC);
+			Registry.register(registry, "bandlands", SurfaceRules.Bandlands.CODEC);
+			Registry.register(registry, "block", SurfaceRules.BlockRuleSource.CODEC);
+			Registry.register(registry, "sequence", SurfaceRules.SequenceRuleSource.CODEC);
+			return Registry.register(registry, "condition", SurfaceRules.TestRuleSource.CODEC);
 		}
 
-		KeyDispatchDataCodec<? extends SurfaceRules.RuleSource> codec();
+		Codec<? extends SurfaceRules.RuleSource> codec();
 	}
 
 	static record SequenceRule(List<SurfaceRules.SurfaceRule> rules) implements SurfaceRules.SurfaceRule {
@@ -581,15 +570,14 @@ public class SurfaceRules {
 	}
 
 	static record SequenceRuleSource(List<SurfaceRules.RuleSource> sequence) implements SurfaceRules.RuleSource {
-		static final KeyDispatchDataCodec<SurfaceRules.SequenceRuleSource> CODEC = KeyDispatchDataCodec.of(
-			SurfaceRules.RuleSource.CODEC
-				.listOf()
-				.<SurfaceRules.SequenceRuleSource>xmap(SurfaceRules.SequenceRuleSource::new, SurfaceRules.SequenceRuleSource::sequence)
-				.fieldOf("sequence")
-		);
+		static final Codec<SurfaceRules.SequenceRuleSource> CODEC = SurfaceRules.RuleSource.CODEC
+			.listOf()
+			.<SurfaceRules.SequenceRuleSource>xmap(SurfaceRules.SequenceRuleSource::new, SurfaceRules.SequenceRuleSource::sequence)
+			.fieldOf("sequence")
+			.codec();
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.RuleSource> codec() {
+		public Codec<? extends SurfaceRules.RuleSource> codec() {
 			return CODEC;
 		}
 
@@ -618,10 +606,10 @@ public class SurfaceRules {
 	static enum Steep implements SurfaceRules.ConditionSource {
 		INSTANCE;
 
-		static final KeyDispatchDataCodec<SurfaceRules.Steep> CODEC = KeyDispatchDataCodec.of(MapCodec.unit(INSTANCE));
+		static final Codec<SurfaceRules.Steep> CODEC = Codec.unit(INSTANCE);
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.ConditionSource> codec() {
+		public Codec<? extends SurfaceRules.ConditionSource> codec() {
 			return CODEC;
 		}
 
@@ -634,20 +622,18 @@ public class SurfaceRules {
 		final int offset;
 		final boolean addSurfaceDepth;
 		final int secondaryDepthRange;
-		static final KeyDispatchDataCodec<SurfaceRules.StoneDepthCheck> CODEC = KeyDispatchDataCodec.of(
-			RecordCodecBuilder.mapCodec(
-				instance -> instance.group(
-							Codec.INT.fieldOf("offset").forGetter(SurfaceRules.StoneDepthCheck::offset),
-							Codec.BOOL.fieldOf("add_surface_depth").forGetter(SurfaceRules.StoneDepthCheck::addSurfaceDepth),
-							Codec.INT.fieldOf("secondary_depth_range").forGetter(SurfaceRules.StoneDepthCheck::secondaryDepthRange),
-							CaveSurface.CODEC.fieldOf("surface_type").forGetter(SurfaceRules.StoneDepthCheck::surfaceType)
-						)
-						.apply(instance, SurfaceRules.StoneDepthCheck::new)
-			)
+		static final Codec<SurfaceRules.StoneDepthCheck> CODEC = RecordCodecBuilder.create(
+			instance -> instance.group(
+						Codec.INT.fieldOf("offset").forGetter(SurfaceRules.StoneDepthCheck::offset),
+						Codec.BOOL.fieldOf("add_surface_depth").forGetter(SurfaceRules.StoneDepthCheck::addSurfaceDepth),
+						Codec.INT.fieldOf("secondary_depth_range").forGetter(SurfaceRules.StoneDepthCheck::secondaryDepthRange),
+						CaveSurface.CODEC.fieldOf("surface_type").forGetter(SurfaceRules.StoneDepthCheck::surfaceType)
+					)
+					.apply(instance, SurfaceRules.StoneDepthCheck::new)
 		);
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.ConditionSource> codec() {
+		public Codec<? extends SurfaceRules.ConditionSource> codec() {
 			return CODEC;
 		}
 
@@ -682,10 +668,10 @@ public class SurfaceRules {
 	static enum Temperature implements SurfaceRules.ConditionSource {
 		INSTANCE;
 
-		static final KeyDispatchDataCodec<SurfaceRules.Temperature> CODEC = KeyDispatchDataCodec.of(MapCodec.unit(INSTANCE));
+		static final Codec<SurfaceRules.Temperature> CODEC = Codec.unit(INSTANCE);
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.ConditionSource> codec() {
+		public Codec<? extends SurfaceRules.ConditionSource> codec() {
 			return CODEC;
 		}
 
@@ -703,18 +689,16 @@ public class SurfaceRules {
 	}
 
 	static record TestRuleSource(SurfaceRules.ConditionSource ifTrue, SurfaceRules.RuleSource thenRun) implements SurfaceRules.RuleSource {
-		static final KeyDispatchDataCodec<SurfaceRules.TestRuleSource> CODEC = KeyDispatchDataCodec.of(
-			RecordCodecBuilder.mapCodec(
-				instance -> instance.group(
-							SurfaceRules.ConditionSource.CODEC.fieldOf("if_true").forGetter(SurfaceRules.TestRuleSource::ifTrue),
-							SurfaceRules.RuleSource.CODEC.fieldOf("then_run").forGetter(SurfaceRules.TestRuleSource::thenRun)
-						)
-						.apply(instance, SurfaceRules.TestRuleSource::new)
-			)
+		static final Codec<SurfaceRules.TestRuleSource> CODEC = RecordCodecBuilder.create(
+			instance -> instance.group(
+						SurfaceRules.ConditionSource.CODEC.fieldOf("if_true").forGetter(SurfaceRules.TestRuleSource::ifTrue),
+						SurfaceRules.RuleSource.CODEC.fieldOf("then_run").forGetter(SurfaceRules.TestRuleSource::thenRun)
+					)
+					.apply(instance, SurfaceRules.TestRuleSource::new)
 		);
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.RuleSource> codec() {
+		public Codec<? extends SurfaceRules.RuleSource> codec() {
 			return CODEC;
 		}
 
@@ -725,26 +709,24 @@ public class SurfaceRules {
 
 	static record VerticalGradientConditionSource(ResourceLocation randomName, VerticalAnchor trueAtAndBelow, VerticalAnchor falseAtAndAbove)
 		implements SurfaceRules.ConditionSource {
-		static final KeyDispatchDataCodec<SurfaceRules.VerticalGradientConditionSource> CODEC = KeyDispatchDataCodec.of(
-			RecordCodecBuilder.mapCodec(
-				instance -> instance.group(
-							ResourceLocation.CODEC.fieldOf("random_name").forGetter(SurfaceRules.VerticalGradientConditionSource::randomName),
-							VerticalAnchor.CODEC.fieldOf("true_at_and_below").forGetter(SurfaceRules.VerticalGradientConditionSource::trueAtAndBelow),
-							VerticalAnchor.CODEC.fieldOf("false_at_and_above").forGetter(SurfaceRules.VerticalGradientConditionSource::falseAtAndAbove)
-						)
-						.apply(instance, SurfaceRules.VerticalGradientConditionSource::new)
-			)
+		static final Codec<SurfaceRules.VerticalGradientConditionSource> CODEC = RecordCodecBuilder.create(
+			instance -> instance.group(
+						ResourceLocation.CODEC.fieldOf("random_name").forGetter(SurfaceRules.VerticalGradientConditionSource::randomName),
+						VerticalAnchor.CODEC.fieldOf("true_at_and_below").forGetter(SurfaceRules.VerticalGradientConditionSource::trueAtAndBelow),
+						VerticalAnchor.CODEC.fieldOf("false_at_and_above").forGetter(SurfaceRules.VerticalGradientConditionSource::falseAtAndAbove)
+					)
+					.apply(instance, SurfaceRules.VerticalGradientConditionSource::new)
 		);
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.ConditionSource> codec() {
+		public Codec<? extends SurfaceRules.ConditionSource> codec() {
 			return CODEC;
 		}
 
 		public SurfaceRules.Condition apply(SurfaceRules.Context context) {
 			final int i = this.trueAtAndBelow().resolveY(context.context);
 			final int j = this.falseAtAndAbove().resolveY(context.context);
-			final PositionalRandomFactory positionalRandomFactory = context.randomState.getOrCreateRandomFactory(this.randomName());
+			final PositionalRandomFactory positionalRandomFactory = context.system.getOrCreateRandomFactory(this.randomName());
 
 			class VerticalGradientCondition extends SurfaceRules.LazyYCondition {
 				VerticalGradientCondition() {
@@ -774,19 +756,17 @@ public class SurfaceRules {
 		final int offset;
 		final int surfaceDepthMultiplier;
 		final boolean addStoneDepth;
-		static final KeyDispatchDataCodec<SurfaceRules.WaterConditionSource> CODEC = KeyDispatchDataCodec.of(
-			RecordCodecBuilder.mapCodec(
-				instance -> instance.group(
-							Codec.INT.fieldOf("offset").forGetter(SurfaceRules.WaterConditionSource::offset),
-							Codec.intRange(-20, 20).fieldOf("surface_depth_multiplier").forGetter(SurfaceRules.WaterConditionSource::surfaceDepthMultiplier),
-							Codec.BOOL.fieldOf("add_stone_depth").forGetter(SurfaceRules.WaterConditionSource::addStoneDepth)
-						)
-						.apply(instance, SurfaceRules.WaterConditionSource::new)
-			)
+		static final Codec<SurfaceRules.WaterConditionSource> CODEC = RecordCodecBuilder.create(
+			instance -> instance.group(
+						Codec.INT.fieldOf("offset").forGetter(SurfaceRules.WaterConditionSource::offset),
+						Codec.intRange(-20, 20).fieldOf("surface_depth_multiplier").forGetter(SurfaceRules.WaterConditionSource::surfaceDepthMultiplier),
+						Codec.BOOL.fieldOf("add_stone_depth").forGetter(SurfaceRules.WaterConditionSource::addStoneDepth)
+					)
+					.apply(instance, SurfaceRules.WaterConditionSource::new)
 		);
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.ConditionSource> codec() {
+		public Codec<? extends SurfaceRules.ConditionSource> codec() {
 			return CODEC;
 		}
 
@@ -812,19 +792,17 @@ public class SurfaceRules {
 		final VerticalAnchor anchor;
 		final int surfaceDepthMultiplier;
 		final boolean addStoneDepth;
-		static final KeyDispatchDataCodec<SurfaceRules.YConditionSource> CODEC = KeyDispatchDataCodec.of(
-			RecordCodecBuilder.mapCodec(
-				instance -> instance.group(
-							VerticalAnchor.CODEC.fieldOf("anchor").forGetter(SurfaceRules.YConditionSource::anchor),
-							Codec.intRange(-20, 20).fieldOf("surface_depth_multiplier").forGetter(SurfaceRules.YConditionSource::surfaceDepthMultiplier),
-							Codec.BOOL.fieldOf("add_stone_depth").forGetter(SurfaceRules.YConditionSource::addStoneDepth)
-						)
-						.apply(instance, SurfaceRules.YConditionSource::new)
-			)
+		static final Codec<SurfaceRules.YConditionSource> CODEC = RecordCodecBuilder.create(
+			instance -> instance.group(
+						VerticalAnchor.CODEC.fieldOf("anchor").forGetter(SurfaceRules.YConditionSource::anchor),
+						Codec.intRange(-20, 20).fieldOf("surface_depth_multiplier").forGetter(SurfaceRules.YConditionSource::surfaceDepthMultiplier),
+						Codec.BOOL.fieldOf("add_stone_depth").forGetter(SurfaceRules.YConditionSource::addStoneDepth)
+					)
+					.apply(instance, SurfaceRules.YConditionSource::new)
 		);
 
 		@Override
-		public KeyDispatchDataCodec<? extends SurfaceRules.ConditionSource> codec() {
+		public Codec<? extends SurfaceRules.ConditionSource> codec() {
 			return CODEC;
 		}
 

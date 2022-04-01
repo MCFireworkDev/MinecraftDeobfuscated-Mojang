@@ -70,16 +70,14 @@ public class BehaviorUtils {
 	}
 
 	public static void setWalkAndLookTargetMemories(LivingEntity livingEntity, Entity entity, float f, int i) {
-		setWalkAndLookTargetMemories(livingEntity, new EntityTracker(entity, true), f, i);
+		WalkTarget walkTarget = new WalkTarget(new EntityTracker(entity, false), f, i);
+		livingEntity.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(entity, true));
+		livingEntity.getBrain().setMemory(MemoryModuleType.WALK_TARGET, walkTarget);
 	}
 
 	public static void setWalkAndLookTargetMemories(LivingEntity livingEntity, BlockPos blockPos, float f, int i) {
-		setWalkAndLookTargetMemories(livingEntity, new BlockPosTracker(blockPos), f, i);
-	}
-
-	public static void setWalkAndLookTargetMemories(LivingEntity livingEntity, PositionTracker positionTracker, float f, int i) {
-		WalkTarget walkTarget = new WalkTarget(positionTracker, f, i);
-		livingEntity.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, positionTracker);
+		WalkTarget walkTarget = new WalkTarget(new BlockPosTracker(blockPos), f, i);
+		livingEntity.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new BlockPosTracker(blockPos));
 		livingEntity.getBrain().setMemory(MemoryModuleType.WALK_TARGET, walkTarget);
 	}
 
@@ -109,7 +107,12 @@ public class BehaviorUtils {
 			return mob.closerThan(livingEntity, (double)j);
 		}
 
-		return mob.isWithinMeleeAttackRange(livingEntity);
+		return isWithinMeleeAttackRange(mob, livingEntity);
+	}
+
+	public static boolean isWithinMeleeAttackRange(Mob mob, LivingEntity livingEntity) {
+		double d = mob.distanceToSqr(livingEntity.getX(), livingEntity.getY(), livingEntity.getZ());
+		return d <= mob.getMeleeAttackRangeSqr(livingEntity);
 	}
 
 	public static boolean isOtherTargetMuchFurtherAwayThanCurrentAttackTarget(LivingEntity livingEntity, LivingEntity livingEntity2, double d) {
@@ -173,9 +176,5 @@ public class BehaviorUtils {
 		}
 
 		return vec3;
-	}
-
-	public static boolean isBreeding(LivingEntity livingEntity) {
-		return livingEntity.getBrain().hasMemoryValue(MemoryModuleType.BREED_TARGET);
 	}
 }

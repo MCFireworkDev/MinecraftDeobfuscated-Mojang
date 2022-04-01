@@ -24,7 +24,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
 
 public class LocateCommand {
 	private static final DynamicCommandExceptionType ERROR_FAILED = new DynamicCommandExceptionType(
@@ -39,24 +39,28 @@ public class LocateCommand {
 			Commands.literal("locate")
 				.requires(commandSourceStack -> commandSourceStack.hasPermission(2))
 				.then(
-					Commands.argument("structure", ResourceOrTagLocationArgument.resourceOrTag(Registry.STRUCTURE_REGISTRY))
-						.executes(commandContext -> locate(commandContext.getSource(), ResourceOrTagLocationArgument.getStructure(commandContext, "structure")))
+					Commands.argument("structure", ResourceOrTagLocationArgument.resourceOrTag(Registry.CONFIGURED_STRUCTURE_FEATURE_REGISTRY))
+						.executes(commandContext -> locate(commandContext.getSource(), ResourceOrTagLocationArgument.getStructureFeature(commandContext, "structure")))
 				)
 		);
 	}
 
-	private static int locate(CommandSourceStack commandSourceStack, ResourceOrTagLocationArgument.Result<Structure> result) throws CommandSyntaxException {
-		Registry<Structure> registry = commandSourceStack.getLevel().registryAccess().registryOrThrow(Registry.STRUCTURE_REGISTRY);
-		HolderSet<Structure> holderSet = (HolderSet)((Optional)result.unwrap()
+	private static int locate(CommandSourceStack commandSourceStack, ResourceOrTagLocationArgument.Result<ConfiguredStructureFeature<?, ?>> result) throws CommandSyntaxException {
+		Registry<ConfiguredStructureFeature<?, ?>> registry = commandSourceStack.getLevel()
+			.registryAccess()
+			.registryOrThrow(Registry.CONFIGURED_STRUCTURE_FEATURE_REGISTRY);
+		HolderSet<ConfiguredStructureFeature<?, ?>> holderSet = (HolderSet)((Optional)result.unwrap()
 				.map(resourceKey -> registry.getHolder(resourceKey).map(holder -> HolderSet.direct(holder)), registry::getTag))
 			.orElseThrow(() -> ERROR_INVALID.create(result.asPrintable()));
 		BlockPos blockPos = new BlockPos(commandSourceStack.getPosition());
 		ServerLevel serverLevel = commandSourceStack.getLevel();
-		Pair<BlockPos, Holder<Structure>> pair = serverLevel.getChunkSource().getGenerator().findNearestMapStructure(serverLevel, holderSet, blockPos, 100, false);
+		Pair<BlockPos, Holder<ConfiguredStructureFeature<?, ?>>> pair = serverLevel.getChunkSource()
+			.getGenerator()
+			.findNearestMapFeature(serverLevel, holderSet, blockPos, 100, false);
 		if (pair == null) {
 			throw ERROR_FAILED.create(result.asPrintable());
 		} else {
-			return showLocateResult(commandSourceStack, result, blockPos, pair, "commands.locate.success", false);
+			return showLocateResult(commandSourceStack, result, blockPos, pair, "commands.locate.success");
 		}
 	}
 
@@ -65,8 +69,7 @@ public class LocateCommand {
 		ResourceOrTagLocationArgument.Result<?> result,
 		BlockPos blockPos,
 		Pair<BlockPos, ? extends Holder<?>> pair,
-		String string,
-		boolean bl
+		String string
 	) {
 		BlockPos blockPos2 = pair.getFirst();
 		String string2 = result.unwrap()
@@ -78,12 +81,11 @@ public class LocateCommand {
 						+ (String)pair.getSecond().unwrapKey().map(resourceKey -> resourceKey.location().toString()).orElse("[unregistered]")
 						+ ")"
 			);
-		int i = bl ? Mth.floor(Mth.sqrt((float)blockPos.distSqr(blockPos2))) : Mth.floor(dist(blockPos.getX(), blockPos.getZ(), blockPos2.getX(), blockPos2.getZ()));
-		String string3 = bl ? String.valueOf(blockPos2.getY()) : "~";
-		Component component = ComponentUtils.wrapInSquareBrackets(new TranslatableComponent("chat.coordinates", blockPos2.getX(), string3, blockPos2.getZ()))
+		int i = Mth.floor(dist(blockPos.getX(), blockPos.getZ(), blockPos2.getX(), blockPos2.getZ()));
+		Component component = ComponentUtils.wrapInSquareBrackets(new TranslatableComponent("chat.coordinates", blockPos2.getX(), "~", blockPos2.getZ()))
 			.withStyle(
 				style -> style.withColor(ChatFormatting.GREEN)
-						.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/tp @s " + blockPos2.getX() + " " + string3 + " " + blockPos2.getZ()))
+						.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/tp @s " + blockPos2.getX() + " ~ " + blockPos2.getZ()))
 						.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TranslatableComponent("chat.coordinates.tooltip")))
 			);
 		commandSourceStack.sendSuccess(new TranslatableComponent(string, string2, component, i), false);

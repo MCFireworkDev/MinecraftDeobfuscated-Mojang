@@ -196,8 +196,6 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 	@Nullable
 	private static ShaderInstance rendertypeEntityTranslucentShader;
 	@Nullable
-	private static ShaderInstance rendertypeEntityTranslucentEmissiveShader;
-	@Nullable
 	private static ShaderInstance rendertypeEntitySmoothCutoutShader;
 	@Nullable
 	private static ShaderInstance rendertypeBeaconBeamShader;
@@ -550,12 +548,6 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 			);
 			list2.add(
 				Pair.of(
-					new ShaderInstance(resourceManager, "rendertype_entity_translucent_emissive", DefaultVertexFormat.NEW_ENTITY),
-					(Consumer)shaderInstance -> rendertypeEntityTranslucentEmissiveShader = shaderInstance
-				)
-			);
-			list2.add(
-				Pair.of(
 					new ShaderInstance(resourceManager, "rendertype_entity_smooth_cutout", DefaultVertexFormat.NEW_ENTITY),
 					(Consumer)shaderInstance -> rendertypeEntitySmoothCutoutShader = shaderInstance
 				)
@@ -820,7 +812,7 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 				float g = 1.0F;
 				AABB aABB = entity.getBoundingBox().expandTowards(vec32.scale(d)).inflate(1.0, 1.0, 1.0);
 				EntityHitResult entityHitResult = ProjectileUtil.getEntityHitResult(
-					entity, vec3, vec33, aABB, entityx -> !entityx.isSpectator() && entityx.isPickable(), e
+					entity, vec3, vec33, aABB, entity2x -> !entity2x.isSpectator() && entity2x.isPickable() && entity2x.getRootVehicle() != entity.getRootVehicle(), e
 				);
 				if (entityHitResult != null) {
 					Entity entity2 = entityHitResult.getEntity();
@@ -864,7 +856,7 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 		} else {
 			double d = 70.0;
 			if (bl) {
-				d = (double)((Integer)this.minecraft.options.fov().get()).intValue();
+				d = this.minecraft.options.fov;
 				d *= (double)Mth.lerp(f, this.oldFov, this.fov);
 			}
 
@@ -875,7 +867,7 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 
 			FogType fogType = camera.getFluidInCamera();
 			if (fogType == FogType.LAVA || fogType == FogType.WATER) {
-				d *= Mth.lerp(this.minecraft.options.fovEffectScale().get(), 1.0, 0.85714287F);
+				d *= (double)Mth.lerp(this.minecraft.options.fovEffectScale, 1.0F, 0.85714287F);
 			}
 
 			return d;
@@ -933,7 +925,7 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 			pose.normal().setIdentity();
 			poseStack.pushPose();
 			this.bobHurt(poseStack, f);
-			if (this.minecraft.options.bobView().get()) {
+			if (this.minecraft.options.bobView) {
 				this.bobView(poseStack, f);
 			}
 
@@ -960,7 +952,7 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 				this.bobHurt(poseStack, f);
 			}
 
-			if (this.minecraft.options.bobView().get()) {
+			if (this.minecraft.options.bobView) {
 				this.bobView(poseStack, f);
 			}
 		}
@@ -996,7 +988,7 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 	public void render(float f, long l, boolean bl) {
 		if (!this.minecraft.isWindowActive()
 			&& this.minecraft.options.pauseOnLostFocus
-			&& (!this.minecraft.options.touchscreen().get() || !this.minecraft.mouseHandler.isRightPressed())) {
+			&& (!this.minecraft.options.touchscreen || !this.minecraft.mouseHandler.isRightPressed())) {
 			if (Util.getMillis() - this.lastActiveTime > 500L) {
 				this.minecraft.pauseGame(false);
 			}
@@ -1044,9 +1036,8 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 				this.minecraft.getProfiler().popPush("gui");
 				if (this.minecraft.player != null) {
 					float g = Mth.lerp(f, this.minecraft.player.oPortalTime, this.minecraft.player.portalTime);
-					float h = ((Double)this.minecraft.options.screenEffectScale().get()).floatValue();
-					if (g > 0.0F && this.minecraft.player.hasEffect(MobEffects.CONFUSION) && h < 1.0F) {
-						this.renderConfusionOverlay(g * (1.0F - h));
+					if (g > 0.0F && this.minecraft.player.hasEffect(MobEffects.CONFUSION) && this.minecraft.options.screenEffectScale < 1.0F) {
+						this.renderConfusionOverlay(g * (1.0F - this.minecraft.options.screenEffectScale));
 					}
 				}
 
@@ -1200,21 +1191,22 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 		double d = this.getFov(camera, f, true);
 		poseStack2.last().pose().multiply(this.getProjectionMatrix(d));
 		this.bobHurt(poseStack2, f);
-		if (this.minecraft.options.bobView().get()) {
+		if (this.minecraft.options.bobView) {
 			this.bobView(poseStack2, f);
 		}
 
-		float g = ((Double)this.minecraft.options.screenEffectScale().get()).floatValue();
-		float h = Mth.lerp(f, this.minecraft.player.oPortalTime, this.minecraft.player.portalTime) * g * g;
-		if (h > 0.0F) {
+		float g = Mth.lerp(f, this.minecraft.player.oPortalTime, this.minecraft.player.portalTime)
+			* this.minecraft.options.screenEffectScale
+			* this.minecraft.options.screenEffectScale;
+		if (g > 0.0F) {
 			int i = this.minecraft.player.hasEffect(MobEffects.CONFUSION) ? 7 : 20;
-			float j = 5.0F / (h * h + 5.0F) - h * 0.04F;
-			j *= j;
+			float h = 5.0F / (g * g + 5.0F) - g * 0.04F;
+			h *= h;
 			Vector3f vector3f = new Vector3f(0.0F, Mth.SQRT_OF_TWO / 2.0F, Mth.SQRT_OF_TWO / 2.0F);
 			poseStack2.mulPose(vector3f.rotationDegrees(((float)this.tick + f) * (float)i));
-			poseStack2.scale(1.0F / j, 1.0F, 1.0F);
-			float k = -((float)this.tick + f) * (float)i;
-			poseStack2.mulPose(vector3f.rotationDegrees(k));
+			poseStack2.scale(1.0F / h, 1.0F, 1.0F);
+			float j = -((float)this.tick + f) * (float)i;
+			poseStack2.mulPose(vector3f.rotationDegrees(j));
 		}
 
 		Matrix4f matrix4f = poseStack2.last().pose();
@@ -1233,11 +1225,7 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 			RenderSystem.setInverseViewRotationMatrix(matrix3f);
 		}
 
-		this.minecraft
-			.levelRenderer
-			.prepareCullFrustum(
-				poseStack, camera.getPosition(), this.getProjectionMatrix(Math.max(d, (double)((Integer)this.minecraft.options.fov().get()).intValue()))
-			);
+		this.minecraft.levelRenderer.prepareCullFrustum(poseStack, camera.getPosition(), this.getProjectionMatrix(Math.max(d, this.minecraft.options.fov)));
 		this.minecraft.levelRenderer.renderLevel(poseStack, f, l, bl, camera, this, this.lightTexture, matrix4f);
 		this.minecraft.getProfiler().popPush("hand");
 		if (this.renderHand) {
@@ -1484,11 +1472,6 @@ public class GameRenderer implements ResourceManagerReloadListener, AutoCloseabl
 	@Nullable
 	public static ShaderInstance getRendertypeEntityTranslucentShader() {
 		return rendertypeEntityTranslucentShader;
-	}
-
-	@Nullable
-	public static ShaderInstance getRendertypeEntityTranslucentEmissiveShader() {
-		return rendertypeEntityTranslucentEmissiveShader;
 	}
 
 	@Nullable

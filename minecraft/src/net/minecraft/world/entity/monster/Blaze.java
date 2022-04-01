@@ -76,7 +76,7 @@ public class Blaze extends Monster {
 	}
 
 	@Override
-	public float getLightLevelDependentMagicValue() {
+	public float getBrightness() {
 		return 1.0F;
 	}
 
@@ -171,7 +171,11 @@ public class Blaze extends Monster {
 		@Override
 		public boolean canUse() {
 			LivingEntity livingEntity = this.blaze.getTarget();
-			return livingEntity != null && livingEntity.isAlive() && this.blaze.canAttack(livingEntity);
+			if (this.blaze.isPassenger() && this.blaze.getRootVehicle() == livingEntity) {
+				return false;
+			} else {
+				return livingEntity != null && livingEntity.isAlive() && this.blaze.canAttack(livingEntity);
+			}
 		}
 
 		@Override

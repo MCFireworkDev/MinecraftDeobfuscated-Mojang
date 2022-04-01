@@ -191,7 +191,7 @@ public class Vex extends Monster {
 	}
 
 	@Override
-	public float getLightLevelDependentMagicValue() {
+	public float getBrightness() {
 		return 1.0F;
 	}
 
@@ -222,9 +222,8 @@ public class Vex extends Monster {
 
 		@Override
 		public boolean canUse() {
-			LivingEntity livingEntity = Vex.this.getTarget();
-			if (livingEntity != null && livingEntity.isAlive() && !Vex.this.getMoveControl().hasWanted() && Vex.this.random.nextInt(reducedTickDelay(7)) == 0) {
-				return Vex.this.distanceToSqr(livingEntity) > 4.0;
+			if (Vex.this.getTarget() != null && !Vex.this.getMoveControl().hasWanted() && Vex.this.random.nextInt(reducedTickDelay(7)) == 0) {
+				return Vex.this.distanceToSqr(Vex.this.getTarget()) > 4.0;
 			} else {
 				return false;
 			}

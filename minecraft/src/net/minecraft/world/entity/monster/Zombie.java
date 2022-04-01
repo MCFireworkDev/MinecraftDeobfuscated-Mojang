@@ -9,7 +9,6 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -412,7 +411,6 @@ public class Zombie extends Monster {
 				serverLevel, serverLevel.getCurrentDifficultyAt(zombieVillager.blockPosition()), MobSpawnType.CONVERSION, new Zombie.ZombieGroupData(false, true), null
 			);
 			zombieVillager.setVillagerData(villager.getVillagerData());
-			zombieVillager.setGossips(villager.getGossips().store(NbtOps.INSTANCE).getValue());
 			zombieVillager.setTradeOffers(villager.getOffers().createTag());
 			zombieVillager.setVillagerXp(villager.getVillagerXp());
 			if (!this.isSilent()) {
@@ -434,6 +432,11 @@ public class Zombie extends Monster {
 	@Override
 	public boolean wantsToPickUp(ItemStack itemStack) {
 		return itemStack.is(Items.GLOW_INK_SAC) ? false : super.wantsToPickUp(itemStack);
+	}
+
+	@Override
+	public boolean canStealItem() {
+		return true;
 	}
 
 	@Nullable

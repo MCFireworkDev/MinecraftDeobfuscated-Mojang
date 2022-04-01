@@ -10,7 +10,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Blocks;
@@ -64,8 +66,21 @@ public class Camera {
 
 	public void tick() {
 		if (this.entity != null) {
-			this.eyeHeightOld = this.eyeHeight;
-			this.eyeHeight += (this.entity.getEyeHeight() - this.eyeHeight) * 0.5F;
+			float f;
+			label18: {
+				this.eyeHeightOld = this.eyeHeight;
+				if (!this.detached && this.entity.isCrouching()) {
+					Entity var3 = this.entity;
+					if (var3 instanceof LivingEntity livingEntity && livingEntity.getItemBySlot(EquipmentSlot.HEAD).is(Items.BARREL)) {
+						f = 0.875F;
+						break label18;
+					}
+				}
+
+				f = this.entity.getEyeHeight();
+			}
+
+			this.eyeHeight += (f - this.eyeHeight) * 0.5F;
 		}
 	}
 
@@ -160,7 +175,7 @@ public class Camera {
 	public Camera.NearPlane getNearPlane() {
 		Minecraft minecraft = Minecraft.getInstance();
 		double d = (double)minecraft.getWindow().getWidth() / (double)minecraft.getWindow().getHeight();
-		double e = Math.tan((double)((float)((Integer)minecraft.options.fov().get()).intValue() * (float) (Math.PI / 180.0)) / 2.0) * 0.05F;
+		double e = Math.tan(minecraft.options.fov * (float) (Math.PI / 180.0) / 2.0) * 0.05F;
 		double f = e * d;
 		Vec3 vec3 = new Vec3(this.forwards).scale(0.05F);
 		Vec3 vec32 = new Vec3(this.left).scale(f);
