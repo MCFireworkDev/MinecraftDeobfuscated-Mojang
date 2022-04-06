@@ -42,7 +42,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.BlockingQueue;
@@ -101,6 +100,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.ParticleUtils;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.util.valueproviders.UniformInt;
@@ -318,7 +318,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 						}
 
 						if (u != v) {
-							Random random = new Random((long)(p * p * 3121 + p * 45238971 ^ o * o * 418711 + o * 13761));
+							RandomSource randomSource = RandomSource.create((long)(p * p * 3121 + p * 45238971 ^ o * o * 418711 + o * 13761));
 							mutableBlockPos.set(p, u, o);
 							if (biome.warmEnoughToRain(mutableBlockPos)) {
 								if (m != 0) {
@@ -332,7 +332,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 								}
 
 								int x = this.ticks + p * p * 3121 + p * 45238971 + o * o * 418711 + o * 13761 & 31;
-								float y = -((float)x + f) / 32.0F * (3.0F + random.nextFloat());
+								float y = -((float)x + f) / 32.0F * (3.0F + randomSource.nextFloat());
 								double z = (double)p + 0.5 - d;
 								double aa = (double)o + 0.5 - g;
 								float ab = (float)Math.sqrt(z * z + aa * aa) / (float)l;
@@ -371,8 +371,8 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 								}
 
 								float ae = -((float)(this.ticks & 511) + f) / 512.0F;
-								float y = (float)(random.nextDouble() + (double)n * 0.01 * (double)((float)random.nextGaussian()));
-								float af = (float)(random.nextDouble() + (double)(n * (float)random.nextGaussian()) * 0.001);
+								float y = (float)(randomSource.nextDouble() + (double)n * 0.01 * (double)((float)randomSource.nextGaussian()));
+								float af = (float)(randomSource.nextDouble() + (double)(n * (float)randomSource.nextGaussian()) * 0.001);
 								double ag = (double)p + 0.5 - d;
 								double ah = (double)o + 0.5 - g;
 								float ac = (float)Math.sqrt(ag * ag + ah * ah) / (float)l;
@@ -422,15 +422,15 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 	public void tickRain(Camera camera) {
 		float f = this.minecraft.level.getRainLevel(1.0F) / (Minecraft.useFancyGraphics() ? 1.0F : 2.0F);
 		if (!(f <= 0.0F)) {
-			Random random = new Random((long)this.ticks * 312987231L);
+			RandomSource randomSource = RandomSource.create((long)this.ticks * 312987231L);
 			LevelReader levelReader = this.minecraft.level;
 			BlockPos blockPos = new BlockPos(camera.getPosition());
 			BlockPos blockPos2 = null;
 			int i = (int)(100.0F * f * f) / (this.minecraft.options.particles().get() == ParticleStatus.DECREASED ? 2 : 1);
 
 			for(int j = 0; j < i; ++j) {
-				int k = random.nextInt(21) - 10;
-				int l = random.nextInt(21) - 10;
+				int k = randomSource.nextInt(21) - 10;
+				int l = randomSource.nextInt(21) - 10;
 				BlockPos blockPos3 = levelReader.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPos.offset(k, 0, l));
 				Biome biome = levelReader.getBiome(blockPos3).value();
 				if (blockPos3.getY() > levelReader.getMinBuildHeight()
@@ -443,8 +443,8 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 						break;
 					}
 
-					double d = random.nextDouble();
-					double e = random.nextDouble();
+					double d = randomSource.nextDouble();
+					double e = randomSource.nextDouble();
 					BlockState blockState = levelReader.getBlockState(blockPos2);
 					FluidState fluidState = levelReader.getFluidState(blockPos2);
 					VoxelShape voxelShape = blockState.getCollisionShape(levelReader, blockPos2);
@@ -460,7 +460,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				}
 			}
 
-			if (blockPos2 != null && random.nextInt(3) < this.rainSoundTime++) {
+			if (blockPos2 != null && randomSource.nextInt(3) < this.rainSoundTime++) {
 				this.rainSoundTime = 0;
 				if (blockPos2.getY() > blockPos.getY() + 1
 					&& levelReader.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPos).getY() > Mth.floor((float)blockPos.getY())) {
@@ -646,14 +646,14 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 	}
 
 	private void drawStars(BufferBuilder bufferBuilder) {
-		Random random = new Random(10842L);
+		RandomSource randomSource = RandomSource.create(10842L);
 		bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 
 		for(int i = 0; i < 1500; ++i) {
-			double d = (double)(random.nextFloat() * 2.0F - 1.0F);
-			double e = (double)(random.nextFloat() * 2.0F - 1.0F);
-			double f = (double)(random.nextFloat() * 2.0F - 1.0F);
-			double g = (double)(0.15F + random.nextFloat() * 0.1F);
+			double d = (double)(randomSource.nextFloat() * 2.0F - 1.0F);
+			double e = (double)(randomSource.nextFloat() * 2.0F - 1.0F);
+			double f = (double)(randomSource.nextFloat() * 2.0F - 1.0F);
+			double g = (double)(0.15F + randomSource.nextFloat() * 0.1F);
 			double h = d * d + e * e + f * f;
 			if (h < 1.0 && h > 0.01) {
 				h = 1.0 / Math.sqrt(h);
@@ -669,7 +669,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				double p = Math.atan2(Math.sqrt(d * d + f * f), e);
 				double q = Math.sin(p);
 				double r = Math.cos(p);
-				double s = random.nextDouble() * Math.PI * 2.0;
+				double s = randomSource.nextDouble() * Math.PI * 2.0;
 				double t = Math.sin(s);
 				double u = Math.cos(s);
 
@@ -2708,7 +2708,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 	}
 
 	public void levelEvent(Player player, int i, BlockPos blockPos, int j) {
-		Random random = this.level.random;
+		RandomSource randomSource = this.level.random;
 		switch(i) {
 			case 1000:
 				this.level.playLocalSound(blockPos, SoundEvents.DISPENSER_DISPENSE, SoundSource.BLOCKS, 1.0F, 1.0F, false);
@@ -2726,24 +2726,28 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				this.level.playLocalSound(blockPos, SoundEvents.FIREWORK_ROCKET_SHOOT, SoundSource.NEUTRAL, 1.0F, 1.2F, false);
 				break;
 			case 1005:
-				this.level.playLocalSound(blockPos, SoundEvents.IRON_DOOR_OPEN, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+				this.level.playLocalSound(blockPos, SoundEvents.IRON_DOOR_OPEN, SoundSource.BLOCKS, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 1006:
-				this.level.playLocalSound(blockPos, SoundEvents.WOODEN_DOOR_OPEN, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+				this.level.playLocalSound(blockPos, SoundEvents.WOODEN_DOOR_OPEN, SoundSource.BLOCKS, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 1007:
-				this.level.playLocalSound(blockPos, SoundEvents.WOODEN_TRAPDOOR_OPEN, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+				this.level.playLocalSound(blockPos, SoundEvents.WOODEN_TRAPDOOR_OPEN, SoundSource.BLOCKS, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 1008:
-				this.level.playLocalSound(blockPos, SoundEvents.FENCE_GATE_OPEN, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+				this.level.playLocalSound(blockPos, SoundEvents.FENCE_GATE_OPEN, SoundSource.BLOCKS, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 1009:
 				if (j == 0) {
 					this.level
-						.playLocalSound(blockPos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 2.6F + (random.nextFloat() - random.nextFloat()) * 0.8F, false);
+						.playLocalSound(
+							blockPos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 2.6F + (randomSource.nextFloat() - randomSource.nextFloat()) * 0.8F, false
+						);
 				} else if (j == 1) {
 					this.level
-						.playLocalSound(blockPos, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundSource.BLOCKS, 0.7F, 1.6F + (random.nextFloat() - random.nextFloat()) * 0.4F, false);
+						.playLocalSound(
+							blockPos, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundSource.BLOCKS, 0.7F, 1.6F + (randomSource.nextFloat() - randomSource.nextFloat()) * 0.4F, false
+						);
 				}
 				break;
 			case 1010:
@@ -2754,74 +2758,90 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				}
 				break;
 			case 1011:
-				this.level.playLocalSound(blockPos, SoundEvents.IRON_DOOR_CLOSE, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+				this.level.playLocalSound(blockPos, SoundEvents.IRON_DOOR_CLOSE, SoundSource.BLOCKS, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 1012:
-				this.level.playLocalSound(blockPos, SoundEvents.WOODEN_DOOR_CLOSE, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+				this.level.playLocalSound(blockPos, SoundEvents.WOODEN_DOOR_CLOSE, SoundSource.BLOCKS, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 1013:
-				this.level.playLocalSound(blockPos, SoundEvents.WOODEN_TRAPDOOR_CLOSE, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+				this.level.playLocalSound(blockPos, SoundEvents.WOODEN_TRAPDOOR_CLOSE, SoundSource.BLOCKS, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 1014:
-				this.level.playLocalSound(blockPos, SoundEvents.FENCE_GATE_CLOSE, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+				this.level.playLocalSound(blockPos, SoundEvents.FENCE_GATE_CLOSE, SoundSource.BLOCKS, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 1015:
-				this.level.playLocalSound(blockPos, SoundEvents.GHAST_WARN, SoundSource.HOSTILE, 10.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false);
+				this.level
+					.playLocalSound(blockPos, SoundEvents.GHAST_WARN, SoundSource.HOSTILE, 10.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false);
 				break;
 			case 1016:
-				this.level.playLocalSound(blockPos, SoundEvents.GHAST_SHOOT, SoundSource.HOSTILE, 10.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false);
+				this.level
+					.playLocalSound(blockPos, SoundEvents.GHAST_SHOOT, SoundSource.HOSTILE, 10.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false);
 				break;
 			case 1017:
 				this.level
-					.playLocalSound(blockPos, SoundEvents.ENDER_DRAGON_SHOOT, SoundSource.HOSTILE, 10.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false);
+					.playLocalSound(
+						blockPos, SoundEvents.ENDER_DRAGON_SHOOT, SoundSource.HOSTILE, 10.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false
+					);
 				break;
 			case 1018:
-				this.level.playLocalSound(blockPos, SoundEvents.BLAZE_SHOOT, SoundSource.HOSTILE, 2.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false);
+				this.level
+					.playLocalSound(blockPos, SoundEvents.BLAZE_SHOOT, SoundSource.HOSTILE, 2.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false);
 				break;
 			case 1019:
 				this.level
 					.playLocalSound(
-						blockPos, SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, SoundSource.HOSTILE, 2.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false
+						blockPos, SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, SoundSource.HOSTILE, 2.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false
 					);
 				break;
 			case 1020:
 				this.level
-					.playLocalSound(blockPos, SoundEvents.ZOMBIE_ATTACK_IRON_DOOR, SoundSource.HOSTILE, 2.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false);
+					.playLocalSound(
+						blockPos, SoundEvents.ZOMBIE_ATTACK_IRON_DOOR, SoundSource.HOSTILE, 2.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false
+					);
 				break;
 			case 1021:
 				this.level
-					.playLocalSound(blockPos, SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, SoundSource.HOSTILE, 2.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false);
+					.playLocalSound(
+						blockPos, SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, SoundSource.HOSTILE, 2.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false
+					);
 				break;
 			case 1022:
 				this.level
-					.playLocalSound(blockPos, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.HOSTILE, 2.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false);
+					.playLocalSound(
+						blockPos, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.HOSTILE, 2.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false
+					);
 				break;
 			case 1024:
-				this.level.playLocalSound(blockPos, SoundEvents.WITHER_SHOOT, SoundSource.HOSTILE, 2.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false);
+				this.level
+					.playLocalSound(blockPos, SoundEvents.WITHER_SHOOT, SoundSource.HOSTILE, 2.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false);
 				break;
 			case 1025:
-				this.level.playLocalSound(blockPos, SoundEvents.BAT_TAKEOFF, SoundSource.NEUTRAL, 0.05F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false);
+				this.level
+					.playLocalSound(blockPos, SoundEvents.BAT_TAKEOFF, SoundSource.NEUTRAL, 0.05F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false);
 				break;
 			case 1026:
-				this.level.playLocalSound(blockPos, SoundEvents.ZOMBIE_INFECT, SoundSource.HOSTILE, 2.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false);
+				this.level
+					.playLocalSound(
+						blockPos, SoundEvents.ZOMBIE_INFECT, SoundSource.HOSTILE, 2.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false
+					);
 				break;
 			case 1027:
 				this.level
 					.playLocalSound(
-						blockPos, SoundEvents.ZOMBIE_VILLAGER_CONVERTED, SoundSource.HOSTILE, 2.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false
+						blockPos, SoundEvents.ZOMBIE_VILLAGER_CONVERTED, SoundSource.HOSTILE, 2.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false
 					);
 				break;
 			case 1029:
-				this.level.playLocalSound(blockPos, SoundEvents.ANVIL_DESTROY, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+				this.level.playLocalSound(blockPos, SoundEvents.ANVIL_DESTROY, SoundSource.BLOCKS, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 1030:
-				this.level.playLocalSound(blockPos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+				this.level.playLocalSound(blockPos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 1031:
 				this.level.playLocalSound(blockPos, SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.3F, this.level.random.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 1032:
-				this.minecraft.getSoundManager().play(SimpleSoundInstance.forLocalAmbience(SoundEvents.PORTAL_TRAVEL, random.nextFloat() * 0.4F + 0.8F, 0.25F));
+				this.minecraft.getSoundManager().play(SimpleSoundInstance.forLocalAmbience(SoundEvents.PORTAL_TRAVEL, randomSource.nextFloat() * 0.4F + 0.8F, 0.25F));
 				break;
 			case 1033:
 				this.level.playLocalSound(blockPos, SoundEvents.CHORUS_FLOWER_GROW, SoundSource.BLOCKS, 1.0F, 1.0F, false);
@@ -2833,10 +2853,10 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				this.level.playLocalSound(blockPos, SoundEvents.BREWING_STAND_BREW, SoundSource.BLOCKS, 1.0F, 1.0F, false);
 				break;
 			case 1036:
-				this.level.playLocalSound(blockPos, SoundEvents.IRON_TRAPDOOR_CLOSE, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+				this.level.playLocalSound(blockPos, SoundEvents.IRON_TRAPDOOR_CLOSE, SoundSource.BLOCKS, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 1037:
-				this.level.playLocalSound(blockPos, SoundEvents.IRON_TRAPDOOR_OPEN, SoundSource.BLOCKS, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+				this.level.playLocalSound(blockPos, SoundEvents.IRON_TRAPDOOR_OPEN, SoundSource.BLOCKS, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 1039:
 				this.level.playLocalSound(blockPos, SoundEvents.PHANTOM_BITE, SoundSource.HOSTILE, 0.3F, this.level.random.nextFloat() * 0.1F + 0.9F, false);
@@ -2844,12 +2864,14 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 			case 1040:
 				this.level
 					.playLocalSound(
-						blockPos, SoundEvents.ZOMBIE_CONVERTED_TO_DROWNED, SoundSource.HOSTILE, 2.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false
+						blockPos, SoundEvents.ZOMBIE_CONVERTED_TO_DROWNED, SoundSource.HOSTILE, 2.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false
 					);
 				break;
 			case 1041:
 				this.level
-					.playLocalSound(blockPos, SoundEvents.HUSK_CONVERTED_TO_ZOMBIE, SoundSource.HOSTILE, 2.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false);
+					.playLocalSound(
+						blockPos, SoundEvents.HUSK_CONVERTED_TO_ZOMBIE, SoundSource.HOSTILE, 2.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false
+					);
 				break;
 			case 1042:
 				this.level.playLocalSound(blockPos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 1.0F, this.level.random.nextFloat() * 0.1F + 0.9F, false);
@@ -2878,22 +2900,25 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 			case 1048:
 				this.level
 					.playLocalSound(
-						blockPos, SoundEvents.SKELETON_CONVERTED_TO_STRAY, SoundSource.HOSTILE, 2.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F, false
+						blockPos, SoundEvents.SKELETON_CONVERTED_TO_STRAY, SoundSource.HOSTILE, 2.0F, (randomSource.nextFloat() - randomSource.nextFloat()) * 0.2F + 1.0F, false
 					);
 				break;
 			case 1500:
 				ComposterBlock.handleFill(this.level, blockPos, j > 0);
 				break;
 			case 1501:
-				this.level.playLocalSound(blockPos, SoundEvents.LAVA_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 2.6F + (random.nextFloat() - random.nextFloat()) * 0.8F, false);
+				this.level
+					.playLocalSound(
+						blockPos, SoundEvents.LAVA_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 2.6F + (randomSource.nextFloat() - randomSource.nextFloat()) * 0.8F, false
+					);
 
 				for(int l = 0; l < 8; ++l) {
 					this.level
 						.addParticle(
 							ParticleTypes.LARGE_SMOKE,
-							(double)blockPos.getX() + random.nextDouble(),
+							(double)blockPos.getX() + randomSource.nextDouble(),
 							(double)blockPos.getY() + 1.2,
-							(double)blockPos.getZ() + random.nextDouble(),
+							(double)blockPos.getZ() + randomSource.nextDouble(),
 							0.0,
 							0.0,
 							0.0
@@ -2902,12 +2927,14 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				break;
 			case 1502:
 				this.level
-					.playLocalSound(blockPos, SoundEvents.REDSTONE_TORCH_BURNOUT, SoundSource.BLOCKS, 0.5F, 2.6F + (random.nextFloat() - random.nextFloat()) * 0.8F, false);
+					.playLocalSound(
+						blockPos, SoundEvents.REDSTONE_TORCH_BURNOUT, SoundSource.BLOCKS, 0.5F, 2.6F + (randomSource.nextFloat() - randomSource.nextFloat()) * 0.8F, false
+					);
 
 				for(int l = 0; l < 5; ++l) {
-					double al = (double)blockPos.getX() + random.nextDouble() * 0.6 + 0.2;
-					double am = (double)blockPos.getY() + random.nextDouble() * 0.6 + 0.2;
-					double an = (double)blockPos.getZ() + random.nextDouble() * 0.6 + 0.2;
+					double al = (double)blockPos.getX() + randomSource.nextDouble() * 0.6 + 0.2;
+					double am = (double)blockPos.getY() + randomSource.nextDouble() * 0.6 + 0.2;
+					double an = (double)blockPos.getZ() + randomSource.nextDouble() * 0.6 + 0.2;
 					this.level.addParticle(ParticleTypes.SMOKE, al, am, an, 0.0, 0.0, 0.0);
 				}
 				break;
@@ -2915,9 +2942,9 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				this.level.playLocalSound(blockPos, SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.BLOCKS, 1.0F, 1.0F, false);
 
 				for(int l = 0; l < 16; ++l) {
-					double al = (double)blockPos.getX() + (5.0 + random.nextDouble() * 6.0) / 16.0;
+					double al = (double)blockPos.getX() + (5.0 + randomSource.nextDouble() * 6.0) / 16.0;
 					double am = (double)blockPos.getY() + 0.8125;
-					double an = (double)blockPos.getZ() + (5.0 + random.nextDouble() * 6.0) / 16.0;
+					double an = (double)blockPos.getZ() + (5.0 + randomSource.nextDouble() * 6.0) / 16.0;
 					this.level.addParticle(ParticleTypes.SMOKE, al, am, an, 0.0, 0.0, 0.0);
 				}
 				break;
@@ -2938,13 +2965,13 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				double f = (double)blockPos.getZ() + (double)m * 0.6 + 0.5;
 
 				for(int n = 0; n < 10; ++n) {
-					double g = random.nextDouble() * 0.2 + 0.01;
-					double h = d + (double)k * 0.01 + (random.nextDouble() - 0.5) * (double)m * 0.5;
-					double o = e + (double)l * 0.01 + (random.nextDouble() - 0.5) * (double)l * 0.5;
-					double p = f + (double)m * 0.01 + (random.nextDouble() - 0.5) * (double)k * 0.5;
-					double q = (double)k * g + random.nextGaussian() * 0.01;
-					double r = (double)l * g + random.nextGaussian() * 0.01;
-					double s = (double)m * g + random.nextGaussian() * 0.01;
+					double g = randomSource.nextDouble() * 0.2 + 0.01;
+					double h = d + (double)k * 0.01 + (randomSource.nextDouble() - 0.5) * (double)m * 0.5;
+					double o = e + (double)l * 0.01 + (randomSource.nextDouble() - 0.5) * (double)l * 0.5;
+					double p = f + (double)m * 0.01 + (randomSource.nextDouble() - 0.5) * (double)k * 0.5;
+					double q = (double)k * g + randomSource.nextGaussian() * 0.01;
+					double r = (double)l * g + randomSource.nextGaussian() * 0.01;
+					double s = (double)m * g + randomSource.nextGaussian() * 0.01;
 					this.addParticle(ParticleTypes.SMOKE, h, o, p, q, r, s);
 				}
 				break;
@@ -2968,9 +2995,9 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 						vec3.x,
 						vec3.y,
 						vec3.z,
-						random.nextGaussian() * 0.15,
-						random.nextDouble() * 0.2,
-						random.nextGaussian() * 0.15
+						randomSource.nextGaussian() * 0.15,
+						randomSource.nextDouble() * 0.2,
+						randomSource.nextGaussian() * 0.15
 					);
 				}
 
@@ -2980,22 +3007,22 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				ParticleOptions particleOptions = i == 2007 ? ParticleTypes.INSTANT_EFFECT : ParticleTypes.EFFECT;
 
 				for(int z = 0; z < 100; ++z) {
-					double e = random.nextDouble() * 4.0;
-					double f = random.nextDouble() * Math.PI * 2.0;
+					double e = randomSource.nextDouble() * 4.0;
+					double f = randomSource.nextDouble() * Math.PI * 2.0;
 					double aa = Math.cos(f) * e;
-					double ab = 0.01 + random.nextDouble() * 0.5;
+					double ab = 0.01 + randomSource.nextDouble() * 0.5;
 					double ac = Math.sin(f) * e;
 					Particle particle = this.addParticleInternal(
 						particleOptions, particleOptions.getType().getOverrideLimiter(), vec3.x + aa * 0.1, vec3.y + 0.3, vec3.z + ac * 0.1, aa, ab, ac
 					);
 					if (particle != null) {
-						float ad = 0.75F + random.nextFloat() * 0.25F;
+						float ad = 0.75F + randomSource.nextFloat() * 0.25F;
 						particle.setColor(w * ad, x * ad, y * ad);
 						particle.setPower((float)e);
 					}
 				}
 
-				this.level.playLocalSound(blockPos, SoundEvents.SPLASH_POTION_BREAK, SoundSource.NEUTRAL, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+				this.level.playLocalSound(blockPos, SoundEvents.SPLASH_POTION_BREAK, SoundSource.NEUTRAL, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				break;
 			case 2003:
 				double t = (double)blockPos.getX() + 0.5;
@@ -3008,9 +3035,9 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 						t,
 						u,
 						d,
-						random.nextGaussian() * 0.15,
-						random.nextDouble() * 0.2,
-						random.nextGaussian() * 0.15
+						randomSource.nextGaussian() * 0.15,
+						randomSource.nextDouble() * 0.2,
+						randomSource.nextGaussian() * 0.15
 					);
 				}
 
@@ -3021,9 +3048,9 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				break;
 			case 2004:
 				for(int k = 0; k < 20; ++k) {
-					double u = (double)blockPos.getX() + 0.5 + (random.nextDouble() - 0.5) * 2.0;
-					double d = (double)blockPos.getY() + 0.5 + (random.nextDouble() - 0.5) * 2.0;
-					double e = (double)blockPos.getZ() + 0.5 + (random.nextDouble() - 0.5) * 2.0;
+					double u = (double)blockPos.getX() + 0.5 + (randomSource.nextDouble() - 0.5) * 2.0;
+					double d = (double)blockPos.getY() + 0.5 + (randomSource.nextDouble() - 0.5) * 2.0;
+					double e = (double)blockPos.getZ() + 0.5 + (randomSource.nextDouble() - 0.5) * 2.0;
 					this.level.addParticle(ParticleTypes.SMOKE, u, d, e, 0.0, 0.0, 0.0);
 					this.level.addParticle(ParticleTypes.FLAME, u, d, e, 0.0, 0.0, 0.0);
 				}
@@ -3033,10 +3060,10 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				break;
 			case 2006:
 				for(int l = 0; l < 200; ++l) {
-					float y = random.nextFloat() * 4.0F;
-					float ae = random.nextFloat() * (float) (Math.PI * 2);
+					float y = randomSource.nextFloat() * 4.0F;
+					float ae = randomSource.nextFloat() * (float) (Math.PI * 2);
 					double am = (double)(Mth.cos(ae) * y);
-					double an = 0.01 + random.nextDouble() * 0.5;
+					double an = 0.01 + randomSource.nextDouble() * 0.5;
 					double ah = (double)(Mth.sin(ae) * y);
 					Particle particle2 = this.addParticleInternal(
 						ParticleTypes.DRAGON_BREATH, false, (double)blockPos.getX() + am * 0.1, (double)blockPos.getY() + 0.3, (double)blockPos.getZ() + ah * 0.1, am, an, ah
@@ -3047,7 +3074,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				}
 
 				if (j == 1) {
-					this.level.playLocalSound(blockPos, SoundEvents.DRAGON_FIREBALL_EXPLODE, SoundSource.HOSTILE, 1.0F, random.nextFloat() * 0.1F + 0.9F, false);
+					this.level.playLocalSound(blockPos, SoundEvents.DRAGON_FIREBALL_EXPLODE, SoundSource.HOSTILE, 1.0F, randomSource.nextFloat() * 0.1F + 0.9F, false);
 				}
 				break;
 			case 2008:
@@ -3059,9 +3086,9 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 					this.level
 						.addParticle(
 							ParticleTypes.CLOUD,
-							(double)blockPos.getX() + random.nextDouble(),
+							(double)blockPos.getX() + randomSource.nextDouble(),
 							(double)blockPos.getY() + 1.2,
-							(double)blockPos.getZ() + random.nextDouble(),
+							(double)blockPos.getZ() + randomSource.nextDouble(),
 							0.0,
 							0.0,
 							0.0
@@ -3106,9 +3133,9 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 			case 3006:
 				int k = j >> 6;
 				if (k > 0) {
-					if (random.nextFloat() < 0.3F + (float)k * 0.1F) {
-						float x = 0.15F + 0.02F * (float)k * (float)k * random.nextFloat();
-						float y = 0.4F + 0.3F * (float)k * random.nextFloat();
+					if (randomSource.nextFloat() < 0.3F + (float)k * 0.1F) {
+						float x = 0.15F + 0.02F * (float)k * (float)k * randomSource.nextFloat();
+						float y = 0.4F + 0.3F * (float)k * randomSource.nextFloat();
 						this.level.playLocalSound(blockPos, SoundEvents.SCULK_BLOCK_CHARGE, SoundSource.BLOCKS, x, y, false);
 					}
 
@@ -3116,7 +3143,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 					IntProvider intProvider = UniformInt.of(0, k);
 					float ae = 0.005F;
 					Supplier<Vec3> supplier = () -> new Vec3(
-							Mth.nextDouble(random, -0.005F, 0.005F), Mth.nextDouble(random, -0.005F, 0.005F), Mth.nextDouble(random, -0.005F, 0.005F)
+							Mth.nextDouble(randomSource, -0.005F, 0.005F), Mth.nextDouble(randomSource, -0.005F, 0.005F), Mth.nextDouble(randomSource, -0.005F, 0.005F)
 						);
 					if (l == 0) {
 						for(Direction direction2 : Direction.values()) {
@@ -3139,9 +3166,9 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 					float ai = 0.07F;
 
 					for(int v = 0; v < m; ++v) {
-						float aj = 2.0F * random.nextFloat() - 1.0F;
-						float ag = 2.0F * random.nextFloat() - 1.0F;
-						float ak = 2.0F * random.nextFloat() - 1.0F;
+						float aj = 2.0F * randomSource.nextFloat() - 1.0F;
+						float ag = 2.0F * randomSource.nextFloat() - 1.0F;
+						float ak = 2.0F * randomSource.nextFloat() - 1.0F;
 						this.level
 							.addParticle(
 								ParticleTypes.SCULK_CHARGE_POP,

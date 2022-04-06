@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.Map.Entry;
@@ -97,7 +96,6 @@ import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundAddExperienceOrbPacket;
-import net.minecraft.network.protocol.game.ClientboundAddMobPacket;
 import net.minecraft.network.protocol.game.ClientboundAddPaintingPacket;
 import net.minecraft.network.protocol.game.ClientboundAddPlayerPacket;
 import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
@@ -218,6 +216,7 @@ import net.minecraft.stats.StatsCounter;
 import net.minecraft.tags.TagKey;
 import net.minecraft.tags.TagNetworkSerialization;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
@@ -299,7 +298,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 	private final DebugQueryHandler debugQueryHandler = new DebugQueryHandler(this);
 	private int serverChunkRadius = 3;
 	private int serverSimulationDistance = 3;
-	private final Random random = new Random();
+	private final RandomSource random = RandomSource.create();
 	private CommandDispatcher<SharedSuggestionProvider> commands = new CommandDispatcher<>();
 	private final RecipeManager recipeManager = new RecipeManager();
 	private final UUID id = UUID.randomUUID();
@@ -403,9 +402,25 @@ public class ClientPacketListener implements ClientGamePacketListener {
 			entity.recreateFromPacket(clientboundAddEntityPacket);
 			int i = clientboundAddEntityPacket.getId();
 			this.level.putNonPlayerEntity(i, entity);
-			if (entity instanceof AbstractMinecart) {
-				this.minecraft.getSoundManager().play(new MinecartSoundInstance((AbstractMinecart)entity));
+			this.postAddEntitySoundInstance(entity);
+		} else {
+			LOGGER.warn("Skipping Entity with id {}", entityType);
+		}
+	}
+
+	private void postAddEntitySoundInstance(Entity entity) {
+		if (entity instanceof AbstractMinecart) {
+			this.minecraft.getSoundManager().play(new MinecartSoundInstance((AbstractMinecart)entity));
+		} else if (entity instanceof Bee) {
+			boolean bl = ((Bee)entity).isAngry();
+			BeeSoundInstance beeSoundInstance;
+			if (bl) {
+				beeSoundInstance = new BeeAggressiveSoundInstance((Bee)entity);
+			} else {
+				beeSoundInstance = new BeeFlyingSoundInstance((Bee)entity);
 			}
+
+			this.minecraft.getSoundManager().queueTickingSound(beeSoundInstance);
 		}
 	}
 
@@ -793,29 +808,6 @@ public class ClientPacketListener implements ClientGamePacketListener {
 			} else if (clientboundAnimatePacket.getAction() == 5) {
 				this.minecraft.particleEngine.createTrackingEmitter(entity, ParticleTypes.ENCHANTED_HIT);
 			}
-		}
-	}
-
-	@Override
-	public void handleAddMob(ClientboundAddMobPacket clientboundAddMobPacket) {
-		PacketUtils.ensureRunningOnSameThread(clientboundAddMobPacket, this, this.minecraft);
-		LivingEntity livingEntity = (LivingEntity)EntityType.create(this.level, clientboundAddMobPacket.getType());
-		if (livingEntity != null) {
-			livingEntity.recreateFromPacket(clientboundAddMobPacket);
-			this.level.putNonPlayerEntity(clientboundAddMobPacket.getId(), livingEntity);
-			if (livingEntity instanceof Bee) {
-				boolean bl = ((Bee)livingEntity).isAngry();
-				BeeSoundInstance beeSoundInstance;
-				if (bl) {
-					beeSoundInstance = new BeeAggressiveSoundInstance((Bee)livingEntity);
-				} else {
-					beeSoundInstance = new BeeFlyingSoundInstance((Bee)livingEntity);
-				}
-
-				this.minecraft.getSoundManager().queueTickingSound(beeSoundInstance);
-			}
-		} else {
-			LOGGER.warn("Skipping Entity with id {}", clientboundAddMobPacket.getType());
 		}
 	}
 
@@ -1618,7 +1610,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		PacketUtils.ensureRunningOnSameThread(clientboundSoundPacket, this, this.minecraft);
 		this.minecraft
 			.level
-			.playSound(
+			.playSeededSound(
 				this.minecraft.player,
 				clientboundSoundPacket.getX(),
 				clientboundSoundPacket.getY(),
@@ -1626,7 +1618,8 @@ public class ClientPacketListener implements ClientGamePacketListener {
 				clientboundSoundPacket.getSound(),
 				clientboundSoundPacket.getSource(),
 				clientboundSoundPacket.getVolume(),
-				clientboundSoundPacket.getPitch()
+				clientboundSoundPacket.getPitch(),
+				clientboundSoundPacket.getSeed()
 			);
 	}
 
@@ -1637,13 +1630,14 @@ public class ClientPacketListener implements ClientGamePacketListener {
 		if (entity != null) {
 			this.minecraft
 				.level
-				.playSound(
+				.playSeededSound(
 					this.minecraft.player,
 					entity,
 					clientboundSoundEntityPacket.getSound(),
 					clientboundSoundEntityPacket.getSource(),
 					clientboundSoundEntityPacket.getVolume(),
-					clientboundSoundEntityPacket.getPitch()
+					clientboundSoundEntityPacket.getPitch(),
+					clientboundSoundEntityPacket.getSeed()
 				);
 		}
 	}
@@ -1659,6 +1653,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 					clientboundCustomSoundPacket.getSource(),
 					clientboundCustomSoundPacket.getVolume(),
 					clientboundCustomSoundPacket.getPitch(),
+					RandomSource.create(clientboundCustomSoundPacket.getSeed()),
 					false,
 					0,
 					SoundInstance.Attenuation.LINEAR,

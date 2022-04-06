@@ -429,4 +429,9 @@ public class ItemEntity extends Entity {
 	public SoundSource getSoundSource() {
 		return SoundSource.AMBIENT;
 	}
+
+	@Override
+	public float getVisualRotationYInDegrees() {
+		return 180.0F - this.getSpin(0.5F) / (float) (Math.PI * 2) * 360.0F;
+	}
 }

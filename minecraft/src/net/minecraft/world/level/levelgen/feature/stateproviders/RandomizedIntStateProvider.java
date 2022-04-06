@@ -5,9 +5,9 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
@@ -54,13 +54,13 @@ public class RandomizedIntStateProvider extends BlockStateProvider {
 	}
 
 	@Override
-	public BlockState getState(Random random, BlockPos blockPos) {
-		BlockState blockState = this.source.getState(random, blockPos);
+	public BlockState getState(RandomSource randomSource, BlockPos blockPos) {
+		BlockState blockState = this.source.getState(randomSource, blockPos);
 		if (this.property == null || !blockState.hasProperty(this.property)) {
 			this.property = findProperty(blockState, this.propertyName);
 		}
 
-		return blockState.setValue(this.property, Integer.valueOf(this.values.sample(random)));
+		return blockState.setValue(this.property, Integer.valueOf(this.values.sample(randomSource)));
 	}
 
 	private static IntegerProperty findProperty(BlockState blockState, String string) {

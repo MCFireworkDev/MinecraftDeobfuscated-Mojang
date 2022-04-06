@@ -6,8 +6,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import java.util.Random;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.VerticalAnchor;
 import net.minecraft.world.level.levelgen.WorldGenerationContext;
 import org.slf4j.Logger;
@@ -35,7 +35,7 @@ public class UniformHeight extends HeightProvider {
 	}
 
 	@Override
-	public int sample(Random random, WorldGenerationContext worldGenerationContext) {
+	public int sample(RandomSource randomSource, WorldGenerationContext worldGenerationContext) {
 		int i = this.minInclusive.resolveY(worldGenerationContext);
 		int j = this.maxInclusive.resolveY(worldGenerationContext);
 		if (i > j) {
@@ -45,7 +45,7 @@ public class UniformHeight extends HeightProvider {
 
 			return i;
 		} else {
-			return Mth.randomBetweenInclusive(random, i, j);
+			return Mth.randomBetweenInclusive(randomSource, i, j);
 		}
 	}
 

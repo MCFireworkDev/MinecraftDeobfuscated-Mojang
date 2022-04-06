@@ -335,7 +335,7 @@ public class SoundEngine {
 						float f = soundInstance.getVolume();
 						float g = Math.max(f, 1.0F) * (float)sound.getAttenuationDistance();
 						SoundSource soundSource = soundInstance.getSource();
-						float h = this.calculateVolume(soundInstance);
+						float h = this.calculateVolume(f, soundSource);
 						float i = this.calculatePitch(soundInstance);
 						SoundInstance.Attenuation attenuation = soundInstance.getAttenuation();
 						boolean bl = soundInstance.isRelative();
@@ -421,7 +421,11 @@ public class SoundEngine {
 	}
 
 	private float calculateVolume(SoundInstance soundInstance) {
-		return Mth.clamp(soundInstance.getVolume() * this.getVolume(soundInstance.getSource()), 0.0F, 1.0F);
+		return this.calculateVolume(soundInstance.getVolume(), soundInstance.getSource());
+	}
+
+	private float calculateVolume(float f, SoundSource soundSource) {
+		return Mth.clamp(f * this.getVolume(soundSource), 0.0F, 1.0F);
 	}
 
 	public void pause() {

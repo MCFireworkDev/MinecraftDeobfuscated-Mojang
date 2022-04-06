@@ -3,8 +3,8 @@ package net.minecraft.world.level.levelgen.placement;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.util.Random;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 public class SurfaceRelativeThresholdFilter extends PlacementFilter {
@@ -35,7 +35,7 @@ public class SurfaceRelativeThresholdFilter extends PlacementFilter {
 	}
 
 	@Override
-	protected boolean shouldPlace(PlacementContext placementContext, Random random, BlockPos blockPos) {
+	protected boolean shouldPlace(PlacementContext placementContext, RandomSource randomSource, BlockPos blockPos) {
 		long l = (long)placementContext.getHeight(this.heightmap, blockPos.getX(), blockPos.getZ());
 		long m = l + (long)this.minInclusive;
 		long n = l + (long)this.maxInclusive;

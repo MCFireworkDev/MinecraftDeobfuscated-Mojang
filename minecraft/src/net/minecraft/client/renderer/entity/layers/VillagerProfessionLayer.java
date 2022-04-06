@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.io.IOException;
+import java.util.Optional;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.Util;
@@ -78,45 +79,18 @@ public class VillagerProfessionLayer<T extends LivingEntity & VillagerDataHolder
 	public <K> VillagerMetaDataSection.Hat getHatData(
 		Object2ObjectMap<K, VillagerMetaDataSection.Hat> object2ObjectMap, String string, DefaultedRegistry<K> defaultedRegistry, K object
 	) {
-		return (VillagerMetaDataSection.Hat)object2ObjectMap.computeIfAbsent(object, object2 -> {
-			try {
-				Resource resource = this.resourceManager.getResource(this.getResourceLocation(string, defaultedRegistry.getKey(object)));
-
-				VillagerMetaDataSection.Hat var7;
-				label49: {
-					try {
-						VillagerMetaDataSection villagerMetaDataSection = resource.getMetadata(VillagerMetaDataSection.SERIALIZER);
-						if (villagerMetaDataSection != null) {
-							var7 = villagerMetaDataSection.getHat();
-							break label49;
+		return (VillagerMetaDataSection.Hat)object2ObjectMap.computeIfAbsent(
+			object,
+			object2 -> (VillagerMetaDataSection.Hat)this.resourceManager
+					.getResource(this.getResourceLocation(string, defaultedRegistry.getKey(object)))
+					.flatMap(resource -> {
+						try {
+							return resource.metadata().getSection(VillagerMetaDataSection.SERIALIZER).map(VillagerMetaDataSection::getHat);
+						} catch (IOException var2xx) {
+							return Optional.empty();
 						}
-					} catch (Throwable var9) {
-						if (resource != null) {
-							try {
-								resource.close();
-							} catch (Throwable var8) {
-								var9.addSuppressed(var8);
-							}
-						}
-
-						throw var9;
-					}
-
-					if (resource != null) {
-						resource.close();
-					}
-
-					return VillagerMetaDataSection.Hat.NONE;
-				}
-
-				if (resource != null) {
-					resource.close();
-				}
-
-				return var7;
-			} catch (IOException var10) {
-				return VillagerMetaDataSection.Hat.NONE;
-			}
-		});
+					})
+					.orElse(VillagerMetaDataSection.Hat.NONE)
+		);
 	}
 }

@@ -3,8 +3,8 @@ package net.minecraft.world.level.levelgen.placement;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.util.Random;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.biome.Biome;
 
 public class NoiseBasedCountPlacement extends RepeatingPlacement {
@@ -31,7 +31,7 @@ public class NoiseBasedCountPlacement extends RepeatingPlacement {
 	}
 
 	@Override
-	protected int count(Random random, BlockPos blockPos) {
+	protected int count(RandomSource randomSource, BlockPos blockPos) {
 		double d = Biome.BIOME_INFO_NOISE.getValue((double)blockPos.getX() / this.noiseFactor, (double)blockPos.getZ() / this.noiseFactor, false);
 		return (int)Math.ceil((d + this.noiseOffset) * (double)this.noiseToCountRatio);
 	}

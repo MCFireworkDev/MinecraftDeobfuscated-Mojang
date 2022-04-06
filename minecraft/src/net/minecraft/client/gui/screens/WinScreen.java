@@ -16,10 +16,8 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.io.Reader;
 import java.util.List;
-import java.util.Random;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
@@ -29,10 +27,9 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.GsonHelper;
-import org.apache.commons.io.IOUtils;
+import net.minecraft.util.RandomSource;
 import org.slf4j.Logger;
 
 @Environment(EnvType.CLIENT)
@@ -138,22 +135,34 @@ public class WinScreen extends Screen {
 	}
 
 	private void wrapCreditsIO(String string, WinScreen.CreditsReader creditsReader) {
-		Resource resource = null;
-
 		try {
-			resource = this.minecraft.getResourceManager().getResource(new ResourceLocation(string));
-			InputStreamReader inputStreamReader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
-			creditsReader.read(inputStreamReader);
+			Reader reader = this.minecraft.getResourceManager().openAsReader(new ResourceLocation(string));
+
+			try {
+				creditsReader.read(reader);
+			} catch (Throwable var7) {
+				if (reader != null) {
+					try {
+						reader.close();
+					} catch (Throwable var6) {
+						var7.addSuppressed(var6);
+					}
+				}
+
+				throw var7;
+			}
+
+			if (reader != null) {
+				reader.close();
+			}
 		} catch (Exception var8) {
 			LOGGER.error("Couldn't load credits", var8);
-		} finally {
-			IOUtils.closeQuietly(resource);
 		}
 	}
 
-	private void addPoemFile(InputStreamReader inputStreamReader) throws IOException {
-		BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-		Random random = new Random(8124371L);
+	private void addPoemFile(Reader reader) throws IOException {
+		BufferedReader bufferedReader = new BufferedReader(reader);
+		RandomSource randomSource = RandomSource.create(8124371L);
 
 		String string;
 		while((string = bufferedReader.readLine()) != null) {
@@ -162,7 +171,7 @@ public class WinScreen extends Screen {
 			String string3;
 			for(string = string.replaceAll("PLAYERNAME", this.minecraft.getUser().getName());
 				(i = string.indexOf(OBFUSCATE_TOKEN)) != -1;
-				string = string2 + ChatFormatting.WHITE + ChatFormatting.OBFUSCATED + "XXXXXXXX".substring(0, random.nextInt(4) + 3) + string3
+				string = string2 + ChatFormatting.WHITE + ChatFormatting.OBFUSCATED + "XXXXXXXX".substring(0, randomSource.nextInt(4) + 3) + string3
 			) {
 				string2 = string.substring(0, i);
 				string3 = string.substring(i + OBFUSCATE_TOKEN.length());
@@ -177,8 +186,8 @@ public class WinScreen extends Screen {
 		}
 	}
 
-	private void addCreditsFile(InputStreamReader inputStreamReader) {
-		for(JsonElement jsonElement : GsonHelper.parseArray(inputStreamReader)) {
+	private void addCreditsFile(Reader reader) {
+		for(JsonElement jsonElement : GsonHelper.parseArray(reader)) {
 			JsonObject jsonObject = jsonElement.getAsJsonObject();
 			String string = jsonObject.get("section").getAsString();
 			this.addCreditsLine(SECTION_HEADING, true);
@@ -314,6 +323,6 @@ public class WinScreen extends Screen {
 	@FunctionalInterface
 	@Environment(EnvType.CLIENT)
 	interface CreditsReader {
-		void read(InputStreamReader inputStreamReader) throws IOException;
+		void read(Reader reader) throws IOException;
 	}
 }

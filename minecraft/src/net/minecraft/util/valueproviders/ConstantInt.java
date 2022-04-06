@@ -4,7 +4,7 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.util.Random;
+import net.minecraft.util.RandomSource;
 
 public class ConstantInt extends IntProvider {
 	public static final ConstantInt ZERO = new ConstantInt(0);
@@ -30,7 +30,7 @@ public class ConstantInt extends IntProvider {
 	}
 
 	@Override
-	public int sample(Random random) {
+	public int sample(RandomSource randomSource) {
 		return this.value;
 	}
 

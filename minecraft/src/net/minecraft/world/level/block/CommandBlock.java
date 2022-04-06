@@ -1,10 +1,10 @@
 package net.minecraft.world.level.block;
 
 import com.mojang.logging.LogUtils;
-import java.util.Random;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -66,7 +66,7 @@ public class CommandBlock extends BaseEntityBlock implements GameMasterBlock {
 	}
 
 	@Override
-	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Random random) {
+	public void tick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, RandomSource randomSource) {
 		BlockEntity blockEntity = serverLevel.getBlockEntity(blockPos);
 		if (blockEntity instanceof CommandBlockEntity commandBlockEntity) {
 			BaseCommandBlock baseCommandBlock = commandBlockEntity.getCommandBlock();

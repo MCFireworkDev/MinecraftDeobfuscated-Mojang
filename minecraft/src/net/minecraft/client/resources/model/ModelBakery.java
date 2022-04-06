@@ -13,11 +13,8 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -56,7 +53,6 @@ import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.resources.ResourceThunk;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.block.Block;
@@ -359,81 +355,53 @@ public class ModelBakery {
 				Pair<UnbakedModel, Supplier<ModelBakery.ModelGroupKey>> pair = Pair.of(unbakedModel, (Supplier)() -> modelGroupKey);
 
 				try {
-					List<Pair<String, BlockModelDefinition>> list2;
-					try {
-						list2 = (List)this.resourceManager
-							.getResourceStack(resourceLocation3)
-							.stream()
-							.map(
-								resourceThunk -> {
+					for(Pair<String, BlockModelDefinition> pair2 : this.resourceManager
+						.getResourceStack(resourceLocation3)
+						.stream()
+						.map(
+							resource -> {
+								try {
+									Reader reader = resource.openAsReader();
+		
+									Pair var4x;
 									try {
-										Resource resource = resourceThunk.open();
-		
-										Pair var5x;
-										try {
-											InputStream inputStream = resource.getInputStream();
-		
+										var4x = Pair.of(resource.sourcePackId(), BlockModelDefinition.fromStream(this.context, reader));
+									} catch (Throwable var7xx) {
+										if (reader != null) {
 											try {
-												var5x = Pair.of(
-													resourceThunk.sourcePackId(), BlockModelDefinition.fromStream(this.context, new InputStreamReader(inputStream, StandardCharsets.UTF_8))
-												);
-											} catch (Throwable var9xx) {
-												if (inputStream != null) {
-													try {
-														inputStream.close();
-													} catch (Throwable var8xx) {
-														var9xx.addSuppressed(var8xx);
-													}
-												}
-		
-												throw var9xx;
+												reader.close();
+											} catch (Throwable var6xx) {
+												var7xx.addSuppressed(var6xx);
 											}
-		
-											if (inputStream != null) {
-												inputStream.close();
-											}
-										} catch (Throwable var10xx) {
-											if (resource != null) {
-												try {
-													resource.close();
-												} catch (Throwable var7xx) {
-													var10xx.addSuppressed(var7xx);
-												}
-											}
-		
-											throw var10xx;
 										}
 		
-										if (resource != null) {
-											resource.close();
-										}
-		
-										return var5x;
-									} catch (Exception var11xx) {
-										throw new ModelBakery.BlockStateDefinitionException(
-											String.format(
-												"Exception loading blockstate definition: '%s' in resourcepack: '%s': %s", resourceLocation3, resourceThunk.sourcePackId(), var11xx.getMessage()
-											)
-										);
+										throw var7xx;
 									}
+		
+									if (reader != null) {
+										reader.close();
+									}
+		
+									return var4x;
+								} catch (Exception var8xx) {
+									throw new ModelBakery.BlockStateDefinitionException(
+										String.format(
+											"Exception loading blockstate definition: '%s' in resourcepack: '%s': %s", resourceLocation3, resource.sourcePackId(), var8xx.getMessage()
+										)
+									);
 								}
-							)
-							.collect(Collectors.toList());
-					} catch (IOException var25) {
-						LOGGER.warn("Exception loading blockstate definition: {}: {}", resourceLocation3, var25);
-						return;
-					}
-
-					for(Pair<String, BlockModelDefinition> pair2 : list2) {
+							}
+						)
+						.toList()) {
 						BlockModelDefinition blockModelDefinition = pair2.getSecond();
-						Map<BlockState, Pair<UnbakedModel, Supplier<ModelBakery.ModelGroupKey>>> map4 = Maps.<BlockState, Pair<UnbakedModel, Supplier<ModelBakery.ModelGroupKey>>>newIdentityHashMap(
+						Map<BlockState, Pair<UnbakedModel, Supplier<ModelBakery.ModelGroupKey>>> map3 = Maps.<BlockState, Pair<UnbakedModel, Supplier<ModelBakery.ModelGroupKey>>>newIdentityHashMap(
 							
 						);
 						MultiPart multiPart;
 						if (blockModelDefinition.isMultiPart()) {
 							multiPart = blockModelDefinition.getMultiPart();
 							immutableList.forEach(
-								blockState -> map4.put(blockState, Pair.of(multiPart, (Supplier)() -> ModelBakery.ModelGroupKey.create(blockState, multiPart, list)))
+								blockState -> map3.put(blockState, Pair.of(multiPart, (Supplier)() -> ModelBakery.ModelGroupKey.create(blockState, multiPart, list)))
 							);
 						} else {
 							multiPart = null;
@@ -447,11 +415,11 @@ public class ModelBakery {
 											.filter(predicate(stateDefinition, string))
 											.forEach(
 												blockState -> {
-													Pair<UnbakedModel, Supplier<ModelBakery.ModelGroupKey>> pair2xxx = (Pair)map4.put(
+													Pair<UnbakedModel, Supplier<ModelBakery.ModelGroupKey>> pair2xxx = (Pair)map3.put(
 														blockState, Pair.of(multiVariant, (Supplier)() -> ModelBakery.ModelGroupKey.create(blockState, multiVariant, list))
 													);
 													if (pair2xxx != null && pair2xxx.getFirst() != multiPart) {
-														map4.put(blockState, pair);
+														map3.put(blockState, pair);
 														throw new RuntimeException(
 															"Overlapping definition with: "
 																+ (String)((Entry)blockModelDefinition.getVariants()
@@ -476,14 +444,14 @@ public class ModelBakery {
 									}
 								}
 							);
-						map2.putAll(map4);
+						map2.putAll(map3);
 					}
-				} catch (ModelBakery.BlockStateDefinitionException var26) {
-					throw var26;
-				} catch (Exception var27) {
-					throw new ModelBakery.BlockStateDefinitionException(String.format("Exception loading blockstate definition: '%s': %s", resourceLocation3, var27));
+				} catch (ModelBakery.BlockStateDefinitionException var24) {
+					throw var24;
+				} catch (Exception var25) {
+					throw new ModelBakery.BlockStateDefinitionException(String.format("Exception loading blockstate definition: '%s': %s", resourceLocation3, var25));
 				} finally {
-					Map<ModelBakery.ModelGroupKey, Set<BlockState>> map6 = Maps.newHashMap();
+					Map<ModelBakery.ModelGroupKey, Set<BlockState>> map5 = Maps.newHashMap();
 					map.forEach((modelResourceLocationx, blockState) -> {
 						Pair<UnbakedModel, Supplier<ModelBakery.ModelGroupKey>> pair2xx = (Pair)map2.get(blockState);
 						if (pair2xx == null) {
@@ -495,12 +463,12 @@ public class ModelBakery {
 
 						try {
 							ModelBakery.ModelGroupKey modelGroupKeyxx = (ModelBakery.ModelGroupKey)((Supplier)pair2xx.getSecond()).get();
-							((Set)map6.computeIfAbsent(modelGroupKeyxx, modelGroupKeyxx -> Sets.newIdentityHashSet())).add(blockState);
+							((Set)map5.computeIfAbsent(modelGroupKeyxx, modelGroupKeyxx -> Sets.newIdentityHashSet())).add(blockState);
 						} catch (Exception var9xx) {
 							LOGGER.warn("Exception evaluating model definition: '{}'", modelResourceLocationx, var9xx);
 						}
 					});
-					map6.forEach((modelGroupKeyx, set) -> {
+					map5.forEach((modelGroupKeyx, set) -> {
 						Iterator<BlockState> iterator = set.iterator();
 
 						while(iterator.hasNext()) {
@@ -558,7 +526,6 @@ public class ModelBakery {
 
 	private BlockModel loadBlockModel(ResourceLocation resourceLocation) throws IOException {
 		Reader reader = null;
-		Resource resource = null;
 
 		BlockModel blockModel;
 		try {
@@ -577,8 +544,7 @@ public class ModelBakery {
 
 					reader = new StringReader(string3);
 				} else {
-					resource = this.resourceManager.getResource(new ResourceLocation(resourceLocation.getNamespace(), "models/" + resourceLocation.getPath() + ".json"));
-					reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
+					reader = this.resourceManager.openAsReader(new ResourceLocation(resourceLocation.getNamespace(), "models/" + resourceLocation.getPath() + ".json"));
 				}
 
 				blockModel = BlockModel.fromStream(reader);
@@ -589,7 +555,6 @@ public class ModelBakery {
 			blockModel = BLOCK_ENTITY_MARKER;
 		} finally {
 			IOUtils.closeQuietly(reader);
-			IOUtils.closeQuietly(resource);
 		}
 
 		return blockModel;

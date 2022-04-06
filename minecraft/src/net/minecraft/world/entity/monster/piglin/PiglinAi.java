@@ -6,13 +6,13 @@ import com.mojang.datafixers.util.Pair;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.InteractionHand;
@@ -282,7 +282,7 @@ public class PiglinAi {
 		brain.setActiveActivityToFirstValid(ImmutableList.of(Activity.ADMIRE_ITEM, Activity.FIGHT, Activity.AVOID, Activity.CELEBRATE, Activity.RIDE, Activity.IDLE));
 		Activity activity2 = (Activity)brain.getActiveNonCoreActivity().orElse(null);
 		if (activity != activity2) {
-			getSoundForCurrentActivity(piglin).ifPresent(piglin::playSound);
+			getSoundForCurrentActivity(piglin).ifPresent(piglin::playSoundEvent);
 		}
 
 		piglin.setAggressive(brain.hasMemoryValue(MemoryModuleType.ATTACK_TARGET));
@@ -433,7 +433,7 @@ public class PiglinAi {
 		if (livingEntity2.getType() != EntityType.HOGLIN) {
 			return false;
 		} else {
-			return new Random(livingEntity.level.getGameTime()).nextFloat() < 0.1F;
+			return RandomSource.create(livingEntity.level.getGameTime()).nextFloat() < 0.1F;
 		}
 	}
 

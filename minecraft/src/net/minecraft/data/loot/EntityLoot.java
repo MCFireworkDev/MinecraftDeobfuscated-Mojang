@@ -10,12 +10,16 @@ import java.util.function.Consumer;
 import net.minecraft.advancements.critereon.DamageSourcePredicate;
 import net.minecraft.advancements.critereon.EntityFlagsPredicate;
 import net.minecraft.advancements.critereon.EntityPredicate;
+import net.minecraft.advancements.critereon.EntitySubPredicate;
+import net.minecraft.advancements.critereon.MinMaxBounds;
+import net.minecraft.advancements.critereon.SlimePredicate;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.animal.FrogVariant;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.ItemLike;
@@ -26,6 +30,7 @@ import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.EmptyLootItem;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
+import net.minecraft.world.level.storage.loot.entries.LootPoolSingletonContainer;
 import net.minecraft.world.level.storage.loot.entries.LootTableReference;
 import net.minecraft.world.level.storage.loot.entries.TagEntry;
 import net.minecraft.world.level.storage.loot.functions.LootingEnchantFunction;
@@ -33,6 +38,7 @@ import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraft.world.level.storage.loot.functions.SetPotionFunction;
 import net.minecraft.world.level.storage.loot.functions.SmeltItemFunction;
 import net.minecraft.world.level.storage.loot.predicates.DamageSourceCondition;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemEntityPropertyCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemKilledByPlayerCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemRandomChanceCondition;
@@ -465,9 +471,30 @@ public class EntityLoot implements Consumer<BiConsumer<ResourceLocation, LootTab
 					LootPool.lootPool()
 						.setRolls(ConstantValue.exactly(1.0F))
 						.add(
-							LootItem.lootTableItem(Items.MAGMA_CREAM)
-								.apply(SetItemCountFunction.setCount(UniformGenerator.between(-2.0F, 1.0F)))
-								.apply(LootingEnchantFunction.lootingMultiplier(UniformGenerator.between(0.0F, 1.0F)))
+							((LootPoolSingletonContainer.Builder)LootItem.lootTableItem(Items.MAGMA_CREAM)
+									.apply(SetItemCountFunction.setCount(UniformGenerator.between(-2.0F, 1.0F)))
+									.apply(LootingEnchantFunction.lootingMultiplier(UniformGenerator.between(0.0F, 1.0F)))
+									.when(this.killedByFrog().invert()))
+								.when(
+									LootItemEntityPropertyCondition.hasProperties(
+										LootContext.EntityTarget.THIS, EntityPredicate.Builder.entity().subPredicate(SlimePredicate.sized(MinMaxBounds.Ints.atLeast(2)))
+									)
+								)
+						)
+						.add(
+							LootItem.lootTableItem(Items.PEARLESCENT_FROGLIGHT)
+								.apply(SetItemCountFunction.setCount(ConstantValue.exactly(1.0F)))
+								.when(this.killedByFrogVariant(FrogVariant.WARM))
+						)
+						.add(
+							LootItem.lootTableItem(Items.VERDANT_FROGLIGHT)
+								.apply(SetItemCountFunction.setCount(ConstantValue.exactly(1.0F)))
+								.when(this.killedByFrogVariant(FrogVariant.COLD))
+						)
+						.add(
+							LootItem.lootTableItem(Items.OCHRE_FROGLIGHT)
+								.apply(SetItemCountFunction.setCount(ConstantValue.exactly(1.0F)))
+								.when(this.killedByFrogVariant(FrogVariant.TEMPERATE))
 						)
 				)
 		);
@@ -730,6 +757,13 @@ public class EntityLoot implements Consumer<BiConsumer<ResourceLocation, LootTab
 							LootItem.lootTableItem(Items.SLIME_BALL)
 								.apply(SetItemCountFunction.setCount(UniformGenerator.between(0.0F, 2.0F)))
 								.apply(LootingEnchantFunction.lootingMultiplier(UniformGenerator.between(0.0F, 1.0F)))
+								.when(this.killedByFrog().invert())
+						)
+						.add(LootItem.lootTableItem(Items.SLIME_BALL).apply(SetItemCountFunction.setCount(ConstantValue.exactly(1.0F))).when(this.killedByFrog()))
+						.when(
+							LootItemEntityPropertyCondition.hasProperties(
+								LootContext.EntityTarget.THIS, EntityPredicate.Builder.entity().subPredicate(SlimePredicate.sized(MinMaxBounds.Ints.exactly(1)))
+							)
 						)
 				)
 		);
@@ -1117,6 +1151,17 @@ public class EntityLoot implements Consumer<BiConsumer<ResourceLocation, LootTab
 		}
 
 		this.map.forEach(biConsumer);
+	}
+
+	private LootItemCondition.Builder killedByFrog() {
+		return DamageSourceCondition.hasDamageSource(DamageSourcePredicate.Builder.damageType().source(EntityPredicate.Builder.entity().of(EntityType.FROG)));
+	}
+
+	private LootItemCondition.Builder killedByFrogVariant(FrogVariant frogVariant) {
+		return DamageSourceCondition.hasDamageSource(
+			DamageSourcePredicate.Builder.damageType()
+				.source(EntityPredicate.Builder.entity().of(EntityType.FROG).subPredicate(EntitySubPredicate.variant(frogVariant)))
+		);
 	}
 
 	private void add(EntityType<?> entityType, LootTable.Builder builder) {

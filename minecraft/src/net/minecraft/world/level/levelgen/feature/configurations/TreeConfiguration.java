@@ -5,9 +5,11 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.List;
+import java.util.Optional;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.feature.featuresize.FeatureSize;
 import net.minecraft.world.level.levelgen.feature.foliageplacers.FoliagePlacer;
+import net.minecraft.world.level.levelgen.feature.rootplacers.RootPlacer;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
 import net.minecraft.world.level.levelgen.feature.treedecorators.TreeDecorator;
 import net.minecraft.world.level.levelgen.feature.trunkplacers.TrunkPlacer;
@@ -19,6 +21,7 @@ public class TreeConfiguration implements FeatureConfiguration {
 					TrunkPlacer.CODEC.fieldOf("trunk_placer").forGetter(treeConfiguration -> treeConfiguration.trunkPlacer),
 					BlockStateProvider.CODEC.fieldOf("foliage_provider").forGetter(treeConfiguration -> treeConfiguration.foliageProvider),
 					FoliagePlacer.CODEC.fieldOf("foliage_placer").forGetter(treeConfiguration -> treeConfiguration.foliagePlacer),
+					RootPlacer.CODEC.optionalFieldOf("root_placer").forGetter(treeConfiguration -> treeConfiguration.rootPlacer),
 					BlockStateProvider.CODEC.fieldOf("dirt_provider").forGetter(treeConfiguration -> treeConfiguration.dirtProvider),
 					FeatureSize.CODEC.fieldOf("minimum_size").forGetter(treeConfiguration -> treeConfiguration.minimumSize),
 					TreeDecorator.CODEC.listOf().fieldOf("decorators").forGetter(treeConfiguration -> treeConfiguration.decorators),
@@ -32,6 +35,7 @@ public class TreeConfiguration implements FeatureConfiguration {
 	public final TrunkPlacer trunkPlacer;
 	public final BlockStateProvider foliageProvider;
 	public final FoliagePlacer foliagePlacer;
+	public final Optional<RootPlacer> rootPlacer;
 	public final FeatureSize minimumSize;
 	public final List<TreeDecorator> decorators;
 	public final boolean ignoreVines;
@@ -42,6 +46,7 @@ public class TreeConfiguration implements FeatureConfiguration {
 		TrunkPlacer trunkPlacer,
 		BlockStateProvider blockStateProvider2,
 		FoliagePlacer foliagePlacer,
+		Optional<RootPlacer> optional,
 		BlockStateProvider blockStateProvider3,
 		FeatureSize featureSize,
 		List<TreeDecorator> list,
@@ -52,6 +57,7 @@ public class TreeConfiguration implements FeatureConfiguration {
 		this.trunkPlacer = trunkPlacer;
 		this.foliageProvider = blockStateProvider2;
 		this.foliagePlacer = foliagePlacer;
+		this.rootPlacer = optional;
 		this.dirtProvider = blockStateProvider3;
 		this.minimumSize = featureSize;
 		this.decorators = list;
@@ -64,6 +70,7 @@ public class TreeConfiguration implements FeatureConfiguration {
 		private final TrunkPlacer trunkPlacer;
 		public final BlockStateProvider foliageProvider;
 		private final FoliagePlacer foliagePlacer;
+		private final Optional<RootPlacer> rootPlacer;
 		private BlockStateProvider dirtProvider;
 		private final FeatureSize minimumSize;
 		private List<TreeDecorator> decorators = ImmutableList.of();
@@ -75,6 +82,7 @@ public class TreeConfiguration implements FeatureConfiguration {
 			TrunkPlacer trunkPlacer,
 			BlockStateProvider blockStateProvider2,
 			FoliagePlacer foliagePlacer,
+			Optional<RootPlacer> optional,
 			FeatureSize featureSize
 		) {
 			this.trunkProvider = blockStateProvider;
@@ -82,7 +90,18 @@ public class TreeConfiguration implements FeatureConfiguration {
 			this.foliageProvider = blockStateProvider2;
 			this.dirtProvider = BlockStateProvider.simple(Blocks.DIRT);
 			this.foliagePlacer = foliagePlacer;
+			this.rootPlacer = optional;
 			this.minimumSize = featureSize;
+		}
+
+		public TreeConfigurationBuilder(
+			BlockStateProvider blockStateProvider,
+			TrunkPlacer trunkPlacer,
+			BlockStateProvider blockStateProvider2,
+			FoliagePlacer foliagePlacer,
+			FeatureSize featureSize
+		) {
+			this(blockStateProvider, trunkPlacer, blockStateProvider2, foliagePlacer, Optional.empty(), featureSize);
 		}
 
 		public TreeConfiguration.TreeConfigurationBuilder dirt(BlockStateProvider blockStateProvider) {
@@ -111,6 +130,7 @@ public class TreeConfiguration implements FeatureConfiguration {
 				this.trunkPlacer,
 				this.foliageProvider,
 				this.foliagePlacer,
+				this.rootPlacer,
 				this.dirtProvider,
 				this.minimumSize,
 				this.decorators,

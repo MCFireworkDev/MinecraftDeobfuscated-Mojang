@@ -5,13 +5,13 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.List;
-import java.util.Random;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.FrontAndTop;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
@@ -55,7 +55,7 @@ public class FeaturePoolElement extends StructurePoolElement {
 
 	@Override
 	public List<StructureTemplate.StructureBlockInfo> getShuffledJigsawBlocks(
-		StructureTemplateManager structureTemplateManager, BlockPos blockPos, Rotation rotation, Random random
+		StructureTemplateManager structureTemplateManager, BlockPos blockPos, Rotation rotation, RandomSource randomSource
 	) {
 		List<StructureTemplate.StructureBlockInfo> list = Lists.<StructureTemplate.StructureBlockInfo>newArrayList();
 		list.add(
@@ -86,10 +86,10 @@ public class FeaturePoolElement extends StructurePoolElement {
 		BlockPos blockPos2,
 		Rotation rotation,
 		BoundingBox boundingBox,
-		Random random,
+		RandomSource randomSource,
 		boolean bl
 	) {
-		return ((PlacedFeature)this.feature.value()).place(worldGenLevel, chunkGenerator, random, blockPos);
+		return ((PlacedFeature)this.feature.value()).place(worldGenLevel, chunkGenerator, randomSource, blockPos);
 	}
 
 	@Override

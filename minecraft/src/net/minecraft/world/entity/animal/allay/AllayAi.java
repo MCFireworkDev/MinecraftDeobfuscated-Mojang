@@ -8,6 +8,7 @@ import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -29,7 +30,6 @@ import net.minecraft.world.entity.ai.behavior.SetWalkTargetFromLookTarget;
 import net.minecraft.world.entity.ai.behavior.StayCloseToTarget;
 import net.minecraft.world.entity.ai.behavior.Swim;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -123,12 +123,16 @@ public class AllayAi {
 	}
 
 	private static Optional<PositionTracker> getLikedPlayerPositionTracker(LivingEntity livingEntity) {
+		return getLikedPlayer(livingEntity).map(serverPlayer -> new EntityTracker(serverPlayer, true));
+	}
+
+	public static Optional<ServerPlayer> getLikedPlayer(LivingEntity livingEntity) {
 		Level level = livingEntity.getLevel();
 		if (!level.isClientSide() && level instanceof ServerLevel serverLevel) {
 			Optional<UUID> optional = livingEntity.getBrain().getMemory(MemoryModuleType.LIKED_PLAYER);
 			if (optional.isPresent()) {
 				Entity entity = serverLevel.getEntity((UUID)optional.get());
-				return entity instanceof Player ? Optional.of(new EntityTracker(entity, true)) : Optional.empty();
+				return entity instanceof ServerPlayer serverPlayer ? Optional.of(serverPlayer) : Optional.empty();
 			}
 		}
 
