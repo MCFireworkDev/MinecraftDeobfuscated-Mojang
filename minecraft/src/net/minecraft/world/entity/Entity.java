@@ -366,6 +366,13 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		return this.position().closerThan(entity.position(), d);
 	}
 
+	public boolean closerThan(Entity entity, double d, double e) {
+		double f = entity.getX() - this.getX();
+		double g = entity.getY() - this.getY();
+		double h = entity.getZ() - this.getZ();
+		return Mth.lengthSquared(f, h) < Mth.square(d) && Mth.square(g) < Mth.square(e);
+	}
+
 	protected void setRot(float f, float g) {
 		this.setYRot(f % 360.0F);
 		this.setXRot(g % 360.0F);
@@ -594,7 +601,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 			}
 
 			this.onGround = this.verticalCollision && vec3.y < 0.0;
-			BlockPos blockPos = this.getOnPos();
+			BlockPos blockPos = this.getOnPosLegacy();
 			BlockState blockState = this.level.getBlockState(blockPos);
 			this.checkFallDamage(vec32.y, this.onGround, blockState, blockPos);
 			if (this.isRemoved()) {
@@ -620,7 +627,8 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 					double f = vec32.y;
 					double g = vec32.z;
 					this.flyDist += (float)(vec32.length() * 0.6);
-					if (!blockState.is(BlockTags.CLIMBABLE) && !blockState.is(Blocks.POWDER_SNOW)) {
+					boolean bl3 = blockState.is(BlockTags.CLIMBABLE) || blockState.is(Blocks.POWDER_SNOW);
+					if (!bl3) {
 						f = 0.0;
 					}
 
@@ -646,7 +654,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 								this.playStepSound(blockPos, blockState);
 							}
 
-							if (movementEmission.emitsEvents()) {
+							if (movementEmission.emitsEvents() && (this.onGround || vec3.y == 0.0 || this.isInPowderSnow || bl3)) {
 								this.gameEvent(GameEvent.STEP);
 							}
 						}
@@ -707,9 +715,18 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		}
 	}
 
+	@Deprecated
+	public BlockPos getOnPosLegacy() {
+		return this.getOnPos(0.2F);
+	}
+
 	public BlockPos getOnPos() {
+		return this.getOnPos(1.0E-5F);
+	}
+
+	private BlockPos getOnPos(float f) {
 		int i = Mth.floor(this.position.x);
-		int j = Mth.floor(this.position.y - 0.2F);
+		int j = Mth.floor(this.position.y - (double)f);
 		int k = Mth.floor(this.position.z);
 		BlockPos blockPos = new BlockPos(i, j, k);
 		if (this.level.getBlockState(blockPos).isAir()) {
@@ -976,7 +993,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		return Entity.MovementEmission.ALL;
 	}
 
-	public boolean occludesVibrations() {
+	public boolean dampensVibrations() {
 		return false;
 	}
 
@@ -1115,7 +1132,12 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		this.gameEvent(GameEvent.SPLASH);
 	}
 
-	protected BlockState getBlockStateOn() {
+	@Deprecated
+	protected BlockState getBlockStateOnLegacy() {
+		return this.level.getBlockState(this.getOnPosLegacy());
+	}
+
+	public BlockState getBlockStateOn() {
 		return this.level.getBlockState(this.getOnPos());
 	}
 
@@ -1274,11 +1296,11 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 					e *= g;
 					d *= 0.05F;
 					e *= 0.05F;
-					if (!this.isVehicle()) {
+					if (!this.isVehicle() && this.isPushable()) {
 						this.push(-d, 0.0, -e);
 					}
 
-					if (!entity.isVehicle()) {
+					if (!entity.isVehicle() && entity.isPushable()) {
 						entity.push(d, 0.0, e);
 					}
 				}

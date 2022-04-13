@@ -7,6 +7,7 @@ import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import java.util.function.Function;
 import net.minecraft.Util;
@@ -42,14 +43,14 @@ public class StructureTemplatePool {
 	public static final Codec<Holder<StructureTemplatePool>> CODEC = RegistryFileCodec.create(Registry.TEMPLATE_POOL_REGISTRY, DIRECT_CODEC);
 	private final ResourceLocation name;
 	private final List<Pair<StructurePoolElement, Integer>> rawTemplates;
-	private final List<StructurePoolElement> templates;
+	private final ObjectArrayList<StructurePoolElement> templates;
 	private final ResourceLocation fallback;
 	private int maxSize = Integer.MIN_VALUE;
 
 	public StructureTemplatePool(ResourceLocation resourceLocation, ResourceLocation resourceLocation2, List<Pair<StructurePoolElement, Integer>> list) {
 		this.name = resourceLocation;
 		this.rawTemplates = list;
-		this.templates = Lists.<StructurePoolElement>newArrayList();
+		this.templates = new ObjectArrayList<>();
 
 		for(Pair<StructurePoolElement, Integer> pair : list) {
 			StructurePoolElement structurePoolElement = pair.getFirst();
@@ -70,7 +71,7 @@ public class StructureTemplatePool {
 	) {
 		this.name = resourceLocation;
 		this.rawTemplates = Lists.<Pair<StructurePoolElement, Integer>>newArrayList();
-		this.templates = Lists.<StructurePoolElement>newArrayList();
+		this.templates = new ObjectArrayList<>();
 
 		for(Pair<Function<StructureTemplatePool.Projection, ? extends StructurePoolElement>, Integer> pair : list) {
 			StructurePoolElement structurePoolElement = (StructurePoolElement)((Function)pair.getFirst()).apply(projection);
@@ -102,7 +103,7 @@ public class StructureTemplatePool {
 	}
 
 	public StructurePoolElement getRandomTemplate(RandomSource randomSource) {
-		return (StructurePoolElement)this.templates.get(randomSource.nextInt(this.templates.size()));
+		return this.templates.get(randomSource.nextInt(this.templates.size()));
 	}
 
 	public List<StructurePoolElement> getShuffledTemplates(RandomSource randomSource) {

@@ -358,7 +358,7 @@ public class Cat extends TamableAnimal {
 		TagKey<CatVariant> tagKey = bl ? CatVariantTags.FULL_MOON_SPAWNS : CatVariantTags.DEFAULT_SPAWNS;
 		Registry.CAT_VARIANT
 			.getTag(tagKey)
-			.flatMap(named -> named.getRandomElement(this.random))
+			.flatMap(named -> named.getRandomElement(serverLevelAccessor.getRandom()))
 			.ifPresent(holder -> this.setCatVariant((CatVariant)holder.value()));
 		ServerLevel serverLevel = serverLevelAccessor.getLevel();
 		if (serverLevel.structureManager().getStructureWithPieceAt(this.blockPosition(), StructureTags.CATS_SPAWN_AS_BLACK).isValid()) {

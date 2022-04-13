@@ -7,6 +7,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -105,7 +106,11 @@ public class SinglePoolElement extends StructurePoolElement {
 		StructureTemplateManager structureTemplateManager, BlockPos blockPos, Rotation rotation, RandomSource randomSource
 	) {
 		StructureTemplate structureTemplate = this.getTemplate(structureTemplateManager);
-		return Util.shuffledCopy(structureTemplate.filterBlocks(blockPos, new StructurePlaceSettings().setRotation(rotation), Blocks.JIGSAW, true), randomSource);
+		ObjectArrayList<StructureTemplate.StructureBlockInfo> objectArrayList = structureTemplate.filterBlocks(
+			blockPos, new StructurePlaceSettings().setRotation(rotation), Blocks.JIGSAW, true
+		);
+		Util.shuffle(objectArrayList, randomSource);
+		return objectArrayList;
 	}
 
 	@Override
