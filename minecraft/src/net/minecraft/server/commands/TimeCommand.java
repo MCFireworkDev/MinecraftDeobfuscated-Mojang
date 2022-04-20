@@ -6,7 +6,7 @@ import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.TimeArgument;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 
 public class TimeCommand {
@@ -52,7 +52,7 @@ public class TimeCommand {
 	}
 
 	private static int queryTime(CommandSourceStack commandSourceStack, int i) {
-		commandSourceStack.sendSuccess(new TranslatableComponent("commands.time.query", i), false);
+		commandSourceStack.sendSuccess(Component.translatable("commands.time.query", i), false);
 		return i;
 	}
 
@@ -61,7 +61,7 @@ public class TimeCommand {
 			serverLevel.setDayTime((long)i);
 		}
 
-		commandSourceStack.sendSuccess(new TranslatableComponent("commands.time.set", i), true);
+		commandSourceStack.sendSuccess(Component.translatable("commands.time.set", i), true);
 		return getDayTime(commandSourceStack.getLevel());
 	}
 
@@ -71,7 +71,7 @@ public class TimeCommand {
 		}
 
 		int j = getDayTime(commandSourceStack.getLevel());
-		commandSourceStack.sendSuccess(new TranslatableComponent("commands.time.set", j), true);
+		commandSourceStack.sendSuccess(Component.translatable("commands.time.set", j), true);
 		return j;
 	}
 }

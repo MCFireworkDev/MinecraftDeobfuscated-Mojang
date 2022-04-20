@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -271,16 +272,14 @@ public class ChunkRenderDispatcher {
 				return false;
 			}
 		};
-		final Set<RenderType> hasBlocks = new ObjectArraySet<>();
-		final Set<RenderType> hasLayer = new ObjectArraySet<>();
-		boolean isCompletelyEmpty = true;
+		final Set<RenderType> hasBlocks = new ObjectArraySet<>(RenderType.chunkBufferLayers().size());
 		final List<BlockEntity> renderableBlockEntities = Lists.<BlockEntity>newArrayList();
 		VisibilitySet visibilitySet = new VisibilitySet();
 		@Nullable
 		BufferBuilder.SortState transparencyState;
 
 		public boolean hasNoRenderableLayers() {
-			return this.isCompletelyEmpty;
+			return this.hasBlocks.isEmpty();
 		}
 
 		public boolean isEmpty(RenderType renderType) {
@@ -421,7 +420,7 @@ public class ChunkRenderDispatcher {
 				this.lastResortTransparencyTask.cancel();
 			}
 
-			if (!compiledChunk.hasLayer.contains(renderType)) {
+			if (!compiledChunk.hasBlocks.contains(renderType)) {
 				return false;
 			} else {
 				this.lastResortTransparencyTask = new ChunkRenderDispatcher.RenderChunk.ResortTransparencyTask(this.getDistToPlayerSqr(), compiledChunk);
@@ -548,7 +547,7 @@ public class ChunkRenderDispatcher {
 						return CompletableFuture.completedFuture(ChunkRenderDispatcher.ChunkTaskResult.CANCELLED);
 					} else {
 						List<CompletableFuture<Void>> list = Lists.newArrayList();
-						compiledChunk.hasLayer
+						compiledChunk.hasBlocks
 							.forEach(
 								renderType -> list.add(ChunkRenderDispatcher.this.uploadChunkLayer(chunkBufferBuilderPack.builder(renderType), RenderChunk.this.getBuffer(renderType)))
 							);
@@ -584,6 +583,7 @@ public class ChunkRenderDispatcher {
 				PoseStack poseStack = new PoseStack();
 				if (renderChunkRegion != null) {
 					ModelBlockRenderer.enableCaching();
+					Set<RenderType> set2 = new ReferenceArraySet<>(RenderType.chunkBufferLayers().size());
 					RandomSource randomSource = RandomSource.create();
 					BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
 
@@ -605,12 +605,11 @@ public class ChunkRenderDispatcher {
 						if (!fluidState.isEmpty()) {
 							RenderType renderType = ItemBlockRenderTypes.getRenderLayer(fluidState);
 							BufferBuilder bufferBuilder = chunkBufferBuilderPack.builder(renderType);
-							if (compiledChunk.hasLayer.add(renderType)) {
+							if (set2.add(renderType)) {
 								RenderChunk.this.beginLayer(bufferBuilder);
 							}
 
 							if (blockRenderDispatcher.renderLiquid(blockPos3, renderChunkRegion, bufferBuilder, blockState2, fluidState)) {
-								compiledChunk.isCompletelyEmpty = false;
 								compiledChunk.hasBlocks.add(renderType);
 							}
 						}
@@ -618,14 +617,13 @@ public class ChunkRenderDispatcher {
 						if (blockState.getRenderShape() != RenderShape.INVISIBLE) {
 							RenderType renderType = ItemBlockRenderTypes.getChunkRenderType(blockState);
 							BufferBuilder bufferBuilder = chunkBufferBuilderPack.builder(renderType);
-							if (compiledChunk.hasLayer.add(renderType)) {
+							if (set2.add(renderType)) {
 								RenderChunk.this.beginLayer(bufferBuilder);
 							}
 
 							poseStack.pushPose();
 							poseStack.translate((double)(blockPos3.getX() & 15), (double)(blockPos3.getY() & 15), (double)(blockPos3.getZ() & 15));
 							if (blockRenderDispatcher.renderBatched(blockState, blockPos3, renderChunkRegion, poseStack, bufferBuilder, true, randomSource)) {
-								compiledChunk.isCompletelyEmpty = false;
 								compiledChunk.hasBlocks.add(renderType);
 							}
 
@@ -639,7 +637,10 @@ public class ChunkRenderDispatcher {
 						compiledChunk.transparencyState = bufferBuilder2.getSortState();
 					}
 
-					compiledChunk.hasLayer.stream().map(chunkBufferBuilderPack::builder).forEach(BufferBuilder::end);
+					for(RenderType renderType2 : set2) {
+						chunkBufferBuilderPack.builder(renderType2).end();
+					}
+
 					ModelBlockRenderer.clearCache();
 				}
 
@@ -695,7 +696,7 @@ public class ChunkRenderDispatcher {
 					float g = (float)vec3.y;
 					float h = (float)vec3.z;
 					BufferBuilder.SortState sortState = this.compiledChunk.transparencyState;
-					if (sortState != null && this.compiledChunk.hasBlocks.contains(RenderType.translucent())) {
+					if (sortState != null && !this.compiledChunk.isEmpty(RenderType.translucent())) {
 						BufferBuilder bufferBuilder = chunkBufferBuilderPack.builder(RenderType.translucent());
 						RenderChunk.this.beginLayer(bufferBuilder);
 						bufferBuilder.restoreSortState(sortState);

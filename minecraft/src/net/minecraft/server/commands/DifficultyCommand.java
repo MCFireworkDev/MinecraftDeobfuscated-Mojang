@@ -7,13 +7,13 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.Difficulty;
 
 public class DifficultyCommand {
 	private static final DynamicCommandExceptionType ERROR_ALREADY_DIFFICULT = new DynamicCommandExceptionType(
-		object -> new TranslatableComponent("commands.difficulty.failure", object)
+		object -> Component.translatable("commands.difficulty.failure", object)
 	);
 
 	public static void register(CommandDispatcher<CommandSourceStack> commandDispatcher) {
@@ -25,7 +25,7 @@ public class DifficultyCommand {
 
 		commandDispatcher.register(literalArgumentBuilder.requires(commandSourceStack -> commandSourceStack.hasPermission(2)).executes(commandContext -> {
 			Difficulty difficultyxx = commandContext.getSource().getLevel().getDifficulty();
-			commandContext.getSource().sendSuccess(new TranslatableComponent("commands.difficulty.query", difficultyxx.getDisplayName()), false);
+			commandContext.getSource().sendSuccess(Component.translatable("commands.difficulty.query", difficultyxx.getDisplayName()), false);
 			return difficultyxx.getId();
 		}));
 	}
@@ -36,7 +36,7 @@ public class DifficultyCommand {
 			throw ERROR_ALREADY_DIFFICULT.create(difficulty.getKey());
 		} else {
 			minecraftServer.setDifficulty(difficulty, true);
-			commandSourceStack.sendSuccess(new TranslatableComponent("commands.difficulty.success", difficulty.getDisplayName()), true);
+			commandSourceStack.sendSuccess(Component.translatable("commands.difficulty.success", difficulty.getDisplayName()), true);
 			return 0;
 		}
 	}

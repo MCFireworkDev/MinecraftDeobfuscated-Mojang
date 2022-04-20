@@ -20,7 +20,6 @@ import net.minecraft.DefaultUncaughtExceptionHandler;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.game.ClientboundDisconnectPacket;
 import net.minecraft.network.protocol.login.ClientboundGameProfilePacket;
 import net.minecraft.network.protocol.login.ClientboundHelloPacket;
@@ -73,7 +72,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener 
 		}
 
 		if (this.tick++ == 600) {
-			this.disconnect(new TranslatableComponent("multiplayer.disconnect.slow_login"));
+			this.disconnect(Component.translatable("multiplayer.disconnect.slow_login"));
 		}
 	}
 
@@ -123,7 +122,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener 
 				}
 			} catch (Exception var5) {
 				LOGGER.error("Couldn't place player in world", var5);
-				Component component2 = new TranslatableComponent("multiplayer.disconnect.invalid_player_data");
+				Component component2 = Component.translatable("multiplayer.disconnect.invalid_player_data");
 				this.connection.send(new ClientboundDisconnectPacket(component2));
 				this.connection.disconnect(component2);
 			}
@@ -198,7 +197,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener 
 						ServerLoginPacketListenerImpl.this.gameProfile = ServerLoginPacketListenerImpl.this.createFakeProfile(gameProfile);
 						ServerLoginPacketListenerImpl.this.state = ServerLoginPacketListenerImpl.State.READY_TO_ACCEPT;
 					} else {
-						ServerLoginPacketListenerImpl.this.disconnect(new TranslatableComponent("multiplayer.disconnect.unverified_username"));
+						ServerLoginPacketListenerImpl.this.disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
 						ServerLoginPacketListenerImpl.LOGGER.error("Username '{}' tried to join with an invalid session", gameProfile.getName());
 					}
 				} catch (AuthenticationUnavailableException var3) {
@@ -207,7 +206,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener 
 						ServerLoginPacketListenerImpl.this.gameProfile = ServerLoginPacketListenerImpl.this.createFakeProfile(gameProfile);
 						ServerLoginPacketListenerImpl.this.state = ServerLoginPacketListenerImpl.State.READY_TO_ACCEPT;
 					} else {
-						ServerLoginPacketListenerImpl.this.disconnect(new TranslatableComponent("multiplayer.disconnect.authservers_down"));
+						ServerLoginPacketListenerImpl.this.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
 						ServerLoginPacketListenerImpl.LOGGER.error("Couldn't verify username because servers are unavailable");
 					}
 				}
@@ -227,7 +226,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener 
 
 	@Override
 	public void handleCustomQueryPacket(ServerboundCustomQueryPacket serverboundCustomQueryPacket) {
-		this.disconnect(new TranslatableComponent("multiplayer.disconnect.unexpected_query_response"));
+		this.disconnect(Component.translatable("multiplayer.disconnect.unexpected_query_response"));
 	}
 
 	protected GameProfile createFakeProfile(GameProfile gameProfile) {

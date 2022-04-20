@@ -10,8 +10,8 @@ import com.mojang.datafixers.schemas.Schema;
 import com.mojang.datafixers.types.Type;
 import com.mojang.serialization.Dynamic;
 import java.util.stream.Stream;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.util.GsonHelper;
 import org.apache.commons.lang3.StringUtils;
 
@@ -32,7 +32,7 @@ public class ItemWrittenBookPagesStrictJsonFix extends DataFix {
 								try {
 									component = GsonHelper.fromJson(BlockEntitySignTextStrictJsonFix.GSON, string, Component.class, true);
 									if (component == null) {
-										component = TextComponent.EMPTY;
+										component = CommonComponents.EMPTY;
 									}
 								} catch (Exception var6) {
 								}
@@ -52,13 +52,13 @@ public class ItemWrittenBookPagesStrictJsonFix extends DataFix {
 								}
 
 								if (component == null) {
-									component = new TextComponent(string);
+									component = Component.literal(string);
 								}
 							} else {
-								component = new TextComponent(string);
+								component = Component.literal(string);
 							}
 						} else {
-							component = TextComponent.EMPTY;
+							component = CommonComponents.EMPTY;
 						}
 
 						return dynamicxx.createString(Component.Serializer.toJson(component));

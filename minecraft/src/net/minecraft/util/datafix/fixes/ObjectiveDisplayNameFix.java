@@ -9,7 +9,6 @@ import com.mojang.datafixers.schemas.Schema;
 import com.mojang.datafixers.types.Type;
 import com.mojang.serialization.Dynamic;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 
 public class ObjectiveDisplayNameFix extends DataFix {
 	public ObjectiveDisplayNameFix(Schema schema, boolean bl) {
@@ -27,7 +26,7 @@ public class ObjectiveDisplayNameFix extends DataFix {
 					dynamic -> dynamic.update(
 							"DisplayName",
 							dynamic2 -> DataFixUtils.orElse(
-									dynamic2.asString().map(string -> Component.Serializer.toJson(new TextComponent(string))).map(dynamic::createString).result(), dynamic2
+									dynamic2.asString().map(string -> Component.Serializer.toJson(Component.literal(string))).map(dynamic::createString).result(), dynamic2
 								)
 						)
 				)

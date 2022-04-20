@@ -11,7 +11,6 @@ import com.mojang.datafixers.types.Type;
 import com.mojang.serialization.Dynamic;
 import java.util.stream.Stream;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 
 public class ItemLoreFix extends DataFix {
 	public ItemLoreFix(Schema schema, boolean bl) {
@@ -45,6 +44,6 @@ public class ItemLoreFix extends DataFix {
 	}
 
 	private static String fixLoreEntry(String string) {
-		return Component.Serializer.toJson(new TextComponent(string));
+		return Component.Serializer.toJson(Component.literal(string));
 	}
 }

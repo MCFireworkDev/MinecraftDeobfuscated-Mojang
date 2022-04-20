@@ -19,7 +19,6 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.bossevents.CustomBossEvent;
 import net.minecraft.server.bossevents.CustomBossEvents;
@@ -29,34 +28,34 @@ import net.minecraft.world.entity.player.Player;
 
 public class BossBarCommands {
 	private static final DynamicCommandExceptionType ERROR_ALREADY_EXISTS = new DynamicCommandExceptionType(
-		object -> new TranslatableComponent("commands.bossbar.create.failed", object)
+		object -> Component.translatable("commands.bossbar.create.failed", object)
 	);
 	private static final DynamicCommandExceptionType ERROR_DOESNT_EXIST = new DynamicCommandExceptionType(
-		object -> new TranslatableComponent("commands.bossbar.unknown", object)
+		object -> Component.translatable("commands.bossbar.unknown", object)
 	);
 	private static final SimpleCommandExceptionType ERROR_NO_PLAYER_CHANGE = new SimpleCommandExceptionType(
-		new TranslatableComponent("commands.bossbar.set.players.unchanged")
+		Component.translatable("commands.bossbar.set.players.unchanged")
 	);
 	private static final SimpleCommandExceptionType ERROR_NO_NAME_CHANGE = new SimpleCommandExceptionType(
-		new TranslatableComponent("commands.bossbar.set.name.unchanged")
+		Component.translatable("commands.bossbar.set.name.unchanged")
 	);
 	private static final SimpleCommandExceptionType ERROR_NO_COLOR_CHANGE = new SimpleCommandExceptionType(
-		new TranslatableComponent("commands.bossbar.set.color.unchanged")
+		Component.translatable("commands.bossbar.set.color.unchanged")
 	);
 	private static final SimpleCommandExceptionType ERROR_NO_STYLE_CHANGE = new SimpleCommandExceptionType(
-		new TranslatableComponent("commands.bossbar.set.style.unchanged")
+		Component.translatable("commands.bossbar.set.style.unchanged")
 	);
 	private static final SimpleCommandExceptionType ERROR_NO_VALUE_CHANGE = new SimpleCommandExceptionType(
-		new TranslatableComponent("commands.bossbar.set.value.unchanged")
+		Component.translatable("commands.bossbar.set.value.unchanged")
 	);
 	private static final SimpleCommandExceptionType ERROR_NO_MAX_CHANGE = new SimpleCommandExceptionType(
-		new TranslatableComponent("commands.bossbar.set.max.unchanged")
+		Component.translatable("commands.bossbar.set.max.unchanged")
 	);
 	private static final SimpleCommandExceptionType ERROR_ALREADY_HIDDEN = new SimpleCommandExceptionType(
-		new TranslatableComponent("commands.bossbar.set.visibility.unchanged.hidden")
+		Component.translatable("commands.bossbar.set.visibility.unchanged.hidden")
 	);
 	private static final SimpleCommandExceptionType ERROR_ALREADY_VISIBLE = new SimpleCommandExceptionType(
-		new TranslatableComponent("commands.bossbar.set.visibility.unchanged.visible")
+		Component.translatable("commands.bossbar.set.visibility.unchanged.visible")
 	);
 	public static final SuggestionProvider<CommandSourceStack> SUGGEST_BOSS_BAR = (commandContext, suggestionsBuilder) -> SharedSuggestionProvider.suggestResource(
 			commandContext.getSource().getServer().getCustomBossEvents().getIds(), suggestionsBuilder
@@ -206,31 +205,31 @@ public class BossBarCommands {
 	}
 
 	private static int getValue(CommandSourceStack commandSourceStack, CustomBossEvent customBossEvent) {
-		commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.get.value", customBossEvent.getDisplayName(), customBossEvent.getValue()), true);
+		commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.get.value", customBossEvent.getDisplayName(), customBossEvent.getValue()), true);
 		return customBossEvent.getValue();
 	}
 
 	private static int getMax(CommandSourceStack commandSourceStack, CustomBossEvent customBossEvent) {
-		commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.get.max", customBossEvent.getDisplayName(), customBossEvent.getMax()), true);
+		commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.get.max", customBossEvent.getDisplayName(), customBossEvent.getMax()), true);
 		return customBossEvent.getMax();
 	}
 
 	private static int getVisible(CommandSourceStack commandSourceStack, CustomBossEvent customBossEvent) {
 		if (customBossEvent.isVisible()) {
-			commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.get.visible.visible", customBossEvent.getDisplayName()), true);
+			commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.get.visible.visible", customBossEvent.getDisplayName()), true);
 			return 1;
 		} else {
-			commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.get.visible.hidden", customBossEvent.getDisplayName()), true);
+			commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.get.visible.hidden", customBossEvent.getDisplayName()), true);
 			return 0;
 		}
 	}
 
 	private static int getPlayers(CommandSourceStack commandSourceStack, CustomBossEvent customBossEvent) {
 		if (customBossEvent.getPlayers().isEmpty()) {
-			commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.get.players.none", customBossEvent.getDisplayName()), true);
+			commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.get.players.none", customBossEvent.getDisplayName()), true);
 		} else {
 			commandSourceStack.sendSuccess(
-				new TranslatableComponent(
+				Component.translatable(
 					"commands.bossbar.get.players.some",
 					customBossEvent.getDisplayName(),
 					customBossEvent.getPlayers().size(),
@@ -253,9 +252,9 @@ public class BossBarCommands {
 		} else {
 			customBossEvent.setVisible(bl);
 			if (bl) {
-				commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.set.visible.success.visible", customBossEvent.getDisplayName()), true);
+				commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.set.visible.success.visible", customBossEvent.getDisplayName()), true);
 			} else {
-				commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.set.visible.success.hidden", customBossEvent.getDisplayName()), true);
+				commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.set.visible.success.hidden", customBossEvent.getDisplayName()), true);
 			}
 
 			return 0;
@@ -267,7 +266,7 @@ public class BossBarCommands {
 			throw ERROR_NO_VALUE_CHANGE.create();
 		} else {
 			customBossEvent.setValue(i);
-			commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.set.value.success", customBossEvent.getDisplayName(), i), true);
+			commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.set.value.success", customBossEvent.getDisplayName(), i), true);
 			return i;
 		}
 	}
@@ -277,7 +276,7 @@ public class BossBarCommands {
 			throw ERROR_NO_MAX_CHANGE.create();
 		} else {
 			customBossEvent.setMax(i);
-			commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.set.max.success", customBossEvent.getDisplayName(), i), true);
+			commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.set.max.success", customBossEvent.getDisplayName(), i), true);
 			return i;
 		}
 	}
@@ -287,7 +286,7 @@ public class BossBarCommands {
 			throw ERROR_NO_COLOR_CHANGE.create();
 		} else {
 			customBossEvent.setColor(bossBarColor);
-			commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.set.color.success", customBossEvent.getDisplayName()), true);
+			commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.set.color.success", customBossEvent.getDisplayName()), true);
 			return 0;
 		}
 	}
@@ -297,7 +296,7 @@ public class BossBarCommands {
 			throw ERROR_NO_STYLE_CHANGE.create();
 		} else {
 			customBossEvent.setOverlay(bossBarOverlay);
-			commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.set.style.success", customBossEvent.getDisplayName()), true);
+			commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.set.style.success", customBossEvent.getDisplayName()), true);
 			return 0;
 		}
 	}
@@ -308,7 +307,7 @@ public class BossBarCommands {
 			throw ERROR_NO_NAME_CHANGE.create();
 		} else {
 			customBossEvent.setName(component2);
-			commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.set.name.success", customBossEvent.getDisplayName()), true);
+			commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.set.name.success", customBossEvent.getDisplayName()), true);
 			return 0;
 		}
 	}
@@ -319,10 +318,10 @@ public class BossBarCommands {
 			throw ERROR_NO_PLAYER_CHANGE.create();
 		} else {
 			if (customBossEvent.getPlayers().isEmpty()) {
-				commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.set.players.success.none", customBossEvent.getDisplayName()), true);
+				commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.set.players.success.none", customBossEvent.getDisplayName()), true);
 			} else {
 				commandSourceStack.sendSuccess(
-					new TranslatableComponent(
+					Component.translatable(
 						"commands.bossbar.set.players.success.some",
 						customBossEvent.getDisplayName(),
 						collection.size(),
@@ -339,10 +338,10 @@ public class BossBarCommands {
 	private static int listBars(CommandSourceStack commandSourceStack) {
 		Collection<CustomBossEvent> collection = commandSourceStack.getServer().getCustomBossEvents().getEvents();
 		if (collection.isEmpty()) {
-			commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.list.bars.none"), false);
+			commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.list.bars.none"), false);
 		} else {
 			commandSourceStack.sendSuccess(
-				new TranslatableComponent("commands.bossbar.list.bars.some", collection.size(), ComponentUtils.formatList(collection, CustomBossEvent::getDisplayName)),
+				Component.translatable("commands.bossbar.list.bars.some", collection.size(), ComponentUtils.formatList(collection, CustomBossEvent::getDisplayName)),
 				false
 			);
 		}
@@ -356,7 +355,7 @@ public class BossBarCommands {
 			throw ERROR_ALREADY_EXISTS.create(resourceLocation.toString());
 		} else {
 			CustomBossEvent customBossEvent = customBossEvents.create(resourceLocation, ComponentUtils.updateForEntity(commandSourceStack, component, null, 0));
-			commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.create.success", customBossEvent.getDisplayName()), true);
+			commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.create.success", customBossEvent.getDisplayName()), true);
 			return customBossEvents.getEvents().size();
 		}
 	}
@@ -365,7 +364,7 @@ public class BossBarCommands {
 		CustomBossEvents customBossEvents = commandSourceStack.getServer().getCustomBossEvents();
 		customBossEvent.removeAllPlayers();
 		customBossEvents.remove(customBossEvent);
-		commandSourceStack.sendSuccess(new TranslatableComponent("commands.bossbar.remove.success", customBossEvent.getDisplayName()), true);
+		commandSourceStack.sendSuccess(Component.translatable("commands.bossbar.remove.success", customBossEvent.getDisplayName()), true);
 		return customBossEvents.getEvents().size();
 	}
 

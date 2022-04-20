@@ -32,8 +32,6 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -1742,7 +1740,7 @@ public abstract class Player extends LivingEntity {
 
 	@Override
 	public Component getName() {
-		return new TextComponent(this.gameProfile.getName());
+		return Component.literal(this.gameProfile.getName());
 	}
 
 	public PlayerEnderChestContainer getEnderChestInventory() {
@@ -2085,11 +2083,11 @@ public abstract class Player extends LivingEntity {
 
 	public static enum BedSleepingProblem {
 		NOT_POSSIBLE_HERE,
-		NOT_POSSIBLE_NOW(new TranslatableComponent("block.minecraft.bed.no_sleep")),
-		TOO_FAR_AWAY(new TranslatableComponent("block.minecraft.bed.too_far_away")),
-		OBSTRUCTED(new TranslatableComponent("block.minecraft.bed.obstructed")),
+		NOT_POSSIBLE_NOW(Component.translatable("block.minecraft.bed.no_sleep")),
+		TOO_FAR_AWAY(Component.translatable("block.minecraft.bed.too_far_away")),
+		OBSTRUCTED(Component.translatable("block.minecraft.bed.obstructed")),
 		OTHER_PROBLEM,
-		NOT_SAFE(new TranslatableComponent("block.minecraft.bed.not_safe"));
+		NOT_SAFE(Component.translatable("block.minecraft.bed.not_safe"));
 
 		@Nullable
 		private final Component message;

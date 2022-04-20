@@ -17,7 +17,7 @@ import net.minecraft.commands.arguments.blocks.BlockPredicateArgument;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Clearable;
 import net.minecraft.world.level.block.Blocks;
@@ -28,11 +28,11 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 public class CloneCommands {
 	private static final int MAX_CLONE_AREA = 32768;
-	private static final SimpleCommandExceptionType ERROR_OVERLAP = new SimpleCommandExceptionType(new TranslatableComponent("commands.clone.overlap"));
+	private static final SimpleCommandExceptionType ERROR_OVERLAP = new SimpleCommandExceptionType(Component.translatable("commands.clone.overlap"));
 	private static final Dynamic2CommandExceptionType ERROR_AREA_TOO_LARGE = new Dynamic2CommandExceptionType(
-		(object, object2) -> new TranslatableComponent("commands.clone.toobig", object, object2)
+		(object, object2) -> Component.translatable("commands.clone.toobig", object, object2)
 	);
-	private static final SimpleCommandExceptionType ERROR_FAILED = new SimpleCommandExceptionType(new TranslatableComponent("commands.clone.failed"));
+	private static final SimpleCommandExceptionType ERROR_FAILED = new SimpleCommandExceptionType(Component.translatable("commands.clone.failed"));
 	public static final Predicate<BlockInWorld> FILTER_AIR = blockInWorld -> !blockInWorld.getState().isAir();
 
 	public static void register(CommandDispatcher<CommandSourceStack> commandDispatcher, CommandBuildContext commandBuildContext) {
@@ -318,7 +318,7 @@ public class CloneCommands {
 					if (l == 0) {
 						throw ERROR_FAILED.create();
 					} else {
-						commandSourceStack.sendSuccess(new TranslatableComponent("commands.clone.success", l), true);
+						commandSourceStack.sendSuccess(Component.translatable("commands.clone.success", l), true);
 						return l;
 					}
 				} else {
