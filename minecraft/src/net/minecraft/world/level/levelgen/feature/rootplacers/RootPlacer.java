@@ -15,6 +15,7 @@ import net.minecraft.world.level.LevelSimulatedReader;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.levelgen.feature.TreeFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
 import net.minecraft.world.level.material.FluidState;
@@ -50,6 +51,10 @@ public abstract class RootPlacer {
 		TreeConfiguration treeConfiguration
 	);
 
+	protected boolean canPlaceRoot(LevelSimulatedReader levelSimulatedReader, BlockPos blockPos) {
+		return TreeFeature.validTreePos(levelSimulatedReader, blockPos);
+	}
+
 	protected void placeRoot(
 		LevelSimulatedReader levelSimulatedReader,
 		BiConsumer<BlockPos, BlockState> biConsumer,
@@ -57,15 +62,18 @@ public abstract class RootPlacer {
 		BlockPos blockPos,
 		TreeConfiguration treeConfiguration
 	) {
-		biConsumer.accept(blockPos, this.getPotentiallyWaterloggedState(levelSimulatedReader, blockPos, this.rootProvider.getState(randomSource, blockPos)));
-		if (this.aboveRootPlacement.isPresent()) {
-			AboveRootPlacement aboveRootPlacement = (AboveRootPlacement)this.aboveRootPlacement.get();
-			BlockPos blockPos2 = blockPos.above();
-			if (randomSource.nextFloat() < aboveRootPlacement.aboveRootPlacementChance()
-				&& levelSimulatedReader.isStateAtPosition(blockPos2, BlockBehaviour.BlockStateBase::isAir)) {
-				biConsumer.accept(
-					blockPos2, this.getPotentiallyWaterloggedState(levelSimulatedReader, blockPos2, aboveRootPlacement.aboveRootProvider().getState(randomSource, blockPos2))
-				);
+		if (this.canPlaceRoot(levelSimulatedReader, blockPos)) {
+			biConsumer.accept(blockPos, this.getPotentiallyWaterloggedState(levelSimulatedReader, blockPos, this.rootProvider.getState(randomSource, blockPos)));
+			if (this.aboveRootPlacement.isPresent()) {
+				AboveRootPlacement aboveRootPlacement = (AboveRootPlacement)this.aboveRootPlacement.get();
+				BlockPos blockPos2 = blockPos.above();
+				if (randomSource.nextFloat() < aboveRootPlacement.aboveRootPlacementChance()
+					&& levelSimulatedReader.isStateAtPosition(blockPos2, BlockBehaviour.BlockStateBase::isAir)) {
+					biConsumer.accept(
+						blockPos2,
+						this.getPotentiallyWaterloggedState(levelSimulatedReader, blockPos2, aboveRootPlacement.aboveRootProvider().getState(randomSource, blockPos2))
+					);
+				}
 			}
 		}
 	}

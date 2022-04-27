@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.function.BooleanSupplier;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -150,42 +151,44 @@ public class Main {
 				WorldLoader.InitConfig initConfig = new WorldLoader.InitConfig(
 					packConfig, Commands.CommandSelection.DEDICATED, dedicatedServerSettings.getProperties().functionPermissionLevel
 				);
-				worldStem = (WorldStem)WorldStem.load(
-						initConfig,
-						(resourceManager, dataPackConfig) -> {
-							RegistryAccess.Writable writable = RegistryAccess.builtinCopy();
-							DynamicOps<Tag> dynamicOps = RegistryOps.createAndLoad(NbtOps.INSTANCE, writable, resourceManager);
-							WorldData worldDataxx = levelStorageAccess.getDataTag(dynamicOps, dataPackConfig, writable.allElementsLifecycle());
-							if (worldDataxx != null) {
-								return Pair.of(worldDataxx, writable.freeze());
-							} else {
-								LevelSettings levelSettings;
-								WorldGenSettings worldGenSettings;
-								if (optionSet.has(optionSpec3)) {
-									levelSettings = MinecraftServer.DEMO_SETTINGS;
-									worldGenSettings = WorldPresets.demoSettings(writable);
-								} else {
-									DedicatedServerProperties dedicatedServerProperties = dedicatedServerSettings.getProperties();
-									levelSettings = new LevelSettings(
-										dedicatedServerProperties.levelName,
-										dedicatedServerProperties.gamemode,
-										dedicatedServerProperties.hardcore,
-										dedicatedServerProperties.difficulty,
-										false,
-										new GameRules(),
-										dataPackConfig
-									);
-									worldGenSettings = optionSet.has(optionSpec4)
-										? dedicatedServerProperties.getWorldGenSettings(writable).withBonusChest()
-										: dedicatedServerProperties.getWorldGenSettings(writable);
-								}
-		
-								PrimaryLevelData primaryLevelData = new PrimaryLevelData(levelSettings, worldGenSettings, Lifecycle.stable());
-								return Pair.of(primaryLevelData, writable.freeze());
-							}
-						},
-						Util.backgroundExecutor(),
-						Runnable::run
+				worldStem = (WorldStem)Util.blockUntilDone(
+						executor -> WorldStem.load(
+								initConfig,
+								(resourceManager, dataPackConfig) -> {
+									RegistryAccess.Writable writable = RegistryAccess.builtinCopy();
+									DynamicOps<Tag> dynamicOps = RegistryOps.createAndLoad(NbtOps.INSTANCE, writable, resourceManager);
+									WorldData worldDataxx = levelStorageAccess.getDataTag(dynamicOps, dataPackConfig, writable.allElementsLifecycle());
+									if (worldDataxx != null) {
+										return Pair.of(worldDataxx, writable.freeze());
+									} else {
+										LevelSettings levelSettings;
+										WorldGenSettings worldGenSettings;
+										if (optionSet.has(optionSpec3)) {
+											levelSettings = MinecraftServer.DEMO_SETTINGS;
+											worldGenSettings = WorldPresets.demoSettings(writable);
+										} else {
+											DedicatedServerProperties dedicatedServerProperties = dedicatedServerSettings.getProperties();
+											levelSettings = new LevelSettings(
+												dedicatedServerProperties.levelName,
+												dedicatedServerProperties.gamemode,
+												dedicatedServerProperties.hardcore,
+												dedicatedServerProperties.difficulty,
+												false,
+												new GameRules(),
+												dataPackConfig
+											);
+											worldGenSettings = optionSet.has(optionSpec4)
+												? dedicatedServerProperties.getWorldGenSettings(writable).withBonusChest()
+												: dedicatedServerProperties.getWorldGenSettings(writable);
+										}
+			
+										PrimaryLevelData primaryLevelData = new PrimaryLevelData(levelSettings, worldGenSettings, Lifecycle.stable());
+										return Pair.of(primaryLevelData, writable.freeze());
+									}
+								},
+								Util.backgroundExecutor(),
+								executor
+							)
 					)
 					.get();
 			} catch (Exception var38) {

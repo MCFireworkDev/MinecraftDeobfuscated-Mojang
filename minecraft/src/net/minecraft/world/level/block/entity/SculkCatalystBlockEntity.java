@@ -3,6 +3,7 @@ package net.minecraft.world.level.block.entity;
 import com.google.common.annotations.VisibleForTesting;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -43,7 +44,7 @@ public class SculkCatalystBlockEntity extends BlockEntity implements GameEventLi
 			Entity livingEntity2 = context.sourceEntity();
 			if (livingEntity2 instanceof LivingEntity livingEntity) {
 				if (!livingEntity.wasExperienceConsumed()) {
-					this.sculkSpreader.addCursors(new BlockPos(vec3), livingEntity.getExperienceReward());
+					this.sculkSpreader.addCursors(new BlockPos(vec3.relative(Direction.UP, 0.5)), livingEntity.getExperienceReward());
 					livingEntity.skipDropExperience();
 					LivingEntity livingEntity2x = livingEntity.getLastHurtByMob();
 					if (livingEntity2x instanceof ServerPlayer serverPlayer) {
