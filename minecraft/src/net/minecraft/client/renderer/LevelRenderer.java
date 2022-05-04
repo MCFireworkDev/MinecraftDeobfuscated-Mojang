@@ -1825,12 +1825,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 		runnable.run();
 		if (!bl) {
 			FogType fogType = camera.getFluidInCamera();
-			if (fogType != FogType.POWDER_SNOW && fogType != FogType.LAVA) {
-				Entity g = camera.getEntity();
-				if (g instanceof LivingEntity livingEntity && livingEntity.hasEffect(MobEffects.BLINDNESS)) {
-					return;
-				}
-
+			if (fogType != FogType.POWDER_SNOW && fogType != FogType.LAVA && !this.doesMobEffectBlockSky(camera)) {
 				if (this.minecraft.level.effects().skyType() == DimensionSpecialEffects.SkyType.END) {
 					this.renderEndSky(poseStack);
 				} else if (this.minecraft.level.effects().skyType() == DimensionSpecialEffects.SkyType.NORMAL) {
@@ -1948,6 +1943,16 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 					RenderSystem.depthMask(true);
 				}
 			}
+		}
+	}
+
+	private boolean doesMobEffectBlockSky(Camera camera) {
+		Entity var3 = camera.getEntity();
+		if (!(var3 instanceof LivingEntity)) {
+			return false;
+		} else {
+			LivingEntity livingEntity = (LivingEntity)var3;
+			return livingEntity.hasEffect(MobEffects.BLINDNESS) || livingEntity.hasEffect(MobEffects.DARKNESS);
 		}
 	}
 

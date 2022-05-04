@@ -26,6 +26,7 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -169,10 +170,15 @@ public class VanillaPackResources implements PackResources {
 		Stream<Path> stream = Files.walk(path2.resolve(string2));
 
 		try {
-			stream.filter(pathx -> !pathx.endsWith(".mcmeta") && Files.isRegularFile(pathx, new LinkOption[0]))
-				.map(path2x -> new ResourceLocation(string, path2.relativize(path2x).toString().replaceAll("\\\\", "/")))
-				.filter(predicate)
-				.forEach(collection::add);
+			stream.filter(pathx -> !pathx.endsWith(".mcmeta") && Files.isRegularFile(pathx, new LinkOption[0])).mapMulti((path2x, consumer) -> {
+				String string2xx = path2.relativize(path2x).toString().replaceAll("\\\\", "/");
+				ResourceLocation resourceLocation = ResourceLocation.tryBuild(string, string2xx);
+				if (resourceLocation == null) {
+					Util.logAndPauseIfInIde("Invalid path in datapack: %s:%s, ignoring".formatted(string, string2xx));
+				} else {
+					consumer.accept(resourceLocation);
+				}
+			}).filter(predicate).forEach(collection::add);
 		} catch (Throwable var10) {
 			if (stream != null) {
 				try {

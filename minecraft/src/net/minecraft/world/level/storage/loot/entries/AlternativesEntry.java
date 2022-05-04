@@ -1,8 +1,10 @@
 package net.minecraft.world.level.storage.loot.entries;
 
 import com.google.common.collect.Lists;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.ValidationContext;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
@@ -53,6 +55,12 @@ public class AlternativesEntry extends CompositeEntryBase {
 
 	public static AlternativesEntry.Builder alternatives(LootPoolEntryContainer.Builder<?>... builders) {
 		return new AlternativesEntry.Builder(builders);
+	}
+
+	public static <E> AlternativesEntry.Builder alternatives(Collection<E> collection, Function<E, LootPoolEntryContainer.Builder<?>> function) {
+		return new AlternativesEntry.Builder(
+			(LootPoolEntryContainer.Builder<?>[])collection.stream().map(function::apply).toArray(i -> new LootPoolEntryContainer.Builder[i])
+		);
 	}
 
 	public static class Builder extends LootPoolEntryContainer.Builder<AlternativesEntry.Builder> {
