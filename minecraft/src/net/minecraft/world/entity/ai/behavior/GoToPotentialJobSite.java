@@ -4,12 +4,12 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.core.Holder;
 import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
-import net.minecraft.world.entity.ai.village.poi.PoiType;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.schedule.Activity;
 
@@ -46,7 +46,7 @@ public class GoToPotentialJobSite extends Behavior<Villager> {
 			ServerLevel serverLevel2 = serverLevel.getServer().getLevel(globalPos.dimension());
 			if (serverLevel2 != null) {
 				PoiManager poiManager = serverLevel2.getPoiManager();
-				if (poiManager.exists(blockPos, poiType -> true)) {
+				if (poiManager.exists(blockPos, holder -> true)) {
 					poiManager.release(blockPos);
 				}
 

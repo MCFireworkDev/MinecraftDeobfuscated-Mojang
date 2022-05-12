@@ -134,11 +134,14 @@ public class ComponentUtils {
 	}
 
 	public static boolean isTranslationResolvable(@Nullable Component component) {
-		if (component instanceof TranslatableContents translatableContents) {
-			String string = translatableContents.getKey();
-			return Language.getInstance().has(string);
-		} else {
-			return true;
+		if (component != null) {
+			ComponentContents string = component.getContents();
+			if (string instanceof TranslatableContents translatableContents) {
+				String stringx = translatableContents.getKey();
+				return Language.getInstance().has(stringx);
+			}
 		}
+
+		return true;
 	}
 }

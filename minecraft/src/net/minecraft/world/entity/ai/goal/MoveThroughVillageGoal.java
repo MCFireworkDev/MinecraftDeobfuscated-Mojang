@@ -8,14 +8,15 @@ import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.PoiTypeTags;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.util.DefaultRandomPos;
 import net.minecraft.world.entity.ai.util.GoalUtils;
 import net.minecraft.world.entity.ai.util.LandRandomPos;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
-import net.minecraft.world.entity.ai.village.poi.PoiType;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
@@ -58,20 +59,26 @@ public class MoveThroughVillageGoal extends Goal {
 				if (!serverLevel.isCloseToVillage(blockPos, 6)) {
 					return false;
 				} else {
-					Vec3 vec3 = LandRandomPos.getPos(this.mob, 15, 7, blockPos2x -> {
-						if (!serverLevel.isVillage(blockPos2x)) {
-							return Double.NEGATIVE_INFINITY;
-						} else {
-							Optional<BlockPos> optionalxx = serverLevel.getPoiManager().find(PoiType.ALL, this::hasNotVisited, blockPos2x, 10, PoiManager.Occupancy.IS_OCCUPIED);
-							return !optionalxx.isPresent() ? Double.NEGATIVE_INFINITY : -((BlockPos)optionalxx.get()).distSqr(blockPos);
+					Vec3 vec3 = LandRandomPos.getPos(
+						this.mob,
+						15,
+						7,
+						blockPos2x -> {
+							if (!serverLevel.isVillage(blockPos2x)) {
+								return Double.NEGATIVE_INFINITY;
+							} else {
+								Optional<BlockPos> optionalxx = serverLevel.getPoiManager()
+									.find(holder -> holder.is(PoiTypeTags.VILLAGE), this::hasNotVisited, blockPos2x, 10, PoiManager.Occupancy.IS_OCCUPIED);
+								return optionalxx.map(blockPos2xx -> -blockPos2xx.distSqr(blockPos)).orElse(Double.NEGATIVE_INFINITY);
+							}
 						}
-					});
+					);
 					if (vec3 == null) {
 						return false;
 					} else {
 						Optional<BlockPos> optional = serverLevel.getPoiManager()
-							.find(PoiType.ALL, this::hasNotVisited, new BlockPos(vec3), 10, PoiManager.Occupancy.IS_OCCUPIED);
-						if (!optional.isPresent()) {
+							.find(holder -> holder.is(PoiTypeTags.VILLAGE), this::hasNotVisited, new BlockPos(vec3), 10, PoiManager.Occupancy.IS_OCCUPIED);
+						if (optional.isEmpty()) {
 							return false;
 						} else {
 							this.poiPos = ((BlockPos)optional.get()).immutable();

@@ -5,7 +5,9 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.Optional;
 import javax.annotation.Nullable;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
@@ -32,8 +34,8 @@ public record ChatType(Optional<ChatType.TextDisplay> chat, Optional<ChatType.Te
 		return ResourceKey.create(Registry.CHAT_TYPE_REGISTRY, new ResourceLocation(string));
 	}
 
-	public static ChatType bootstrap(Registry<ChatType> registry) {
-		ChatType chatType = Registry.register(
+	public static Holder<ChatType> bootstrap(Registry<ChatType> registry) {
+		BuiltinRegistries.register(
 			registry,
 			CHAT,
 			new ChatType(
@@ -42,15 +44,15 @@ public record ChatType(Optional<ChatType.TextDisplay> chat, Optional<ChatType.Te
 				Optional.of(ChatType.Narration.decorated(ChatDecoration.withSender("chat.type.text.narrate"), ChatType.Narration.Priority.CHAT))
 			)
 		);
-		Registry.register(
+		BuiltinRegistries.register(
 			registry,
 			SYSTEM,
 			new ChatType(
 				Optional.of(ChatType.TextDisplay.undecorated()), Optional.empty(), Optional.of(ChatType.Narration.undecorated(ChatType.Narration.Priority.SYSTEM))
 			)
 		);
-		Registry.register(registry, GAME_INFO, new ChatType(Optional.empty(), Optional.of(ChatType.TextDisplay.undecorated()), Optional.empty()));
-		Registry.register(
+		BuiltinRegistries.register(registry, GAME_INFO, new ChatType(Optional.empty(), Optional.of(ChatType.TextDisplay.undecorated()), Optional.empty()));
+		BuiltinRegistries.register(
 			registry,
 			SAY_COMMAND,
 			new ChatType(
@@ -59,7 +61,7 @@ public record ChatType(Optional<ChatType.TextDisplay> chat, Optional<ChatType.Te
 				Optional.of(ChatType.Narration.decorated(ChatDecoration.withSender("chat.type.text.narrate"), ChatType.Narration.Priority.CHAT))
 			)
 		);
-		Registry.register(
+		BuiltinRegistries.register(
 			registry,
 			MSG_COMMAND,
 			new ChatType(
@@ -68,7 +70,7 @@ public record ChatType(Optional<ChatType.TextDisplay> chat, Optional<ChatType.Te
 				Optional.of(ChatType.Narration.decorated(ChatDecoration.withSender("chat.type.text.narrate"), ChatType.Narration.Priority.CHAT))
 			)
 		);
-		Registry.register(
+		BuiltinRegistries.register(
 			registry,
 			TEAM_MSG_COMMAND,
 			new ChatType(
@@ -77,7 +79,7 @@ public record ChatType(Optional<ChatType.TextDisplay> chat, Optional<ChatType.Te
 				Optional.of(ChatType.Narration.decorated(ChatDecoration.withSender("chat.type.text.narrate"), ChatType.Narration.Priority.CHAT))
 			)
 		);
-		Registry.register(
+		BuiltinRegistries.register(
 			registry,
 			EMOTE_COMMAND,
 			new ChatType(
@@ -86,14 +88,13 @@ public record ChatType(Optional<ChatType.TextDisplay> chat, Optional<ChatType.Te
 				Optional.of(ChatType.Narration.decorated(ChatDecoration.withSender("chat.type.emote"), ChatType.Narration.Priority.CHAT))
 			)
 		);
-		Registry.register(
+		return BuiltinRegistries.register(
 			registry,
 			TELLRAW_COMMAND,
 			new ChatType(
 				Optional.of(ChatType.TextDisplay.undecorated()), Optional.empty(), Optional.of(ChatType.Narration.undecorated(ChatType.Narration.Priority.CHAT))
 			)
 		);
-		return chatType;
 	}
 
 	public static record Narration(Optional<ChatDecoration> decoration, ChatType.Narration.Priority priority) {

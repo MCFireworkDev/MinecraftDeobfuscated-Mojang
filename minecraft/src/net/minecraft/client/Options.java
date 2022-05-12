@@ -472,6 +472,14 @@ public class Options {
 		"options.hideMatchedNames", OptionInstance.cachedConstantTooltip(CHAT_TOOLTIP_HIDE_MATCHED_NAMES), true
 	);
 	private final OptionInstance<Boolean> showAutosaveIndicator = OptionInstance.createBoolean("options.autosaveIndicator", true);
+	private static final Component CHAT_TOOLTIP_PREVIEW = Component.translatable("options.chatPreview.tooltip");
+	private final OptionInstance<Boolean> chatPreview = OptionInstance.createBoolean(
+		"options.chatPreview", OptionInstance.cachedConstantTooltip(CHAT_TOOLTIP_PREVIEW), true
+	);
+	private static final Component CHAT_TOOLTIP_ONLY_SHOW_SIGNED = Component.translatable("options.onlyShowSignedChat.tooltip");
+	private final OptionInstance<Boolean> onlyShowSignedChat = OptionInstance.createBoolean(
+		"options.onlyShowSignedChat", OptionInstance.cachedConstantTooltip(CHAT_TOOLTIP_ONLY_SHOW_SIGNED), false
+	);
 	public final KeyMapping keyUp = new KeyMapping("key.forward", 87, "key.categories.movement");
 	public final KeyMapping keyLeft = new KeyMapping("key.left", 65, "key.categories.movement");
 	public final KeyMapping keyDown = new KeyMapping("key.back", 83, "key.categories.movement");
@@ -866,6 +874,14 @@ public class Options {
 		return this.showAutosaveIndicator;
 	}
 
+	public OptionInstance<Boolean> chatPreview() {
+		return this.chatPreview;
+	}
+
+	public OptionInstance<Boolean> onlyShowSignedChat() {
+		return this.onlyShowSignedChat;
+	}
+
 	public OptionInstance<Integer> fov() {
 		return this.fov;
 	}
@@ -1022,6 +1038,8 @@ public class Options {
 		this.syncWrites = fieldAccess.process("syncChunkWrites", this.syncWrites);
 		fieldAccess.process("showAutosaveIndicator", this.showAutosaveIndicator);
 		fieldAccess.process("allowServerListing", this.allowServerListing);
+		fieldAccess.process("chatPreview", this.chatPreview);
+		fieldAccess.process("onlyShowSignedChat", this.onlyShowSignedChat);
 
 		for(KeyMapping keyMapping : this.keyMappings) {
 			String string = keyMapping.saveString();

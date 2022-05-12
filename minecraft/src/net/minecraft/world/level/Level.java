@@ -95,7 +95,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
 	public final RandomSource random = RandomSource.create();
 	@Deprecated
 	private final RandomSource threadSafeRandom = RandomSource.createThreadSafe();
-	final DimensionType dimensionType;
+	private final ResourceKey<DimensionType> dimensionTypeId;
 	private final Holder<DimensionType> dimensionTypeRegistration;
 	protected final WritableLevelData levelData;
 	private final Supplier<ProfilerFiller> profiler;
@@ -118,19 +118,20 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
 		this.profiler = supplier;
 		this.levelData = writableLevelData;
 		this.dimensionTypeRegistration = holder;
-		this.dimensionType = (DimensionType)holder.value();
+		this.dimensionTypeId = (ResourceKey)holder.unwrapKey().orElseThrow(() -> new IllegalArgumentException("Dimensions must be registered"));
+		final DimensionType dimensionType = (DimensionType)holder.value();
 		this.dimension = resourceKey;
 		this.isClientSide = bl;
-		if (this.dimensionType.coordinateScale() != 1.0) {
+		if (dimensionType.coordinateScale() != 1.0) {
 			this.worldBorder = new WorldBorder() {
 				@Override
 				public double getCenterX() {
-					return super.getCenterX() / Level.this.dimensionType.coordinateScale();
+					return super.getCenterX() / dimensionType.coordinateScale();
 				}
 
 				@Override
 				public double getCenterZ() {
-					return super.getCenterZ() / Level.this.dimensionType.coordinateScale();
+					return super.getCenterZ() / dimensionType.coordinateScale();
 				}
 			};
 		} else {
@@ -864,7 +865,11 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
 
 	@Override
 	public DimensionType dimensionType() {
-		return this.dimensionType;
+		return (DimensionType)this.dimensionTypeRegistration.value();
+	}
+
+	public ResourceKey<DimensionType> dimensionTypeId() {
+		return this.dimensionTypeId;
 	}
 
 	public Holder<DimensionType> dimensionTypeRegistration() {

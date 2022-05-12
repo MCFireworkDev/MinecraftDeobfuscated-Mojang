@@ -126,7 +126,7 @@ public class EndCityPieces {
 				for(Tuple<Rotation, BlockPos> tuple : EndCityPieces.TOWER_BRIDGES) {
 					if (randomSource.nextBoolean()) {
 						EndCityPieces.EndCityPiece endCityPiece4 = EndCityPieces.addHelper(
-							list, EndCityPieces.addPiece(structureTemplateManager, endCityPiece3, tuple.getB(), "bridge_end", rotation.getRotated((Rotation)tuple.getA()), true)
+							list, EndCityPieces.addPiece(structureTemplateManager, endCityPiece3, tuple.getB(), "bridge_end", rotation.getRotated(tuple.getA()), true)
 						);
 						EndCityPieces.recursiveChildren(structureTemplateManager, EndCityPieces.TOWER_BRIDGE_GENERATOR, i + 1, endCityPiece4, null, list, randomSource);
 					}
@@ -252,7 +252,7 @@ public class EndCityPieces {
 				for(Tuple<Rotation, BlockPos> tuple : EndCityPieces.FAT_TOWER_BRIDGES) {
 					if (randomSource.nextBoolean()) {
 						EndCityPieces.EndCityPiece endCityPiece3 = EndCityPieces.addHelper(
-							list, EndCityPieces.addPiece(structureTemplateManager, endCityPiece2, tuple.getB(), "bridge_end", rotation.getRotated((Rotation)tuple.getA()), true)
+							list, EndCityPieces.addPiece(structureTemplateManager, endCityPiece2, tuple.getB(), "bridge_end", rotation.getRotated(tuple.getA()), true)
 						);
 						EndCityPieces.recursiveChildren(structureTemplateManager, EndCityPieces.TOWER_BRIDGE_GENERATOR, i + 1, endCityPiece3, null, list, randomSource);
 					}

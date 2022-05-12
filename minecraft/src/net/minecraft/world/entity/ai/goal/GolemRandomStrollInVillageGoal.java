@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
@@ -11,7 +12,6 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.util.LandRandomPos;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.entity.ai.village.poi.PoiRecord;
-import net.minecraft.world.entity.ai.village.poi.PoiType;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.phys.Vec3;
 
@@ -91,7 +91,7 @@ public class GolemRandomStrollInVillageGoal extends RandomStrollGoal {
 	private BlockPos getRandomPoiWithinSection(SectionPos sectionPos) {
 		ServerLevel serverLevel = (ServerLevel)this.mob.level;
 		PoiManager poiManager = serverLevel.getPoiManager();
-		List<BlockPos> list = (List)poiManager.getInRange(poiType -> true, sectionPos.center(), 8, PoiManager.Occupancy.IS_OCCUPIED)
+		List<BlockPos> list = (List)poiManager.getInRange(holder -> true, sectionPos.center(), 8, PoiManager.Occupancy.IS_OCCUPIED)
 			.map(PoiRecord::getPos)
 			.collect(Collectors.toList());
 		return list.isEmpty() ? null : (BlockPos)list.get(serverLevel.random.nextInt(list.size()));

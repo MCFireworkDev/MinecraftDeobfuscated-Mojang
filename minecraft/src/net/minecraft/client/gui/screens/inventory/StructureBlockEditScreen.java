@@ -155,7 +155,7 @@ public class StructureBlockEditScreen extends Screen {
 				.create(this.width / 2 + 4 + 100, 160, 50, 20, INCLUDE_ENTITIES_LABEL, (cycleButton, boolean_) -> this.structure.setIgnoreEntities(!boolean_))
 		);
 		this.mirrorButton = this.addRenderableWidget(
-			CycleButton.builder(Mirror::symbol)
+			CycleButton.<Mirror>builder(Mirror::symbol)
 				.withValues(Mirror.values())
 				.displayOnlyValue()
 				.withInitialValue(this.initialMirror)

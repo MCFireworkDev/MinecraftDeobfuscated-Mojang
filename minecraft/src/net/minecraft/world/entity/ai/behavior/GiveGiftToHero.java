@@ -31,7 +31,7 @@ public class GiveGiftToHero extends Behavior<Villager> {
 	private static final int MIN_TIME_BETWEEN_GIFTS = 600;
 	private static final int MAX_TIME_BETWEEN_GIFTS = 6600;
 	private static final int TIME_TO_DELAY_FOR_HEAD_TO_FINISH_TURNING = 20;
-	private static final Map<VillagerProfession, ResourceLocation> GIFTS = Util.make(Maps.<VillagerProfession, ResourceLocation>newHashMap(), hashMap -> {
+	private static final Map<VillagerProfession, ResourceLocation> GIFTS = Util.make(Maps.newHashMap(), hashMap -> {
 		hashMap.put(VillagerProfession.ARMORER, BuiltInLootTables.ARMORER_GIFT);
 		hashMap.put(VillagerProfession.BUTCHER, BuiltInLootTables.BUTCHER_GIFT);
 		hashMap.put(VillagerProfession.CARTOGRAPHER, BuiltInLootTables.CARTOGRAPHER_GIFT);

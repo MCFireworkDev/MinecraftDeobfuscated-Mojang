@@ -4,10 +4,10 @@ import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -55,18 +55,12 @@ public class SculkShriekerBlock extends BaseEntityBlock implements SimpleWaterlo
 
 	@Override
 	public void stepOn(Level level, BlockPos blockPos, BlockState blockState, Entity entity) {
-		Entity entity2;
-		if (entity instanceof Player) {
-			entity2 = entity;
-		} else if (entity.getControllingPassenger() instanceof Player) {
-			entity2 = entity.getControllingPassenger();
-		} else {
-			entity2 = null;
-		}
-
-		if (level instanceof ServerLevel serverLevel && entity2 != null) {
-			serverLevel.getBlockEntity(blockPos, BlockEntityType.SCULK_SHRIEKER)
-				.ifPresent(sculkShriekerBlockEntity -> sculkShriekerBlockEntity.shriek(serverLevel, entity2));
+		if (level instanceof ServerLevel serverLevel) {
+			ServerPlayer serverPlayer = SculkShriekerBlockEntity.tryGetPlayer(entity);
+			if (serverPlayer != null) {
+				serverLevel.getBlockEntity(blockPos, BlockEntityType.SCULK_SHRIEKER)
+					.ifPresent(sculkShriekerBlockEntity -> sculkShriekerBlockEntity.tryShriek(serverLevel, serverPlayer));
+			}
 		}
 
 		super.stepOn(level, blockPos, blockState, entity);
@@ -76,7 +70,7 @@ public class SculkShriekerBlock extends BaseEntityBlock implements SimpleWaterlo
 	public void onRemove(BlockState blockState, Level level, BlockPos blockPos, BlockState blockState2, boolean bl) {
 		if (level instanceof ServerLevel serverLevel && blockState.getValue(SHRIEKING) && !blockState.is(blockState2.getBlock())) {
 			serverLevel.getBlockEntity(blockPos, BlockEntityType.SCULK_SHRIEKER)
-				.ifPresent(sculkShriekerBlockEntity -> sculkShriekerBlockEntity.replyOrSummon(serverLevel));
+				.ifPresent(sculkShriekerBlockEntity -> sculkShriekerBlockEntity.tryRespond(serverLevel));
 		}
 
 		super.onRemove(blockState, level, blockPos, blockState2, bl);
@@ -87,7 +81,7 @@ public class SculkShriekerBlock extends BaseEntityBlock implements SimpleWaterlo
 		if (blockState.getValue(SHRIEKING)) {
 			serverLevel.setBlock(blockPos, blockState.setValue(SHRIEKING, Boolean.valueOf(false)), 3);
 			serverLevel.getBlockEntity(blockPos, BlockEntityType.SCULK_SHRIEKER)
-				.ifPresent(sculkShriekerBlockEntity -> sculkShriekerBlockEntity.replyOrSummon(serverLevel));
+				.ifPresent(sculkShriekerBlockEntity -> sculkShriekerBlockEntity.tryRespond(serverLevel));
 		}
 	}
 

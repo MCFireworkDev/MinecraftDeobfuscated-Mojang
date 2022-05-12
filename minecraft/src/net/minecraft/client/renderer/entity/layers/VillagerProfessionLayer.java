@@ -37,7 +37,7 @@ public class VillagerProfessionLayer<T extends LivingEntity & VillagerDataHolder
 		int2ObjectOpenHashMap.put(5, new ResourceLocation("diamond"));
 	});
 	private final Object2ObjectMap<VillagerType, VillagerMetaDataSection.Hat> typeHatCache = new Object2ObjectOpenHashMap<>();
-	private final Object2ObjectMap<VillagerProfession, VillagerMetaDataSection.Hat> professionHatCache = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<VillagerProfession, VillagerMetaDataSection.Hat> professionHatCache = new Object2ObjectOpenHashMap();
 	private final ResourceManager resourceManager;
 	private final String path;
 
@@ -60,7 +60,7 @@ public class VillagerProfessionLayer<T extends LivingEntity & VillagerDataHolder
 			renderColoredCutoutModel(entityModel, resourceLocation, poseStack, multiBufferSource, i, livingEntity, 1.0F, 1.0F, 1.0F);
 			entityModel.hatVisible(true);
 			if (villagerProfession != VillagerProfession.NONE && !livingEntity.isBaby()) {
-				ResourceLocation resourceLocation2 = this.getResourceLocation("profession", Registry.VILLAGER_PROFESSION.getKey(villagerProfession));
+				ResourceLocation resourceLocation2 = this.getResourceLocation("profession", Registry.VILLAGER_PROFESSION.getKey((T)villagerProfession));
 				renderColoredCutoutModel(entityModel, resourceLocation2, poseStack, multiBufferSource, i, livingEntity, 1.0F, 1.0F, 1.0F);
 				if (villagerProfession != VillagerProfession.NITWIT) {
 					ResourceLocation resourceLocation3 = this.getResourceLocation(

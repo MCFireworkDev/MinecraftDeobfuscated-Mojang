@@ -388,6 +388,12 @@ public class CommandSourceStack implements SharedSuggestionProvider {
 		}
 	}
 
+	@Nullable
+	public ServerPlayer getPlayer() {
+		Entity var2 = this.entity;
+		return var2 instanceof ServerPlayer serverPlayer ? serverPlayer : null;
+	}
+
 	public boolean isPlayer() {
 		return this.entity instanceof ServerPlayer;
 	}

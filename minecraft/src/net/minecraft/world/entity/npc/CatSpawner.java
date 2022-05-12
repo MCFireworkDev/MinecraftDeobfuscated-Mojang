@@ -2,6 +2,7 @@ package net.minecraft.world.entity.npc;
 
 import java.util.List;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.StructureTags;
 import net.minecraft.util.RandomSource;
@@ -9,7 +10,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
-import net.minecraft.world.entity.ai.village.poi.PoiType;
+import net.minecraft.world.entity.ai.village.poi.PoiTypes;
 import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.CustomSpawner;
@@ -62,7 +63,7 @@ public class CatSpawner implements CustomSpawner {
 
 	private int spawnInVillage(ServerLevel serverLevel, BlockPos blockPos) {
 		int i = 48;
-		if (serverLevel.getPoiManager().getCountInRange(PoiType.HOME.getPredicate(), blockPos, 48, PoiManager.Occupancy.IS_OCCUPIED) > 4L) {
+		if (serverLevel.getPoiManager().getCountInRange(holder -> holder.is(PoiTypes.HOME), blockPos, 48, PoiManager.Occupancy.IS_OCCUPIED) > 4L) {
 			List<Cat> list = serverLevel.getEntitiesOfClass(Cat.class, new AABB(blockPos).inflate(48.0, 8.0, 48.0));
 			if (list.size() < 5) {
 				return this.spawnCat(blockPos, serverLevel);

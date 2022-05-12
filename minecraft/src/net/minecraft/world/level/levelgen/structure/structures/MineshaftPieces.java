@@ -10,14 +10,18 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BiomeTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.vehicle.MinecartChest;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FallingBlock;
@@ -370,7 +374,7 @@ public class MineshaftPieces {
 			ChunkPos chunkPos,
 			BlockPos blockPos
 		) {
-			if (!this.edgesLiquid(worldGenLevel, boundingBox)) {
+			if (!this.isInInvalidLocation(worldGenLevel, boundingBox)) {
 				int i = 0;
 				int j = 2;
 				int k = 0;
@@ -814,7 +818,7 @@ public class MineshaftPieces {
 			ChunkPos chunkPos,
 			BlockPos blockPos
 		) {
-			if (!this.edgesLiquid(worldGenLevel, boundingBox)) {
+			if (!this.isInInvalidLocation(worldGenLevel, boundingBox)) {
 				BlockState blockState = this.type.getPlanksState();
 				if (this.isTwoFloored) {
 					this.generateBox(
@@ -942,15 +946,18 @@ public class MineshaftPieces {
 
 	abstract static class MineShaftPiece extends StructurePiece {
 		protected MineshaftStructure.Type type;
+		private final TagKey<Biome> biomeTag;
 
 		public MineShaftPiece(StructurePieceType structurePieceType, int i, MineshaftStructure.Type type, BoundingBox boundingBox) {
 			super(structurePieceType, i, boundingBox);
 			this.type = type;
+			this.biomeTag = type == MineshaftStructure.Type.MESA ? BiomeTags.HAS_MINESHAFT_MESA : BiomeTags.HAS_MINESHAFT;
 		}
 
 		public MineShaftPiece(StructurePieceType structurePieceType, CompoundTag compoundTag) {
 			super(structurePieceType, compoundTag);
 			this.type = MineshaftStructure.Type.byId(compoundTag.getInt("MST"));
+			this.biomeTag = this.type == MineshaftStructure.Type.MESA ? BiomeTags.HAS_MINESHAFT_MESA : BiomeTags.HAS_MINESHAFT;
 		}
 
 		@Override
@@ -977,52 +984,55 @@ public class MineshaftPieces {
 			return true;
 		}
 
-		protected boolean edgesLiquid(BlockGetter blockGetter, BoundingBox boundingBox) {
+		protected boolean isInInvalidLocation(LevelAccessor levelAccessor, BoundingBox boundingBox) {
 			int i = Math.max(this.boundingBox.minX() - 1, boundingBox.minX());
 			int j = Math.max(this.boundingBox.minY() - 1, boundingBox.minY());
 			int k = Math.max(this.boundingBox.minZ() - 1, boundingBox.minZ());
 			int l = Math.min(this.boundingBox.maxX() + 1, boundingBox.maxX());
 			int m = Math.min(this.boundingBox.maxY() + 1, boundingBox.maxY());
 			int n = Math.min(this.boundingBox.maxZ() + 1, boundingBox.maxZ());
-			BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
+			BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos((i + l) / 2, (j + m) / 2, (k + n) / 2);
+			if (!levelAccessor.getBiome(mutableBlockPos).is(this.biomeTag)) {
+				return true;
+			} else {
+				for(int o = i; o <= l; ++o) {
+					for(int p = k; p <= n; ++p) {
+						if (levelAccessor.getBlockState(mutableBlockPos.set(o, j, p)).getMaterial().isLiquid()) {
+							return true;
+						}
 
-			for(int o = i; o <= l; ++o) {
-				for(int p = k; p <= n; ++p) {
-					if (blockGetter.getBlockState(mutableBlockPos.set(o, j, p)).getMaterial().isLiquid()) {
-						return true;
-					}
-
-					if (blockGetter.getBlockState(mutableBlockPos.set(o, m, p)).getMaterial().isLiquid()) {
-						return true;
-					}
-				}
-			}
-
-			for(int o = i; o <= l; ++o) {
-				for(int p = j; p <= m; ++p) {
-					if (blockGetter.getBlockState(mutableBlockPos.set(o, p, k)).getMaterial().isLiquid()) {
-						return true;
-					}
-
-					if (blockGetter.getBlockState(mutableBlockPos.set(o, p, n)).getMaterial().isLiquid()) {
-						return true;
+						if (levelAccessor.getBlockState(mutableBlockPos.set(o, m, p)).getMaterial().isLiquid()) {
+							return true;
+						}
 					}
 				}
-			}
 
-			for(int o = k; o <= n; ++o) {
-				for(int p = j; p <= m; ++p) {
-					if (blockGetter.getBlockState(mutableBlockPos.set(i, p, o)).getMaterial().isLiquid()) {
-						return true;
-					}
+				for(int o = i; o <= l; ++o) {
+					for(int p = j; p <= m; ++p) {
+						if (levelAccessor.getBlockState(mutableBlockPos.set(o, p, k)).getMaterial().isLiquid()) {
+							return true;
+						}
 
-					if (blockGetter.getBlockState(mutableBlockPos.set(l, p, o)).getMaterial().isLiquid()) {
-						return true;
+						if (levelAccessor.getBlockState(mutableBlockPos.set(o, p, n)).getMaterial().isLiquid()) {
+							return true;
+						}
 					}
 				}
-			}
 
-			return false;
+				for(int o = k; o <= n; ++o) {
+					for(int p = j; p <= m; ++p) {
+						if (levelAccessor.getBlockState(mutableBlockPos.set(i, p, o)).getMaterial().isLiquid()) {
+							return true;
+						}
+
+						if (levelAccessor.getBlockState(mutableBlockPos.set(l, p, o)).getMaterial().isLiquid()) {
+							return true;
+						}
+					}
+				}
+
+				return false;
+			}
 		}
 
 		protected void setPlanksBlock(WorldGenLevel worldGenLevel, BoundingBox boundingBox, BlockState blockState, int i, int j, int k) {
@@ -1178,7 +1188,7 @@ public class MineshaftPieces {
 			ChunkPos chunkPos,
 			BlockPos blockPos
 		) {
-			if (!this.edgesLiquid(worldGenLevel, boundingBox)) {
+			if (!this.isInInvalidLocation(worldGenLevel, boundingBox)) {
 				this.generateBox(
 					worldGenLevel,
 					boundingBox,
@@ -1306,7 +1316,7 @@ public class MineshaftPieces {
 			ChunkPos chunkPos,
 			BlockPos blockPos
 		) {
-			if (!this.edgesLiquid(worldGenLevel, boundingBox)) {
+			if (!this.isInInvalidLocation(worldGenLevel, boundingBox)) {
 				this.generateBox(worldGenLevel, boundingBox, 0, 5, 0, 2, 7, 1, CAVE_AIR, CAVE_AIR, false);
 				this.generateBox(worldGenLevel, boundingBox, 0, 0, 7, 2, 2, 8, CAVE_AIR, CAVE_AIR, false);
 

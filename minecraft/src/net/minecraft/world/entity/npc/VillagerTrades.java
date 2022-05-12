@@ -62,7 +62,7 @@ public class VillagerTrades {
 	private static final float LOW_TIER_PRICE_MULTIPLIER = 0.05F;
 	private static final float HIGH_TIER_PRICE_MULTIPLIER = 0.2F;
 	public static final Map<VillagerProfession, Int2ObjectMap<VillagerTrades.ItemListing[]>> TRADES = Util.make(
-		Maps.<VillagerProfession, Int2ObjectMap<VillagerTrades.ItemListing[]>>newHashMap(),
+		Maps.newHashMap(),
 		hashMap -> {
 			hashMap.put(
 				VillagerProfession.FARMER,

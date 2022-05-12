@@ -47,6 +47,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.sensing.SensorType;
 import net.minecraft.world.entity.ai.village.poi.PoiType;
+import net.minecraft.world.entity.ai.village.poi.PoiTypes;
 import net.minecraft.world.entity.animal.CatVariant;
 import net.minecraft.world.entity.animal.FrogVariant;
 import net.minecraft.world.entity.decoration.PaintingVariant;
@@ -207,11 +208,9 @@ public abstract class Registry<T> implements Keyable, IdMap<T> {
 	public static final Registry<StatType<?>> STAT_TYPE = registerSimple(STAT_TYPE_REGISTRY, registry -> Stats.ITEM_USED);
 	public static final DefaultedRegistry<VillagerType> VILLAGER_TYPE = registerDefaulted(VILLAGER_TYPE_REGISTRY, "plains", registry -> VillagerType.PLAINS);
 	public static final DefaultedRegistry<VillagerProfession> VILLAGER_PROFESSION = registerDefaulted(
-		VILLAGER_PROFESSION_REGISTRY, "none", registry -> VillagerProfession.NONE
+		VILLAGER_PROFESSION_REGISTRY, "none", registry -> (T)VillagerProfession.NONE
 	);
-	public static final DefaultedRegistry<PoiType> POINT_OF_INTEREST_TYPE = registerDefaulted(
-		POINT_OF_INTEREST_TYPE_REGISTRY, "unemployed", registry -> PoiType.UNEMPLOYED
-	);
+	public static final Registry<PoiType> POINT_OF_INTEREST_TYPE = registerSimple(POINT_OF_INTEREST_TYPE_REGISTRY, PoiTypes::bootstrap);
 	public static final DefaultedRegistry<MemoryModuleType<?>> MEMORY_MODULE_TYPE = registerDefaulted(
 		MEMORY_MODULE_TYPE_REGISTRY, "dummy", registry -> MemoryModuleType.DUMMY
 	);
@@ -322,7 +321,6 @@ public abstract class Registry<T> implements Keyable, IdMap<T> {
 		STRUCTURE_POOL_ELEMENT_REGISTRY, registry -> StructurePoolElementType.EMPTY
 	);
 	public static final ResourceKey<Registry<ChatType>> CHAT_TYPE_REGISTRY = createRegistryKey("chat_type");
-	public static final Registry<ChatType> CHAT_TYPE = registerSimple(CHAT_TYPE_REGISTRY, ChatType::bootstrap);
 	public static final ResourceKey<Registry<CatVariant>> CAT_VARIANT_REGISTRY = createRegistryKey("cat_variant");
 	public static final Registry<CatVariant> CAT_VARIANT = registerSimple(CAT_VARIANT_REGISTRY, registry -> (T)CatVariant.BLACK);
 	public static final ResourceKey<Registry<FrogVariant>> FROG_VARIANT_REGISTRY = createRegistryKey("frog_variant");

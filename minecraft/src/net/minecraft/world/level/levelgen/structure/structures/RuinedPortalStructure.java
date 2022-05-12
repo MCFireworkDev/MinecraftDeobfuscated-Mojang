@@ -109,7 +109,7 @@ public class RuinedPortalStructure extends Structure {
 			}
 
 			StructureTemplate structureTemplate = generationContext.structureTemplateManager().getOrCreate(resourceLocation);
-			Rotation rotation = Util.getRandom((Rotation[])Rotation.values(), worldgenRandom);
+			Rotation rotation = Util.getRandom(Rotation.values(), worldgenRandom);
 			Mirror mirror = worldgenRandom.nextFloat() < 0.5F ? Mirror.NONE : Mirror.FRONT_BACK;
 			BlockPos blockPos = new BlockPos(structureTemplate.getSize().getX() / 2, 0, structureTemplate.getSize().getZ() / 2);
 			ChunkGenerator chunkGenerator = generationContext.chunkGenerator();
