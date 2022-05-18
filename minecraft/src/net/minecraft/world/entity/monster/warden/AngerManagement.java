@@ -194,7 +194,7 @@ public class AngerManagement {
 					if (bl3 != bl4) {
 						return bl3 ? -1 : 1;
 					} else {
-						return i > j ? -1 : 1;
+						return Integer.compare(j, i);
 					}
 				}
 			}

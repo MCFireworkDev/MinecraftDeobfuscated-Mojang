@@ -171,6 +171,7 @@ import net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket;
 import net.minecraft.network.protocol.game.ClientboundSetChunkCacheCenterPacket;
 import net.minecraft.network.protocol.game.ClientboundSetChunkCacheRadiusPacket;
 import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket;
+import net.minecraft.network.protocol.game.ClientboundSetDisplayChatPreviewPacket;
 import net.minecraft.network.protocol.game.ClientboundSetDisplayObjectivePacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
@@ -631,6 +632,15 @@ public class ClientPacketListener implements ClientGamePacketListener {
 	}
 
 	@Override
+	public void handleSetDisplayChatPreview(ClientboundSetDisplayChatPreviewPacket clientboundSetDisplayChatPreviewPacket) {
+		PacketUtils.ensureRunningOnSameThread(clientboundSetDisplayChatPreviewPacket, this, this.minecraft);
+		ServerData serverData = this.minecraft.getCurrentServer();
+		if (serverData != null) {
+			serverData.setChatPreviewEnabled(clientboundSetDisplayChatPreviewPacket.enabled());
+		}
+	}
+
+	@Override
 	public void handleChunkBlocksUpdate(ClientboundSectionBlocksUpdatePacket clientboundSectionBlocksUpdatePacket) {
 		PacketUtils.ensureRunningOnSameThread(clientboundSectionBlocksUpdatePacket, this, this.minecraft);
 		int i = 19 | (clientboundSectionBlocksUpdatePacket.shouldSuppressLightUpdates() ? 128 : 0);
@@ -817,7 +827,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 			LOGGER.warn("Received chat packet without valid signature from {}", chatSender.name().getString());
 		}
 
-		boolean bl = this.minecraft.options.onlyShowSignedChat().get();
+		boolean bl = this.minecraft.options.onlyShowSecureChat().get();
 		Component component = bl ? playerChatMessage.signedContent() : playerChatMessage.serverContent();
 		this.minecraft.gui.handlePlayerChat(chatType, component, chatSender);
 	}
@@ -1575,9 +1585,11 @@ public class ClientPacketListener implements ClientGamePacketListener {
 			});
 			serverData.setPreviewsChat(clientboundServerDataPacket.previewsChat());
 			ServerList.saveSingleServer(serverData);
-			ServerData.ChatPreview chatPreview = serverData.getChatPreview();
-			if (chatPreview != null && !chatPreview.isAcknowledged()) {
-				this.minecraft.execute(() -> this.minecraft.setScreen(new ChatPreviewWarningScreen(serverData)));
+			if (this.minecraft.options.chatPreview().get()) {
+				ServerData.ChatPreview chatPreview = serverData.getChatPreview();
+				if (chatPreview != null && !chatPreview.isAcknowledged()) {
+					this.minecraft.execute(() -> this.minecraft.setScreen(new ChatPreviewWarningScreen(this.minecraft.screen, serverData)));
+				}
 			}
 		}
 	}
@@ -1635,7 +1647,7 @@ public class ClientPacketListener implements ClientGamePacketListener {
 			} else {
 				PlayerInfo playerInfo = (PlayerInfo)this.playerInfoMap.get(playerUpdate.getProfile().getId());
 				if (clientboundPlayerInfoPacket.getAction() == ClientboundPlayerInfoPacket.Action.ADD_PLAYER) {
-					playerInfo = new PlayerInfo(playerUpdate, this.minecraft.getMinecraftSessionService());
+					playerInfo = new PlayerInfo(playerUpdate, this.minecraft.getServiceSignatureValidator());
 					this.playerInfoMap.put(playerInfo.getProfile().getId(), playerInfo);
 					this.minecraft.getPlayerSocialManager().addPlayer(playerInfo);
 				}
