@@ -172,10 +172,15 @@ public class FogRenderer {
 			} else {
 				v = 1.0F;
 			}
-		} else if (entity instanceof LivingEntity && ((LivingEntity)entity).hasEffect(MobEffects.NIGHT_VISION)) {
-			v = GameRenderer.getNightVisionScale((LivingEntity)entity, f);
 		} else {
-			v = 0.0F;
+			label86: {
+				if (entity instanceof LivingEntity livingEntity2 && livingEntity2.hasEffect(MobEffects.NIGHT_VISION) && !livingEntity2.hasEffect(MobEffects.DARKNESS)) {
+					v = GameRenderer.getNightVisionScale(livingEntity2, f);
+					break label86;
+				}
+
+				v = 0.0F;
+			}
 		}
 
 		if (fogRed != 0.0F && fogGreen != 0.0F && fogBlue != 0.0F) {

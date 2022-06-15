@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.ClientRecipeBook;
@@ -36,6 +37,7 @@ import net.minecraft.client.DebugQueryHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.MapRenderer;
+import net.minecraft.client.gui.chat.NarratorChatListener;
 import net.minecraft.client.gui.components.toasts.RecipeToast;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.ConfirmScreen;
@@ -57,6 +59,7 @@ import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
 import net.minecraft.client.gui.screens.recipebook.RecipeCollection;
 import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
+import net.minecraft.client.multiplayer.chat.LoggedChat;
 import net.minecraft.client.particle.ItemPickupParticle;
 import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.client.player.LocalPlayer;
@@ -222,6 +225,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.tags.TagNetworkSerialization;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.util.StringDecomposer;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
@@ -286,6 +290,7 @@ import net.minecraft.world.scores.Score;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 @Environment(EnvType.CLIENT)
@@ -808,9 +813,19 @@ public class ClientPacketListener implements ClientGamePacketListener {
 	@Override
 	public void handleSystemChat(ClientboundSystemChatPacket clientboundSystemChatPacket) {
 		PacketUtils.ensureRunningOnSameThread(clientboundSystemChatPacket, this, this.minecraft);
-		Registry<ChatType> registry = this.registryAccess.registryOrThrow(Registry.CHAT_TYPE_REGISTRY);
-		ChatType chatType = clientboundSystemChatPacket.resolveType(registry);
-		this.minecraft.gui.handleSystemChat(chatType, clientboundSystemChatPacket.content());
+		if (!this.minecraft.options.hideMatchedNames().get() || !this.minecraft.isBlocked(this.guessChatUUID(clientboundSystemChatPacket.content()))) {
+			Registry<ChatType> registry = this.registryAccess.registryOrThrow(Registry.CHAT_TYPE_REGISTRY);
+			ChatType chatType = clientboundSystemChatPacket.resolveType(registry);
+			this.minecraft.gui.handleSystemChat(chatType, clientboundSystemChatPacket.content());
+			Instant instant = Instant.now();
+			this.minecraft.getReportingContext().chatLog().push(LoggedChat.system(clientboundSystemChatPacket.content(), instant));
+		}
+	}
+
+	private UUID guessChatUUID(Component component) {
+		String string = StringDecomposer.getPlainText(component);
+		String string2 = StringUtils.substringBetween(string, "<", ">");
+		return string2 == null ? Util.NIL_UUID : this.minecraft.getPlayerSocialManager().getDiscoveredUUID(string2);
 	}
 
 	@Override
@@ -828,17 +843,27 @@ public class ClientPacketListener implements ClientGamePacketListener {
 	}
 
 	private void handlePlayerChat(ChatType chatType, PlayerChatMessage playerChatMessage, ChatSender chatSender) {
-		boolean bl = this.minecraft.options.onlyShowSecureChat().get();
-		PlayerInfo playerInfo = this.getPlayerInfo(playerChatMessage.signature().sender());
-		if (playerInfo != null && !this.hasValidSignature(playerChatMessage, playerInfo)) {
-			LOGGER.warn("Received chat packet without valid signature from {}", playerInfo.getProfile().getName());
-			if (bl) {
-				return;
+		if (!this.minecraft.isBlocked(chatSender.uuid())) {
+			boolean bl = this.minecraft.options.onlyShowSecureChat().get();
+			PlayerInfo playerInfo = this.getPlayerInfo(playerChatMessage.signature().sender());
+			if (playerInfo != null && !this.hasValidSignature(playerChatMessage, playerInfo)) {
+				LOGGER.warn("Received chat packet without valid signature from {}", playerInfo.getProfile().getName());
+				if (bl) {
+					return;
+				}
 			}
-		}
 
-		Component component = bl ? playerChatMessage.signedContent() : playerChatMessage.serverContent();
-		this.minecraft.gui.handlePlayerChat(chatType, component, chatSender);
+			PlayerChatMessage playerChatMessage2 = bl ? playerChatMessage.removeUnsignedContent() : playerChatMessage;
+			Component component = playerChatMessage2.serverContent();
+			this.minecraft.gui.handlePlayerChat(chatType, component, chatSender);
+			GameProfile gameProfile = this.getSenderProfile(chatSender);
+			this.minecraft.getReportingContext().chatLog().push(LoggedChat.player(gameProfile, chatSender.name(), playerChatMessage2));
+		}
+	}
+
+	private GameProfile getSenderProfile(ChatSender chatSender) {
+		PlayerInfo playerInfo = this.getPlayerInfo(chatSender.uuid());
+		return playerInfo == null ? new GameProfile(chatSender.uuid(), chatSender.name().getString()) : playerInfo.getProfile();
 	}
 
 	private boolean hasValidSignature(PlayerChatMessage playerChatMessage, PlayerInfo playerInfo) {
@@ -908,7 +933,9 @@ public class ClientPacketListener implements ClientGamePacketListener {
 							this.minecraft.player.setYHeadRot(entity.getYRot());
 						}
 
-						this.minecraft.gui.setOverlayMessage(Component.translatable("mount.onboard", this.minecraft.options.keyShift.getTranslatedKeyMessage()), false);
+						Component component = Component.translatable("mount.onboard", this.minecraft.options.keyShift.getTranslatedKeyMessage());
+						this.minecraft.gui.setOverlayMessage(component, false);
+						NarratorChatListener.INSTANCE.sayNow(component);
 					}
 				}
 			}
