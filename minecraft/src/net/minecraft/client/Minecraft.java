@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Queues;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationException;
+import com.mojang.authlib.minecraft.BanDetails;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.minecraft.UserApiService;
 import com.mojang.authlib.minecraft.UserApiService.UserFlag;
@@ -30,7 +31,9 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.logging.LogUtils;
 import com.mojang.math.Matrix4f;
+import com.mojang.realmsclient.client.RealmsClient;
 import com.mojang.realmsclient.dto.RealmsServer;
+import com.mojang.realmsclient.gui.RealmsDataFetcher;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -78,6 +81,7 @@ import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.client.gui.components.toasts.TutorialToast;
 import net.minecraft.client.gui.font.FontManager;
+import net.minecraft.client.gui.screens.BanNoticeScreen;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.ConnectScreen;
@@ -318,6 +322,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 	private final BlockEntityRenderDispatcher blockEntityRenderDispatcher;
 	private final UUID deviceSessionId = UUID.randomUUID();
 	private final ProfileKeyPairManager profileKeyPairManager;
+	private final RealmsDataFetcher realmsDataFetcher;
 	@Nullable
 	public MultiPlayerGameMode gameMode;
 	@Nullable
@@ -530,6 +535,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 		this.resourceManager.registerReloadListener(this.regionalCompliancies);
 		this.gui = new Gui(this, this.itemRenderer);
 		this.debugRenderer = new DebugRenderer(this);
+		this.realmsDataFetcher = new RealmsDataFetcher(RealmsClient.create(this));
 		RenderSystem.setErrorCallback(this::onFullscreenError);
 		if (this.mainRenderTarget.width != this.window.getWidth() || this.mainRenderTarget.height != this.window.getHeight()) {
 			StringBuilder stringBuilder = new StringBuilder(
@@ -577,6 +583,14 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 		);
 		if (string != null) {
 			ConnectScreen.startConnecting(new TitleScreen(), this, new ServerAddress(string, i), null);
+		} else if (this.shouldShowBanNotice()) {
+			this.setScreen(BanNoticeScreen.create(bl -> {
+				if (bl) {
+					Util.getPlatform().openUri("https://aka.ms/mcjavamoderation");
+				}
+
+				this.setScreen(new TitleScreen(true));
+			}, this.multiplayerBan()));
 		} else {
 			this.setScreen(new TitleScreen(true));
 		}
@@ -2043,11 +2057,20 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 	}
 
 	public boolean allowsMultiplayer() {
-		return this.allowsMultiplayer && this.userApiService.properties().flag(UserFlag.SERVERS_ALLOWED);
+		return this.allowsMultiplayer && this.userApiService.properties().flag(UserFlag.SERVERS_ALLOWED) && this.multiplayerBan() == null;
 	}
 
 	public boolean allowsRealms() {
-		return this.userApiService.properties().flag(UserFlag.REALMS_ALLOWED);
+		return this.userApiService.properties().flag(UserFlag.REALMS_ALLOWED) && this.multiplayerBan() == null;
+	}
+
+	public boolean shouldShowBanNotice() {
+		return this.multiplayerBan() != null;
+	}
+
+	@Nullable
+	private BanDetails multiplayerBan() {
+		return (BanDetails)this.userApiService.properties().bannedScopes().get("MULTIPLAYER");
 	}
 
 	public boolean isBlocked(UUID uUID) {
@@ -2714,6 +2737,10 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 
 	public ReportingContext getReportingContext() {
 		return this.reportingContext;
+	}
+
+	public RealmsDataFetcher realmsDataFetcher() {
+		return this.realmsDataFetcher;
 	}
 
 	@Environment(EnvType.CLIENT)
