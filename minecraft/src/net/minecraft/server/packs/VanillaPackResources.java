@@ -23,7 +23,6 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -175,7 +174,7 @@ public class VanillaPackResources implements PackResources {
 				String string2xx = path2.relativize(path2x).toString().replaceAll("\\\\", "/");
 				ResourceLocation resourceLocation = ResourceLocation.tryBuild(string, string2xx);
 				if (resourceLocation == null) {
-					Util.logAndPauseIfInIde(String.format(Locale.ROOT, "Invalid path in datapack: %s:%s, ignoring", string, string2xx));
+					Util.logAndPauseIfInIde("Invalid path in datapack: %s:%s, ignoring".formatted(string, string2xx));
 				} else {
 					consumer.accept(resourceLocation);
 				}

@@ -15,7 +15,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -328,7 +327,7 @@ public final class NbtUtils {
 							stringBuilder.append(' ');
 						}
 
-						stringBuilder.append(String.format(Locale.ROOT, "0x%02X", bs[k] & 255));
+						stringBuilder.append(String.format("0x%02X", bs[k] & 255));
 					}
 				} else {
 					indent(i + 1, stringBuilder).append(" // Skipped, supply withBinaryBlobs true");
@@ -397,7 +396,7 @@ public final class NbtUtils {
 				int j = 0;
 
 				for(int n : is) {
-					j = Math.max(j, String.format(Locale.ROOT, "%X", n).length());
+					j = Math.max(j, String.format("%X", n).length());
 				}
 
 				int k = is.length;
@@ -419,7 +418,7 @@ public final class NbtUtils {
 							stringBuilder.append(' ');
 						}
 
-						stringBuilder.append(String.format(Locale.ROOT, "0x%0" + j + "X", is[m]));
+						stringBuilder.append(String.format("0x%0" + j + "X", is[m]));
 					}
 				} else {
 					indent(i + 1, stringBuilder).append(" // Skipped, supply withBinaryBlobs true");
@@ -434,7 +433,7 @@ public final class NbtUtils {
 				long o = 0L;
 
 				for(long p : ls) {
-					o = Math.max(o, (long)String.format(Locale.ROOT, "%X", p).length());
+					o = Math.max(o, (long)String.format("%X", p).length());
 				}
 
 				long q = (long)ls.length;
@@ -456,7 +455,7 @@ public final class NbtUtils {
 							stringBuilder.append(' ');
 						}
 
-						stringBuilder.append(String.format(Locale.ROOT, "0x%0" + o + "X", ls[n]));
+						stringBuilder.append(String.format("0x%0" + o + "X", ls[n]));
 					}
 				} else {
 					indent(i + 1, stringBuilder).append(" // Skipped, supply withBinaryBlobs true");

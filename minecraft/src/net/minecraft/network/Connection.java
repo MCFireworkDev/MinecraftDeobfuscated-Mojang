@@ -40,6 +40,8 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.ClientboundDisconnectPacket;
 import net.minecraft.network.protocol.login.ClientboundLoginDisconnectPacket;
 import net.minecraft.server.RunningOnDifferentThreadException;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 import net.minecraft.util.LazyLoadedValue;
 import net.minecraft.util.Mth;
 import org.apache.commons.lang3.Validate;
@@ -226,9 +228,12 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
 
 	public void tick() {
 		this.flushQueue();
-		PacketListener var2 = this.packetListener;
-		if (var2 instanceof TickablePacketListener tickablePacketListener) {
-			tickablePacketListener.tick();
+		if (this.packetListener instanceof ServerLoginPacketListenerImpl) {
+			((ServerLoginPacketListenerImpl)this.packetListener).tick();
+		}
+
+		if (this.packetListener instanceof ServerGamePacketListenerImpl) {
+			((ServerGamePacketListenerImpl)this.packetListener).tick();
 		}
 
 		if (!this.isConnected() && !this.disconnectionHandled) {

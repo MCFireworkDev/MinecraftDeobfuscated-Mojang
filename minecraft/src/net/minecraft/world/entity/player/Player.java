@@ -28,7 +28,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.chat.ChatSender;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -1352,10 +1351,6 @@ public abstract class Player extends LivingEntity {
 	public void updateTutorialInventoryAction(ItemStack itemStack, ItemStack itemStack2, ClickAction clickAction) {
 	}
 
-	public boolean hasContainerOpen() {
-		return this.containerMenu != this.inventoryMenu;
-	}
-
 	public Either<Player.BedSleepingProblem, Unit> startSleepInBed(BlockPos blockPos) {
 		this.startSleeping(blockPos);
 		this.sleepCounter = 0;
@@ -1578,11 +1573,6 @@ public abstract class Player extends LivingEntity {
 
 			return super.causeFallDamage(f, g, damageSource);
 		}
-	}
-
-	@Override
-	public ChatSender asChatSender() {
-		return new ChatSender(this.getGameProfile().getId(), this.getProfilePublicKey());
 	}
 
 	public boolean tryToStartFallFlying() {
