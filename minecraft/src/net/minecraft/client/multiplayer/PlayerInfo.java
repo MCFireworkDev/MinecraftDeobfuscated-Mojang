@@ -14,6 +14,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.SignedMessageValidator;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.CryptException;
@@ -42,6 +43,7 @@ public class PlayerInfo {
 	private long renderVisibilityId;
 	@Nullable
 	private final ProfilePublicKey profilePublicKey;
+	private final SignedMessageValidator messageValidator;
 
 	public PlayerInfo(ClientboundPlayerInfoPacket.PlayerUpdate playerUpdate, SignatureValidator signatureValidator) {
 		this.profile = playerUpdate.getProfile();
@@ -60,6 +62,7 @@ public class PlayerInfo {
 		}
 
 		this.profilePublicKey = profilePublicKey;
+		this.messageValidator = SignedMessageValidator.create(profilePublicKey);
 	}
 
 	public GameProfile getProfile() {
@@ -69,6 +72,10 @@ public class PlayerInfo {
 	@Nullable
 	public ProfilePublicKey getProfilePublicKey() {
 		return this.profilePublicKey;
+	}
+
+	public SignedMessageValidator getMessageValidator() {
+		return this.messageValidator;
 	}
 
 	@Nullable
