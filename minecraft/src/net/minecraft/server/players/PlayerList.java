@@ -815,7 +815,7 @@ public abstract class PlayerList {
 	) {
 		boolean bl = this.verifyChatTrusted((PlayerChatMessage)filteredText.raw(), chatSender);
 		this.server.logChatMessage(((PlayerChatMessage)filteredText.raw()).serverContent(), bound, bl ? null : "Not Secure");
-		FilteredText<OutgoingPlayerChatMessage> filteredText2 = OutgoingPlayerChatMessage.createFromFiltered(filteredText, chatSender);
+		FilteredText<OutgoingPlayerChatMessage> filteredText2 = OutgoingPlayerChatMessage.createFromFiltered(filteredText);
 
 		for(ServerPlayer serverPlayer : this.players) {
 			OutgoingPlayerChatMessage outgoingPlayerChatMessage = filteredText2.select(predicate.test(serverPlayer));
