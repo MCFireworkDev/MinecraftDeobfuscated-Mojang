@@ -42,9 +42,9 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
+import net.minecraft.client.GameNarrator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.chat.NarratorChatListener;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineLabel;
@@ -154,7 +154,7 @@ public class RealmsMainScreen extends RealmsScreen {
 	private Button closeButton;
 
 	public RealmsMainScreen(Screen screen) {
-		super(NarratorChatListener.NO_TITLE);
+		super(GameNarrator.NO_TITLE);
 		this.lastScreen = screen;
 		this.inviteNarrationLimiter = RateLimiter.create(0.016666668F);
 	}
@@ -440,7 +440,7 @@ public class RealmsMainScreen extends RealmsScreen {
 		subscription.subscribe(realmsDataFetcher.pendingInvitesTask, integer -> {
 			this.numberOfPendingInvites = integer;
 			if (this.numberOfPendingInvites > 0 && this.inviteNarrationLimiter.tryAcquire(1)) {
-				NarratorChatListener.INSTANCE.sayNow(Component.translatable("mco.configure.world.invite.narration", this.numberOfPendingInvites));
+				this.minecraft.getNarrator().sayNow(Component.translatable("mco.configure.world.invite.narration", this.numberOfPendingInvites));
 			}
 		});
 		subscription.subscribe(realmsDataFetcher.trialAvailabilityTask, boolean_ -> {
@@ -832,7 +832,7 @@ public class RealmsMainScreen extends RealmsScreen {
 				this.realmsSelectionListAdded = false;
 			}
 
-			NarratorChatListener.INSTANCE.sayNow(POPUP_TEXT);
+			this.minecraft.getNarrator().sayNow(POPUP_TEXT);
 		}
 
 		if (this.hasFetchedServers) {
