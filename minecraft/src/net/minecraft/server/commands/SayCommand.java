@@ -6,7 +6,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.MessageArgument;
 import net.minecraft.network.chat.ChatType;
-import net.minecraft.server.network.FilteredText;
+import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.server.players.PlayerList;
 
 public class SayCommand {
@@ -23,7 +23,7 @@ public class SayCommand {
 								PlayerList playerList = commandSourceStack.getServer().getPlayerList();
 								chatMessage.resolve(
 									commandSourceStack,
-									filteredText -> playerList.broadcastChatMessage(filteredText, commandSourceStack, ChatType.bind(ChatType.SAY_COMMAND, commandSourceStack))
+									playerChatMessage -> playerList.broadcastChatMessage(playerChatMessage, commandSourceStack, ChatType.bind(ChatType.SAY_COMMAND, commandSourceStack))
 								);
 								return 1;
 							}

@@ -5,7 +5,6 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
 import com.mojang.authlib.minecraft.InsecurePublicKeyException.MissingException;
 import com.mojang.logging.LogUtils;
-import io.netty.channel.ChannelFuture;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -19,6 +18,7 @@ import javax.crypto.SecretKey;
 import net.minecraft.DefaultUncaughtExceptionHandler;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.Connection;
+import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.TickablePacketListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ThrowingComponent;
@@ -127,7 +127,7 @@ public class ServerLoginPacketListenerImpl implements TickablePacketListener, Se
 				this.connection
 					.send(
 						new ClientboundLoginCompressionPacket(this.server.getCompressionThreshold()),
-						channelFuture -> this.connection.setupCompression(this.server.getCompressionThreshold(), true)
+						PacketSendListener.thenRun(() -> this.connection.setupCompression(this.server.getCompressionThreshold(), true))
 					);
 			}
 
