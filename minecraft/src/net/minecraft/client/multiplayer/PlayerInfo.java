@@ -3,7 +3,6 @@ package net.minecraft.client.multiplayer;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.InsecurePublicKeyException;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type;
 import com.mojang.logging.LogUtils;
@@ -17,7 +16,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.SignedMessageValidator;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoPacket;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.CryptException;
 import net.minecraft.util.SignatureValidator;
 import net.minecraft.world.entity.player.ProfilePublicKey;
 import net.minecraft.world.level.GameType;
@@ -55,10 +53,10 @@ public class PlayerInfo {
 		try {
 			ProfilePublicKey.Data data = playerUpdate.getProfilePublicKey();
 			if (data != null) {
-				profilePublicKey = ProfilePublicKey.createValidated(signatureValidator, this.profile.getId(), data);
+				profilePublicKey = ProfilePublicKey.createValidated(signatureValidator, this.profile.getId(), data, ProfilePublicKey.EXPIRY_GRACE_PERIOD);
 			}
-		} catch (InsecurePublicKeyException | CryptException var6) {
-			LOGGER.error("Failed to retrieve publicKey property for profile {}", this.profile.getId(), var6);
+		} catch (Exception var6) {
+			LOGGER.error("Failed to validate publicKey property for profile {}", this.profile.getId(), var6);
 		}
 
 		this.profilePublicKey = profilePublicKey;
