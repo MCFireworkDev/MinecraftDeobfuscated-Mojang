@@ -38,9 +38,9 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.TickingBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.gameevent.EuclideanGameEventDispatcher;
-import net.minecraft.world.level.gameevent.GameEventDispatcher;
+import net.minecraft.world.level.gameevent.EuclideanGameEventListenerRegistry;
 import net.minecraft.world.level.gameevent.GameEventListener;
+import net.minecraft.world.level.gameevent.GameEventListenerRegistry;
 import net.minecraft.world.level.levelgen.DebugLevelSource;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.blending.BlendingData;
@@ -83,7 +83,7 @@ public class LevelChunk extends ChunkAccess {
 	private Supplier<ChunkHolder.FullChunkStatus> fullStatus;
 	@Nullable
 	private LevelChunk.PostLoadProcessor postLoad;
-	private final Int2ObjectMap<GameEventDispatcher> gameEventDispatcherSections;
+	private final Int2ObjectMap<GameEventListenerRegistry> gameEventListenerRegistrySections;
 	private final LevelChunkTicks<Block> blockTicks;
 	private final LevelChunkTicks<Fluid> fluidTicks;
 
@@ -104,7 +104,7 @@ public class LevelChunk extends ChunkAccess {
 	) {
 		super(chunkPos, upgradeData, level, level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), l, levelChunkSections, blendingData);
 		this.level = level;
-		this.gameEventDispatcherSections = new Int2ObjectOpenHashMap<>();
+		this.gameEventListenerRegistrySections = new Int2ObjectOpenHashMap<>();
 
 		for(Heightmap.Types types : Heightmap.Types.values()) {
 			if (ChunkStatus.FULL.heightmapsAfter().contains(types)) {
@@ -169,12 +169,12 @@ public class LevelChunk extends ChunkAccess {
 	}
 
 	@Override
-	public GameEventDispatcher getEventDispatcher(int i) {
+	public GameEventListenerRegistry getListenerRegistry(int i) {
 		Level var3 = this.level;
 		return var3 instanceof ServerLevel serverLevel
-			? this.gameEventDispatcherSections
-				.computeIfAbsent(i, (Int2ObjectFunction<? extends GameEventDispatcher>)(ix -> new EuclideanGameEventDispatcher(serverLevel)))
-			: super.getEventDispatcher(i);
+			? this.gameEventListenerRegistrySections
+				.computeIfAbsent(i, (Int2ObjectFunction<? extends GameEventListenerRegistry>)(ix -> new EuclideanGameEventListenerRegistry(serverLevel)))
+			: super.getListenerRegistry(i);
 	}
 
 	@Override
@@ -427,10 +427,10 @@ public class LevelChunk extends ChunkAccess {
 			GameEventListener gameEventListener = ((EntityBlock)block).getListener(serverLevel, blockEntity);
 			if (gameEventListener != null) {
 				int i = SectionPos.blockToSectionCoord(blockEntity.getBlockPos().getY());
-				GameEventDispatcher gameEventDispatcher = this.getEventDispatcher(i);
-				gameEventDispatcher.unregister(gameEventListener);
-				if (gameEventDispatcher.isEmpty()) {
-					this.gameEventDispatcherSections.remove(i);
+				GameEventListenerRegistry gameEventListenerRegistry = this.getListenerRegistry(i);
+				gameEventListenerRegistry.unregister(gameEventListener);
+				if (gameEventListenerRegistry.isEmpty()) {
+					this.gameEventListenerRegistrySections.remove(i);
 				}
 			}
 		}
@@ -615,8 +615,7 @@ public class LevelChunk extends ChunkAccess {
 		if (block instanceof EntityBlock) {
 			GameEventListener gameEventListener = ((EntityBlock)block).getListener(serverLevel, blockEntity);
 			if (gameEventListener != null) {
-				GameEventDispatcher gameEventDispatcher = this.getEventDispatcher(SectionPos.blockToSectionCoord(blockEntity.getBlockPos().getY()));
-				gameEventDispatcher.register(gameEventListener);
+				this.getListenerRegistry(SectionPos.blockToSectionCoord(blockEntity.getBlockPos().getY())).register(gameEventListener);
 			}
 		}
 	}

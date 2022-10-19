@@ -54,7 +54,7 @@ public class SculkShriekerBlockEntity extends BlockEntity implements VibrationLi
 	});
 	private static final int SHRIEKING_TICKS = 90;
 	private int warningLevel;
-	private VibrationListener listener = new VibrationListener(new BlockPositionSource(this.worldPosition), 8, this, null, 0.0F, 0);
+	private VibrationListener listener = new VibrationListener(new BlockPositionSource(this.worldPosition), 8, this);
 
 	public SculkShriekerBlockEntity(BlockPos blockPos, BlockState blockState) {
 		super(BlockEntityType.SCULK_SHRIEKER, blockPos, blockState);
@@ -93,7 +93,7 @@ public class SculkShriekerBlockEntity extends BlockEntity implements VibrationLi
 
 	@Override
 	public boolean shouldListen(ServerLevel serverLevel, GameEventListener gameEventListener, BlockPos blockPos, GameEvent gameEvent, GameEvent.Context context) {
-		return !this.isRemoved() && !this.getBlockState().getValue(SculkShriekerBlock.SHRIEKING) && tryGetPlayer(context.sourceEntity()) != null;
+		return !this.getBlockState().getValue(SculkShriekerBlock.SHRIEKING) && tryGetPlayer(context.sourceEntity()) != null;
 	}
 
 	@Nullable

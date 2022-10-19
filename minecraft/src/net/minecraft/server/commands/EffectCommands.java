@@ -9,10 +9,13 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import java.util.Collection;
 import javax.annotation.Nullable;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.commands.arguments.MobEffectArgument;
+import net.minecraft.commands.arguments.ResourceArgument;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -28,7 +31,7 @@ public class EffectCommands {
 		Component.translatable("commands.effect.clear.specific.failed")
 	);
 
-	public static void register(CommandDispatcher<CommandSourceStack> commandDispatcher) {
+	public static void register(CommandDispatcher<CommandSourceStack> commandDispatcher, CommandBuildContext commandBuildContext) {
 		commandDispatcher.register(
 			Commands.literal("effect")
 				.requires(commandSourceStack -> commandSourceStack.hasPermission(2))
@@ -39,10 +42,10 @@ public class EffectCommands {
 							Commands.argument("targets", EntityArgument.entities())
 								.executes(commandContext -> clearEffects(commandContext.getSource(), EntityArgument.getEntities(commandContext, "targets")))
 								.then(
-									Commands.argument("effect", MobEffectArgument.effect())
+									Commands.argument("effect", ResourceArgument.resource(commandBuildContext, Registry.MOB_EFFECT_REGISTRY))
 										.executes(
 											commandContext -> clearEffect(
-													commandContext.getSource(), EntityArgument.getEntities(commandContext, "targets"), MobEffectArgument.getEffect(commandContext, "effect")
+													commandContext.getSource(), EntityArgument.getEntities(commandContext, "targets"), ResourceArgument.getMobEffect(commandContext, "effect")
 												)
 										)
 								)
@@ -53,12 +56,12 @@ public class EffectCommands {
 						.then(
 							Commands.argument("targets", EntityArgument.entities())
 								.then(
-									Commands.argument("effect", MobEffectArgument.effect())
+									Commands.argument("effect", ResourceArgument.resource(commandBuildContext, Registry.MOB_EFFECT_REGISTRY))
 										.executes(
 											commandContext -> giveEffect(
 													commandContext.getSource(),
 													EntityArgument.getEntities(commandContext, "targets"),
-													MobEffectArgument.getEffect(commandContext, "effect"),
+													ResourceArgument.getMobEffect(commandContext, "effect"),
 													null,
 													0,
 													true
@@ -70,7 +73,7 @@ public class EffectCommands {
 													commandContext -> giveEffect(
 															commandContext.getSource(),
 															EntityArgument.getEntities(commandContext, "targets"),
-															MobEffectArgument.getEffect(commandContext, "effect"),
+															ResourceArgument.getMobEffect(commandContext, "effect"),
 															IntegerArgumentType.getInteger(commandContext, "seconds"),
 															0,
 															true
@@ -82,7 +85,7 @@ public class EffectCommands {
 															commandContext -> giveEffect(
 																	commandContext.getSource(),
 																	EntityArgument.getEntities(commandContext, "targets"),
-																	MobEffectArgument.getEffect(commandContext, "effect"),
+																	ResourceArgument.getMobEffect(commandContext, "effect"),
 																	IntegerArgumentType.getInteger(commandContext, "seconds"),
 																	IntegerArgumentType.getInteger(commandContext, "amplifier"),
 																	true
@@ -94,7 +97,7 @@ public class EffectCommands {
 																	commandContext -> giveEffect(
 																			commandContext.getSource(),
 																			EntityArgument.getEntities(commandContext, "targets"),
-																			MobEffectArgument.getEffect(commandContext, "effect"),
+																			ResourceArgument.getMobEffect(commandContext, "effect"),
 																			IntegerArgumentType.getInteger(commandContext, "seconds"),
 																			IntegerArgumentType.getInteger(commandContext, "amplifier"),
 																			!BoolArgumentType.getBool(commandContext, "hideParticles")
@@ -110,8 +113,9 @@ public class EffectCommands {
 	}
 
 	private static int giveEffect(
-		CommandSourceStack commandSourceStack, Collection<? extends Entity> collection, MobEffect mobEffect, @Nullable Integer integer, int i, boolean bl
+		CommandSourceStack commandSourceStack, Collection<? extends Entity> collection, Holder<MobEffect> holder, @Nullable Integer integer, int i, boolean bl
 	) throws CommandSyntaxException {
+		MobEffect mobEffect = holder.value();
 		int j = 0;
 		int k;
 		if (integer != null) {
@@ -177,7 +181,8 @@ public class EffectCommands {
 		}
 	}
 
-	private static int clearEffect(CommandSourceStack commandSourceStack, Collection<? extends Entity> collection, MobEffect mobEffect) throws CommandSyntaxException {
+	private static int clearEffect(CommandSourceStack commandSourceStack, Collection<? extends Entity> collection, Holder<MobEffect> holder) throws CommandSyntaxException {
+		MobEffect mobEffect = holder.value();
 		int i = 0;
 
 		for(Entity entity : collection) {

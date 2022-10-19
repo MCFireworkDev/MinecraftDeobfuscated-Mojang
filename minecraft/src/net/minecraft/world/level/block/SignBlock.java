@@ -80,11 +80,11 @@ public abstract class SignBlock extends BaseEntityBlock implements SimpleWaterlo
 		if (level.isClientSide) {
 			return bl4 ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
 		} else {
-			BlockEntity blockEntity = level.getBlockEntity(blockPos);
-			if (!(blockEntity instanceof SignBlockEntity)) {
+			BlockEntity bl5 = level.getBlockEntity(blockPos);
+			if (!(bl5 instanceof SignBlockEntity)) {
 				return InteractionResult.PASS;
 			} else {
-				SignBlockEntity signBlockEntity = (SignBlockEntity)blockEntity;
+				SignBlockEntity signBlockEntity = (SignBlockEntity)bl5;
 				boolean bl5 = signBlockEntity.hasGlowingText();
 				if ((!bl2 || !bl5) && (!bl3 || bl5)) {
 					if (bl4) {
@@ -127,5 +127,16 @@ public abstract class SignBlock extends BaseEntityBlock implements SimpleWaterlo
 
 	public WoodType type() {
 		return this.type;
+	}
+
+	public static WoodType getWoodType(Block block) {
+		WoodType woodType;
+		if (block instanceof SignBlock) {
+			woodType = ((SignBlock)block).type();
+		} else {
+			woodType = WoodType.OAK;
+		}
+
+		return woodType;
 	}
 }

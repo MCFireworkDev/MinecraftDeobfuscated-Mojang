@@ -217,18 +217,22 @@ public class Pig extends Animal implements ItemSteerable, Saddleable {
 	public void thunderHit(ServerLevel serverLevel, LightningBolt lightningBolt) {
 		if (serverLevel.getDifficulty() != Difficulty.PEACEFUL) {
 			ZombifiedPiglin zombifiedPiglin = EntityType.ZOMBIFIED_PIGLIN.create(serverLevel);
-			zombifiedPiglin.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.GOLDEN_SWORD));
-			zombifiedPiglin.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
-			zombifiedPiglin.setNoAi(this.isNoAi());
-			zombifiedPiglin.setBaby(this.isBaby());
-			if (this.hasCustomName()) {
-				zombifiedPiglin.setCustomName(this.getCustomName());
-				zombifiedPiglin.setCustomNameVisible(this.isCustomNameVisible());
-			}
+			if (zombifiedPiglin != null) {
+				zombifiedPiglin.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.GOLDEN_SWORD));
+				zombifiedPiglin.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
+				zombifiedPiglin.setNoAi(this.isNoAi());
+				zombifiedPiglin.setBaby(this.isBaby());
+				if (this.hasCustomName()) {
+					zombifiedPiglin.setCustomName(this.getCustomName());
+					zombifiedPiglin.setCustomNameVisible(this.isCustomNameVisible());
+				}
 
-			zombifiedPiglin.setPersistenceRequired();
-			serverLevel.addFreshEntity(zombifiedPiglin);
-			this.discard();
+				zombifiedPiglin.setPersistenceRequired();
+				serverLevel.addFreshEntity(zombifiedPiglin);
+				this.discard();
+			} else {
+				super.thunderHit(serverLevel, lightningBolt);
+			}
 		} else {
 			super.thunderHit(serverLevel, lightningBolt);
 		}
@@ -254,6 +258,7 @@ public class Pig extends Animal implements ItemSteerable, Saddleable {
 		return this.steering.boost(this.getRandom());
 	}
 
+	@Nullable
 	public Pig getBreedOffspring(ServerLevel serverLevel, AgeableMob ageableMob) {
 		return EntityType.PIG.create(serverLevel);
 	}

@@ -7,7 +7,6 @@ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -43,7 +42,6 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.Score;
 import net.minecraft.world.scores.Scoreboard;
@@ -181,26 +179,26 @@ public class EntitySelectorOptions {
 					entitySelectorParser.setSuggestions(
 						(suggestionsBuilder, consumer) -> SharedSuggestionProvider.suggest(Arrays.asList("nearest", "furthest", "random", "arbitrary"), suggestionsBuilder)
 					);
-					BiConsumer<Vec3, List<? extends Entity>> biConsumer;
+					BiConsumer var10001;
 					switch(string) {
 						case "nearest":
-							biConsumer = EntitySelectorParser.ORDER_NEAREST;
+							var10001 = EntitySelectorParser.ORDER_NEAREST;
 							break;
 						case "furthest":
-							biConsumer = EntitySelectorParser.ORDER_FURTHEST;
+							var10001 = EntitySelectorParser.ORDER_FURTHEST;
 							break;
 						case "random":
-							biConsumer = EntitySelectorParser.ORDER_RANDOM;
+							var10001 = EntitySelectorParser.ORDER_RANDOM;
 							break;
 						case "arbitrary":
-							biConsumer = EntitySelectorParser.ORDER_ARBITRARY;
+							var10001 = EntitySelectorParser.ORDER_ARBITRARY;
 							break;
 						default:
 							entitySelectorParser.getReader().setCursor(i);
 							throw ERROR_SORT_UNKNOWN.createWithContext(entitySelectorParser.getReader(), string);
 					}
 	
-					entitySelectorParser.setOrder(biConsumer);
+					entitySelectorParser.setOrder(var10001);
 					entitySelectorParser.setSorted(true);
 				},
 				entitySelectorParser -> !entitySelectorParser.isCurrentEntity() && !entitySelectorParser.isSorted(),
@@ -512,7 +510,7 @@ public class EntitySelectorOptions {
 	public static EntitySelectorOptions.Modifier get(EntitySelectorParser entitySelectorParser, String string, int i) throws CommandSyntaxException {
 		EntitySelectorOptions.Option option = (EntitySelectorOptions.Option)OPTIONS.get(string);
 		if (option != null) {
-			if (option.predicate.test(entitySelectorParser)) {
+			if (option.canUse.test(entitySelectorParser)) {
 				return option.modifier;
 			} else {
 				throw ERROR_INAPPLICABLE_OPTION.createWithContext(entitySelectorParser.getReader(), string);
@@ -527,7 +525,7 @@ public class EntitySelectorOptions {
 		String string = suggestionsBuilder.getRemaining().toLowerCase(Locale.ROOT);
 
 		for(Entry<String, EntitySelectorOptions.Option> entry : OPTIONS.entrySet()) {
-			if (((EntitySelectorOptions.Option)entry.getValue()).predicate.test(entitySelectorParser)
+			if (((EntitySelectorOptions.Option)entry.getValue()).canUse.test(entitySelectorParser)
 				&& ((String)entry.getKey()).toLowerCase(Locale.ROOT).startsWith(string)) {
 				suggestionsBuilder.suggest((String)entry.getKey() + "=", ((EntitySelectorOptions.Option)entry.getValue()).description);
 			}
@@ -538,15 +536,9 @@ public class EntitySelectorOptions {
 		void handle(EntitySelectorParser entitySelectorParser) throws CommandSyntaxException;
 	}
 
-	static class Option {
-		public final EntitySelectorOptions.Modifier modifier;
-		public final Predicate<EntitySelectorParser> predicate;
-		public final Component description;
-
-		Option(EntitySelectorOptions.Modifier modifier, Predicate<EntitySelectorParser> predicate, Component component) {
-			this.modifier = modifier;
-			this.predicate = predicate;
-			this.description = component;
-		}
+	static record Option(EntitySelectorOptions.Modifier modifier, Predicate<EntitySelectorParser> canUse, Component description) {
+		final EntitySelectorOptions.Modifier modifier;
+		final Predicate<EntitySelectorParser> canUse;
+		final Component description;
 	}
 }

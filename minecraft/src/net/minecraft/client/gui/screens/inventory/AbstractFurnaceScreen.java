@@ -129,10 +129,4 @@ public abstract class AbstractFurnaceScreen<T extends AbstractFurnaceMenu> exten
 	public RecipeBookComponent getRecipeBookComponent() {
 		return this.recipeBookComponent;
 	}
-
-	@Override
-	public void removed() {
-		this.recipeBookComponent.removed();
-		super.removed();
-	}
 }

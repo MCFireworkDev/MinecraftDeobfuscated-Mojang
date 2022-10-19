@@ -56,6 +56,7 @@ public class Bootstrap {
 					DispenseItemBehavior.bootStrap();
 					CauldronInteraction.bootStrap();
 					Registry.freezeBuiltins();
+					Registry.checkRegistry(Registry.REGISTRY);
 					wrapStreams();
 				}
 			}

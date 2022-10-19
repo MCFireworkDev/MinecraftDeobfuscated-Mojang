@@ -27,6 +27,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -405,8 +406,7 @@ public abstract class AbstractContainerMenu {
 				ItemStack itemStack = slot.getItem();
 				ItemStack itemStack5 = this.getCarried();
 				player.updateTutorialInventoryAction(itemStack5, slot.getItem(), clickAction);
-				if (!itemStack5.overrideStackedOnOther(slot, clickAction, player)
-					&& !itemStack.overrideOtherStackedOnMe(itemStack5, slot, clickAction, player, this.createCarriedSlotAccess())) {
+				if (!this.tryItemClickBehaviourOverride(player, clickAction, slot, itemStack, itemStack5)) {
 					if (itemStack.isEmpty()) {
 						if (!itemStack5.isEmpty()) {
 							int p = clickAction == ClickAction.PRIMARY ? itemStack5.getCount() : 1;
@@ -509,6 +509,15 @@ public abstract class AbstractContainerMenu {
 					}
 				}
 			}
+		}
+	}
+
+	private boolean tryItemClickBehaviourOverride(Player player, ClickAction clickAction, Slot slot, ItemStack itemStack, ItemStack itemStack2) {
+		FeatureFlagSet featureFlagSet = player.getLevel().enabledFeatures();
+		if (itemStack2.isItemEnabled(featureFlagSet) && itemStack2.overrideStackedOnOther(slot, clickAction, player)) {
+			return true;
+		} else {
+			return itemStack.isItemEnabled(featureFlagSet) && itemStack.overrideOtherStackedOnMe(itemStack2, slot, clickAction, player, this.createCarriedSlotAccess());
 		}
 	}
 

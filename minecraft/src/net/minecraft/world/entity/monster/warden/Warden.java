@@ -14,6 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -110,9 +111,7 @@ public class Warden extends Monster implements VibrationListener.VibrationListen
 
 	public Warden(EntityType<? extends Monster> entityType, Level level) {
 		super(entityType, level);
-		this.dynamicGameEventListener = new DynamicGameEventListener<>(
-			new VibrationListener(new EntityPositionSource(this, this.getEyeHeight()), 16, this, null, 0.0F, 0)
-		);
+		this.dynamicGameEventListener = new DynamicGameEventListener<>(new VibrationListener(new EntityPositionSource(this, this.getEyeHeight()), 16, this));
 		this.xpReward = 5;
 		this.getNavigation().setCanFloat(true);
 		this.setPathfindingMalus(BlockPathTypes.UNPASSABLE_RAIL, 0.0F);
@@ -124,7 +123,7 @@ public class Warden extends Monster implements VibrationListener.VibrationListen
 	}
 
 	@Override
-	public Packet<?> getAddEntityPacket() {
+	public Packet<ClientGamePacketListener> getAddEntityPacket() {
 		return new ClientboundAddEntityPacket((LivingEntity)this, this.hasPose(Pose.EMERGING) ? 1 : 0);
 	}
 
@@ -568,9 +567,7 @@ public class Warden extends Monster implements VibrationListener.VibrationListen
 			&& !this.isDeadOrDying()
 			&& !this.getBrain().hasMemoryValue(MemoryModuleType.VIBRATION_COOLDOWN)
 			&& !this.isDiggingOrEmerging()
-			&& serverLevel.getWorldBorder().isWithinBounds(blockPos)
-			&& !this.isRemoved()
-			&& this.level == serverLevel) {
+			&& serverLevel.getWorldBorder().isWithinBounds(blockPos)) {
 			Entity var7 = context.sourceEntity();
 			if (var7 instanceof LivingEntity livingEntity && !this.canTargetEntity(livingEntity)) {
 				return false;

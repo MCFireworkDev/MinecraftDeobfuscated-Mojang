@@ -50,6 +50,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineLabel;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.CommonComponents;
@@ -1178,7 +1179,13 @@ public class RealmsMainScreen extends RealmsScreen {
 		public NewsButton() {
 			super(RealmsMainScreen.this.width - 115, 6, 20, 20, Component.translatable("mco.news"), button -> {
 				if (RealmsMainScreen.this.newsLink != null) {
-					Util.getPlatform().openUri(RealmsMainScreen.this.newsLink);
+					RealmsMainScreen.this.minecraft.setScreen(new ConfirmLinkScreen(bl -> {
+						if (bl) {
+							Util.getPlatform().openUri(RealmsMainScreen.this.newsLink);
+						}
+
+						RealmsMainScreen.this.minecraft.setScreen(RealmsMainScreen.this);
+					}, RealmsMainScreen.this.newsLink, true));
 					if (RealmsMainScreen.this.hasUnreadNews) {
 						RealmsPersistence.RealmsPersistenceData realmsPersistenceData = RealmsPersistence.readFile();
 						realmsPersistenceData.hasUnreadNews = false;
