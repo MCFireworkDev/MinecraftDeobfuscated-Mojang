@@ -733,9 +733,10 @@ public class CreativeModeInventoryScreen extends EffectRenderingInventoryScreen<
 		Hotbar hotbar = hotbarManager.get(i);
 		if (bl) {
 			for(int j = 0; j < Inventory.getSelectionSize(); ++j) {
-				ItemStack itemStack = hotbar.get(j).copy();
-				localPlayer.getInventory().setItem(j, itemStack);
-				minecraft.gameMode.handleCreativeModeItemAdd(itemStack, 36 + j);
+				ItemStack itemStack = hotbar.get(j);
+				ItemStack itemStack2 = itemStack.isItemEnabled(localPlayer.level.enabledFeatures()) ? itemStack.copy() : ItemStack.EMPTY;
+				localPlayer.getInventory().setItem(j, itemStack2);
+				minecraft.gameMode.handleCreativeModeItemAdd(itemStack2, 36 + j);
 			}
 
 			localPlayer.inventoryMenu.broadcastChanges();
@@ -761,10 +762,11 @@ public class CreativeModeInventoryScreen extends EffectRenderingInventoryScreen<
 
 		@Override
 		public boolean mayPickup(Player player) {
-			if (super.mayPickup(player) && this.hasItem()) {
-				return this.getItem().getTagElement("CustomCreativeLock") == null;
+			ItemStack itemStack = this.getItem();
+			if (super.mayPickup(player) && !itemStack.isEmpty()) {
+				return itemStack.isItemEnabled(player.level.enabledFeatures()) && itemStack.getTagElement("CustomCreativeLock") == null;
 			} else {
-				return !this.hasItem();
+				return itemStack.isEmpty();
 			}
 		}
 	}

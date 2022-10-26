@@ -229,10 +229,10 @@ public class FallingBlockEntity extends Entity {
 				DamageSource damageSource2;
 				if (this.blockState.getBlock() instanceof Fallable fallable) {
 					predicate = fallable.getHurtsEntitySelector();
-					damageSource2 = fallable.getFallDamageSource();
+					damageSource2 = fallable.getFallDamageSource(this);
 				} else {
 					predicate = EntitySelector.NO_SPECTATORS;
-					damageSource2 = DamageSource.FALLING_BLOCK;
+					damageSource2 = DamageSource.fallingBlock(this);
 				}
 
 				float h = (float)Math.min(Mth.floor((float)i * this.fallDamagePerDistance), this.fallDamageMax);

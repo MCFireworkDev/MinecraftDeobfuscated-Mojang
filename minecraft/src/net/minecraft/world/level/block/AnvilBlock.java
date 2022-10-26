@@ -10,6 +10,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -98,8 +99,8 @@ public class AnvilBlock extends FallingBlock {
 	}
 
 	@Override
-	public DamageSource getFallDamageSource() {
-		return DamageSource.ANVIL;
+	public DamageSource getFallDamageSource(Entity entity) {
+		return DamageSource.anvil(entity);
 	}
 
 	@Nullable

@@ -176,6 +176,11 @@ public class GameTestServer extends MinecraftServer {
 	}
 
 	@Override
+	public void waitUntilNextTick() {
+		this.runAllTasks();
+	}
+
+	@Override
 	public SystemReport fillServerSystemReport(SystemReport systemReport) {
 		systemReport.setDetail("Type", "Game test server");
 		return systemReport;

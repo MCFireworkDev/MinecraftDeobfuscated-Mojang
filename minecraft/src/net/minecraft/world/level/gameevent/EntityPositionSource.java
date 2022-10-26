@@ -7,9 +7,9 @@ import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -17,7 +17,7 @@ import net.minecraft.world.phys.Vec3;
 public class EntityPositionSource implements PositionSource {
 	public static final Codec<EntityPositionSource> CODEC = RecordCodecBuilder.create(
 		instance -> instance.group(
-					ExtraCodecs.UUID.fieldOf("source_entity").forGetter(EntityPositionSource::getUuid),
+					UUIDUtil.CODEC.fieldOf("source_entity").forGetter(EntityPositionSource::getUuid),
 					Codec.FLOAT.fieldOf("y_offset").orElse(0.0F).forGetter(entityPositionSource -> entityPositionSource.yOffset)
 				)
 				.apply(instance, (uUID, float_) -> new EntityPositionSource(Either.right(Either.left(uUID)), float_))

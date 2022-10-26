@@ -10,10 +10,13 @@ import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -54,6 +57,7 @@ import net.minecraft.network.chat.LastSeenMessagesValidator;
 import net.minecraft.network.chat.MessageSignature;
 import net.minecraft.network.chat.MessageSignatureCache;
 import net.minecraft.network.chat.PlayerChatMessage;
+import net.minecraft.network.chat.RemoteChatSession;
 import net.minecraft.network.chat.SignableCommand;
 import net.minecraft.network.chat.SignedMessageBody;
 import net.minecraft.network.chat.SignedMessageChain;
@@ -68,6 +72,7 @@ import net.minecraft.network.protocol.game.ClientboundDisguisedChatPacket;
 import net.minecraft.network.protocol.game.ClientboundKeepAlivePacket;
 import net.minecraft.network.protocol.game.ClientboundMoveVehiclePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerChatPacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
@@ -79,6 +84,7 @@ import net.minecraft.network.protocol.game.ServerboundChangeDifficultyPacket;
 import net.minecraft.network.protocol.game.ServerboundChatAckPacket;
 import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundChatPacket;
+import net.minecraft.network.protocol.game.ServerboundChatSessionUpdatePacket;
 import net.minecraft.network.protocol.game.ServerboundClientCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundClientInformationPacket;
 import net.minecraft.network.protocol.game.ServerboundCommandSuggestionPacket;
@@ -127,6 +133,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.FutureChain;
 import net.minecraft.util.Mth;
+import net.minecraft.util.SignatureValidator;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -140,6 +147,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.ProfilePublicKey;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -217,10 +225,11 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 	private int receivedMovePacketCount;
 	private int knownMovePacketCount;
 	private final AtomicReference<Instant> lastChatTimeStamp = new AtomicReference(Instant.EPOCH);
-	private final SignedMessageChain.Decoder signedMessageDecoder;
+	@Nullable
+	private RemoteChatSession chatSession;
+	private SignedMessageChain.Decoder signedMessageDecoder;
 	private final LastSeenMessagesValidator lastSeenMessages = new LastSeenMessagesValidator(20);
 	private final MessageSignatureCache messageSignatureCache = MessageSignatureCache.createDefault();
-	private final MessageSignature.Packer messageSignaturePacker = this.messageSignatureCache.packer();
 	private final FutureChain chatMessageChain;
 
 	public ServerGamePacketListenerImpl(MinecraftServer minecraftServer, Connection connection, ServerPlayer serverPlayer) {
@@ -231,7 +240,9 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 		serverPlayer.connection = this;
 		this.keepAliveTime = Util.getMillis();
 		serverPlayer.getTextFilter().join();
-		this.signedMessageDecoder = serverPlayer.getChatSession().createMessageDecoder(serverPlayer.getUUID());
+		this.signedMessageDecoder = minecraftServer.enforceSecureProfile()
+			? SignedMessageChain.Decoder.REJECT_ALL
+			: SignedMessageChain.Decoder.unsigned(serverPlayer.getUUID());
 		this.chatMessageChain = new FutureChain(minecraftServer);
 	}
 
@@ -1482,7 +1493,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 				playerChatMessage.link().sender(),
 				playerChatMessage.link().index(),
 				playerChatMessage.signature(),
-				playerChatMessage.signedBody().pack(this.messageSignaturePacker),
+				playerChatMessage.signedBody().pack(this.messageSignatureCache),
 				playerChatMessage.unsignedContent(),
 				playerChatMessage.filterMask(),
 				bound.toNetwork(this.player.level.registryAccess())
@@ -1769,6 +1780,42 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 		if (this.player.hasPermissions(2) || this.isSingleplayerOwner()) {
 			this.server.setDifficultyLocked(serverboundLockDifficultyPacket.isLocked());
 		}
+	}
+
+	@Override
+	public void handleChatSessionUpdate(ServerboundChatSessionUpdatePacket serverboundChatSessionUpdatePacket) {
+		PacketUtils.ensureRunningOnSameThread(serverboundChatSessionUpdatePacket, this, this.player.getLevel());
+		RemoteChatSession.Data data = serverboundChatSessionUpdatePacket.chatSession();
+		ProfilePublicKey.Data data2 = this.chatSession != null ? this.chatSession.profilePublicKey().data() : null;
+		ProfilePublicKey.Data data3 = data.profilePublicKey();
+		if (!Objects.equals(data2, data3)) {
+			if (data2 != null && data3.expiresAt().isBefore(data2.expiresAt())) {
+				this.disconnect(ProfilePublicKey.EXPIRED_PROFILE_PUBLIC_KEY);
+			} else {
+				try {
+					SignatureValidator signatureValidator = this.server.getServiceSignatureValidator();
+					this.resetPlayerChatState(data.validate(this.player.getGameProfile(), signatureValidator, Duration.ZERO));
+				} catch (ProfilePublicKey.ValidationException var6) {
+					LOGGER.error("Failed to validate profile key: {}", var6.getMessage());
+					this.disconnect(var6.getComponent());
+				}
+			}
+		}
+	}
+
+	private void resetPlayerChatState(RemoteChatSession remoteChatSession) {
+		this.chatSession = remoteChatSession;
+		this.signedMessageDecoder = remoteChatSession.createMessageDecoder(this.player.getUUID());
+		this.chatMessageChain
+			.append(
+				executor -> {
+					this.player.setChatSession(remoteChatSession);
+					this.server
+						.getPlayerList()
+						.broadcastAll(new ClientboundPlayerInfoUpdatePacket(EnumSet.of(ClientboundPlayerInfoUpdatePacket.Action.INITIALIZE_CHAT), List.of(this.player)));
+					return CompletableFuture.completedFuture(null);
+				}
+			);
 	}
 
 	@Override
