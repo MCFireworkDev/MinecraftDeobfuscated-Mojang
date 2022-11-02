@@ -1,11 +1,13 @@
 package net.minecraft.world.level.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.data.worldgen.features.CaveFeatures;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
@@ -16,8 +18,8 @@ public class MossBlock extends Block implements BonemealableBlock {
 	}
 
 	@Override
-	public boolean isValidBonemealTarget(BlockGetter blockGetter, BlockPos blockPos, BlockState blockState, boolean bl) {
-		return blockGetter.getBlockState(blockPos.above()).isAir();
+	public boolean isValidBonemealTarget(LevelReader levelReader, BlockPos blockPos, BlockState blockState, boolean bl) {
+		return levelReader.getBlockState(blockPos.above()).isAir();
 	}
 
 	@Override
@@ -27,7 +29,11 @@ public class MossBlock extends Block implements BonemealableBlock {
 
 	@Override
 	public void performBonemeal(ServerLevel serverLevel, RandomSource randomSource, BlockPos blockPos, BlockState blockState) {
-		((ConfiguredFeature)CaveFeatures.MOSS_PATCH_BONEMEAL.value())
-			.place(serverLevel, serverLevel.getChunkSource().getGenerator(), randomSource, blockPos.above());
+		serverLevel.registryAccess()
+			.registry(Registry.CONFIGURED_FEATURE_REGISTRY)
+			.flatMap(registry -> registry.getHolder(CaveFeatures.MOSS_PATCH_BONEMEAL))
+			.ifPresent(
+				reference -> ((ConfiguredFeature)reference.value()).place(serverLevel, serverLevel.getChunkSource().getGenerator(), randomSource, blockPos.above())
+			);
 	}
 }

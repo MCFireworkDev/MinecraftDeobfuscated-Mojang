@@ -151,7 +151,7 @@ public class Cat extends TamableAnimal {
 	@Override
 	protected void defineSynchedData() {
 		super.defineSynchedData();
-		this.entityData.define(DATA_VARIANT_ID, CatVariant.BLACK);
+		this.entityData.define(DATA_VARIANT_ID, (CatVariant)Registry.CAT_VARIANT.getOrThrow(CatVariant.BLACK));
 		this.entityData.define(IS_LYING, false);
 		this.entityData.define(RELAX_STATE_ONE, false);
 		this.entityData.define(DATA_COLLAR_COLOR, DyeColor.RED.getId());
@@ -363,7 +363,7 @@ public class Cat extends TamableAnimal {
 			.ifPresent(holder -> this.setCatVariant((CatVariant)holder.value()));
 		ServerLevel serverLevel = serverLevelAccessor.getLevel();
 		if (serverLevel.structureManager().getStructureWithPieceAt(this.blockPosition(), StructureTags.CATS_SPAWN_AS_BLACK).isValid()) {
-			this.setCatVariant(CatVariant.ALL_BLACK);
+			this.setCatVariant((CatVariant)Registry.CAT_VARIANT.getOrThrow(CatVariant.ALL_BLACK));
 			this.setPersistenceRequired();
 		}
 
