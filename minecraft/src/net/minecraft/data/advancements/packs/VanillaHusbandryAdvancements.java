@@ -30,7 +30,7 @@ import net.minecraft.advancements.critereon.StartRidingTrigger;
 import net.minecraft.advancements.critereon.TameAnimalTrigger;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.advancements.AdvancementSubProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -255,7 +255,7 @@ public class VanillaHusbandryAdvancements implements AdvancementSubProvider {
 			.parent(advancement6)
 			.requirements(RequirementsStrategy.OR)
 			.addCriterion(
-				Registry.ITEM.getKey(Items.AXOLOTL_BUCKET).getPath(),
+				BuiltInRegistries.ITEM.getKey(Items.AXOLOTL_BUCKET).getPath(),
 				FilledBucketTrigger.TriggerInstance.filledBucket(ItemPredicate.Builder.item().of(Items.AXOLOTL_BUCKET).build())
 			)
 			.display(
@@ -360,7 +360,7 @@ public class VanillaHusbandryAdvancements implements AdvancementSubProvider {
 		Advancement advancement10 = Advancement.Builder.advancement()
 			.parent(advancement)
 			.addCriterion(
-				Registry.ITEM.getKey(Items.TADPOLE_BUCKET).getPath(),
+				BuiltInRegistries.ITEM.getKey(Items.TADPOLE_BUCKET).getPath(),
 				FilledBucketTrigger.TriggerInstance.filledBucket(ItemPredicate.Builder.item().of(Items.TADPOLE_BUCKET).build())
 			)
 			.display(
@@ -503,7 +503,7 @@ public class VanillaHusbandryAdvancements implements AdvancementSubProvider {
 	}
 
 	private Advancement.Builder addLeashedFrogVariants(Advancement.Builder builder) {
-		Registry.FROG_VARIANT
+		BuiltInRegistries.FROG_VARIANT
 			.holders()
 			.forEach(
 				reference -> builder.addCriterion(
@@ -521,7 +521,7 @@ public class VanillaHusbandryAdvancements implements AdvancementSubProvider {
 
 	private Advancement.Builder addFood(Advancement.Builder builder) {
 		for(Item item : EDIBLE_ITEMS) {
-			builder.addCriterion(Registry.ITEM.getKey(item).getPath(), ConsumeItemTrigger.TriggerInstance.usedItem(item));
+			builder.addCriterion(BuiltInRegistries.ITEM.getKey(item).getPath(), ConsumeItemTrigger.TriggerInstance.usedItem(item));
 		}
 
 		return builder;
@@ -548,7 +548,9 @@ public class VanillaHusbandryAdvancements implements AdvancementSubProvider {
 
 	private Advancement.Builder addFishBuckets(Advancement.Builder builder) {
 		for(Item item : FISH_BUCKETS) {
-			builder.addCriterion(Registry.ITEM.getKey(item).getPath(), FilledBucketTrigger.TriggerInstance.filledBucket(ItemPredicate.Builder.item().of(item).build()));
+			builder.addCriterion(
+				BuiltInRegistries.ITEM.getKey(item).getPath(), FilledBucketTrigger.TriggerInstance.filledBucket(ItemPredicate.Builder.item().of(item).build())
+			);
 		}
 
 		return builder;
@@ -557,7 +559,7 @@ public class VanillaHusbandryAdvancements implements AdvancementSubProvider {
 	private Advancement.Builder addFish(Advancement.Builder builder) {
 		for(Item item : FISH) {
 			builder.addCriterion(
-				Registry.ITEM.getKey(item).getPath(),
+				BuiltInRegistries.ITEM.getKey(item).getPath(),
 				FishingRodHookedTrigger.TriggerInstance.fishedItem(ItemPredicate.ANY, EntityPredicate.ANY, ItemPredicate.Builder.item().of(item).build())
 			);
 		}
@@ -566,7 +568,7 @@ public class VanillaHusbandryAdvancements implements AdvancementSubProvider {
 	}
 
 	private Advancement.Builder addCatVariants(Advancement.Builder builder) {
-		Registry.CAT_VARIANT
+		BuiltInRegistries.CAT_VARIANT
 			.entrySet()
 			.stream()
 			.sorted(Entry.comparingByKey(Comparator.comparing(ResourceKey::location)))

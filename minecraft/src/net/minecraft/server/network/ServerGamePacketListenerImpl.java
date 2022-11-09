@@ -43,7 +43,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -725,7 +725,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 			if (blockEntity instanceof JigsawBlockEntity jigsawBlockEntity) {
 				jigsawBlockEntity.setName(serverboundSetJigsawBlockPacket.getName());
 				jigsawBlockEntity.setTarget(serverboundSetJigsawBlockPacket.getTarget());
-				jigsawBlockEntity.setPool(ResourceKey.create(Registry.TEMPLATE_POOL_REGISTRY, serverboundSetJigsawBlockPacket.getPool()));
+				jigsawBlockEntity.setPool(ResourceKey.create(Registries.TEMPLATE_POOL, serverboundSetJigsawBlockPacket.getPool()));
 				jigsawBlockEntity.setFinalState(serverboundSetJigsawBlockPacket.getFinalState());
 				jigsawBlockEntity.setJoint(serverboundSetJigsawBlockPacket.getJoint());
 				jigsawBlockEntity.setChanged();
@@ -1445,7 +1445,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 			case START_RIDING_JUMP:
 				if (this.player.getVehicle() instanceof PlayerRideableJumping playerRideableJumping) {
 					int i = serverboundPlayerCommandPacket.getData();
-					if (playerRideableJumping.canJump() && i > 0) {
+					if (playerRideableJumping.canJump(this.player) && i > 0) {
 						playerRideableJumping.handleStartJump(i);
 					}
 				}

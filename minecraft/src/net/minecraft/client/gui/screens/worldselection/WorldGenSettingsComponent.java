@@ -29,6 +29,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.RegistryOps;
@@ -77,7 +78,7 @@ public class WorldGenSettingsComponent implements Renderable {
 	}
 
 	private static Optional<Holder<WorldPreset>> findPreset(WorldCreationContext worldCreationContext, Optional<ResourceKey<WorldPreset>> optional) {
-		return optional.flatMap(resourceKey -> worldCreationContext.worldgenLoadContext().registryOrThrow(Registry.WORLD_PRESET_REGISTRY).getHolder(resourceKey));
+		return optional.flatMap(resourceKey -> worldCreationContext.worldgenLoadContext().registryOrThrow(Registries.WORLD_PRESET).getHolder(resourceKey));
 	}
 
 	public void init(CreateWorldScreen createWorldScreen, Minecraft minecraft, Font font) {
@@ -104,7 +105,7 @@ public class WorldGenSettingsComponent implements Renderable {
 				)
 		);
 		this.featuresButton.visible = false;
-		Registry<WorldPreset> registry = this.settings.worldgenLoadContext().registryOrThrow(Registry.WORLD_PRESET_REGISTRY);
+		Registry<WorldPreset> registry = this.settings.worldgenLoadContext().registryOrThrow(Registries.WORLD_PRESET);
 		List<Holder<WorldPreset>> list = (List)getNonEmptyList(registry, WorldPresetTags.NORMAL)
 			.orElseGet(() -> (List)registry.holders().collect(Collectors.toUnmodifiableList()));
 		List<Holder<WorldPreset>> list2 = (List)getNonEmptyList(registry, WorldPresetTags.EXTENDED).orElse(list);

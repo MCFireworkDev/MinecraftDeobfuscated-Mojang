@@ -39,7 +39,7 @@ import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.LayeredRegistryAccess;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -303,7 +303,7 @@ public class CreateWorldScreen extends Screen {
 		Lifecycle lifecycle = FeatureFlags.isExperimental(worldCreationContext.dataConfiguration().enabledFeatures())
 			? Lifecycle.experimental()
 			: Lifecycle.stable();
-		Lifecycle lifecycle2 = layeredRegistryAccess.compositeAccess().allElementsLifecycle();
+		Lifecycle lifecycle2 = layeredRegistryAccess.compositeAccess().allRegistriesLifecycle();
 		Lifecycle lifecycle3 = lifecycle2.add(lifecycle);
 		WorldOpenFlows.confirmWorldCreation(
 			this.minecraft, this, lifecycle3, () -> this.createNewWorld(complete.specialWorldProperty(), layeredRegistryAccess, lifecycle3)
@@ -520,9 +520,9 @@ public class CreateWorldScreen extends Screen {
 		WorldLoader.load(
 				initConfig,
 				dataLoadContext -> {
-					if (dataLoadContext.datapackWorldgen().registryOrThrow(Registry.WORLD_PRESET_REGISTRY).size() == 0) {
+					if (dataLoadContext.datapackWorldgen().registryOrThrow(Registries.WORLD_PRESET).size() == 0) {
 						throw new IllegalStateException("Needs at least one world preset to continue");
-					} else if (dataLoadContext.datapackWorldgen().registryOrThrow(Registry.BIOME_REGISTRY).size() == 0) {
+					} else if (dataLoadContext.datapackWorldgen().registryOrThrow(Registries.BIOME).size() == 0) {
 						throw new IllegalStateException("Needs at least one biome continue");
 					} else {
 						WorldCreationContext worldCreationContext = this.worldGenSettingsComponent.settings();
@@ -647,7 +647,7 @@ public class CreateWorldScreen extends Screen {
 				Optional var4;
 				try {
 					Path path = levelStorageAccess.getLevelPath(LevelResource.DATAPACK_DIR);
-					Files.createDirectories(path);
+					FileUtil.createDirectoriesSafe(path);
 					stream.filter(pathx -> !pathx.equals(this.tempDataPackDir)).forEach(path2 -> copyBetweenDirs(this.tempDataPackDir, path, path2));
 					var4 = Optional.of(levelStorageAccess);
 				} catch (Throwable var6) {

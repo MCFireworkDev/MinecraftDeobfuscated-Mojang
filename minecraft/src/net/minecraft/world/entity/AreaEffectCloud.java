@@ -11,9 +11,9 @@ import java.util.UUID;
 import java.util.Map.Entry;
 import javax.annotation.Nullable;
 import net.minecraft.commands.arguments.ParticleArgument;
-import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -349,7 +349,7 @@ public class AreaEffectCloud extends Entity {
 
 		if (compoundTag.contains("Particle", 8)) {
 			try {
-				this.setParticle(ParticleArgument.readParticle(new StringReader(compoundTag.getString("Particle")), Registry.PARTICLE_TYPE.asLookup()));
+				this.setParticle(ParticleArgument.readParticle(new StringReader(compoundTag.getString("Particle")), BuiltInRegistries.PARTICLE_TYPE.asLookup()));
 			} catch (CommandSyntaxException var5) {
 				LOGGER.warn("Couldn't load custom particle {}", compoundTag.getString("Particle"), var5);
 			}
@@ -396,7 +396,7 @@ public class AreaEffectCloud extends Entity {
 		}
 
 		if (this.potion != Potions.EMPTY) {
-			compoundTag.putString("Potion", Registry.POTION.getKey(this.potion).toString());
+			compoundTag.putString("Potion", BuiltInRegistries.POTION.getKey(this.potion).toString());
 		}
 
 		if (!this.effects.isEmpty()) {

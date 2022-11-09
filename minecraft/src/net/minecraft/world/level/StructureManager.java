@@ -15,6 +15,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.SectionPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.tags.TagKey;
@@ -110,12 +111,12 @@ public class StructureManager {
 	}
 
 	public StructureStart getStructureWithPieceAt(BlockPos blockPos, ResourceKey<Structure> resourceKey) {
-		Structure structure = this.registryAccess().registryOrThrow(Registry.STRUCTURE_REGISTRY).get(resourceKey);
+		Structure structure = this.registryAccess().registryOrThrow(Registries.STRUCTURE).get(resourceKey);
 		return structure == null ? StructureStart.INVALID_START : this.getStructureWithPieceAt(blockPos, structure);
 	}
 
 	public StructureStart getStructureWithPieceAt(BlockPos blockPos, TagKey<Structure> tagKey) {
-		Registry<Structure> registry = this.registryAccess().registryOrThrow(Registry.STRUCTURE_REGISTRY);
+		Registry<Structure> registry = this.registryAccess().registryOrThrow(Registries.STRUCTURE);
 
 		for(StructureStart structureStart : this.startsForStructure(
 			new ChunkPos(blockPos), structure -> registry.getHolder(registry.getId(structure)).map(reference -> reference.is(tagKey)).orElse(false)

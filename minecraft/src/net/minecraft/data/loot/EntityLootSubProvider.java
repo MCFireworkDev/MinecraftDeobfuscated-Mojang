@@ -14,7 +14,7 @@ import net.minecraft.advancements.critereon.EntityFlagsPredicate;
 import net.minecraft.advancements.critereon.EntityPredicate;
 import net.minecraft.advancements.critereon.EntitySubPredicate;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -55,7 +55,7 @@ public abstract class EntityLootSubProvider implements LootTableSubProvider {
 	public void generate(BiConsumer<ResourceLocation, LootTable.Builder> biConsumer) {
 		this.generate();
 		Set<ResourceLocation> set = Sets.<ResourceLocation>newHashSet();
-		Registry.ENTITY_TYPE
+		BuiltInRegistries.ENTITY_TYPE
 			.holders()
 			.forEach(
 				reference -> {

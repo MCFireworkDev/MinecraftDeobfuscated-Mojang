@@ -7,6 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.DefaultedRegistry;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
@@ -22,7 +23,7 @@ public class RegistryDumpReport implements DataProvider {
 	@Override
 	public CompletableFuture<?> run(CachedOutput cachedOutput) {
 		JsonObject jsonObject = new JsonObject();
-		Registry.REGISTRY.holders().forEach(reference -> jsonObject.add(reference.key().location().toString(), dumpRegistry((Registry)reference.value())));
+		BuiltInRegistries.REGISTRY.holders().forEach(reference -> jsonObject.add(reference.key().location().toString(), dumpRegistry((Registry)reference.value())));
 		Path path = this.output.getOutputFolder(PackOutput.Target.REPORTS).resolve("registries.json");
 		return DataProvider.saveStable(cachedOutput, jsonObject, path);
 	}
@@ -34,7 +35,7 @@ public class RegistryDumpReport implements DataProvider {
 			jsonObject.addProperty("default", resourceLocation.toString());
 		}
 
-		int i = Registry.REGISTRY.getId(registry);
+		int i = BuiltInRegistries.REGISTRY.getId(registry);
 		jsonObject.addProperty("protocol_id", i);
 		JsonObject jsonObject2 = new JsonObject();
 		registry.holders().forEach(reference -> {

@@ -51,6 +51,8 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.core.IdMap;
 import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
@@ -407,7 +409,7 @@ public class FriendlyByteBuf extends ByteBuf {
 	}
 
 	public GlobalPos readGlobalPos() {
-		ResourceKey<Level> resourceKey = this.readResourceKey(Registry.DIMENSION_REGISTRY);
+		ResourceKey<Level> resourceKey = this.readResourceKey(Registries.DIMENSION);
 		BlockPos blockPos = this.readBlockPos();
 		return GlobalPos.of(resourceKey, blockPos);
 	}
@@ -547,7 +549,7 @@ public class FriendlyByteBuf extends ByteBuf {
 		} else {
 			this.writeBoolean(true);
 			Item item = itemStack.getItem();
-			this.writeId(Registry.ITEM, item);
+			this.writeId(BuiltInRegistries.ITEM, item);
 			this.writeByte(itemStack.getCount());
 			CompoundTag compoundTag = null;
 			if (item.canBeDepleted() || item.shouldOverrideMultiplayerNbt()) {
@@ -564,7 +566,7 @@ public class FriendlyByteBuf extends ByteBuf {
 		if (!this.readBoolean()) {
 			return ItemStack.EMPTY;
 		} else {
-			Item item = this.readById(Registry.ITEM);
+			Item item = this.readById(BuiltInRegistries.ITEM);
 			int i = this.readByte();
 			ItemStack itemStack = new ItemStack(item, i);
 			itemStack.setTag(this.readNbt());

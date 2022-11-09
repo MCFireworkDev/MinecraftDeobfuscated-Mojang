@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
@@ -26,9 +26,7 @@ public final class RandomState {
 
 	public static RandomState create(HolderGetter.Provider provider, ResourceKey<NoiseGeneratorSettings> resourceKey, long l) {
 		return create(
-			(NoiseGeneratorSettings)provider.lookupOrThrow(Registry.NOISE_GENERATOR_SETTINGS_REGISTRY).getOrThrow(resourceKey).value(),
-			provider.lookupOrThrow(Registry.NOISE_REGISTRY),
-			l
+			(NoiseGeneratorSettings)provider.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(resourceKey).value(), provider.lookupOrThrow(Registries.NOISE), l
 		);
 	}
 

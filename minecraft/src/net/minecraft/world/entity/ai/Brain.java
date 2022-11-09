@@ -25,12 +25,13 @@ import java.util.Map.Entry;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.VisibleForDebug;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.behavior.Behavior;
+import net.minecraft.world.entity.ai.behavior.BehaviorControl;
 import net.minecraft.world.entity.ai.memory.ExpirableValue;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.MemoryStatus;
@@ -49,7 +50,7 @@ public class Brain<E extends LivingEntity> {
 	private final Map<SensorType<? extends Sensor<? super E>>, Sensor<? super E>> sensors = Maps.<SensorType<? extends Sensor<? super E>>, Sensor<? super E>>newLinkedHashMap(
 		
 	);
-	private final Map<Integer, Map<Activity, Set<Behavior<? super E>>>> availableBehaviorsByPriority = Maps.newTreeMap();
+	private final Map<Integer, Map<Activity, Set<BehaviorControl<? super E>>>> availableBehaviorsByPriority = Maps.newTreeMap();
 	private Schedule schedule = Schedule.EMPTY;
 	private final Map<Activity, Set<Pair<MemoryModuleType<?>, MemoryStatus>>> activityRequirements = Maps.newHashMap();
 	private final Map<Activity, Set<MemoryModuleType<?>>> activityMemoriesToEraseWhenStopped = Maps.newHashMap();
@@ -73,7 +74,7 @@ public class Brain<E extends LivingEntity> {
 					@Override
 					public <T> Stream<T> keys(DynamicOps<T> dynamicOps) {
 						return collection.stream()
-							.flatMap(memoryModuleType -> memoryModuleType.getCodec().map(codec -> Registry.MEMORY_MODULE_TYPE.getKey(memoryModuleType)).stream())
+							.flatMap(memoryModuleType -> memoryModuleType.getCodec().map(codec -> BuiltInRegistries.MEMORY_MODULE_TYPE.getKey(memoryModuleType)).stream())
 							.map(resourceLocation -> dynamicOps.createString(resourceLocation.toString()));
 					}
 		
@@ -83,7 +84,7 @@ public class Brain<E extends LivingEntity> {
 						mapLike.entries()
 							.forEach(
 								pair -> {
-									DataResult<MemoryModuleType<?>> dataResult = Registry.MEMORY_MODULE_TYPE.byNameCodec().parse(dynamicOps, (T)pair.getFirst());
+									DataResult<MemoryModuleType<?>> dataResult = BuiltInRegistries.MEMORY_MODULE_TYPE.byNameCodec().parse(dynamicOps, (T)pair.getFirst());
 									DataResult<? extends Brain.MemoryValue<?>> dataResult2 = dataResult.flatMap(
 										memoryModuleType -> this.captureRead(memoryModuleType, dynamicOps, (T)pair.getSecond())
 									);
@@ -191,6 +192,12 @@ public class Brain<E extends LivingEntity> {
 		}
 	}
 
+	@Nullable
+	public <U> Optional<U> getMemoryInternal(MemoryModuleType<U> memoryModuleType) {
+		Optional<? extends ExpirableValue<?>> optional = (Optional)this.memories.get(memoryModuleType);
+		return optional == null ? null : optional.map(ExpirableValue::getValue);
+	}
+
 	public <U> long getTimeUntilExpiry(MemoryModuleType<U> memoryModuleType) {
 		Optional<? extends ExpirableValue<?>> optional = (Optional)this.memories.get(memoryModuleType);
 		return optional.map(ExpirableValue::getTimeToLive).orElse(0L);
@@ -237,14 +244,14 @@ public class Brain<E extends LivingEntity> {
 
 	@Deprecated
 	@VisibleForDebug
-	public List<Behavior<? super E>> getRunningBehaviors() {
-		List<Behavior<? super E>> list = new ObjectArrayList<>();
+	public List<BehaviorControl<? super E>> getRunningBehaviors() {
+		List<BehaviorControl<? super E>> list = new ObjectArrayList<>();
 
-		for(Map<Activity, Set<Behavior<? super E>>> map : this.availableBehaviorsByPriority.values()) {
-			for(Set<Behavior<? super E>> set : map.values()) {
-				for(Behavior<? super E> behavior : set) {
-					if (behavior.getStatus() == Behavior.Status.RUNNING) {
-						list.add(behavior);
+		for(Map<Activity, Set<BehaviorControl<? super E>>> map : this.availableBehaviorsByPriority.values()) {
+			for(Set<BehaviorControl<? super E>> set : map.values()) {
+				for(BehaviorControl<? super E> behaviorControl : set) {
+					if (behaviorControl.getStatus() == Behavior.Status.RUNNING) {
+						list.add(behaviorControl);
 					}
 				}
 			}
@@ -320,31 +327,33 @@ public class Brain<E extends LivingEntity> {
 		this.defaultActivity = activity;
 	}
 
-	public void addActivity(Activity activity, int i, ImmutableList<? extends Behavior<? super E>> immutableList) {
+	public void addActivity(Activity activity, int i, ImmutableList<? extends BehaviorControl<? super E>> immutableList) {
 		this.addActivity(activity, this.createPriorityPairs(i, immutableList));
 	}
 
 	public void addActivityAndRemoveMemoryWhenStopped(
-		Activity activity, int i, ImmutableList<? extends Behavior<? super E>> immutableList, MemoryModuleType<?> memoryModuleType
+		Activity activity, int i, ImmutableList<? extends BehaviorControl<? super E>> immutableList, MemoryModuleType<?> memoryModuleType
 	) {
 		Set<Pair<MemoryModuleType<?>, MemoryStatus>> set = ImmutableSet.of(Pair.of(memoryModuleType, MemoryStatus.VALUE_PRESENT));
 		Set<MemoryModuleType<?>> set2 = ImmutableSet.of(memoryModuleType);
 		this.addActivityAndRemoveMemoriesWhenStopped(activity, this.createPriorityPairs(i, immutableList), set, set2);
 	}
 
-	public void addActivity(Activity activity, ImmutableList<? extends Pair<Integer, ? extends Behavior<? super E>>> immutableList) {
+	public void addActivity(Activity activity, ImmutableList<? extends Pair<Integer, ? extends BehaviorControl<? super E>>> immutableList) {
 		this.addActivityAndRemoveMemoriesWhenStopped(activity, immutableList, ImmutableSet.of(), Sets.<MemoryModuleType<?>>newHashSet());
 	}
 
 	public void addActivityWithConditions(
-		Activity activity, ImmutableList<? extends Pair<Integer, ? extends Behavior<? super E>>> immutableList, Set<Pair<MemoryModuleType<?>, MemoryStatus>> set
+		Activity activity,
+		ImmutableList<? extends Pair<Integer, ? extends BehaviorControl<? super E>>> immutableList,
+		Set<Pair<MemoryModuleType<?>, MemoryStatus>> set
 	) {
 		this.addActivityAndRemoveMemoriesWhenStopped(activity, immutableList, set, Sets.<MemoryModuleType<?>>newHashSet());
 	}
 
 	public void addActivityAndRemoveMemoriesWhenStopped(
 		Activity activity,
-		ImmutableList<? extends Pair<Integer, ? extends Behavior<? super E>>> immutableList,
+		ImmutableList<? extends Pair<Integer, ? extends BehaviorControl<? super E>>> immutableList,
 		Set<Pair<MemoryModuleType<?>, MemoryStatus>> set,
 		Set<MemoryModuleType<?>> set2
 	) {
@@ -353,7 +362,7 @@ public class Brain<E extends LivingEntity> {
 			this.activityMemoriesToEraseWhenStopped.put(activity, set2);
 		}
 
-		for(Pair<Integer, ? extends Behavior<? super E>> pair : immutableList) {
+		for(Pair<Integer, ? extends BehaviorControl<? super E>> pair : immutableList) {
 			((Set)((Map)this.availableBehaviorsByPriority.computeIfAbsent((Integer)pair.getFirst(), integer -> Maps.newHashMap()))
 					.computeIfAbsent(activity, activityx -> Sets.newLinkedHashSet()))
 				.add(pair.getSecond());
@@ -411,21 +420,21 @@ public class Brain<E extends LivingEntity> {
 	public void stopAll(ServerLevel serverLevel, E livingEntity) {
 		long l = livingEntity.level.getGameTime();
 
-		for(Behavior<? super E> behavior : this.getRunningBehaviors()) {
-			behavior.doStop(serverLevel, livingEntity, l);
+		for(BehaviorControl<? super E> behaviorControl : this.getRunningBehaviors()) {
+			behaviorControl.doStop(serverLevel, livingEntity, l);
 		}
 	}
 
 	private void startEachNonRunningBehavior(ServerLevel serverLevel, E livingEntity) {
 		long l = serverLevel.getGameTime();
 
-		for(Map<Activity, Set<Behavior<? super E>>> map : this.availableBehaviorsByPriority.values()) {
-			for(Entry<Activity, Set<Behavior<? super E>>> entry : map.entrySet()) {
+		for(Map<Activity, Set<BehaviorControl<? super E>>> map : this.availableBehaviorsByPriority.values()) {
+			for(Entry<Activity, Set<BehaviorControl<? super E>>> entry : map.entrySet()) {
 				Activity activity = (Activity)entry.getKey();
 				if (this.activeActivities.contains(activity)) {
-					for(Behavior<? super E> behavior : (Set)entry.getValue()) {
-						if (behavior.getStatus() == Behavior.Status.STOPPED) {
-							behavior.tryStart(serverLevel, livingEntity, l);
+					for(BehaviorControl<? super E> behaviorControl : (Set)entry.getValue()) {
+						if (behaviorControl.getStatus() == Behavior.Status.STOPPED) {
+							behaviorControl.tryStart(serverLevel, livingEntity, l);
 						}
 					}
 				}
@@ -436,8 +445,8 @@ public class Brain<E extends LivingEntity> {
 	private void tickEachRunningBehavior(ServerLevel serverLevel, E livingEntity) {
 		long l = serverLevel.getGameTime();
 
-		for(Behavior<? super E> behavior : this.getRunningBehaviors()) {
-			behavior.tickOrStop(serverLevel, livingEntity, l);
+		for(BehaviorControl<? super E> behaviorControl : this.getRunningBehaviors()) {
+			behaviorControl.tickOrStop(serverLevel, livingEntity, l);
 		}
 	}
 
@@ -461,12 +470,14 @@ public class Brain<E extends LivingEntity> {
 		return object instanceof Collection && ((Collection)object).isEmpty();
 	}
 
-	ImmutableList<? extends Pair<Integer, ? extends Behavior<? super E>>> createPriorityPairs(int i, ImmutableList<? extends Behavior<? super E>> immutableList) {
+	ImmutableList<? extends Pair<Integer, ? extends BehaviorControl<? super E>>> createPriorityPairs(
+		int i, ImmutableList<? extends BehaviorControl<? super E>> immutableList
+	) {
 		int j = i;
-		Builder<Pair<Integer, ? extends Behavior<? super E>>> builder = ImmutableList.builder();
+		Builder<Pair<Integer, ? extends BehaviorControl<? super E>>> builder = ImmutableList.builder();
 
-		for(Behavior<? super E> behavior : immutableList) {
-			builder.add(Pair.of(j++, behavior));
+		for(BehaviorControl<? super E> behaviorControl : immutableList) {
+			builder.add(Pair.of(j++, behaviorControl));
 		}
 
 		return builder.build();
@@ -496,7 +507,7 @@ public class Brain<E extends LivingEntity> {
 					codec -> this.value
 							.ifPresent(
 								expirableValue -> recordBuilder.add(
-										Registry.MEMORY_MODULE_TYPE.byNameCodec().encodeStart(dynamicOps, this.type), codec.encodeStart(dynamicOps, expirableValue)
+										BuiltInRegistries.MEMORY_MODULE_TYPE.byNameCodec().encodeStart(dynamicOps, this.type), codec.encodeStart(dynamicOps, expirableValue)
 									)
 							)
 				);

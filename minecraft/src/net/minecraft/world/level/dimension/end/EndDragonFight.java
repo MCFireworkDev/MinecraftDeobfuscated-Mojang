@@ -18,6 +18,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.features.EndFeatures;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntTag;
@@ -400,7 +401,7 @@ public class EndDragonFight {
 		this.level.levelEvent(3000, blockPos, 0);
 		this.level
 			.registryAccess()
-			.registry(Registry.CONFIGURED_FEATURE_REGISTRY)
+			.registry(Registries.CONFIGURED_FEATURE)
 			.flatMap(registry -> registry.getHolder(EndFeatures.END_GATEWAY_DELAYED))
 			.ifPresent(
 				reference -> ((ConfiguredFeature)reference.value()).place(this.level, this.level.getChunkSource().getGenerator(), RandomSource.create(), blockPos)

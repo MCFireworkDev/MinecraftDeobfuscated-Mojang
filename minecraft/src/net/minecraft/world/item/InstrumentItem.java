@@ -8,7 +8,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -51,7 +52,7 @@ public class InstrumentItem extends Item {
 	}
 
 	public static void setRandom(ItemStack itemStack, TagKey<Instrument> tagKey, RandomSource randomSource) {
-		Optional<Holder<Instrument>> optional = Registry.INSTRUMENT.getTag(tagKey).flatMap(named -> named.getRandomElement(randomSource));
+		Optional<Holder<Instrument>> optional = BuiltInRegistries.INSTRUMENT.getTag(tagKey).flatMap(named -> named.getRandomElement(randomSource));
 		optional.ifPresent(holder -> setSoundVariantId(itemStack, holder));
 	}
 
@@ -89,11 +90,11 @@ public class InstrumentItem extends Item {
 		if (compoundTag != null) {
 			ResourceLocation resourceLocation = ResourceLocation.tryParse(compoundTag.getString("instrument"));
 			if (resourceLocation != null) {
-				return Registry.INSTRUMENT.getHolder(ResourceKey.create(Registry.INSTRUMENT_REGISTRY, resourceLocation));
+				return BuiltInRegistries.INSTRUMENT.getHolder(ResourceKey.create(Registries.INSTRUMENT, resourceLocation));
 			}
 		}
 
-		Iterator<Holder<Instrument>> iterator = Registry.INSTRUMENT.getTagOrEmpty(this.instruments).iterator();
+		Iterator<Holder<Instrument>> iterator = BuiltInRegistries.INSTRUMENT.getTagOrEmpty(this.instruments).iterator();
 		return iterator.hasNext() ? Optional.of((Holder)iterator.next()) : Optional.empty();
 	}
 
