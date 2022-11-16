@@ -50,7 +50,6 @@ public class CreateBuffetWorldScreen extends Screen {
 
 	@Override
 	protected void init() {
-		this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 		this.list = new CreateBuffetWorldScreen.BiomeList();
 		this.addWidget(this.list);
 		this.doneButton = this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> {

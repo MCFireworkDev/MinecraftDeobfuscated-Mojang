@@ -39,9 +39,7 @@ public class EditServerScreen extends Screen {
 
 	@Override
 	protected void init() {
-		this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 		this.nameEdit = new EditBox(this.font, this.width / 2 - 100, 66, 200, 20, Component.translatable("addServer.enterName"));
-		this.nameEdit.setFocus(true);
 		this.nameEdit.setValue(this.serverData.name);
 		this.nameEdit.setResponder(string -> this.updateAddButtonStatus());
 		this.addWidget(this.nameEdit);
@@ -71,6 +69,7 @@ public class EditServerScreen extends Screen {
 				.bounds(this.width / 2 - 100, this.height / 4 + 120 + 18, 200, 20)
 				.build()
 		);
+		this.setInitialFocus(this.nameEdit);
 		this.updateAddButtonStatus();
 	}
 
@@ -81,11 +80,6 @@ public class EditServerScreen extends Screen {
 		this.init(minecraft, i, j);
 		this.ipEdit.setValue(string);
 		this.nameEdit.setValue(string2);
-	}
-
-	@Override
-	public void removed() {
-		this.minecraft.keyboardHandler.setSendRepeatsToGui(false);
 	}
 
 	private void onAdd() {

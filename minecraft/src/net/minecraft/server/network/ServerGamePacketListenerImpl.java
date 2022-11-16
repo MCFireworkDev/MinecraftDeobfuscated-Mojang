@@ -975,6 +975,7 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 								this.lastGoodZ = this.player.getZ();
 							} else {
 								this.teleport(i, j, k, g, h);
+								this.player.doCheckFallDamage(this.player.getY() - l, serverboundMovePlayerPacket.isOnGround());
 							}
 						}
 					}
