@@ -5,7 +5,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.Optional;
+import java.util.function.IntFunction;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.ByIdMap;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.ChunkPos;
@@ -75,6 +77,7 @@ public class MineshaftStructure extends Structure {
 		MESA("mesa", Blocks.DARK_OAK_LOG, Blocks.DARK_OAK_PLANKS, Blocks.DARK_OAK_FENCE);
 
 		public static final Codec<MineshaftStructure.Type> CODEC = StringRepresentable.fromEnum(MineshaftStructure.Type::values);
+		private static final IntFunction<MineshaftStructure.Type> BY_ID = ByIdMap.continuous(Enum::ordinal, values(), ByIdMap.OutOfBoundsStrategy.ZERO);
 		private final String name;
 		private final BlockState woodState;
 		private final BlockState planksState;
@@ -92,7 +95,7 @@ public class MineshaftStructure extends Structure {
 		}
 
 		public static MineshaftStructure.Type byId(int i) {
-			return i >= 0 && i < values().length ? values()[i] : NORMAL;
+			return (MineshaftStructure.Type)BY_ID.apply(i);
 		}
 
 		public BlockState getWoodState() {

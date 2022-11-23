@@ -219,7 +219,7 @@ public class CreateWorldScreen extends Screen {
 				.create(i, 100, 150, 20, GAME_MODEL_LABEL, (cycleButton, selectedGameMode) -> this.setGameMode(selectedGameMode))
 		);
 		this.difficultyButton = this.addRenderableWidget(
-			CycleButton.builder(Difficulty::getDisplayName)
+			CycleButton.<Difficulty>builder(Difficulty::getDisplayName)
 				.withValues(Difficulty.values())
 				.withInitialValue(this.getEffectiveDifficulty())
 				.create(j, 100, 150, 20, Component.translatable("options.difficulty"), (cycleButton, difficulty) -> this.difficulty = difficulty)

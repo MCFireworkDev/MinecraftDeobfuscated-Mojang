@@ -481,7 +481,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 			.resultOrPartial(LOGGER::error)
 			.ifPresent(tag -> compoundTag.put("VillagerData", tag));
 		compoundTag.putByte("FoodLevel", (byte)this.foodLevel);
-		compoundTag.put("Gossips", this.gossips.store(NbtOps.INSTANCE).getValue());
+		compoundTag.put("Gossips", this.gossips.store(NbtOps.INSTANCE));
 		compoundTag.putInt("Xp", this.villagerXp);
 		compoundTag.putLong("LastRestock", this.lastRestockGameTime);
 		compoundTag.putLong("LastGossipDecay", this.lastGossipDecayTime);

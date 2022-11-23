@@ -184,7 +184,7 @@ public class KeyboardHandler {
 						this.minecraft
 							.player
 							.connection
-							.sendUnsignedCommand("gamemode " + ((GameType)MoreObjects.firstNonNull(this.minecraft.gameMode.getPreviousPlayerMode(), GameType.CREATIVE)).getName());
+							.sendUnsignedCommand("gamemode " + MoreObjects.firstNonNull(this.minecraft.gameMode.getPreviousPlayerMode(), GameType.CREATIVE).getName());
 					}
 
 					return true;

@@ -3,6 +3,7 @@ package net.minecraft.server.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
@@ -29,10 +30,12 @@ public class PublishCommand {
 				.requires(commandSourceStack -> commandSourceStack.hasPermission(4))
 				.executes(commandContext -> publish(commandContext.getSource(), HttpUtil.getAvailablePort(), false, null))
 				.then(
-					Commands.argument("allowCommands", BoolArgumentType.bool())
-						.executes(
-							commandContext -> publish(commandContext.getSource(), HttpUtil.getAvailablePort(), BoolArgumentType.getBool(commandContext, "allowCommands"), null)
-						)
+					((RequiredArgumentBuilder)Commands.argument("allowCommands", BoolArgumentType.bool())
+							.executes(
+								commandContext -> publish(
+										(CommandSourceStack)commandContext.getSource(), HttpUtil.getAvailablePort(), BoolArgumentType.getBool(commandContext, "allowCommands"), null
+									)
+							))
 						.then(
 							Commands.argument("gamemode", GameModeArgument.gameMode())
 								.executes(

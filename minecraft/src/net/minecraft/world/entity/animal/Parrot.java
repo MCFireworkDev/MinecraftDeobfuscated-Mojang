@@ -4,12 +4,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.mojang.serialization.Codec;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import net.minecraft.Util;
@@ -24,6 +23,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.ByIdMap;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringRepresentable;
@@ -512,9 +512,7 @@ public class Parrot extends ShoulderRidingEntity implements VariantHolder<Parrot
 		GRAY(4, "gray");
 
 		public static final Codec<Parrot.Variant> CODEC = StringRepresentable.fromEnum(Parrot.Variant::values);
-		private static final Parrot.Variant[] BY_ID = (Parrot.Variant[])Arrays.stream(values())
-			.sorted(Comparator.comparingInt(Parrot.Variant::getId))
-			.toArray(i -> new Parrot.Variant[i]);
+		private static final IntFunction<Parrot.Variant> BY_ID = ByIdMap.continuous(Parrot.Variant::getId, values(), ByIdMap.OutOfBoundsStrategy.CLAMP);
 		final int id;
 		private final String name;
 
@@ -528,7 +526,7 @@ public class Parrot extends ShoulderRidingEntity implements VariantHolder<Parrot
 		}
 
 		public static Parrot.Variant byId(int i) {
-			return BY_ID[Mth.clamp(i, 0, BY_ID.length - 1)];
+			return (Parrot.Variant)BY_ID.apply(i);
 		}
 
 		@Override

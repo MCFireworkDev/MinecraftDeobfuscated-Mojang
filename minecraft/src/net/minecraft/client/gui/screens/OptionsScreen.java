@@ -128,7 +128,7 @@ public class OptionsScreen extends Screen {
 	}
 
 	public static CycleButton<Difficulty> createDifficultyButton(int i, int j, String string, Minecraft minecraft) {
-		return CycleButton.builder(Difficulty::getDisplayName)
+		return CycleButton.<Difficulty>builder(Difficulty::getDisplayName)
 			.withValues(Difficulty.values())
 			.withInitialValue(minecraft.level.getDifficulty())
 			.create(

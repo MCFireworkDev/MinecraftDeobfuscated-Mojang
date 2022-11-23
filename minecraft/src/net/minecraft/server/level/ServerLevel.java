@@ -51,6 +51,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockEventPacket;
+import net.minecraft.network.protocol.game.ClientboundCustomSoundPacket;
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
@@ -61,6 +62,7 @@ import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerScoreboard;
 import net.minecraft.server.level.progress.ChunkProgressListener;
@@ -906,6 +908,15 @@ public class ServerLevel extends Level implements WorldGenLevel {
 				this.dimension(),
 				new ClientboundSoundEntityPacket(soundEvent, soundSource, entity, f, g, l)
 			);
+	}
+
+	@Override
+	public void playCustomSound(
+		@Nullable Player player, Vec3 vec3, ResourceLocation resourceLocation, SoundSource soundSource, float f, float g, double d, long l
+	) {
+		this.server
+			.getPlayerList()
+			.broadcast(player, vec3.x(), vec3.y(), vec3.z(), d, this.dimension(), new ClientboundCustomSoundPacket(resourceLocation, soundSource, vec3, f, g, l));
 	}
 
 	@Override
