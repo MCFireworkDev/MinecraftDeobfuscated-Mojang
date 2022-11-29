@@ -51,7 +51,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockEventPacket;
-import net.minecraft.network.protocol.game.ClientboundCustomSoundPacket;
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 import net.minecraft.network.protocol.game.ClientboundExplodePacket;
 import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
@@ -62,7 +61,6 @@ import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerScoreboard;
 import net.minecraft.server.level.progress.ChunkProgressListener;
@@ -889,10 +887,12 @@ public class ServerLevel extends Level implements WorldGenLevel {
 	}
 
 	@Override
-	public void playSeededSound(@Nullable Player player, double d, double e, double f, SoundEvent soundEvent, SoundSource soundSource, float g, float h, long l) {
+	public void playSeededSound(
+		@Nullable Player player, double d, double e, double f, Holder<SoundEvent> holder, SoundSource soundSource, float g, float h, long l
+	) {
 		this.server
 			.getPlayerList()
-			.broadcast(player, d, e, f, (double)soundEvent.getRange(g), this.dimension(), new ClientboundSoundPacket(soundEvent, soundSource, d, e, f, g, h, l));
+			.broadcast(player, d, e, f, (double)holder.value().getRange(g), this.dimension(), new ClientboundSoundPacket(holder, soundSource, d, e, f, g, h, l));
 	}
 
 	@Override
@@ -908,15 +908,6 @@ public class ServerLevel extends Level implements WorldGenLevel {
 				this.dimension(),
 				new ClientboundSoundEntityPacket(soundEvent, soundSource, entity, f, g, l)
 			);
-	}
-
-	@Override
-	public void playCustomSound(
-		@Nullable Player player, Vec3 vec3, ResourceLocation resourceLocation, SoundSource soundSource, float f, float g, double d, long l
-	) {
-		this.server
-			.getPlayerList()
-			.broadcast(player, vec3.x(), vec3.y(), vec3.z(), d, this.dimension(), new ClientboundCustomSoundPacket(resourceLocation, soundSource, vec3, f, g, l));
 	}
 
 	@Override

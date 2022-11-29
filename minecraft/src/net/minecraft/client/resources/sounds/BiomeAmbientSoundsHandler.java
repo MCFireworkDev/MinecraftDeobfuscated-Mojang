@@ -8,6 +8,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -54,9 +55,9 @@ public class BiomeAmbientSoundsHandler implements AmbientSoundHandler {
 			this.moodSettings = biome.getAmbientMood();
 			this.additionsSettings = biome.getAmbientAdditions();
 			this.loopSounds.values().forEach(BiomeAmbientSoundsHandler.LoopSoundInstance::fadeOut);
-			biome.getAmbientLoop().ifPresent(soundEvent -> this.loopSounds.compute(biome, (biomexx, loopSoundInstance) -> {
+			biome.getAmbientLoop().ifPresent(holder -> this.loopSounds.compute(biome, (biomexx, loopSoundInstance) -> {
 					if (loopSoundInstance == null) {
-						loopSoundInstance = new BiomeAmbientSoundsHandler.LoopSoundInstance(soundEvent);
+						loopSoundInstance = new BiomeAmbientSoundsHandler.LoopSoundInstance((SoundEvent)holder.value());
 						this.soundManager.play(loopSoundInstance);
 					}
 
@@ -67,7 +68,7 @@ public class BiomeAmbientSoundsHandler implements AmbientSoundHandler {
 
 		this.additionsSettings.ifPresent(ambientAdditionsSettings -> {
 			if (this.random.nextDouble() < ambientAdditionsSettings.getTickChance()) {
-				this.soundManager.play(SimpleSoundInstance.forAmbientAddition(ambientAdditionsSettings.getSoundEvent()));
+				this.soundManager.play(SimpleSoundInstance.forAmbientAddition(ambientAdditionsSettings.getSoundEvent().value()));
 			}
 		});
 		this.moodSettings
@@ -97,7 +98,11 @@ public class BiomeAmbientSoundsHandler implements AmbientSoundHandler {
 						double l = Math.sqrt(g * g + h * h + k * k);
 						double m = l + ambientMoodSettings.getSoundPositionOffset();
 						SimpleSoundInstance simpleSoundInstance = SimpleSoundInstance.forAmbientMood(
-							ambientMoodSettings.getSoundEvent(), this.random, this.player.getX() + g / l * m, this.player.getEyeY() + h / l * m, this.player.getZ() + k / l * m
+							ambientMoodSettings.getSoundEvent().value(),
+							this.random,
+							this.player.getX() + g / l * m,
+							this.player.getEyeY() + h / l * m,
+							this.player.getZ() + k / l * m
 						);
 						this.soundManager.play(simpleSoundInstance);
 						this.moodiness = 0.0F;

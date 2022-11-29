@@ -10,7 +10,7 @@ import net.minecraft.client.telemetry.TelemetryProperty;
 import net.minecraft.client.telemetry.TelemetryPropertyMap;
 
 @Environment(EnvType.CLIENT)
-public class WorldLoadTimesEvent implements TelemetryEventProducer {
+public class WorldLoadTimesEvent {
 	private final boolean newWorld;
 	@Nullable
 	private final Duration worldLoadDuration;
@@ -20,7 +20,6 @@ public class WorldLoadTimesEvent implements TelemetryEventProducer {
 		this.newWorld = bl;
 	}
 
-	@Override
 	public void send(TelemetryEventSender telemetryEventSender) {
 		if (this.worldLoadDuration != null) {
 			telemetryEventSender.send(TelemetryEventType.WORLD_LOAD_TIMES, builder -> {
