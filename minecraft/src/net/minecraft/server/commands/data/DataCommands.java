@@ -148,24 +148,20 @@ public class DataCommands {
 									}
 				
 									Collection<Tag> collection = nbtPath.getOrCreate(compoundTag, CompoundTag::new);
-									if (compoundTag.sizeInBytes() + compoundTag2.sizeInBytes() * collection.size() > 2097152) {
-										throw NbtPathArgument.ERROR_DATA_TOO_LARGE.create();
-									} else {
-										int i = 0;
+									int i = 0;
 				
-										for(Tag tag2 : collection) {
-											if (!(tag2 instanceof CompoundTag)) {
-												throw ERROR_EXPECTED_OBJECT.create(tag2);
-											}
-				
-											CompoundTag compoundTag4 = (CompoundTag)tag2;
-											CompoundTag compoundTag5 = compoundTag4.copy();
-											compoundTag4.merge(compoundTag2);
-											i += compoundTag5.equals(compoundTag4) ? 0 : 1;
+									for(Tag tag2 : collection) {
+										if (!(tag2 instanceof CompoundTag)) {
+											throw ERROR_EXPECTED_OBJECT.create(tag2);
 										}
 				
-										return i;
+										CompoundTag compoundTag4 = (CompoundTag)tag2;
+										CompoundTag compoundTag5 = compoundTag4.copy();
+										compoundTag4.merge(compoundTag2);
+										i += compoundTag5.equals(compoundTag4) ? 0 : 1;
 									}
+				
+									return i;
 								})))
 					)
 				);
@@ -298,8 +294,6 @@ public class DataCommands {
 		CompoundTag compoundTag2 = dataAccessor.getData();
 		if (NbtPathArgument.NbtPath.isTooDeep(compoundTag, 0)) {
 			throw NbtPathArgument.ERROR_DATA_TOO_DEEP.create();
-		} else if (compoundTag2.sizeInBytes() + compoundTag.sizeInBytes() > 2097152) {
-			throw NbtPathArgument.ERROR_DATA_TOO_LARGE.create();
 		} else {
 			CompoundTag compoundTag3 = compoundTag2.copy().merge(compoundTag);
 			if (compoundTag2.equals(compoundTag3)) {

@@ -2163,7 +2163,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 	}
 
 	public static boolean useAmbientOcclusion() {
-		return instance.options.ambientOcclusion().get() != AmbientOcclusionStatus.OFF;
+		return instance.options.ambientOcclusion().get();
 	}
 
 	private void pickBlock() {
