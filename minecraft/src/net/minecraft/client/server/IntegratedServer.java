@@ -6,6 +6,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.logging.LogUtils;
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -16,6 +17,7 @@ import net.minecraft.CrashReport;
 import net.minecraft.SharedConstants;
 import net.minecraft.SystemReport;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.Services;
 import net.minecraft.server.WorldStem;
@@ -25,6 +27,7 @@ import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.ModCheck;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.player.ProfileKeyPair;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import org.slf4j.Logger;
@@ -164,6 +167,12 @@ public class IntegratedServer extends MinecraftServer {
 	public boolean publishServer(@Nullable GameType gameType, boolean bl, int i) {
 		try {
 			this.minecraft.prepareForMultiplayer();
+			this.minecraft.getProfileKeyPairManager().prepareKeyPair().thenAcceptAsync(optional -> optional.ifPresent(profileKeyPair -> {
+					ClientPacketListener clientPacketListener = this.minecraft.getConnection();
+					if (clientPacketListener != null) {
+						clientPacketListener.setKeyPair(profileKeyPair);
+					}
+				}), this.minecraft);
 			this.getConnection().startTcpServerListener(null, i);
 			LOGGER.info("Started serving on {}", i);
 			this.publishedPort = i;

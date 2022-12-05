@@ -224,7 +224,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.ProfileKeyPair;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
@@ -2747,12 +2746,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 
 	public void prepareForMultiplayer() {
 		this.playerSocialManager.startOnlineMode();
-		this.getProfileKeyPairManager().prepareKeyPair().thenAcceptAsync(optional -> optional.ifPresent(profileKeyPair -> {
-				ClientPacketListener clientPacketListener = this.getConnection();
-				if (clientPacketListener != null) {
-					clientPacketListener.setKeyPair(profileKeyPair);
-				}
-			}), this);
+		this.getProfileKeyPairManager().prepareKeyPair();
 	}
 
 	public Realms32BitWarningStatus getRealms32BitWarningStatus() {
