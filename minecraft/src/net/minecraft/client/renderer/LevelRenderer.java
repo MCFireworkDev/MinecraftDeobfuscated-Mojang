@@ -291,7 +291,6 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 			int m = -1;
 			float n = (float)this.ticks + f;
 			RenderSystem.setShader(GameRenderer::getParticleShader);
-			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 			BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
 
 			for(int o = k - l; o <= k + l; ++o) {
@@ -301,7 +300,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 					double s = (double)this.rainSizeZ[q] * 0.5;
 					mutableBlockPos.set((double)p, e, (double)o);
 					Biome biome = level.getBiome(mutableBlockPos).value();
-					if (biome.getPrecipitation() != Biome.Precipitation.NONE) {
+					if (biome.hasPrecipitation()) {
 						int t = level.getHeight(Heightmap.Types.MOTION_BLOCKING, p, o);
 						int u = j - l;
 						int v = j + l;
@@ -321,7 +320,8 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 						if (u != v) {
 							RandomSource randomSource = RandomSource.create((long)(p * p * 3121 + p * 45238971 ^ o * o * 418711 + o * 13761));
 							mutableBlockPos.set(p, u, o);
-							if (biome.warmEnoughToRain(mutableBlockPos)) {
+							Biome.Precipitation precipitation = biome.getPrecipitationAt(mutableBlockPos);
+							if (precipitation == Biome.Precipitation.RAIN) {
 								if (m != 0) {
 									if (m >= 0) {
 										tesselator.end();
@@ -360,7 +360,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 									.color(1.0F, 1.0F, 1.0F, ac)
 									.uv2(ad)
 									.endVertex();
-							} else {
+							} else if (precipitation == Biome.Precipitation.SNOW) {
 								if (m != 1) {
 									if (m >= 0) {
 										tesselator.end();
@@ -433,31 +433,29 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				int k = randomSource.nextInt(21) - 10;
 				int l = randomSource.nextInt(21) - 10;
 				BlockPos blockPos3 = levelReader.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPos.offset(k, 0, l));
-				Biome biome = levelReader.getBiome(blockPos3).value();
-				if (blockPos3.getY() > levelReader.getMinBuildHeight()
-					&& blockPos3.getY() <= blockPos.getY() + 10
-					&& blockPos3.getY() >= blockPos.getY() - 10
-					&& biome.getPrecipitation() == Biome.Precipitation.RAIN
-					&& biome.warmEnoughToRain(blockPos3)) {
-					blockPos2 = blockPos3.below();
-					if (this.minecraft.options.particles().get() == ParticleStatus.MINIMAL) {
-						break;
-					}
+				if (blockPos3.getY() > levelReader.getMinBuildHeight() && blockPos3.getY() <= blockPos.getY() + 10 && blockPos3.getY() >= blockPos.getY() - 10) {
+					Biome biome = levelReader.getBiome(blockPos3).value();
+					if (biome.getPrecipitationAt(blockPos3) == Biome.Precipitation.RAIN) {
+						blockPos2 = blockPos3.below();
+						if (this.minecraft.options.particles().get() == ParticleStatus.MINIMAL) {
+							break;
+						}
 
-					double d = randomSource.nextDouble();
-					double e = randomSource.nextDouble();
-					BlockState blockState = levelReader.getBlockState(blockPos2);
-					FluidState fluidState = levelReader.getFluidState(blockPos2);
-					VoxelShape voxelShape = blockState.getCollisionShape(levelReader, blockPos2);
-					double g = voxelShape.max(Direction.Axis.Y, d, e);
-					double h = (double)fluidState.getHeight(levelReader, blockPos2);
-					double m = Math.max(g, h);
-					ParticleOptions particleOptions = !fluidState.is(FluidTags.LAVA) && !blockState.is(Blocks.MAGMA_BLOCK) && !CampfireBlock.isLitCampfire(blockState)
-						? ParticleTypes.RAIN
-						: ParticleTypes.SMOKE;
-					this.minecraft
-						.level
-						.addParticle(particleOptions, (double)blockPos2.getX() + d, (double)blockPos2.getY() + m, (double)blockPos2.getZ() + e, 0.0, 0.0, 0.0);
+						double d = randomSource.nextDouble();
+						double e = randomSource.nextDouble();
+						BlockState blockState = levelReader.getBlockState(blockPos2);
+						FluidState fluidState = levelReader.getFluidState(blockPos2);
+						VoxelShape voxelShape = blockState.getCollisionShape(levelReader, blockPos2);
+						double g = voxelShape.max(Direction.Axis.Y, d, e);
+						double h = (double)fluidState.getHeight(levelReader, blockPos2);
+						double m = Math.max(g, h);
+						ParticleOptions particleOptions = !fluidState.is(FluidTags.LAVA) && !blockState.is(Blocks.MAGMA_BLOCK) && !CampfireBlock.isLitCampfire(blockState)
+							? ParticleTypes.RAIN
+							: ParticleTypes.SMOKE;
+						this.minecraft
+							.level
+							.addParticle(particleOptions, (double)blockPos2.getX() + d, (double)blockPos2.getY() + m, (double)blockPos2.getZ() + e, 0.0, 0.0, 0.0);
+					}
 				}
 			}
 
@@ -1555,7 +1553,6 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 			RenderSystem.disableCull();
 			RenderSystem.enableBlend();
 			RenderSystem.defaultBlendFunc();
-			RenderSystem.disableTexture();
 
 			for(LevelRenderer.RenderChunkInfo renderChunkInfo : this.renderChunksInFrustum) {
 				ChunkRenderDispatcher.RenderChunk renderChunk = renderChunkInfo.chunk;
@@ -1656,12 +1653,10 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 			RenderSystem.depthMask(true);
 			RenderSystem.disableBlend();
 			RenderSystem.enableCull();
-			RenderSystem.enableTexture();
 		}
 
 		if (this.capturedFrustum != null) {
 			RenderSystem.disableCull();
-			RenderSystem.disableTexture();
 			RenderSystem.enableBlend();
 			RenderSystem.defaultBlendFunc();
 			RenderSystem.lineWidth(5.0F);
@@ -1686,7 +1681,6 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 			RenderSystem.depthMask(false);
 			RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
 			bufferBuilder.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
-			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 			this.addFrustumVertex(bufferBuilder, 0);
 			this.addFrustumVertex(bufferBuilder, 1);
 			this.addFrustumVertex(bufferBuilder, 1);
@@ -1717,7 +1711,6 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 			RenderSystem.depthMask(true);
 			RenderSystem.disableBlend();
 			RenderSystem.enableCull();
-			RenderSystem.enableTexture();
 			RenderSystem.lineWidth(1.0F);
 		}
 	}
@@ -1820,7 +1813,6 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 		}
 
 		RenderSystem.depthMask(true);
-		RenderSystem.enableTexture();
 		RenderSystem.disableBlend();
 	}
 
@@ -1832,7 +1824,6 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				if (this.minecraft.level.effects().skyType() == DimensionSpecialEffects.SkyType.END) {
 					this.renderEndSky(poseStack);
 				} else if (this.minecraft.level.effects().skyType() == DimensionSpecialEffects.SkyType.NORMAL) {
-					RenderSystem.disableTexture();
 					Vec3 vec3 = this.level.getSkyColor(this.minecraft.gameRenderer.getMainCamera().getPosition(), f);
 					float g = (float)vec3.x;
 					float h = (float)vec3.y;
@@ -1850,7 +1841,6 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 					float[] fs = this.level.effects().getSunriseColor(this.level.getTimeOfDay(f), f);
 					if (fs != null) {
 						RenderSystem.setShader(GameRenderer::getPositionColorShader);
-						RenderSystem.disableTexture();
 						RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 						poseStack.pushPose();
 						poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
@@ -1876,7 +1866,6 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 						poseStack.popPose();
 					}
 
-					RenderSystem.enableTexture();
 					RenderSystem.blendFuncSeparate(
 						GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO
 					);
@@ -1910,7 +1899,6 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 					bufferBuilder.vertex(matrix4f3, l, -100.0F, -l).uv(u, p).endVertex();
 					bufferBuilder.vertex(matrix4f3, -l, -100.0F, -l).uv(q, p).endVertex();
 					BufferUploader.drawWithShader(bufferBuilder.end());
-					RenderSystem.disableTexture();
 					float v = this.level.getStarBrightness(f) * j;
 					if (v > 0.0F) {
 						RenderSystem.setShaderColor(v, v, v, v);
@@ -1924,7 +1912,6 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 					RenderSystem.disableBlend();
 					poseStack.popPose();
-					RenderSystem.disableTexture();
 					RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, 1.0F);
 					double d = this.minecraft.player.getEyePosition(f).y - this.level.getLevelData().getHorizonHeight(this.level);
 					if (d < 0.0) {
@@ -1936,13 +1923,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 						poseStack.popPose();
 					}
 
-					if (this.level.effects().hasGround()) {
-						RenderSystem.setShaderColor(g * 0.2F + 0.04F, h * 0.2F + 0.04F, i * 0.6F + 0.1F, 1.0F);
-					} else {
-						RenderSystem.setShaderColor(g, h, i, 1.0F);
-					}
-
-					RenderSystem.enableTexture();
+					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 					RenderSystem.depthMask(true);
 				}
 			}
@@ -2040,7 +2021,6 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 			}
 
 			poseStack.popPose();
-			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 			RenderSystem.enableCull();
 			RenderSystem.disableBlend();
 		}
@@ -2401,6 +2381,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 			RenderSystem.disableBlend();
 			poseStack.popPose();
 			RenderSystem.applyModelViewMatrix();
+			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 			RenderSystem.depthMask(true);
 		}
 	}

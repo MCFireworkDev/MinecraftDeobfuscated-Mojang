@@ -12,7 +12,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import net.minecraft.SharedConstants;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
@@ -98,8 +97,7 @@ public class EntityStorage implements EntityPersistentStorage<Entity> {
 					listTag.add(compoundTagxx);
 				}
 			});
-			CompoundTag compoundTag = new CompoundTag();
-			compoundTag.putInt("DataVersion", SharedConstants.getCurrentVersion().getWorldVersion());
+			CompoundTag compoundTag = NbtUtils.addCurrentDataVersion(new CompoundTag());
 			compoundTag.put("Entities", listTag);
 			writeChunkPos(compoundTag, chunkPos);
 			this.worker.store(chunkPos, compoundTag).exceptionally(throwable -> {
@@ -117,12 +115,8 @@ public class EntityStorage implements EntityPersistentStorage<Entity> {
 	}
 
 	private CompoundTag upgradeChunkTag(CompoundTag compoundTag) {
-		int i = getVersion(compoundTag);
-		return NbtUtils.update(this.fixerUpper, DataFixTypes.ENTITY_CHUNK, compoundTag, i);
-	}
-
-	public static int getVersion(CompoundTag compoundTag) {
-		return compoundTag.contains("DataVersion", 99) ? compoundTag.getInt("DataVersion") : -1;
+		int i = NbtUtils.getDataVersion(compoundTag, -1);
+		return DataFixTypes.ENTITY_CHUNK.updateToCurrentVersion(this.fixerUpper, compoundTag, i);
 	}
 
 	@Override

@@ -25,17 +25,16 @@ public class PacketDecoder extends ByteToMessageDecoder {
 		if (i != 0) {
 			FriendlyByteBuf friendlyByteBuf = new FriendlyByteBuf(byteBuf);
 			int j = friendlyByteBuf.readVarInt();
-			Packet<?> packet = ((ConnectionProtocol)channelHandlerContext.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get())
-				.createPacket(this.flow, j, friendlyByteBuf);
+			Packet<?> packet = channelHandlerContext.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get().createPacket(this.flow, j, friendlyByteBuf);
 			if (packet == null) {
 				throw new IOException("Bad packet id " + j);
 			} else {
-				int k = ((ConnectionProtocol)channelHandlerContext.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get()).getId();
+				int k = channelHandlerContext.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get().getId();
 				JvmProfiler.INSTANCE.onPacketReceived(k, j, channelHandlerContext.channel().remoteAddress(), i);
 				if (friendlyByteBuf.readableBytes() > 0) {
 					throw new IOException(
 						"Packet "
-							+ ((ConnectionProtocol)channelHandlerContext.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get()).getId()
+							+ channelHandlerContext.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get().getId()
 							+ "/"
 							+ j
 							+ " ("

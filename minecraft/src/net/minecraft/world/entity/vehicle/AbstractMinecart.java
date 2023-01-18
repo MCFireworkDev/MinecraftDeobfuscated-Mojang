@@ -250,7 +250,7 @@ public abstract class AbstractMinecart extends Entity {
 	abstract Item getDropItem();
 
 	@Override
-	public void animateHurt() {
+	public void animateHurt(float f) {
 		this.setHurtDir(-this.getHurtDir());
 		this.setHurtTime(10);
 		this.setDamage(this.getDamage() + this.getDamage() * 10.0F);

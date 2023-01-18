@@ -245,7 +245,7 @@ public class Util {
 
 		try {
 			type = DataFixers.getDataFixer()
-				.getSchema(DataFixUtils.makeKey(SharedConstants.getCurrentVersion().getWorldVersion()))
+				.getSchema(DataFixUtils.makeKey(SharedConstants.getCurrentVersion().getDataVersion().getVersion()))
 				.getChoiceType(typeReference, string);
 		} catch (IllegalArgumentException var4) {
 			LOGGER.error("No data fixer registered for {}", string);
