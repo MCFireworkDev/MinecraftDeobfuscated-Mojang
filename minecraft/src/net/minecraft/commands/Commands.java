@@ -99,6 +99,7 @@ import net.minecraft.server.commands.SetBlockCommand;
 import net.minecraft.server.commands.SetPlayerIdleTimeoutCommand;
 import net.minecraft.server.commands.SetSpawnCommand;
 import net.minecraft.server.commands.SetWorldSpawnCommand;
+import net.minecraft.server.commands.SpawnArmorTrimsCommand;
 import net.minecraft.server.commands.SpectateCommand;
 import net.minecraft.server.commands.SpreadPlayersCommand;
 import net.minecraft.server.commands.StopCommand;
@@ -194,6 +195,7 @@ public class Commands {
 
 		if (SharedConstants.IS_RUNNING_IN_IDE) {
 			TestCommand.register(this.dispatcher);
+			SpawnArmorTrimsCommand.register(this.dispatcher);
 		}
 
 		if (commandSelection.includeDedicated) {

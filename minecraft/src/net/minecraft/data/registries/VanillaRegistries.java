@@ -23,6 +23,8 @@ import net.minecraft.data.worldgen.placement.PlacementUtils;
 import net.minecraft.network.chat.ChatType;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.armortrim.TrimMaterials;
+import net.minecraft.world.item.armortrim.TrimPatterns;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.NoiseRouterData;
@@ -47,7 +49,9 @@ public class VanillaRegistries {
 		.add(Registries.NOISE_SETTINGS, NoiseGeneratorSettings::bootstrap)
 		.add(Registries.WORLD_PRESET, WorldPresets::bootstrap)
 		.add(Registries.FLAT_LEVEL_GENERATOR_PRESET, FlatLevelGeneratorPresets::bootstrap)
-		.add(Registries.CHAT_TYPE, ChatType::bootstrap);
+		.add(Registries.CHAT_TYPE, ChatType::bootstrap)
+		.add(Registries.TRIM_PATTERN, TrimPatterns::bootstrap)
+		.add(Registries.TRIM_MATERIAL, TrimMaterials::bootstrap);
 
 	private static void validateThatAllBiomeFeaturesHaveBiomeFilter(HolderLookup.Provider provider) {
 		HolderGetter<PlacedFeature> holderGetter = provider.lookupOrThrow(Registries.PLACED_FEATURE);

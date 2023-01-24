@@ -68,6 +68,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.TraceableEntity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -846,6 +847,15 @@ public class ExecuteCommand {
 			)
 			.then(Commands.literal("vehicle").fork(commandNode, expandOneToOneEntityRelation(entity -> Optional.ofNullable(entity.getVehicle()))))
 			.then(Commands.literal("controller").fork(commandNode, expandOneToOneEntityRelation(entity -> Optional.ofNullable(entity.getControllingPassenger()))))
+			.then(
+				Commands.literal("origin")
+					.fork(
+						commandNode,
+						expandOneToOneEntityRelation(
+							entity -> entity instanceof TraceableEntity traceableEntity ? Optional.ofNullable(traceableEntity.getOwner()) : Optional.empty()
+						)
+					)
+			)
 			.then(Commands.literal("passengers").fork(commandNode, expandOneToManyEntityRelation(entity -> entity.getPassengers().stream())));
 	}
 
