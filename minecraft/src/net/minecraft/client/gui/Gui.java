@@ -456,21 +456,21 @@ public class Gui extends GuiComponent {
 						this.blit(poseStack, k, l, 165, 166, 24, 24);
 					} else {
 						this.blit(poseStack, k, l, 141, 166, 24, 24);
-						if (mobEffectInstance.getDuration() <= 200) {
-							int m = 10 - mobEffectInstance.getDuration() / 20;
-							f = Mth.clamp((float)mobEffectInstance.getDuration() / 10.0F / 5.0F * 0.5F, 0.0F, 0.5F)
-								+ Mth.cos((float)mobEffectInstance.getDuration() * (float) Math.PI / 5.0F) * Mth.clamp((float)m / 10.0F * 0.25F, 0.0F, 0.25F);
+						if (mobEffectInstance.endsWithin(200)) {
+							int m = mobEffectInstance.getDuration();
+							int n = 10 - m / 20;
+							f = Mth.clamp((float)m / 10.0F / 5.0F * 0.5F, 0.0F, 0.5F)
+								+ Mth.cos((float)m * (float) Math.PI / 5.0F) * Mth.clamp((float)n / 10.0F * 0.25F, 0.0F, 0.25F);
 						}
 					}
 
 					TextureAtlasSprite textureAtlasSprite = mobEffectTextureManager.get(mobEffect);
-					int n = k;
 					int o = l;
 					float g = f;
 					list.add((Runnable)() -> {
 						RenderSystem.setShaderTexture(0, textureAtlasSprite.atlasLocation());
 						RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, g);
-						blit(poseStack, n + 3, o + 3, this.getBlitOffset(), 18, 18, textureAtlasSprite);
+						blit(poseStack, k + 3, o + 3, this.getBlitOffset(), 18, 18, textureAtlasSprite);
 						RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 					});
 				}
