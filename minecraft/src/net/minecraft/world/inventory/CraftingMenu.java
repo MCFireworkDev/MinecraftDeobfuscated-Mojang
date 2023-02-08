@@ -140,7 +140,7 @@ public class CraftingMenu extends RecipeBookMenu<CraftingContainer> {
 			}
 
 			if (itemStack2.isEmpty()) {
-				slot.set(ItemStack.EMPTY);
+				slot.setByPlayer(ItemStack.EMPTY);
 			} else {
 				slot.setChanged();
 			}

@@ -157,6 +157,10 @@ public class ResourceLocation implements Comparable<ResourceLocation> {
 		return string + "." + this.toLanguageKey();
 	}
 
+	public String toLanguageKey(String string, String string2) {
+		return string + "." + this.toLanguageKey() + "." + string2;
+	}
+
 	public static ResourceLocation read(StringReader stringReader) throws CommandSyntaxException {
 		int i = stringReader.getCursor();
 

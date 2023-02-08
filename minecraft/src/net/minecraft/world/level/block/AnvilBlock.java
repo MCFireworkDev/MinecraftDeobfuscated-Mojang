@@ -100,7 +100,7 @@ public class AnvilBlock extends FallingBlock {
 
 	@Override
 	public DamageSource getFallDamageSource(Entity entity) {
-		return DamageSource.anvil(entity);
+		return entity.damageSources().anvil(entity);
 	}
 
 	@Nullable

@@ -62,6 +62,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.TagKey;
@@ -71,6 +72,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.Boat;
@@ -444,7 +446,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 				}
 			} else {
 				if (this.remainingFireTicks % 20 == 0 && !this.isInLava()) {
-					this.hurt(DamageSource.ON_FIRE, 1.0F);
+					this.hurt(this.damageSources().onFire(), 1.0F);
 				}
 
 				this.setRemainingFireTicks(this.remainingFireTicks - 1);
@@ -501,7 +503,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 	public void lavaHurt() {
 		if (!this.fireImmune()) {
 			this.setSecondsOnFire(15);
-			if (this.hurt(DamageSource.LAVA, 4.0F)) {
+			if (this.hurt(this.damageSources().lava(), 4.0F)) {
 				this.playSound(SoundEvents.GENERIC_BURN, 0.4F, 2.0F + this.random.nextFloat() * 0.4F);
 			}
 		}
@@ -1752,6 +1754,8 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 	public boolean startRiding(Entity entity, boolean bl) {
 		if (entity == this.vehicle) {
 			return false;
+		} else if (!entity.couldAcceptPassenger()) {
+			return false;
 		} else {
 			for(Entity entity2 = entity; entity2.vehicle != null; entity2 = entity2.vehicle) {
 				if (entity2.vehicle == this) {
@@ -1766,15 +1770,11 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 
 				this.setPose(Pose.STANDING);
 				this.vehicle = entity;
-				if (!this.vehicle.addPassenger(this)) {
-					this.vehicle = null;
-					return false;
-				} else {
-					entity.getIndirectPassengersStream()
-						.filter(entityx -> entityx instanceof ServerPlayer)
-						.forEach(entityx -> CriteriaTriggers.START_RIDING_TRIGGER.trigger((ServerPlayer)entityx));
-					return true;
-				}
+				this.vehicle.addPassenger(this);
+				entity.getIndirectPassengersStream()
+					.filter(entityx -> entityx instanceof ServerPlayer)
+					.forEach(entityx -> CriteriaTriggers.START_RIDING_TRIGGER.trigger((ServerPlayer)entityx));
+				return true;
 			} else {
 				return false;
 			}
@@ -1807,7 +1807,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		this.removeVehicle();
 	}
 
-	protected boolean addPassenger(Entity entity) {
+	protected void addPassenger(Entity entity) {
 		if (entity.getVehicle() != this) {
 			throw new IllegalStateException("Use x.startRiding(y), not y.addPassenger(x)");
 		} else {
@@ -1824,7 +1824,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 				this.passengers = ImmutableList.copyOf(list);
 			}
 
-			return true;
+			this.gameEvent(GameEvent.ENTITY_MOUNT, entity);
 		}
 	}
 
@@ -1839,11 +1839,16 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 			}
 
 			entity.boardingCooldown = 60;
+			this.gameEvent(GameEvent.ENTITY_DISMOUNT, entity);
 		}
 	}
 
 	protected boolean canAddPassenger(Entity entity) {
 		return this.passengers.isEmpty();
+	}
+
+	protected boolean couldAcceptPassenger() {
+		return true;
 	}
 
 	public void lerpTo(double d, double e, double f, float g, float h, int i, boolean bl) {
@@ -1931,6 +1936,9 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 
 	public void lerpMotion(double d, double e, double f) {
 		this.setDeltaMovement(d, e, f);
+	}
+
+	public void handleDamageEvent(DamageSource damageSource) {
 	}
 
 	public void handleEntityEvent(byte b) {
@@ -2125,7 +2133,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 			this.setSecondsOnFire(8);
 		}
 
-		this.hurt(DamageSource.LIGHTNING_BOLT, 5.0F);
+		this.hurt(this.damageSources().lightningBolt(), 5.0F);
 	}
 
 	public void onAboveBubbleCol(boolean bl) {
@@ -2275,8 +2283,8 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 
 	public boolean isInvulnerableTo(DamageSource damageSource) {
 		return this.isRemoved()
-			|| this.invulnerable && damageSource != DamageSource.OUT_OF_WORLD && !damageSource.isCreativePlayer()
-			|| damageSource.isFire() && this.fireImmune();
+			|| this.invulnerable && !damageSource.is(DamageTypeTags.BYPASSES_INVULNERABILITY) && !damageSource.isCreativePlayer()
+			|| damageSource.is(DamageTypeTags.IS_FIRE) && this.fireImmune();
 	}
 
 	public boolean isInvulnerable() {
@@ -2548,6 +2556,9 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		return this.isCustomNameVisible();
 	}
 
+	public void onSyncedDataUpdated(List<SynchedEntityData.DataValue<?>> list) {
+	}
+
 	public void onSyncedDataUpdated(EntityDataAccessor<?> entityDataAccessor) {
 		if (DATA_POSE.equals(entityDataAccessor)) {
 			this.refreshDimensions();
@@ -2781,7 +2792,12 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 	}
 
 	public boolean hasIndirectPassenger(Entity entity) {
-		return this.getIndirectPassengersStream().anyMatch(entity2 -> entity2 == entity);
+		if (!entity.isPassenger()) {
+			return false;
+		} else {
+			Entity entity2 = entity.getVehicle();
+			return entity2 == this ? true : this.hasIndirectPassenger(entity2);
+		}
 	}
 
 	public boolean isControlledByLocalInstance() {
@@ -3206,6 +3222,10 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 
 	public Level getLevel() {
 		return this.level;
+	}
+
+	public DamageSources damageSources() {
+		return this.level.damageSources();
 	}
 
 	@FunctionalInterface

@@ -39,6 +39,7 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.NbtPathArgument;
 import net.minecraft.commands.arguments.ObjectiveArgument;
 import net.minecraft.commands.arguments.RangeArgument;
+import net.minecraft.commands.arguments.ResourceArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.commands.arguments.ResourceOrTagArgument;
 import net.minecraft.commands.arguments.ScoreHolderArgument;
@@ -47,7 +48,9 @@ import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.commands.arguments.coordinates.RotationArgument;
 import net.minecraft.commands.arguments.coordinates.SwizzleArgument;
 import net.minecraft.commands.arguments.coordinates.Vec3Argument;
+import net.minecraft.commands.synchronization.SuggestionProviders;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.ByteTag;
@@ -65,9 +68,10 @@ import net.minecraft.server.commands.data.DataCommands;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.TraceableEntity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -222,6 +226,17 @@ public class ExecuteCommand {
 						.then(
 							Commands.argument("dimension", DimensionArgument.dimension())
 								.redirect(literalCommandNode, commandContext -> commandContext.getSource().withLevel(DimensionArgument.getDimension(commandContext, "dimension")))
+						)
+				)
+				.then(
+					Commands.literal("summon")
+						.then(
+							Commands.argument("entity", ResourceArgument.resource(commandBuildContext, Registries.ENTITY_TYPE))
+								.suggests(SuggestionProviders.SUMMONABLE_ENTITIES)
+								.redirect(
+									literalCommandNode,
+									commandContext -> spawnEntityAndRedirect(commandContext.getSource(), ResourceArgument.getSummonableEntityType(commandContext, "entity"))
+								)
 						)
 				)
 				.then(createRelationOperations(literalCommandNode, Commands.literal("on")))
@@ -460,11 +475,12 @@ public class ExecuteCommand {
 			.then(
 				Commands.literal("loaded")
 					.then(
-						Commands.argument("pos", BlockPosArgument.blockPos())
-							.fork(
-								commandNode,
-								commandContext -> expect(commandContext, bl, isChunkLoaded(commandContext.getSource().getLevel(), BlockPosArgument.getBlockPos(commandContext, "pos")))
-							)
+						addConditional(
+							commandNode,
+							Commands.argument("pos", BlockPosArgument.blockPos()),
+							bl,
+							commandContext -> isChunkLoaded(commandContext.getSource().getLevel(), BlockPosArgument.getBlockPos(commandContext, "pos"))
+						)
 					)
 			)
 			.then(
@@ -825,7 +841,7 @@ public class ExecuteCommand {
 				Commands.literal("owner")
 					.fork(
 						commandNode,
-						expandOneToOneEntityRelation(entity -> entity instanceof TamableAnimal tamableAnimal ? Optional.ofNullable(tamableAnimal.getOwner()) : Optional.empty())
+						expandOneToOneEntityRelation(entity -> entity instanceof OwnableEntity ownableEntity ? Optional.ofNullable(ownableEntity.getOwner()) : Optional.empty())
 					)
 			)
 			.then(
@@ -857,6 +873,11 @@ public class ExecuteCommand {
 					)
 			)
 			.then(Commands.literal("passengers").fork(commandNode, expandOneToManyEntityRelation(entity -> entity.getPassengers().stream())));
+	}
+
+	private static CommandSourceStack spawnEntityAndRedirect(CommandSourceStack commandSourceStack, Holder.Reference<EntityType<?>> reference) throws CommandSyntaxException {
+		Entity entity = SummonCommand.createEntity(commandSourceStack, reference, commandSourceStack.getPosition(), new CompoundTag(), true);
+		return commandSourceStack.withEntity(entity);
 	}
 
 	@FunctionalInterface

@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
@@ -92,12 +93,14 @@ public class CreateWorldScreen extends Screen {
 	private static final String TEMP_WORLD_PREFIX = "mcworld-";
 	static final Component GAME_MODEL_LABEL = Component.translatable("selectWorld.gameMode");
 	static final Component NAME_LABEL = Component.translatable("selectWorld.enterName");
+	static final Component EXPERIMENTS_LABEL = Component.translatable("selectWorld.experiments");
 	static final Component ALLOW_CHEATS_INFO = Component.translatable("selectWorld.allowCommands.info");
 	private static final Component PREPARING_WORLD_DATA = Component.translatable("createWorld.preparing");
 	private static final int HORIZONTAL_BUTTON_SPACING = 10;
 	private static final int VERTICAL_BUTTON_SPACING = 8;
 	final WorldCreationUiState uiState;
 	private final TabManager tabManager = new TabManager(this::addRenderableWidget, guiEventListener -> this.removeWidget(guiEventListener));
+	private boolean recreated;
 	@Nullable
 	private final Screen lastScreen;
 	@Nullable
@@ -146,6 +149,7 @@ public class CreateWorldScreen extends Screen {
 			WorldPresets.fromSettings(worldCreationContext.selectedDimensions().dimensions()),
 			OptionalLong.of(worldCreationContext.options().seed())
 		);
+		createWorldScreen.recreated = true;
 		createWorldScreen.uiState.setName(levelSettings.levelName());
 		createWorldScreen.uiState.setAllowCheats(levelSettings.allowCommands());
 		createWorldScreen.uiState.setDifficulty(levelSettings.difficulty());
@@ -200,7 +204,7 @@ public class CreateWorldScreen extends Screen {
 			abstractWidget.setTabOrderGroup(1);
 			this.addRenderableWidget(abstractWidget);
 		});
-		this.tabNavigationBar.setInitialTab(0);
+		this.tabNavigationBar.selectTab(0);
 		this.uiState.onChanged();
 		this.repositionElements();
 	}
@@ -251,8 +255,9 @@ public class CreateWorldScreen extends Screen {
 			: Lifecycle.stable();
 		Lifecycle lifecycle2 = layeredRegistryAccess.compositeAccess().allRegistriesLifecycle();
 		Lifecycle lifecycle3 = lifecycle2.add(lifecycle);
+		boolean bl = !this.recreated && lifecycle2 == Lifecycle.stable();
 		WorldOpenFlows.confirmWorldCreation(
-			this.minecraft, this, lifecycle3, () -> this.createNewWorld(complete.specialWorldProperty(), layeredRegistryAccess, lifecycle3)
+			this.minecraft, this, lifecycle3, () -> this.createNewWorld(complete.specialWorldProperty(), layeredRegistryAccess, lifecycle3), bl
 		);
 	}
 
@@ -296,7 +301,9 @@ public class CreateWorldScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(int i, int j, int k) {
-		if (super.keyPressed(i, j, k)) {
+		if (this.tabNavigationBar.keyPressed(i)) {
+			return true;
+		} else if (super.keyPressed(i, j, k)) {
 			return true;
 		} else if (i != 257 && i != 335) {
 			return false;
@@ -347,15 +354,31 @@ public class CreateWorldScreen extends Screen {
 		return this.tempDataPackDir;
 	}
 
+	void openExperimentsScreen(WorldDataConfiguration worldDataConfiguration) {
+		Pair<Path, PackRepository> pair = this.getDataPackSelectionSettings(worldDataConfiguration);
+		if (pair != null) {
+			this.minecraft
+				.setScreen(new ExperimentsScreen(this, pair.getSecond(), packRepository -> this.tryApplyNewDataPacks(packRepository, false, this::openExperimentsScreen)));
+		}
+	}
+
 	void openDataPackSelectionScreen(WorldDataConfiguration worldDataConfiguration) {
 		Pair<Path, PackRepository> pair = this.getDataPackSelectionSettings(worldDataConfiguration);
 		if (pair != null) {
 			this.minecraft
-				.setScreen(new PackSelectionScreen(this, pair.getSecond(), this::tryApplyNewDataPacks, (Path)pair.getFirst(), Component.translatable("dataPack.title")));
+				.setScreen(
+					new PackSelectionScreen(
+						this,
+						pair.getSecond(),
+						packRepository -> this.tryApplyNewDataPacks(packRepository, true, this::openDataPackSelectionScreen),
+						(Path)pair.getFirst(),
+						Component.translatable("dataPack.title")
+					)
+				);
 		}
 	}
 
-	private void tryApplyNewDataPacks(PackRepository packRepository) {
+	private void tryApplyNewDataPacks(PackRepository packRepository, boolean bl, Consumer<WorldDataConfiguration> consumer) {
 		List<String> list = ImmutableList.copyOf(packRepository.getSelectedIds());
 		List<String> list2 = (List)packRepository.getAvailableIds().stream().filter(string -> !list.contains(string)).collect(ImmutableList.toImmutableList());
 		WorldDataConfiguration worldDataConfiguration = new WorldDataConfiguration(
@@ -363,21 +386,21 @@ public class CreateWorldScreen extends Screen {
 		);
 		if (!this.uiState.tryUpdateDataConfiguration(worldDataConfiguration)) {
 			FeatureFlagSet featureFlagSet = packRepository.getRequestedFeatureFlags();
-			if (FeatureFlags.isExperimental(featureFlagSet)) {
-				this.minecraft.tell(() -> this.minecraft.setScreen(new ConfirmExperimentalFeaturesScreen(packRepository.getSelectedPacks(), bl -> {
-						if (bl) {
-							this.applyNewPackConfig(packRepository, worldDataConfiguration);
+			if (FeatureFlags.isExperimental(featureFlagSet) && bl) {
+				this.minecraft.tell(() -> this.minecraft.setScreen(new ConfirmExperimentalFeaturesScreen(packRepository.getSelectedPacks(), blx -> {
+						if (blx) {
+							this.applyNewPackConfig(packRepository, worldDataConfiguration, consumer);
 						} else {
-							this.openDataPackSelectionScreen(this.uiState.getSettings().dataConfiguration());
+							consumer.accept(this.uiState.getSettings().dataConfiguration());
 						}
 					})));
 			} else {
-				this.applyNewPackConfig(packRepository, worldDataConfiguration);
+				this.applyNewPackConfig(packRepository, worldDataConfiguration, consumer);
 			}
 		}
 	}
 
-	private void applyNewPackConfig(PackRepository packRepository, WorldDataConfiguration worldDataConfiguration) {
+	private void applyNewPackConfig(PackRepository packRepository, WorldDataConfiguration worldDataConfiguration, Consumer<WorldDataConfiguration> consumer) {
 		this.minecraft.tell(() -> this.minecraft.setScreen(new GenericDirtMessageScreen(Component.translatable("dataPack.validation.working"))));
 		WorldLoader.InitConfig initConfig = createDefaultLoadConfig(packRepository, worldDataConfiguration);
 		WorldLoader.load(
@@ -421,9 +444,9 @@ public class CreateWorldScreen extends Screen {
 											new ConfirmScreen(
 												bl -> {
 													if (bl) {
-														this.openDataPackSelectionScreen(this.uiState.getSettings().dataConfiguration());
+														consumer.accept(this.uiState.getSettings().dataConfiguration());
 													} else {
-														this.openDataPackSelectionScreen(WorldDataConfiguration.DEFAULT);
+														consumer.accept(WorldDataConfiguration.DEFAULT);
 													}
 												},
 												Component.translatable("dataPack.validation.failed"),
@@ -661,6 +684,14 @@ public class CreateWorldScreen extends Screen {
 				cycleButton3.setValue(CreateWorldScreen.this.uiState.isAllowCheats());
 				cycleButton3.active = !CreateWorldScreen.this.uiState.isDebug() && !CreateWorldScreen.this.uiState.isHardcore();
 			});
+			rowHelper.addChild(
+				Button.builder(
+						CreateWorldScreen.EXPERIMENTS_LABEL,
+						button -> CreateWorldScreen.this.openExperimentsScreen(CreateWorldScreen.this.uiState.getSettings().dataConfiguration())
+					)
+					.width(210)
+					.build()
+			);
 		}
 
 		@Override
@@ -679,6 +710,14 @@ public class CreateWorldScreen extends Screen {
 			super(TITLE);
 			GridLayout.RowHelper rowHelper = this.layout.rowSpacing(8).createRowHelper(1);
 			rowHelper.addChild(Button.builder(GAME_RULES_LABEL, button -> this.openGameRulesScreen()).width(210).build());
+			rowHelper.addChild(
+				Button.builder(
+						CreateWorldScreen.EXPERIMENTS_LABEL,
+						button -> CreateWorldScreen.this.openExperimentsScreen(CreateWorldScreen.this.uiState.getSettings().dataConfiguration())
+					)
+					.width(210)
+					.build()
+			);
 			rowHelper.addChild(
 				Button.builder(
 						DATA_PACKS_LABEL, button -> CreateWorldScreen.this.openDataPackSelectionScreen(CreateWorldScreen.this.uiState.getSettings().dataConfiguration())

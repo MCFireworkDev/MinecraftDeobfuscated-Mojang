@@ -23,6 +23,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.GameEventTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
@@ -30,7 +31,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.util.Unit;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.IndirectEntityDamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.effect.MobEffects;
@@ -146,7 +146,7 @@ public class Warden extends Monster implements VibrationListener.VibrationListen
 
 	@Override
 	public boolean isInvulnerableTo(DamageSource damageSource) {
-		return this.isDiggingOrEmerging() && !damageSource.isBypassInvul() ? true : super.isInvulnerableTo(damageSource);
+		return this.isDiggingOrEmerging() && !damageSource.is(DamageTypeTags.BYPASSES_INVULNERABILITY) ? true : super.isInvulnerableTo(damageSource);
 	}
 
 	private boolean isDiggingOrEmerging() {
@@ -308,11 +308,11 @@ public class Warden extends Monster implements VibrationListener.VibrationListen
 	}
 
 	public float getTendrilAnimation(float f) {
-		return Mth.lerp(f, (float)this.tendrilAnimationO, (float)this.tendrilAnimation) / 10.0F;
+		return (float)Mth.lerp(f, this.tendrilAnimationO, this.tendrilAnimation) / 10.0F;
 	}
 
 	public float getHeartAnimation(float f) {
-		return Mth.lerp(f, (float)this.heartAnimationO, (float)this.heartAnimation) / 10.0F;
+		return (float)Mth.lerp(f, this.heartAnimationO, this.heartAnimation) / 10.0F;
 	}
 
 	private void clientDiggingParticles(AnimationState animationState) {
@@ -524,7 +524,7 @@ public class Warden extends Monster implements VibrationListener.VibrationListen
 			this.increaseAngerAt(entity, AngerLevel.ANGRY.getMinimumAnger() + 20, false);
 			if (this.brain.getMemory(MemoryModuleType.ATTACK_TARGET).isEmpty()
 				&& entity instanceof LivingEntity livingEntity
-				&& (!(damageSource instanceof IndirectEntityDamageSource) || this.closerThan(livingEntity, 5.0))) {
+				&& (!damageSource.isIndirect() || this.closerThan(livingEntity, 5.0))) {
 				this.setAttackTarget(livingEntity);
 			}
 		}

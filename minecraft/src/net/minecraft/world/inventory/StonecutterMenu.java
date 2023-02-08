@@ -207,7 +207,7 @@ public class StonecutterMenu extends AbstractContainerMenu {
 			}
 
 			if (itemStack2.isEmpty()) {
-				slot.set(ItemStack.EMPTY);
+				slot.setByPlayer(ItemStack.EMPTY);
 			}
 
 			slot.setChanged();
