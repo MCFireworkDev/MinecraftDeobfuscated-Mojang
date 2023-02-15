@@ -197,7 +197,7 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
 
 	private static boolean tryTakeInItemFromSlot(Hopper hopper, Container container, int i, Direction direction) {
 		ItemStack itemStack = container.getItem(i);
-		if (!itemStack.isEmpty() && canTakeItemFromContainer(container, itemStack, i, direction)) {
+		if (!itemStack.isEmpty() && canTakeItemFromContainer(hopper, container, itemStack, i, direction)) {
 			ItemStack itemStack2 = itemStack.copy();
 			ItemStack itemStack3 = addItem(container, hopper, container.removeItem(i, 1), null);
 			if (itemStack3.isEmpty()) {
@@ -232,12 +232,14 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
 			for(int i = 0; i < is.length && !itemStack.isEmpty(); ++i) {
 				itemStack = tryMoveInItem(container, container2, itemStack, is[i], direction);
 			}
-		} else {
-			int j = container2.getContainerSize();
 
-			for(int k = 0; k < j && !itemStack.isEmpty(); ++k) {
-				itemStack = tryMoveInItem(container, container2, itemStack, k, direction);
-			}
+			return itemStack;
+		}
+
+		int j = container2.getContainerSize();
+
+		for(int i = 0; i < j && !itemStack.isEmpty(); ++i) {
+			itemStack = tryMoveInItem(container, container2, itemStack, i, direction);
 		}
 
 		return itemStack;
@@ -247,12 +249,24 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
 		if (!container.canPlaceItem(i, itemStack)) {
 			return false;
 		} else {
-			return !(container instanceof WorldlyContainer) || ((WorldlyContainer)container).canPlaceItemThroughFace(i, itemStack, direction);
+			if (container instanceof WorldlyContainer worldlyContainer && !worldlyContainer.canPlaceItemThroughFace(i, itemStack, direction)) {
+				return false;
+			}
+
+			return true;
 		}
 	}
 
-	private static boolean canTakeItemFromContainer(Container container, ItemStack itemStack, int i, Direction direction) {
-		return !(container instanceof WorldlyContainer) || ((WorldlyContainer)container).canTakeItemThroughFace(i, itemStack, direction);
+	private static boolean canTakeItemFromContainer(Container container, Container container2, ItemStack itemStack, int i, Direction direction) {
+		if (!container2.canTakeItem(container, i, itemStack)) {
+			return false;
+		} else {
+			if (container2 instanceof WorldlyContainer worldlyContainer && !worldlyContainer.canTakeItemThroughFace(i, itemStack, direction)) {
+				return false;
+			}
+
+			return true;
+		}
 	}
 
 	private static ItemStack tryMoveInItem(@Nullable Container container, Container container2, ItemStack itemStack, int i, @Nullable Direction direction) {
@@ -353,10 +367,8 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
 			return false;
 		} else if (itemStack.getDamageValue() != itemStack2.getDamageValue()) {
 			return false;
-		} else if (itemStack.getCount() > itemStack.getMaxStackSize()) {
-			return false;
 		} else {
-			return ItemStack.tagMatches(itemStack, itemStack2);
+			return itemStack.getCount() > itemStack.getMaxStackSize() ? false : ItemStack.tagMatches(itemStack, itemStack2);
 		}
 	}
 

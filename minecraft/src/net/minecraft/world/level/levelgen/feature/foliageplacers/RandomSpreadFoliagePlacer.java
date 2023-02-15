@@ -3,12 +3,10 @@ package net.minecraft.world.level.levelgen.feature.foliageplacers;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.util.function.BiConsumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.world.level.LevelSimulatedReader;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
 
 public class RandomSpreadFoliagePlacer extends FoliagePlacer {
@@ -39,7 +37,7 @@ public class RandomSpreadFoliagePlacer extends FoliagePlacer {
 	@Override
 	protected void createFoliage(
 		LevelSimulatedReader levelSimulatedReader,
-		BiConsumer<BlockPos, BlockState> biConsumer,
+		FoliagePlacer.FoliageSetter foliageSetter,
 		RandomSource randomSource,
 		TreeConfiguration treeConfiguration,
 		int i,
@@ -58,7 +56,7 @@ public class RandomSpreadFoliagePlacer extends FoliagePlacer {
 				randomSource.nextInt(j) - randomSource.nextInt(j),
 				randomSource.nextInt(k) - randomSource.nextInt(k)
 			);
-			tryPlaceLeaf(levelSimulatedReader, biConsumer, randomSource, treeConfiguration, mutableBlockPos);
+			tryPlaceLeaf(levelSimulatedReader, foliageSetter, randomSource, treeConfiguration, mutableBlockPos);
 		}
 	}
 

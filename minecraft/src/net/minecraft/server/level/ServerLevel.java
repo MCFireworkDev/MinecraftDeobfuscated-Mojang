@@ -1643,15 +1643,11 @@ public class ServerLevel extends Level implements WorldGenLevel {
 		}
 
 		public void onTickingStart(Entity entity) {
-			if (entity.getType().isTicking()) {
-				ServerLevel.this.entityTickList.add(entity);
-			}
+			ServerLevel.this.entityTickList.add(entity);
 		}
 
 		public void onTickingEnd(Entity entity) {
-			if (entity.getType().isTicking()) {
-				ServerLevel.this.entityTickList.remove(entity);
-			}
+			ServerLevel.this.entityTickList.remove(entity);
 		}
 
 		public void onTrackingStart(Entity entity) {

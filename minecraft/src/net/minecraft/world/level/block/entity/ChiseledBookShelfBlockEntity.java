@@ -112,15 +112,7 @@ public class ChiseledBookShelfBlockEntity extends BlockEntity implements Contain
 
 	@Override
 	public boolean stillValid(Player player) {
-		if (this.level == null) {
-			return false;
-		} else if (this.level.getBlockEntity(this.worldPosition) != this) {
-			return false;
-		} else {
-			return !(
-				player.distanceToSqr((double)this.worldPosition.getX() + 0.5, (double)this.worldPosition.getY() + 0.5, (double)this.worldPosition.getZ() + 0.5) > 64.0
-			);
-		}
+		return Container.stillValidBlockEntity(this, player);
 	}
 
 	@Override
