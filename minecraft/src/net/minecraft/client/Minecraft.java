@@ -981,6 +981,10 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 		}
 
 		this.screen = screen;
+		if (this.screen != null) {
+			this.screen.added();
+		}
+
 		BufferUploader.reset();
 		if (screen != null) {
 			this.mouseHandler.releaseMouse();
@@ -1110,9 +1114,6 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 			}
 		}
 
-		PoseStack poseStack = RenderSystem.getModelViewStack();
-		poseStack.pushPose();
-		RenderSystem.applyModelViewMatrix();
 		RenderSystem.clear(16640, ON_OSX);
 		this.mainRenderTarget.bindWrite(true);
 		FogRenderer.setupNoFog();
@@ -1122,8 +1123,6 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 		if (!this.noRender) {
 			this.profiler.popPush("gameRenderer");
 			this.gameRenderer.render(this.pause ? this.pausePartialTick : this.timer.partialTick, l, bl);
-			this.profiler.popPush("toasts");
-			this.toast.render(new PoseStack());
 			this.profiler.pop();
 		}
 
@@ -1135,17 +1134,12 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 
 		this.profiler.push("blit");
 		this.mainRenderTarget.unbindWrite();
-		poseStack.popPose();
-		poseStack.pushPose();
-		RenderSystem.applyModelViewMatrix();
 		this.mainRenderTarget.blitToScreen(this.window.getWidth(), this.window.getHeight());
 		this.frameTimeNs = Util.getNanos() - m;
 		if (bl2) {
 			TimerQuery.getInstance().ifPresent(timerQuery -> this.currentFrameProfile = timerQuery.endProfile());
 		}
 
-		poseStack.popPose();
-		RenderSystem.applyModelViewMatrix();
 		this.profiler.popPush("updateDisplay");
 		this.window.updateDisplay();
 		int k = this.getFramerateLimit();
@@ -1461,6 +1455,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 		Matrix4f matrix4f = new Matrix4f().setOrtho(0.0F, (float)this.window.getWidth(), (float)this.window.getHeight(), 0.0F, 1000.0F, 3000.0F);
 		RenderSystem.setProjectionMatrix(matrix4f);
 		PoseStack poseStack2 = RenderSystem.getModelViewStack();
+		poseStack2.pushPose();
 		poseStack2.setIdentity();
 		poseStack2.translate(0.0F, 0.0F, -2000.0F);
 		RenderSystem.applyModelViewMatrix();
@@ -1548,6 +1543,9 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 			string3 = decimalFormat.format(resultField3.globalPercentage) + "%";
 			this.font.drawShadow(poseStack, string3, (float)(j + 160 - this.font.width(string3)), (float)(k + 80 + r * 8 + 20), resultField3.getColor());
 		}
+
+		poseStack2.popPose();
+		RenderSystem.applyModelViewMatrix();
 	}
 
 	public void stop() {

@@ -67,7 +67,7 @@ public class ExperimentsScreen extends Screen {
 		builder.build(rowHelper::addChild);
 		GridLayout.RowHelper rowHelper2 = this.layout.addToFooter(new GridLayout().columnSpacing(10)).createRowHelper(2);
 		rowHelper2.addChild(Button.builder(CommonComponents.GUI_DONE, button -> this.onDone()).build());
-		rowHelper2.addChild(Button.builder(CommonComponents.GUI_CANCEL, button -> this.popScreen()).build());
+		rowHelper2.addChild(Button.builder(CommonComponents.GUI_CANCEL, button -> this.onClose()).build());
 		this.layout.visitWidgets(guiEventListener -> {
 		});
 		this.repositionElements();
@@ -80,7 +80,7 @@ public class ExperimentsScreen extends Screen {
 
 	@Override
 	public void onClose() {
-		this.popScreen();
+		this.minecraft.setScreen(this.parent);
 	}
 
 	private void onDone() {
@@ -95,11 +95,6 @@ public class ExperimentsScreen extends Screen {
 		list.addAll(Lists.reverse(list2));
 		this.packRepository.setSelected(list.stream().map(Pack::getId).toList());
 		this.output.accept(this.packRepository);
-		this.popScreen();
-	}
-
-	private void popScreen() {
-		this.minecraft.setScreen(this.parent);
 	}
 
 	@Override

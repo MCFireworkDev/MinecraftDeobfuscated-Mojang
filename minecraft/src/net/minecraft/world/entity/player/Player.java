@@ -512,11 +512,6 @@ public abstract class Player extends LivingEntity {
 		this.inventory.tick();
 		this.oBob = this.bob;
 		super.aiStep();
-		this.flyingSpeed = 0.02F;
-		if (this.isSprinting()) {
-			this.flyingSpeed += 0.006F;
-		}
-
 		this.setSpeed((float)this.getAttributeValue(Attributes.MOVEMENT_SPEED));
 		float f;
 		if (this.onGround && !this.isDeadOrDying() && !this.isSwimming()) {
@@ -1050,7 +1045,7 @@ public abstract class Player extends LivingEntity {
 			double e = vec3.z;
 			double f = 0.05;
 
-			while(d != 0.0 && this.level.noCollision(this, this.getBoundingBox().move(d, (double)(-this.maxUpStep), 0.0))) {
+			while(d != 0.0 && this.level.noCollision(this, this.getBoundingBox().move(d, (double)(-this.maxUpStep()), 0.0))) {
 				if (d < 0.05 && d >= -0.05) {
 					d = 0.0;
 				} else if (d > 0.0) {
@@ -1060,7 +1055,7 @@ public abstract class Player extends LivingEntity {
 				}
 			}
 
-			while(e != 0.0 && this.level.noCollision(this, this.getBoundingBox().move(0.0, (double)(-this.maxUpStep), e))) {
+			while(e != 0.0 && this.level.noCollision(this, this.getBoundingBox().move(0.0, (double)(-this.maxUpStep()), e))) {
 				if (e < 0.05 && e >= -0.05) {
 					e = 0.0;
 				} else if (e > 0.0) {
@@ -1070,7 +1065,7 @@ public abstract class Player extends LivingEntity {
 				}
 			}
 
-			while(d != 0.0 && e != 0.0 && this.level.noCollision(this, this.getBoundingBox().move(d, (double)(-this.maxUpStep), e))) {
+			while(d != 0.0 && e != 0.0 && this.level.noCollision(this, this.getBoundingBox().move(d, (double)(-this.maxUpStep()), e))) {
 				if (d < 0.05 && d >= -0.05) {
 					d = 0.0;
 				} else if (d > 0.0) {
@@ -1096,7 +1091,8 @@ public abstract class Player extends LivingEntity {
 
 	private boolean isAboveGround() {
 		return this.onGround
-			|| this.fallDistance < this.maxUpStep && !this.level.noCollision(this, this.getBoundingBox().move(0.0, (double)(this.fallDistance - this.maxUpStep), 0.0));
+			|| this.fallDistance < this.maxUpStep()
+				&& !this.level.noCollision(this, this.getBoundingBox().move(0.0, (double)(this.fallDistance - this.maxUpStep()), 0.0));
 	}
 
 	public void attack(Entity entity) {
@@ -1436,7 +1432,9 @@ public abstract class Player extends LivingEntity {
 		if (this.isSwimming() && !this.isPassenger()) {
 			double g = this.getLookAngle().y;
 			double h = g < -0.2 ? 0.085 : 0.06;
-			if (g <= 0.0 || this.jumping || !this.level.getBlockState(new BlockPos(this.getX(), this.getY() + 1.0 - 0.1, this.getZ())).getFluidState().isEmpty()) {
+			if (g <= 0.0 || this.jumping || !this.level.getBlockState(BlockPos.containing(this.getX(), this.getY() + 1.0 - 0.1, this.getZ())).getFluidState().isEmpty()
+				)
+			 {
 				Vec3 vec32 = this.getDeltaMovement();
 				this.setDeltaMovement(vec32.add(0.0, (g - vec32.y) * h, 0.0));
 			}
@@ -1444,12 +1442,9 @@ public abstract class Player extends LivingEntity {
 
 		if (this.abilities.flying && !this.isPassenger()) {
 			double g = this.getDeltaMovement().y;
-			float i = this.flyingSpeed;
-			this.flyingSpeed = this.abilities.getFlyingSpeed() * (float)(this.isSprinting() ? 2 : 1);
 			super.travel(vec3);
 			Vec3 vec33 = this.getDeltaMovement();
 			this.setDeltaMovement(vec33.x, g * 0.6, vec33.z);
-			this.flyingSpeed = i;
 			this.resetFallDistance();
 			this.setSharedFlag(7, false);
 		} else {
@@ -2097,6 +2092,15 @@ public abstract class Player extends LivingEntity {
 	@Override
 	public boolean canSprint() {
 		return true;
+	}
+
+	@Override
+	protected float getFlyingSpeed() {
+		if (this.abilities.flying && !this.isPassenger()) {
+			return this.isSprinting() ? this.abilities.getFlyingSpeed() * 2.0F : this.abilities.getFlyingSpeed();
+		} else {
+			return this.isSprinting() ? 0.025999999F : 0.02F;
+		}
 	}
 
 	public static enum BedSleepingProblem {

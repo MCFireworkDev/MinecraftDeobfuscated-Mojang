@@ -21,6 +21,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.biome.MultiNoiseBiomeSource;
+import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists;
 import net.minecraft.world.level.biome.TheEndBiomeSource;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
@@ -134,7 +135,7 @@ public record WorldDimensions(Registry<LevelStem> dimensions) {
 			return false;
 		} else {
 			BiomeSource var3 = levelStem.generator().getBiomeSource();
-			if (var3 instanceof MultiNoiseBiomeSource multiNoiseBiomeSource && !multiNoiseBiomeSource.stable(MultiNoiseBiomeSource.Preset.OVERWORLD)) {
+			if (var3 instanceof MultiNoiseBiomeSource multiNoiseBiomeSource && !multiNoiseBiomeSource.stable(MultiNoiseBiomeSourceParameterLists.OVERWORLD)) {
 				return false;
 			}
 
@@ -147,7 +148,7 @@ public record WorldDimensions(Registry<LevelStem> dimensions) {
 			ChunkGenerator var3 = levelStem.generator();
 			if (var3 instanceof NoiseBasedChunkGenerator noiseBasedChunkGenerator && noiseBasedChunkGenerator.stable(NoiseGeneratorSettings.NETHER)) {
 				BiomeSource var4 = noiseBasedChunkGenerator.getBiomeSource();
-				if (var4 instanceof MultiNoiseBiomeSource multiNoiseBiomeSource && multiNoiseBiomeSource.stable(MultiNoiseBiomeSource.Preset.NETHER)) {
+				if (var4 instanceof MultiNoiseBiomeSource multiNoiseBiomeSource && multiNoiseBiomeSource.stable(MultiNoiseBiomeSourceParameterLists.NETHER)) {
 					return true;
 				}
 			}

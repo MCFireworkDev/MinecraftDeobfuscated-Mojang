@@ -72,7 +72,7 @@ public class PlaceCommand {
 										commandContext -> placeFeature(
 												(CommandSourceStack)commandContext.getSource(),
 												ResourceKeyArgument.getConfiguredFeature(commandContext, "feature"),
-												new BlockPos(((CommandSourceStack)commandContext.getSource()).getPosition())
+												BlockPos.containing(((CommandSourceStack)commandContext.getSource()).getPosition())
 											)
 									))
 								.then(
@@ -101,7 +101,7 @@ public class PlaceCommand {
 																ResourceKeyArgument.getStructureTemplatePool(commandContext, "pool"),
 																ResourceLocationArgument.getId(commandContext, "target"),
 																IntegerArgumentType.getInteger(commandContext, "max_depth"),
-																new BlockPos(((CommandSourceStack)commandContext.getSource()).getPosition())
+																BlockPos.containing(((CommandSourceStack)commandContext.getSource()).getPosition())
 															)
 													))
 												.then(
@@ -126,7 +126,9 @@ public class PlaceCommand {
 							Commands.argument("structure", ResourceKeyArgument.key(Registries.STRUCTURE))
 								.executes(
 									commandContext -> placeStructure(
-											commandContext.getSource(), ResourceKeyArgument.getStructure(commandContext, "structure"), new BlockPos(commandContext.getSource().getPosition())
+											commandContext.getSource(),
+											ResourceKeyArgument.getStructure(commandContext, "structure"),
+											BlockPos.containing(commandContext.getSource().getPosition())
 										)
 								)
 								.then(
@@ -150,7 +152,7 @@ public class PlaceCommand {
 									commandContext -> placeTemplate(
 											commandContext.getSource(),
 											ResourceLocationArgument.getId(commandContext, "template"),
-											new BlockPos(commandContext.getSource().getPosition()),
+											BlockPos.containing(commandContext.getSource().getPosition()),
 											Rotation.NONE,
 											Mirror.NONE,
 											1.0F,

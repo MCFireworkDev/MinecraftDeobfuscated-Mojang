@@ -77,7 +77,7 @@ public final class NaturalSpawner {
 				chunkGetter.query(ChunkPos.asLong(blockPos), levelChunk -> {
 					MobSpawnSettings.MobSpawnCost mobSpawnCost = getRoughBiome(blockPos, levelChunk).getMobSettings().getMobSpawnCost(entity.getType());
 					if (mobSpawnCost != null) {
-						potentialCalculator.addCharge(entity.blockPosition(), mobSpawnCost.getCharge());
+						potentialCalculator.addCharge(entity.blockPosition(), mobSpawnCost.charge());
 					}
 
 					if (entity instanceof Mob) {
@@ -407,7 +407,11 @@ public final class NaturalSpawner {
 								double e = Mth.clamp((double)m, (double)j + (double)f, (double)j + 16.0 - (double)f);
 								if (!serverLevelAccessor.noCollision(spawnerData.type.getAABB(d, (double)blockPos.getY(), e))
 									|| !SpawnPlacements.checkSpawnRules(
-										spawnerData.type, serverLevelAccessor, MobSpawnType.CHUNK_GENERATION, new BlockPos(d, (double)blockPos.getY(), e), serverLevelAccessor.getRandom()
+										spawnerData.type,
+										serverLevelAccessor,
+										MobSpawnType.CHUNK_GENERATION,
+										BlockPos.containing(d, (double)blockPos.getY(), e),
+										serverLevelAccessor.getRandom()
 									)) {
 									continue;
 								}
@@ -519,10 +523,10 @@ public final class NaturalSpawner {
 				this.lastCharge = 0.0;
 				return true;
 			} else {
-				double d = mobSpawnCost.getCharge();
+				double d = mobSpawnCost.charge();
 				this.lastCharge = d;
 				double e = this.spawnPotential.getPotentialEnergyChange(blockPos, d);
-				return e <= mobSpawnCost.getEnergyBudget();
+				return e <= mobSpawnCost.energyBudget();
 			}
 		}
 
@@ -535,7 +539,7 @@ public final class NaturalSpawner {
 			} else {
 				MobSpawnSettings.MobSpawnCost mobSpawnCost = NaturalSpawner.getRoughBiome(blockPos, chunkAccess).getMobSettings().getMobSpawnCost(entityType);
 				if (mobSpawnCost != null) {
-					d = mobSpawnCost.getCharge();
+					d = mobSpawnCost.charge();
 				} else {
 					d = 0.0;
 				}

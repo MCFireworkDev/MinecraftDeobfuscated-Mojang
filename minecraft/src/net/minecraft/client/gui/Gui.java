@@ -30,7 +30,6 @@ import net.minecraft.client.gui.components.spectator.SpectatorGui;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -152,7 +151,6 @@ public class Gui extends GuiComponent {
 			this.renderVignette(poseStack, this.minecraft.getCameraEntity());
 		} else {
 			RenderSystem.enableDepthTest();
-			RenderSystem.defaultBlendFunc();
 		}
 
 		float g = this.minecraft.getDeltaFrameTime();
@@ -185,12 +183,9 @@ public class Gui extends GuiComponent {
 		}
 
 		if (!this.minecraft.options.hideGui) {
-			RenderSystem.setShader(GameRenderer::getPositionTexShader);
 			RenderSystem.setShaderTexture(0, GUI_ICONS_LOCATION);
 			RenderSystem.enableBlend();
 			this.renderCrosshair(poseStack);
-			RenderSystem.setShader(GameRenderer::getPositionTexShader);
-			RenderSystem.defaultBlendFunc();
 			this.minecraft.getProfiler().push("bossHealth");
 			this.bossOverlay.render(poseStack);
 			this.minecraft.getProfiler().pop();
@@ -252,8 +247,6 @@ public class Gui extends GuiComponent {
 				if (m > 8) {
 					poseStack.pushPose();
 					poseStack.translate((float)(this.screenWidth / 2), (float)(this.screenHeight - 68), 0.0F);
-					RenderSystem.enableBlend();
-					RenderSystem.defaultBlendFunc();
 					int l = 16777215;
 					if (this.animateOverlayMessageColor) {
 						l = Mth.hsvToRgb(j / 50.0F, 0.7F, 0.6F) & 16777215;
@@ -263,7 +256,6 @@ public class Gui extends GuiComponent {
 					int o = font.width(this.overlayMessageString);
 					this.drawBackdrop(poseStack, font, -4, o, 16777215 | n);
 					font.drawShadow(poseStack, this.overlayMessageString, (float)(-o / 2), -4.0F, l | n);
-					RenderSystem.disableBlend();
 					poseStack.popPose();
 				}
 
@@ -288,7 +280,6 @@ public class Gui extends GuiComponent {
 					poseStack.pushPose();
 					poseStack.translate((float)(this.screenWidth / 2), (float)(this.screenHeight / 2), 0.0F);
 					RenderSystem.enableBlend();
-					RenderSystem.defaultBlendFunc();
 					poseStack.pushPose();
 					poseStack.scale(4.0F, 4.0F, 4.0F);
 					int l = m << 24 & 0xFF000000;
@@ -329,7 +320,6 @@ public class Gui extends GuiComponent {
 			}
 
 			RenderSystem.enableBlend();
-			RenderSystem.defaultBlendFunc();
 			int o = Mth.floor(this.minecraft.mouseHandler.xpos() * (double)window.getGuiScaledWidth() / (double)window.getScreenWidth());
 			int q = Mth.floor(this.minecraft.mouseHandler.ypos() * (double)window.getGuiScaledHeight() / (double)window.getScreenHeight());
 			this.minecraft.getProfiler().push("chat");
@@ -364,7 +354,8 @@ public class Gui extends GuiComponent {
 					Camera camera = this.minecraft.gameRenderer.getMainCamera();
 					PoseStack poseStack2 = RenderSystem.getModelViewStack();
 					poseStack2.pushPose();
-					poseStack2.translate((float)(this.screenWidth / 2), (float)(this.screenHeight / 2), (float)this.getBlitOffset());
+					poseStack2.mulPoseMatrix(poseStack.last().pose());
+					poseStack2.translate((float)(this.screenWidth / 2), (float)(this.screenHeight / 2), 0.0F);
 					poseStack2.mulPose(Axis.XN.rotationDegrees(camera.getXRot()));
 					poseStack2.mulPose(Axis.YP.rotationDegrees(camera.getYRot()));
 					poseStack2.scale(-1.0F, -1.0F, -1.0F);
@@ -380,7 +371,7 @@ public class Gui extends GuiComponent {
 						GlStateManager.DestFactor.ZERO
 					);
 					int i = 15;
-					this.blit(poseStack, (this.screenWidth - 15) / 2, (this.screenHeight - 15) / 2, 0, 0, 15, 15);
+					blit(poseStack, (this.screenWidth - 15) / 2, (this.screenHeight - 15) / 2, 0, 0, 15, 15);
 					if (this.minecraft.options.attackIndicator().get() == AttackIndicatorStatus.CROSSHAIR) {
 						float f = this.minecraft.player.getAttackStrengthScale(0.0F);
 						boolean bl = false;
@@ -392,13 +383,15 @@ public class Gui extends GuiComponent {
 						int j = this.screenHeight / 2 - 7 + 16;
 						int k = this.screenWidth / 2 - 8;
 						if (bl) {
-							this.blit(poseStack, k, j, 68, 94, 16, 16);
+							blit(poseStack, k, j, 68, 94, 16, 16);
 						} else if (f < 1.0F) {
 							int l = (int)(f * 17.0F);
-							this.blit(poseStack, k, j, 36, 94, 16, 4);
-							this.blit(poseStack, k, j, 52, 94, l, 4);
+							blit(poseStack, k, j, 36, 94, 16, 4);
+							blit(poseStack, k, j, 52, 94, l, 4);
 						}
 					}
+
+					RenderSystem.defaultBlendFunc();
 				}
 			}
 		}
@@ -453,9 +446,9 @@ public class Gui extends GuiComponent {
 
 					float f = 1.0F;
 					if (mobEffectInstance.isAmbient()) {
-						this.blit(poseStack, k, l, 165, 166, 24, 24);
+						blit(poseStack, k, l, 165, 166, 24, 24);
 					} else {
-						this.blit(poseStack, k, l, 141, 166, 24, 24);
+						blit(poseStack, k, l, 141, 166, 24, 24);
 						if (mobEffectInstance.endsWithin(200)) {
 							int m = mobEffectInstance.getDuration();
 							int n = 10 - m / 20;
@@ -470,7 +463,7 @@ public class Gui extends GuiComponent {
 					list.add((Runnable)() -> {
 						RenderSystem.setShaderTexture(0, textureAtlasSprite.atlasLocation());
 						RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, g);
-						blit(poseStack, k + 3, o + 3, this.getBlitOffset(), 18, 18, textureAtlasSprite);
+						blit(poseStack, k + 3, o + 3, 0, 18, 18, textureAtlasSprite);
 						RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 					});
 				}
@@ -483,58 +476,56 @@ public class Gui extends GuiComponent {
 	private void renderHotbar(float f, PoseStack poseStack) {
 		Player player = this.getCameraPlayer();
 		if (player != null) {
-			RenderSystem.setShader(GameRenderer::getPositionTexShader);
 			RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
 			ItemStack itemStack = player.getOffhandItem();
 			HumanoidArm humanoidArm = player.getMainArm().getOpposite();
 			int i = this.screenWidth / 2;
-			int j = this.getBlitOffset();
-			int k = 182;
-			int l = 91;
-			this.setBlitOffset(-90);
-			this.blit(poseStack, i - 91, this.screenHeight - 22, 0, 0, 182, 22);
-			this.blit(poseStack, i - 91 - 1 + player.getInventory().selected * 20, this.screenHeight - 22 - 1, 0, 22, 24, 22);
+			int j = 182;
+			int k = 91;
+			poseStack.pushPose();
+			poseStack.translate(0.0F, 0.0F, -90.0F);
+			blit(poseStack, i - 91, this.screenHeight - 22, 0, 0, 182, 22);
+			blit(poseStack, i - 91 - 1 + player.getInventory().selected * 20, this.screenHeight - 22 - 1, 0, 22, 24, 22);
 			if (!itemStack.isEmpty()) {
 				if (humanoidArm == HumanoidArm.LEFT) {
-					this.blit(poseStack, i - 91 - 29, this.screenHeight - 23, 24, 22, 29, 24);
+					blit(poseStack, i - 91 - 29, this.screenHeight - 23, 24, 22, 29, 24);
 				} else {
-					this.blit(poseStack, i + 91, this.screenHeight - 23, 53, 22, 29, 24);
+					blit(poseStack, i + 91, this.screenHeight - 23, 53, 22, 29, 24);
 				}
 			}
 
-			this.setBlitOffset(j);
+			poseStack.popPose();
+			int l = 1;
+
+			for(int m = 0; m < 9; ++m) {
+				int n = i - 90 + m * 20 + 2;
+				int o = this.screenHeight - 16 - 3;
+				this.renderSlot(poseStack, n, o, f, player, player.getInventory().items.get(m), l++);
+			}
+
+			if (!itemStack.isEmpty()) {
+				int m = this.screenHeight - 16 - 3;
+				if (humanoidArm == HumanoidArm.LEFT) {
+					this.renderSlot(poseStack, i - 91 - 26, m, f, player, itemStack, l++);
+				} else {
+					this.renderSlot(poseStack, i + 91 + 10, m, f, player, itemStack, l++);
+				}
+			}
+
 			RenderSystem.enableBlend();
-			RenderSystem.defaultBlendFunc();
-			int m = 1;
-
-			for(int n = 0; n < 9; ++n) {
-				int o = i - 90 + n * 20 + 2;
-				int p = this.screenHeight - 16 - 3;
-				this.renderSlot(o, p, f, player, player.getInventory().items.get(n), m++);
-			}
-
-			if (!itemStack.isEmpty()) {
-				int n = this.screenHeight - 16 - 3;
-				if (humanoidArm == HumanoidArm.LEFT) {
-					this.renderSlot(i - 91 - 26, n, f, player, itemStack, m++);
-				} else {
-					this.renderSlot(i + 91 + 10, n, f, player, itemStack, m++);
-				}
-			}
-
 			if (this.minecraft.options.attackIndicator().get() == AttackIndicatorStatus.HOTBAR) {
 				float g = this.minecraft.player.getAttackStrengthScale(0.0F);
 				if (g < 1.0F) {
-					int o = this.screenHeight - 20;
-					int p = i + 91 + 6;
+					int n = this.screenHeight - 20;
+					int o = i + 91 + 6;
 					if (humanoidArm == HumanoidArm.RIGHT) {
-						p = i - 91 - 22;
+						o = i - 91 - 22;
 					}
 
 					RenderSystem.setShaderTexture(0, GuiComponent.GUI_ICONS_LOCATION);
-					int q = (int)(g * 19.0F);
-					this.blit(poseStack, p, o, 0, 94, 18, 18);
-					this.blit(poseStack, p, o + 18 - q, 18, 112 - q, 18, q);
+					int p = (int)(g * 19.0F);
+					blit(poseStack, o, n, 0, 94, 18, 18);
+					blit(poseStack, o, n + 18 - p, 18, 112 - p, 18, p);
 				}
 			}
 
@@ -549,11 +540,11 @@ public class Gui extends GuiComponent {
 		int j = 182;
 		int k = (int)(f * 183.0F);
 		int l = this.screenHeight - 32 + 3;
-		this.blit(poseStack, i, l, 0, 84, 182, 5);
+		blit(poseStack, i, l, 0, 84, 182, 5);
 		if (playerRideableJumping.getJumpCooldown() > 0) {
-			this.blit(poseStack, i, l, 0, 74, 182, 5);
+			blit(poseStack, i, l, 0, 74, 182, 5);
 		} else if (k > 0) {
-			this.blit(poseStack, i, l, 0, 89, k, 5);
+			blit(poseStack, i, l, 0, 89, k, 5);
 		}
 
 		this.minecraft.getProfiler().pop();
@@ -567,9 +558,9 @@ public class Gui extends GuiComponent {
 			int k = 182;
 			int l = (int)(this.minecraft.player.experienceProgress * 183.0F);
 			int m = this.screenHeight - 32 + 3;
-			this.blit(poseStack, i, m, 0, 64, 182, 5);
+			blit(poseStack, i, m, 0, 64, 182, 5);
 			if (l > 0) {
-				this.blit(poseStack, i, m, 0, 69, l, 5);
+				blit(poseStack, i, m, 0, 69, l, 5);
 			}
 		}
 
@@ -609,11 +600,8 @@ public class Gui extends GuiComponent {
 			}
 
 			if (l > 0) {
-				RenderSystem.enableBlend();
-				RenderSystem.defaultBlendFunc();
 				fill(poseStack, j - 2, k - 2, j + i + 2, k + 9 + 2, this.minecraft.options.getBackgroundColor(0));
 				this.getFont().drawShadow(poseStack, mutableComponent, (float)j, (float)k, 16777215 + (l << 24));
-				RenderSystem.disableBlend();
 			}
 		}
 
@@ -767,15 +755,15 @@ public class Gui extends GuiComponent {
 				if (u > 0) {
 					int x = m + w * 8;
 					if (w * 2 + 1 < u) {
-						this.blit(poseStack, x, s, 34, 9, 9, 9);
+						blit(poseStack, x, s, 34, 9, 9, 9);
 					}
 
 					if (w * 2 + 1 == u) {
-						this.blit(poseStack, x, s, 25, 9, 9, 9);
+						blit(poseStack, x, s, 25, 9, 9, 9);
 					}
 
 					if (w * 2 + 1 > u) {
-						this.blit(poseStack, x, s, 16, 9, 9, 9);
+						blit(poseStack, x, s, 16, 9, 9, 9);
 					}
 				}
 			}
@@ -801,13 +789,13 @@ public class Gui extends GuiComponent {
 					}
 
 					int ac = n - y * 8 - 9;
-					this.blit(poseStack, ac, z, 16 + ab * 9, 27, 9, 9);
+					blit(poseStack, ac, z, 16 + ab * 9, 27, 9, 9);
 					if (y * 2 + 1 < k) {
-						this.blit(poseStack, ac, z, aa + 36, 27, 9, 9);
+						blit(poseStack, ac, z, aa + 36, 27, 9, 9);
 					}
 
 					if (y * 2 + 1 == k) {
-						this.blit(poseStack, ac, z, aa + 45, 27, 9, 9);
+						blit(poseStack, ac, z, aa + 45, 27, 9, 9);
 					}
 				}
 
@@ -825,9 +813,9 @@ public class Gui extends GuiComponent {
 
 				for(int ad = 0; ad < ab + ac; ++ad) {
 					if (ad < ab) {
-						this.blit(poseStack, n - ad * 8 - 9, t, 16, 18, 9, 9);
+						blit(poseStack, n - ad * 8 - 9, t, 16, 18, 9, 9);
 					} else {
-						this.blit(poseStack, n - ad * 8 - 9, t, 25, 18, 9, 9);
+						blit(poseStack, n - ad * 8 - 9, t, 25, 18, 9, 9);
 					}
 				}
 			}
@@ -880,7 +868,7 @@ public class Gui extends GuiComponent {
 	}
 
 	private void renderHeart(PoseStack poseStack, Gui.HeartType heartType, int i, int j, int k, boolean bl, boolean bl2) {
-		this.blit(poseStack, i, j, heartType.getX(bl2, bl), k, 9, 9);
+		blit(poseStack, i, j, heartType.getX(bl2, bl), k, 9, 9);
 	}
 
 	private void renderVehicleHealth(PoseStack poseStack) {
@@ -903,13 +891,13 @@ public class Gui extends GuiComponent {
 						int q = 52;
 						int r = 0;
 						int s = l - p * 8 - 9;
-						this.blit(poseStack, s, m, 52 + r * 9, 9, 9, 9);
+						blit(poseStack, s, m, 52 + r * 9, 9, 9, 9);
 						if (p * 2 + 1 + n < j) {
-							this.blit(poseStack, s, m, 88, 9, 9, 9);
+							blit(poseStack, s, m, 88, 9, 9, 9);
 						}
 
 						if (p * 2 + 1 + n == j) {
-							this.blit(poseStack, s, m, 97, 9, 9, 9);
+							blit(poseStack, s, m, 97, 9, 9, 9);
 						}
 					}
 
@@ -922,7 +910,6 @@ public class Gui extends GuiComponent {
 	private void renderTextureOverlay(PoseStack poseStack, ResourceLocation resourceLocation, float f) {
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthMask(false);
-		RenderSystem.defaultBlendFunc();
 		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, f);
 		RenderSystem.setShaderTexture(0, resourceLocation);
 		blit(poseStack, 0, 0, -90, 0.0F, 0.0F, this.screenWidth, this.screenHeight, this.screenWidth, this.screenHeight);
@@ -934,7 +921,6 @@ public class Gui extends GuiComponent {
 	private void renderSpyglassOverlay(PoseStack poseStack, float f) {
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthMask(false);
-		RenderSystem.defaultBlendFunc();
 		float g = (float)Math.min(this.screenWidth, this.screenHeight);
 		float i = Math.min((float)this.screenWidth / g, (float)this.screenHeight / g) * f;
 		int j = Mth.floor(g * i);
@@ -955,7 +941,7 @@ public class Gui extends GuiComponent {
 
 	private void updateVignetteBrightness(Entity entity) {
 		if (entity != null) {
-			BlockPos blockPos = new BlockPos(entity.getX(), entity.getEyeY(), entity.getZ());
+			BlockPos blockPos = BlockPos.containing(entity.getX(), entity.getEyeY(), entity.getZ());
 			float f = LightTexture.getBrightness(entity.level.dimensionType(), entity.level.getMaxLocalRawBrightness(blockPos));
 			float g = Mth.clamp(1.0F - f, 0.0F, 1.0F);
 			this.vignetteBrightness += (g - this.vignetteBrightness) * 0.01F;
@@ -1006,7 +992,6 @@ public class Gui extends GuiComponent {
 
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthMask(false);
-		RenderSystem.defaultBlendFunc();
 		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, f);
 		RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
 		TextureAtlasSprite textureAtlasSprite = this.minecraft.getBlockRenderer().getBlockModelShaper().getParticleIcon(Blocks.NETHER_PORTAL.defaultBlockState());
@@ -1016,9 +1001,8 @@ public class Gui extends GuiComponent {
 		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 	}
 
-	private void renderSlot(int i, int j, float f, Player player, ItemStack itemStack, int k) {
+	private void renderSlot(PoseStack poseStack, int i, int j, float f, Player player, ItemStack itemStack, int k) {
 		if (!itemStack.isEmpty()) {
-			PoseStack poseStack = RenderSystem.getModelViewStack();
 			float g = (float)itemStack.getPopTime() - f;
 			if (g > 0.0F) {
 				float h = 1.0F + g / 5.0F;
@@ -1026,17 +1010,14 @@ public class Gui extends GuiComponent {
 				poseStack.translate((float)(i + 8), (float)(j + 12), 0.0F);
 				poseStack.scale(1.0F / h, (h + 1.0F) / 2.0F, 1.0F);
 				poseStack.translate((float)(-(i + 8)), (float)(-(j + 12)), 0.0F);
-				RenderSystem.applyModelViewMatrix();
 			}
 
-			this.itemRenderer.renderAndDecorateItem(player, itemStack, i, j, k);
-			RenderSystem.setShader(GameRenderer::getPositionColorShader);
+			this.itemRenderer.renderAndDecorateItem(poseStack, player, itemStack, i, j, k);
 			if (g > 0.0F) {
 				poseStack.popPose();
-				RenderSystem.applyModelViewMatrix();
 			}
 
-			this.itemRenderer.renderGuiItemDecorations(this.minecraft.font, itemStack, i, j);
+			this.itemRenderer.renderGuiItemDecorations(poseStack, this.minecraft.font, itemStack, i, j);
 		}
 	}
 
