@@ -261,10 +261,10 @@ public class Options {
 			PackRepository packRepository = Minecraft.getInstance().getResourcePackRepository();
 			boolean blxx = packRepository.getSelectedIds().contains("high_contrast");
 			if (!blxx && boolean_) {
-				packRepository.addPack("high_contrast");
-				this.updateResourcePacks(packRepository);
-			} else if (blxx && !boolean_) {
-				packRepository.removePack("high_contrast");
+				if (packRepository.addPack("high_contrast")) {
+					this.updateResourcePacks(packRepository);
+				}
+			} else if (blxx && !boolean_ && packRepository.removePack("high_contrast")) {
 				this.updateResourcePacks(packRepository);
 			}
 		}
