@@ -207,7 +207,7 @@ public class CreateWorldScreen extends Screen {
 			abstractWidget.setTabOrderGroup(1);
 			this.addRenderableWidget(abstractWidget);
 		});
-		this.tabNavigationBar.selectTab(0);
+		this.tabNavigationBar.selectTab(0, false);
 		this.uiState.onChanged();
 		this.repositionElements();
 	}
