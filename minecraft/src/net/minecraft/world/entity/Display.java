@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import javax.annotation.Nullable;
 import net.minecraft.Util;
@@ -87,6 +86,7 @@ public abstract class Display extends Entity {
 	private final Quaternionf orientation = new Quaternionf();
 	protected final Display.InterpolatorSet interpolators = new Display.InterpolatorSet();
 	private long interpolationStartClientTick;
+	private float lastProgress;
 	private AABB cullingBoundingBox;
 
 	public Display(EntityType<?> entityType, Level level) {
@@ -97,7 +97,7 @@ public abstract class Display extends Entity {
 		this.interpolators
 			.addEntry(
 				Set.of(DATA_TRANSLATION_ID, DATA_LEFT_ROTATION_ID, DATA_SCALE_ID, DATA_RIGHT_ROTATION_ID),
-				synchedEntityData -> this.transformation.updateValue(createTransformation(synchedEntityData))
+				(f, synchedEntityData) -> this.transformation.updateValue(f, createTransformation(synchedEntityData))
 			);
 		this.interpolators.addEntry(DATA_SHADOW_STRENGTH_ID, this.shadowStrength);
 		this.interpolators.addEntry(DATA_SHADOW_RADIUS_ID, this.shadowRadius);
@@ -113,7 +113,7 @@ public abstract class Display extends Entity {
 		}
 
 		if (bl) {
-			this.interpolators.updateValues(this.entityData);
+			this.interpolators.updateValues(this.lastProgress, this.entityData);
 		}
 	}
 
@@ -377,7 +377,9 @@ public abstract class Display extends Entity {
 		} else {
 			float g = (float)((long)this.tickCount - this.interpolationStartClientTick);
 			float h = g + f;
-			return Mth.clamp(Mth.inverseLerp(h, 0.0F, (float)i), 0.0F, 1.0F);
+			float j = Mth.clamp(Mth.inverseLerp(h, 0.0F, (float)i), 0.0F, 1.0F);
+			this.lastProgress = j;
+			return j;
 		}
 	}
 
@@ -521,6 +523,11 @@ public abstract class Display extends Entity {
 		public float get(float f) {
 			return !((double)f >= 1.0) && this.lastValue != null ? this.interpolate(f, this.lastValue, this.currentValue) : this.currentValue;
 		}
+
+		public void updateValue(float f, Float float_) {
+			this.lastValue = this.get(f);
+			this.currentValue = float_;
+		}
 	}
 
 	abstract static class GenericInterpolator<T> extends Display.Interpolator<T> {
@@ -532,6 +539,12 @@ public abstract class Display extends Entity {
 
 		public T get(float f) {
 			return (T)(!((double)f >= 1.0) && this.lastValue != null ? this.interpolate(f, this.lastValue, this.currentValue) : this.currentValue);
+		}
+
+		@Override
+		public void updateValue(float f, T object) {
+			this.lastValue = this.get(f);
+			this.currentValue = object;
 		}
 	}
 
@@ -547,6 +560,16 @@ public abstract class Display extends Entity {
 		public int get(float f) {
 			return !((double)f >= 1.0) && this.lastValue != null ? this.interpolate(f, this.lastValue, this.currentValue) : this.currentValue;
 		}
+
+		public void updateValue(float f, Integer integer) {
+			this.lastValue = this.get(f);
+			this.currentValue = integer;
+		}
+	}
+
+	@FunctionalInterface
+	interface IntepolatorUpdater {
+		void update(float f, SynchedEntityData synchedEntityData);
 	}
 
 	abstract static class Interpolator<T> {
@@ -558,36 +581,33 @@ public abstract class Display extends Entity {
 			this.currentValue = object;
 		}
 
-		public void updateValue(T object) {
-			this.lastValue = this.currentValue;
-			this.currentValue = object;
-		}
+		public abstract void updateValue(float f, T object);
 	}
 
 	static class InterpolatorSet {
 		private final IntSet interpolatedData = new IntOpenHashSet();
-		private final List<Consumer<SynchedEntityData>> updaters = new ArrayList();
+		private final List<Display.IntepolatorUpdater> updaters = new ArrayList();
 
 		protected <T> void addEntry(EntityDataAccessor<T> entityDataAccessor, Display.Interpolator<T> interpolator) {
 			this.interpolatedData.add(entityDataAccessor.getId());
-			this.updaters.add((Consumer)synchedEntityData -> interpolator.updateValue(synchedEntityData.get(entityDataAccessor)));
+			this.updaters.add((Display.IntepolatorUpdater)(f, synchedEntityData) -> interpolator.updateValue(f, synchedEntityData.get(entityDataAccessor)));
 		}
 
-		protected void addEntry(Set<EntityDataAccessor<?>> set, Consumer<SynchedEntityData> consumer) {
+		protected void addEntry(Set<EntityDataAccessor<?>> set, Display.IntepolatorUpdater intepolatorUpdater) {
 			for(EntityDataAccessor<?> entityDataAccessor : set) {
 				this.interpolatedData.add(entityDataAccessor.getId());
 			}
 
-			this.updaters.add(consumer);
+			this.updaters.add(intepolatorUpdater);
 		}
 
 		public boolean shouldTriggerUpdate(int i) {
 			return this.interpolatedData.contains(i);
 		}
 
-		public void updateValues(SynchedEntityData synchedEntityData) {
-			for(Consumer<SynchedEntityData> consumer : this.updaters) {
-				consumer.accept(synchedEntityData);
+		public void updateValues(float f, SynchedEntityData synchedEntityData) {
+			for(Display.IntepolatorUpdater intepolatorUpdater : this.updaters) {
+				intepolatorUpdater.update(f, synchedEntityData);
 			}
 		}
 	}
@@ -620,7 +640,7 @@ public abstract class Display extends Entity {
 		protected void defineSynchedData() {
 			super.defineSynchedData();
 			this.entityData.define(DATA_ITEM_STACK_ID, ItemStack.EMPTY);
-			this.entityData.define(DATA_ITEM_DISPLAY_ID, ItemDisplayContext.FIXED.getId());
+			this.entityData.define(DATA_ITEM_DISPLAY_ID, ItemDisplayContext.NONE.getId());
 		}
 
 		public ItemStack getItemStack() {
@@ -694,9 +714,7 @@ public abstract class Display extends Entity {
 			super(entityType, level);
 			this.interpolators.addEntry(DATA_BACKGROUND_COLOR_ID, this.backgroundColor);
 			this.interpolators
-				.addEntry(
-					Set.of(DATA_TEXT_OPACITY_ID), synchedEntityData -> this.textOpacity.updateValue(Integer.valueOf(synchedEntityData.get(DATA_TEXT_OPACITY_ID) & 255))
-				);
+				.addEntry(Set.of(DATA_TEXT_OPACITY_ID), (f, synchedEntityData) -> this.textOpacity.updateValue(f, synchedEntityData.get(DATA_TEXT_OPACITY_ID) & 255));
 		}
 
 		@Override
