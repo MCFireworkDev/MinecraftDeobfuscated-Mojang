@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
@@ -13,9 +14,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BrushableBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.SuspiciousSandBlockEntity;
+import net.minecraft.world.level.block.entity.BrushableBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -61,12 +63,20 @@ public class BrushItem extends Item {
 				if (j == 1 || j % 10 == 0) {
 					BlockState blockState = level.getBlockState(blockPos);
 					this.spawnDustParticles(level, blockHitResult, blockState, livingEntity.getViewVector(0.0F));
-					level.playSound(player, blockPos, SoundEvents.BRUSH_BRUSHING, SoundSource.PLAYERS);
-					if (!level.isClientSide() && blockState.is(Blocks.SUSPICIOUS_SAND)) {
-						BlockEntity bl = level.getBlockEntity(blockPos);
-						if (bl instanceof SuspiciousSandBlockEntity suspiciousSandBlockEntity) {
-							boolean blx = suspiciousSandBlockEntity.brush(level.getGameTime(), player, blockHitResult.getDirection());
-							if (blx) {
+					Block bl = blockState.getBlock();
+					SoundEvent soundEvent;
+					if (bl instanceof BrushableBlock brushableBlock) {
+						soundEvent = brushableBlock.getBrushSound();
+					} else {
+						soundEvent = SoundEvents.BRUSH_GENERIC;
+					}
+
+					level.playSound(player, blockPos, soundEvent, SoundSource.PLAYERS);
+					if (!level.isClientSide()) {
+						BlockEntity var14 = level.getBlockEntity(blockPos);
+						if (var14 instanceof BrushableBlockEntity brushableBlockEntity) {
+							boolean bl = brushableBlockEntity.brush(level.getGameTime(), player, blockHitResult.getDirection());
+							if (bl) {
 								itemStack.hurtAndBreak(1, livingEntity, livingEntityx -> livingEntityx.broadcastBreakEvent(EquipmentSlot.MAINHAND));
 							}
 						}

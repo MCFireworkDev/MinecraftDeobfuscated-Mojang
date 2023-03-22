@@ -20,6 +20,7 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.HangingSignBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -66,7 +67,8 @@ public class CeilingHangingSignBlock extends SignBlock {
 		BlockEntity itemStack = level.getBlockEntity(blockPos);
 		if (itemStack instanceof SignBlockEntity signBlockEntity) {
 			ItemStack itemStackx = player.getItemInHand(interactionHand);
-			if (!signBlockEntity.hasAnyClickCommands(player) && itemStackx.getItem() instanceof BlockItem) {
+			SignText signText = signBlockEntity.getTextFacingPlayer(player);
+			if (!signText.hasAnyClickCommands(player) && itemStackx.getItem() instanceof BlockItem) {
 				return InteractionResult.PASS;
 			}
 		}
@@ -127,6 +129,11 @@ public class CeilingHangingSignBlock extends SignBlock {
 		return direction == Direction.UP && !this.canSurvive(blockState, levelAccessor, blockPos)
 			? Blocks.AIR.defaultBlockState()
 			: super.updateShape(blockState, direction, blockState2, levelAccessor, blockPos, blockPos2);
+	}
+
+	@Override
+	public float getYRotationDegrees(BlockState blockState) {
+		return RotationSegment.convertToDegrees(blockState.getValue(ROTATION));
 	}
 
 	@Override

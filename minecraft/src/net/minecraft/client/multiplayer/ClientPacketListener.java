@@ -1285,14 +1285,15 @@ public class ClientPacketListener implements TickablePacketListener, ClientGameP
 	public void handleOpenSignEditor(ClientboundOpenSignEditorPacket clientboundOpenSignEditorPacket) {
 		PacketUtils.ensureRunningOnSameThread(clientboundOpenSignEditorPacket, this, this.minecraft);
 		BlockPos blockPos = clientboundOpenSignEditorPacket.getPos();
-		BlockEntity blockEntity = this.level.getBlockEntity(blockPos);
-		if (!(blockEntity instanceof SignBlockEntity)) {
+		BlockEntity blockState = this.level.getBlockEntity(blockPos);
+		if (blockState instanceof SignBlockEntity signBlockEntity) {
+			this.minecraft.player.openTextEdit(signBlockEntity, clientboundOpenSignEditorPacket.isFrontText());
+		} else {
 			BlockState blockState = this.level.getBlockState(blockPos);
-			blockEntity = new SignBlockEntity(blockPos, blockState);
-			blockEntity.setLevel(this.level);
+			SignBlockEntity signBlockEntity2 = new SignBlockEntity(blockPos, blockState);
+			signBlockEntity2.setLevel(this.level);
+			this.minecraft.player.openTextEdit(signBlockEntity2, clientboundOpenSignEditorPacket.isFrontText());
 		}
-
-		this.minecraft.player.openTextEdit((SignBlockEntity)blockEntity);
 	}
 
 	@Override

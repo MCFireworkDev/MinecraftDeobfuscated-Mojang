@@ -15,6 +15,7 @@ import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Vec3i;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.StructureManager;
@@ -82,11 +83,12 @@ public class SinglePoolElement extends StructurePoolElement {
 		List<StructureTemplate.StructureBlockInfo> list = structureTemplate.filterBlocks(
 			blockPos, new StructurePlaceSettings().setRotation(rotation), Blocks.STRUCTURE_BLOCK, bl
 		);
-		List<StructureTemplate.StructureBlockInfo> list2 = Lists.<StructureTemplate.StructureBlockInfo>newArrayList();
+		List<StructureTemplate.StructureBlockInfo> list2 = Lists.newArrayList();
 
 		for(StructureTemplate.StructureBlockInfo structureBlockInfo : list) {
-			if (structureBlockInfo.nbt != null) {
-				StructureMode structureMode = StructureMode.valueOf(structureBlockInfo.nbt.getString("mode"));
+			CompoundTag compoundTag = structureBlockInfo.nbt();
+			if (compoundTag != null) {
+				StructureMode structureMode = StructureMode.valueOf(compoundTag.getString("mode"));
 				if (structureMode == StructureMode.DATA) {
 					list2.add(structureBlockInfo);
 				}

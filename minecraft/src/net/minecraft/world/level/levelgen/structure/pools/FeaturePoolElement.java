@@ -57,7 +57,7 @@ public class FeaturePoolElement extends StructurePoolElement {
 	public List<StructureTemplate.StructureBlockInfo> getShuffledJigsawBlocks(
 		StructureTemplateManager structureTemplateManager, BlockPos blockPos, Rotation rotation, RandomSource randomSource
 	) {
-		List<StructureTemplate.StructureBlockInfo> list = Lists.<StructureTemplate.StructureBlockInfo>newArrayList();
+		List<StructureTemplate.StructureBlockInfo> list = Lists.newArrayList();
 		list.add(
 			new StructureTemplate.StructureBlockInfo(
 				blockPos,

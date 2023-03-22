@@ -44,7 +44,6 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.npc.InventoryCarrier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ProjectileWeaponItem;
@@ -156,13 +155,11 @@ public class Piglin extends AbstractPiglin implements CrossbowAttackMob, Invento
 	@Override
 	protected void dropCustomDeathLoot(DamageSource damageSource, int i, boolean bl) {
 		super.dropCustomDeathLoot(damageSource, i, bl);
-		if (this.getLevel().enabledFeatures().contains(FeatureFlags.UPDATE_1_20)) {
-			Entity entity = damageSource.getEntity();
-			if (entity instanceof Creeper creeper && creeper.canDropMobsSkull()) {
-				ItemStack itemStack = new ItemStack(Items.PIGLIN_HEAD);
-				creeper.increaseDroppedSkulls();
-				this.spawnAtLocation(itemStack);
-			}
+		Entity entity = damageSource.getEntity();
+		if (entity instanceof Creeper creeper && creeper.canDropMobsSkull()) {
+			ItemStack itemStack = new ItemStack(Items.PIGLIN_HEAD);
+			creeper.increaseDroppedSkulls();
+			this.spawnAtLocation(itemStack);
 		}
 
 		this.inventory.removeAllItems().forEach(this::spawnAtLocation);
