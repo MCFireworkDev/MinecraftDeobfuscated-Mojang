@@ -708,20 +708,7 @@ public class VanillaEntityLoot extends EntityLootSubProvider {
 						)
 				)
 		);
-		this.add(
-			EntityType.SNIFFER,
-			LootTable.lootTable()
-				.withPool(
-					LootPool.lootPool()
-						.setRolls(ConstantValue.exactly(1.0F))
-						.add(
-							((LootPoolSingletonContainer.Builder)LootItem.lootTableItem(Items.MOSS_BLOCK)
-									.apply(SetItemCountFunction.setCount(ConstantValue.exactly(1.0F)))
-									.when(LootItemKilledByPlayerCondition.killedByPlayer()))
-								.when(LootItemRandomChanceWithLootingCondition.randomChanceAndLootingBoost(0.1F, 0.02F))
-						)
-				)
-		);
+		this.add(EntityType.SNIFFER, LootTable.lootTable());
 		this.add(
 			EntityType.SNOW_GOLEM,
 			LootTable.lootTable()

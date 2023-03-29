@@ -1,17 +1,24 @@
 package net.minecraft.world.level.block.entity;
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.logging.LogUtils;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
+import net.minecraft.commands.CommandSource;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.FilteredText;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -19,6 +26,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
 public class SignBlockEntity extends BlockEntity {
@@ -44,12 +53,13 @@ public class SignBlockEntity extends BlockEntity {
 	}
 
 	public boolean isFacingFrontText(Player player) {
-		Block d = this.getBlockState().getBlock();
-		if (d instanceof SignBlock signBlock) {
-			double dx = player.getX() - ((double)this.getBlockPos().getX() + 0.5);
-			double e = player.getZ() - ((double)this.getBlockPos().getZ() + 0.5);
+		Block vec3 = this.getBlockState().getBlock();
+		if (vec3 instanceof SignBlock signBlock) {
+			Vec3 vec3x = signBlock.getSignHitboxCenterPosition(this.getBlockState());
+			double d = player.getX() - ((double)this.getBlockPos().getX() + vec3x.x);
+			double e = player.getZ() - ((double)this.getBlockPos().getZ() + vec3x.z);
 			float f = signBlock.getYRotationDegrees(this.getBlockState());
-			float g = (float)(Mth.atan2(e, dx) * 180.0F / (float)Math.PI) - 90.0F;
+			float g = (float)(Mth.atan2(e, d) * 180.0F / (float)Math.PI) - 90.0F;
 			return Mth.degreesDifferenceAbs(f, g) <= 90.0F;
 		} else {
 			return false;
@@ -95,17 +105,39 @@ public class SignBlockEntity extends BlockEntity {
 			SignText.DIRECT_CODEC
 				.parse(NbtOps.INSTANCE, compoundTag.getCompound("front_text"))
 				.resultOrPartial(LOGGER::error)
-				.ifPresent(signText -> this.frontText = signText);
+				.ifPresent(signText -> this.frontText = this.loadLines(signText));
 		}
 
 		if (compoundTag.contains("back_text")) {
 			SignText.DIRECT_CODEC
 				.parse(NbtOps.INSTANCE, compoundTag.getCompound("back_text"))
 				.resultOrPartial(LOGGER::error)
-				.ifPresent(signText -> this.backText = signText);
+				.ifPresent(signText -> this.backText = this.loadLines(signText));
 		}
 
 		this.isWaxed = compoundTag.getBoolean("is_waxed");
+	}
+
+	private SignText loadLines(SignText signText) {
+		for(int i = 0; i < 4; ++i) {
+			Component component = this.loadLine(signText.getMessage(i, false));
+			Component component2 = this.loadLine(signText.getMessage(i, true));
+			signText = signText.setMessage(i, component, component2);
+		}
+
+		return signText;
+	}
+
+	private Component loadLine(Component component) {
+		Level var3 = this.level;
+		if (var3 instanceof ServerLevel serverLevel) {
+			try {
+				return ComponentUtils.updateForEntity(createCommandSourceStack(null, serverLevel, this.worldPosition), component, null, 0);
+			} catch (CommandSyntaxException var4) {
+			}
+		}
+
+		return component;
 	}
 
 	public void updateSignText(Player player, boolean bl, List<FilteredText> list) {
@@ -157,6 +189,33 @@ public class SignBlockEntity extends BlockEntity {
 		} else {
 			return false;
 		}
+	}
+
+	public boolean canExecuteClickCommands(boolean bl, Player player) {
+		return this.isWaxed() && this.getText(bl).hasAnyClickCommands(player);
+	}
+
+	public boolean executeClickCommandsIfPresent(ServerPlayer serverPlayer, ServerLevel serverLevel, BlockPos blockPos, boolean bl) {
+		boolean bl2 = false;
+
+		for(Component component : this.getText(bl).getMessages(serverPlayer.isTextFilteringEnabled())) {
+			Style style = component.getStyle();
+			ClickEvent clickEvent = style.getClickEvent();
+			if (clickEvent != null && clickEvent.getAction() == ClickEvent.Action.RUN_COMMAND) {
+				serverPlayer.getServer().getCommands().performPrefixedCommand(createCommandSourceStack(serverPlayer, serverLevel, blockPos), clickEvent.getValue());
+				bl2 = true;
+			}
+		}
+
+		return bl2;
+	}
+
+	private static CommandSourceStack createCommandSourceStack(@Nullable ServerPlayer serverPlayer, ServerLevel serverLevel, BlockPos blockPos) {
+		String string = serverPlayer == null ? "Sign" : serverPlayer.getName().getString();
+		Component component = (Component)(serverPlayer == null ? Component.literal("Sign") : serverPlayer.getDisplayName());
+		return new CommandSourceStack(
+			CommandSource.NULL, Vec3.atCenterOf(blockPos), Vec2.ZERO, serverLevel, 2, string, component, serverLevel.getServer(), serverPlayer
+		);
 	}
 
 	public ClientboundBlockEntityDataPacket getUpdatePacket() {

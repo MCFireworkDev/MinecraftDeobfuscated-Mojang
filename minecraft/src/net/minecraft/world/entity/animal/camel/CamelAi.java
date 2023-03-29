@@ -134,7 +134,7 @@ public class CamelAi {
 		@Override
 		protected void start(ServerLevel serverLevel, PathfinderMob pathfinderMob, long l) {
 			if (pathfinderMob instanceof Camel camel) {
-				camel.standUpPanic();
+				camel.standUpInstantly();
 			}
 
 			super.start(serverLevel, pathfinderMob, l);

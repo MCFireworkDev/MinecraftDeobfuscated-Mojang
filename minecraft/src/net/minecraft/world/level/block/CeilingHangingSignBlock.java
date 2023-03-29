@@ -10,7 +10,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.HangingSignItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -20,7 +20,6 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.HangingSignBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
-import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -67,13 +66,18 @@ public class CeilingHangingSignBlock extends SignBlock {
 		BlockEntity itemStack = level.getBlockEntity(blockPos);
 		if (itemStack instanceof SignBlockEntity signBlockEntity) {
 			ItemStack itemStackx = player.getItemInHand(interactionHand);
-			SignText signText = signBlockEntity.getTextFacingPlayer(player);
-			if (!signText.hasAnyClickCommands(player) && itemStackx.getItem() instanceof BlockItem) {
+			if (this.shouldTryToChainAnotherHangingSign(player, blockHitResult, signBlockEntity, itemStackx)) {
 				return InteractionResult.PASS;
 			}
 		}
 
 		return super.use(blockState, level, blockPos, player, interactionHand, blockHitResult);
+	}
+
+	private boolean shouldTryToChainAnotherHangingSign(Player player, BlockHitResult blockHitResult, SignBlockEntity signBlockEntity, ItemStack itemStack) {
+		return !signBlockEntity.canExecuteClickCommands(signBlockEntity.isFacingFrontText(player), player)
+			&& itemStack.getItem() instanceof HangingSignItem
+			&& blockHitResult.getDirection().equals(Direction.DOWN);
 	}
 
 	@Override
