@@ -1581,7 +1581,7 @@ public abstract class Player extends LivingEntity {
 	}
 
 	private float getSpeedModifier() {
-		if (!this.transform.canBreatheInAir() && !this.isInWater()) {
+		if (!this.getTransform().canBreatheInAir() && !this.isInWater()) {
 			return 0.0F;
 		} else {
 			float f = Rules.MORROWIND_POWER_PLAYER_MOVEMENT.get() ? 6.0F : 1.0F;
@@ -1868,7 +1868,7 @@ public abstract class Player extends LivingEntity {
 
 	@Override
 	public String getSkinName() {
-		return ((GameProfile)Objects.requireNonNullElse(this.transform.playerSkin(), this.getGameProfile())).getName();
+		return ((GameProfile)Objects.requireNonNullElse(this.getTransform().playerSkin(), this.getGameProfile())).getName();
 	}
 
 	public PlayerEnderChestContainer getEnderChestInventory() {
@@ -1967,7 +1967,8 @@ public abstract class Player extends LivingEntity {
 
 	@Override
 	public boolean isSwimming() {
-		if (this.transform.entity() != null && !this.transform.entity().isPushedByFluid() && this.isInWater()) {
+		Entity entity = this.getTransform().entity();
+		if (entity != null && !entity.isPushedByFluid() && this.isInWater()) {
 			return true;
 		} else {
 			return !this.abilities.flying && !this.isSpectator() && super.isSwimming();
@@ -1978,8 +1979,9 @@ public abstract class Player extends LivingEntity {
 
 	@Override
 	public boolean isPushedByFluid() {
-		if (this.transform.entity() != null) {
-			return this.transform.entity().isPushedByFluid();
+		Entity entity = this.getTransform().entity();
+		if (entity != null) {
+			return entity.isPushedByFluid();
 		} else {
 			return !this.abilities.flying;
 		}
@@ -2138,7 +2140,7 @@ public abstract class Player extends LivingEntity {
 	@Override
 	public EntityDimensions getDimensions(Pose pose) {
 		EntityDimensions entityDimensions = (EntityDimensions)POSES.getOrDefault(pose, STANDING_DIMENSIONS);
-		return this.transform.getDimensions(pose, entityDimensions);
+		return this.getTransform().getDimensions(pose, entityDimensions);
 	}
 
 	@Override
@@ -2256,7 +2258,7 @@ public abstract class Player extends LivingEntity {
 
 	@Override
 	protected float getFlyingSpeed() {
-		if (!this.transform.canBreatheInAir() && !this.isInWater()) {
+		if (!this.getTransform().canBreatheInAir() && !this.isInWater()) {
 			return 0.01F;
 		} else if (this.abilities.flying && !this.isPassenger()) {
 			return this.isSprinting() ? this.abilities.getFlyingSpeed() * 2.0F : this.abilities.getFlyingSpeed();
