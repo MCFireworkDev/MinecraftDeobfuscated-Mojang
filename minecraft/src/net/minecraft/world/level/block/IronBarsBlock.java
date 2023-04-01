@@ -2,6 +2,7 @@ package net.minecraft.world.level.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -90,6 +91,22 @@ public class IronBarsBlock extends CrossCollisionBlock {
 
 	public final boolean attachsTo(BlockState blockState, boolean bl) {
 		return !isExceptionForConnection(blockState) && bl || blockState.getBlock() instanceof IronBarsBlock || blockState.is(BlockTags.WALLS);
+	}
+
+	@Override
+	public boolean canAirPass(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Direction direction) {
+		return blockState.is(Blocks.GLASS_PANE)
+			? canAirPassThroughGlassPane(blockState, serverLevel, blockPos, direction)
+			: super.canAirPass(blockState, serverLevel, blockPos, direction);
+	}
+
+	public static boolean canAirPassThroughGlassPane(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, Direction direction) {
+		if (direction.getAxis() == Direction.Axis.Y) {
+			return !blockState.getValue(WATERLOGGED);
+		} else {
+			return !blockState.getValue((Property)PROPERTY_BY_DIRECTION.get(direction.getClockWise()))
+				|| !blockState.getValue((Property)PROPERTY_BY_DIRECTION.get(direction.getCounterClockWise()));
+		}
 	}
 
 	@Override

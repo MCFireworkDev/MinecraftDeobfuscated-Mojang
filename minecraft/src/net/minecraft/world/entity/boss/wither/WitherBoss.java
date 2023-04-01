@@ -436,7 +436,7 @@ public class WitherBoss extends Monster implements PowerableMob, RangedAttackMob
 	}
 
 	@Override
-	public boolean hurt(DamageSource damageSource, float f) {
+	protected boolean hurtInternal(DamageSource damageSource, float f) {
 		if (this.isInvulnerableTo(damageSource)) {
 			return false;
 		} else if (damageSource.is(DamageTypeTags.WITHER_IMMUNE_TO) || damageSource.getEntity() instanceof WitherBoss) {
@@ -463,7 +463,7 @@ public class WitherBoss extends Monster implements PowerableMob, RangedAttackMob
 					this.idleHeadUpdates[i] += 3;
 				}
 
-				return super.hurt(damageSource, f);
+				return super.hurtInternal(damageSource, f);
 			}
 		}
 	}

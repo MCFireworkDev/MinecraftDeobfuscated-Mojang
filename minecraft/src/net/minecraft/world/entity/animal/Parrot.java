@@ -159,6 +159,11 @@ public class Parrot extends ShoulderRidingEntity implements VariantHolder<Parrot
 	}
 
 	@Override
+	public boolean canTransformFly() {
+		return true;
+	}
+
+	@Override
 	protected void registerGoals() {
 		this.goalSelector.addGoal(0, new PanicGoal(this, 1.25));
 		this.goalSelector.addGoal(0, new FloatGoal(this));
@@ -406,7 +411,7 @@ public class Parrot extends ShoulderRidingEntity implements VariantHolder<Parrot
 	}
 
 	@Override
-	public boolean hurt(DamageSource damageSource, float f) {
+	protected boolean hurtInternal(DamageSource damageSource, float f) {
 		if (this.isInvulnerableTo(damageSource)) {
 			return false;
 		} else {
@@ -414,7 +419,7 @@ public class Parrot extends ShoulderRidingEntity implements VariantHolder<Parrot
 				this.setOrderedToSit(false);
 			}
 
-			return super.hurt(damageSource, f);
+			return super.hurtInternal(damageSource, f);
 		}
 	}
 

@@ -21,7 +21,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 
 public class Style {
-	public static final Style EMPTY = new Style(null, null, null, null, null, null, null, null, null, null);
+	public static final Style EMPTY = new Style(null, null, null, null, null, null, null, null, null, null, null);
 	public static final Codec<Style> FORMATTING_CODEC = RecordCodecBuilder.create(
 		instance -> instance.group(
 					TextColor.CODEC.optionalFieldOf("color").forGetter(style -> Optional.ofNullable(style.color)),
@@ -31,7 +31,8 @@ public class Style {
 					Codec.BOOL.optionalFieldOf("strikethrough").forGetter(style -> Optional.ofNullable(style.strikethrough)),
 					Codec.BOOL.optionalFieldOf("obfuscated").forGetter(style -> Optional.ofNullable(style.obfuscated)),
 					Codec.STRING.optionalFieldOf("insertion").forGetter(style -> Optional.ofNullable(style.insertion)),
-					ResourceLocation.CODEC.optionalFieldOf("font").forGetter(style -> Optional.ofNullable(style.font))
+					ResourceLocation.CODEC.optionalFieldOf("font").forGetter(style -> Optional.ofNullable(style.font)),
+					Codec.BOOL.optionalFieldOf("reversed").forGetter(style -> Optional.ofNullable(style.reversed))
 				)
 				.apply(instance, Style::create)
 	);
@@ -56,6 +57,8 @@ public class Style {
 	final String insertion;
 	@Nullable
 	final ResourceLocation font;
+	@Nullable
+	final Boolean reversed;
 
 	private static Style create(
 		Optional<TextColor> optional,
@@ -65,7 +68,8 @@ public class Style {
 		Optional<Boolean> optional5,
 		Optional<Boolean> optional6,
 		Optional<String> optional7,
-		Optional<ResourceLocation> optional8
+		Optional<ResourceLocation> optional8,
+		Optional<Boolean> optional9
 	) {
 		return new Style(
 			(TextColor)optional.orElse(null),
@@ -77,7 +81,8 @@ public class Style {
 			null,
 			null,
 			(String)optional7.orElse(null),
-			(ResourceLocation)optional8.orElse(null)
+			(ResourceLocation)optional8.orElse(null),
+			(Boolean)optional9.orElse(null)
 		);
 	}
 
@@ -91,7 +96,8 @@ public class Style {
 		@Nullable ClickEvent clickEvent,
 		@Nullable HoverEvent hoverEvent,
 		@Nullable String string,
-		@Nullable ResourceLocation resourceLocation
+		@Nullable ResourceLocation resourceLocation,
+		@Nullable Boolean boolean6
 	) {
 		this.color = textColor;
 		this.bold = boolean_;
@@ -103,6 +109,7 @@ public class Style {
 		this.hoverEvent = hoverEvent;
 		this.insertion = string;
 		this.font = resourceLocation;
+		this.reversed = boolean6;
 	}
 
 	@Nullable
@@ -130,6 +137,10 @@ public class Style {
 		return this.obfuscated == Boolean.TRUE;
 	}
 
+	public boolean isReversed() {
+		return this.reversed == Boolean.TRUE;
+	}
+
 	public boolean isEmpty() {
 		return this == EMPTY;
 	}
@@ -155,7 +166,17 @@ public class Style {
 
 	public Style withColor(@Nullable TextColor textColor) {
 		return new Style(
-			textColor, this.bold, this.italic, this.underlined, this.strikethrough, this.obfuscated, this.clickEvent, this.hoverEvent, this.insertion, this.font
+			textColor,
+			this.bold,
+			this.italic,
+			this.underlined,
+			this.strikethrough,
+			this.obfuscated,
+			this.clickEvent,
+			this.hoverEvent,
+			this.insertion,
+			this.font,
+			this.reversed
 		);
 	}
 
@@ -169,47 +190,119 @@ public class Style {
 
 	public Style withBold(@Nullable Boolean boolean_) {
 		return new Style(
-			this.color, boolean_, this.italic, this.underlined, this.strikethrough, this.obfuscated, this.clickEvent, this.hoverEvent, this.insertion, this.font
+			this.color,
+			boolean_,
+			this.italic,
+			this.underlined,
+			this.strikethrough,
+			this.obfuscated,
+			this.clickEvent,
+			this.hoverEvent,
+			this.insertion,
+			this.font,
+			this.reversed
 		);
 	}
 
 	public Style withItalic(@Nullable Boolean boolean_) {
 		return new Style(
-			this.color, this.bold, boolean_, this.underlined, this.strikethrough, this.obfuscated, this.clickEvent, this.hoverEvent, this.insertion, this.font
+			this.color,
+			this.bold,
+			boolean_,
+			this.underlined,
+			this.strikethrough,
+			this.obfuscated,
+			this.clickEvent,
+			this.hoverEvent,
+			this.insertion,
+			this.font,
+			this.reversed
 		);
 	}
 
 	public Style withUnderlined(@Nullable Boolean boolean_) {
 		return new Style(
-			this.color, this.bold, this.italic, boolean_, this.strikethrough, this.obfuscated, this.clickEvent, this.hoverEvent, this.insertion, this.font
+			this.color,
+			this.bold,
+			this.italic,
+			boolean_,
+			this.strikethrough,
+			this.obfuscated,
+			this.clickEvent,
+			this.hoverEvent,
+			this.insertion,
+			this.font,
+			this.reversed
 		);
 	}
 
 	public Style withStrikethrough(@Nullable Boolean boolean_) {
-		return new Style(this.color, this.bold, this.italic, this.underlined, boolean_, this.obfuscated, this.clickEvent, this.hoverEvent, this.insertion, this.font);
+		return new Style(
+			this.color, this.bold, this.italic, this.underlined, boolean_, this.obfuscated, this.clickEvent, this.hoverEvent, this.insertion, this.font, this.reversed
+		);
 	}
 
 	public Style withObfuscated(@Nullable Boolean boolean_) {
 		return new Style(
-			this.color, this.bold, this.italic, this.underlined, this.strikethrough, boolean_, this.clickEvent, this.hoverEvent, this.insertion, this.font
+			this.color,
+			this.bold,
+			this.italic,
+			this.underlined,
+			this.strikethrough,
+			boolean_,
+			this.clickEvent,
+			this.hoverEvent,
+			this.insertion,
+			this.font,
+			this.reversed
 		);
 	}
 
 	public Style withClickEvent(@Nullable ClickEvent clickEvent) {
 		return new Style(
-			this.color, this.bold, this.italic, this.underlined, this.strikethrough, this.obfuscated, clickEvent, this.hoverEvent, this.insertion, this.font
+			this.color,
+			this.bold,
+			this.italic,
+			this.underlined,
+			this.strikethrough,
+			this.obfuscated,
+			clickEvent,
+			this.hoverEvent,
+			this.insertion,
+			this.font,
+			this.reversed
 		);
 	}
 
 	public Style withHoverEvent(@Nullable HoverEvent hoverEvent) {
 		return new Style(
-			this.color, this.bold, this.italic, this.underlined, this.strikethrough, this.obfuscated, this.clickEvent, hoverEvent, this.insertion, this.font
+			this.color,
+			this.bold,
+			this.italic,
+			this.underlined,
+			this.strikethrough,
+			this.obfuscated,
+			this.clickEvent,
+			hoverEvent,
+			this.insertion,
+			this.font,
+			this.reversed
 		);
 	}
 
 	public Style withInsertion(@Nullable String string) {
 		return new Style(
-			this.color, this.bold, this.italic, this.underlined, this.strikethrough, this.obfuscated, this.clickEvent, this.hoverEvent, string, this.font
+			this.color,
+			this.bold,
+			this.italic,
+			this.underlined,
+			this.strikethrough,
+			this.obfuscated,
+			this.clickEvent,
+			this.hoverEvent,
+			string,
+			this.font,
+			this.reversed
 		);
 	}
 
@@ -224,7 +317,24 @@ public class Style {
 			this.clickEvent,
 			this.hoverEvent,
 			this.insertion,
-			resourceLocation
+			resourceLocation,
+			this.reversed
+		);
+	}
+
+	public Style withReversed(@Nullable Boolean boolean_) {
+		return new Style(
+			this.color,
+			this.bold,
+			this.italic,
+			this.underlined,
+			this.strikethrough,
+			this.obfuscated,
+			this.clickEvent,
+			this.hoverEvent,
+			this.insertion,
+			this.font,
+			boolean_
 		);
 	}
 
@@ -257,7 +367,7 @@ public class Style {
 				textColor = TextColor.fromLegacyFormat(chatFormatting);
 		}
 
-		return new Style(textColor, boolean_, boolean2, boolean4, boolean3, boolean5, this.clickEvent, this.hoverEvent, this.insertion, this.font);
+		return new Style(textColor, boolean_, boolean2, boolean4, boolean3, boolean5, this.clickEvent, this.hoverEvent, this.insertion, this.font, this.reversed);
 	}
 
 	public Style applyLegacyFormat(ChatFormatting chatFormatting) {
@@ -294,7 +404,7 @@ public class Style {
 				textColor = TextColor.fromLegacyFormat(chatFormatting);
 		}
 
-		return new Style(textColor, boolean_, boolean2, boolean4, boolean3, boolean5, this.clickEvent, this.hoverEvent, this.insertion, this.font);
+		return new Style(textColor, boolean_, boolean2, boolean4, boolean3, boolean5, this.clickEvent, this.hoverEvent, this.insertion, this.font, this.reversed);
 	}
 
 	public Style applyFormats(ChatFormatting... chatFormattings) {
@@ -329,7 +439,7 @@ public class Style {
 			}
 		}
 
-		return new Style(textColor, boolean_, boolean2, boolean4, boolean3, boolean5, this.clickEvent, this.hoverEvent, this.insertion, this.font);
+		return new Style(textColor, boolean_, boolean2, boolean4, boolean3, boolean5, this.clickEvent, this.hoverEvent, this.insertion, this.font, this.reversed);
 	}
 
 	public Style applyTo(Style style) {
@@ -348,7 +458,8 @@ public class Style {
 					this.clickEvent != null ? this.clickEvent : style.clickEvent,
 					this.hoverEvent != null ? this.hoverEvent : style.hoverEvent,
 					this.insertion != null ? this.insertion : style.insertion,
-					this.font != null ? this.font : style.font
+					this.font != null ? this.font : style.font,
+					this.reversed != null ? this.reversed : style.reversed
 				);
 		}
 	}
@@ -399,6 +510,7 @@ public class Style {
 		lv.addValueString("hoverEvent", this.hoverEvent);
 		lv.addValueString("insertion", this.insertion);
 		lv.addValueString("font", this.font);
+		lv.addValueString("reversed", this.reversed);
 		stringBuilder.append("}");
 		return stringBuilder.toString();
 	}
@@ -419,13 +531,16 @@ public class Style {
 				&& Objects.equals(this.getClickEvent(), style.getClickEvent())
 				&& Objects.equals(this.getHoverEvent(), style.getHoverEvent())
 				&& Objects.equals(this.getInsertion(), style.getInsertion())
-				&& Objects.equals(this.getFont(), style.getFont());
+				&& Objects.equals(this.getFont(), style.getFont())
+				&& this.isReversed() == style.isReversed();
 		}
 	}
 
 	public int hashCode() {
 		return Objects.hash(
-			new Object[]{this.color, this.bold, this.italic, this.underlined, this.strikethrough, this.obfuscated, this.clickEvent, this.hoverEvent, this.insertion}
+			new Object[]{
+				this.color, this.bold, this.italic, this.underlined, this.strikethrough, this.obfuscated, this.clickEvent, this.hoverEvent, this.insertion, this.reversed
+			}
 		);
 	}
 
@@ -447,7 +562,8 @@ public class Style {
 					ClickEvent clickEvent = getClickEvent(jsonObject);
 					HoverEvent hoverEvent = getHoverEvent(jsonObject);
 					ResourceLocation resourceLocation = getFont(jsonObject);
-					return new Style(textColor, boolean_, boolean2, boolean3, boolean4, boolean5, clickEvent, hoverEvent, string, resourceLocation);
+					Boolean boolean6 = getOptionalFlag(jsonObject, "reversed");
+					return new Style(textColor, boolean_, boolean2, boolean3, boolean4, boolean5, clickEvent, hoverEvent, string, resourceLocation, boolean6);
 				}
 			} else {
 				return null;
@@ -564,6 +680,10 @@ public class Style {
 
 				if (style.font != null) {
 					jsonObject.addProperty("font", style.font.toString());
+				}
+
+				if (style.reversed != null) {
+					jsonObject.addProperty("reversed", style.reversed);
 				}
 
 				return jsonObject;

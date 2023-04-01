@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.Map.Entry;
@@ -727,12 +728,12 @@ public class Util {
 		return objectArrayList2;
 	}
 
-	public static <T> void shuffle(ObjectArrayList<T> objectArrayList, RandomSource randomSource) {
-		int i = objectArrayList.size();
+	public static <T> void shuffle(List<T> list, RandomSource randomSource) {
+		int i = list.size();
 
 		for(int j = i; j > 1; --j) {
 			int k = randomSource.nextInt(j);
-			objectArrayList.set(j - 1, objectArrayList.set(k, objectArrayList.get(j - 1)));
+			list.set(j - 1, list.set(k, list.get(j - 1)));
 		}
 	}
 
@@ -784,6 +785,28 @@ public class Util {
 			throw (Exception)function.apply(((PartialResult)optional.get()).message());
 		} else {
 			return (T)dataResult.result().orElseThrow();
+		}
+	}
+
+	public static <T> int calculatePrefixSize(Iterable<? extends List<T>> iterable) {
+		Iterator<? extends List<T>> iterator = iterable.iterator();
+		if (!iterator.hasNext()) {
+			return 0;
+		} else {
+			List<T> list = (List)iterator.next();
+
+			int i;
+			int j;
+			for(i = list.size(); iterator.hasNext(); i = j) {
+				List<T> list2 = (List)iterator.next();
+				j = 0;
+
+				while(j < Math.min(list2.size(), i) && Objects.equals(list2.get(j), list.get(j))) {
+					++j;
+				}
+			}
+
+			return i;
 		}
 	}
 

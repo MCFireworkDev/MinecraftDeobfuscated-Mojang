@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.objects.Object2DoubleArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -68,16 +69,20 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.voting.rules.Rules;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageSources;
+import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.transform.EntityTransform;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ProtectionEnchantment;
 import net.minecraft.world.level.BlockGetter;
@@ -98,6 +103,7 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.EntityAccess;
 import net.minecraft.world.level.entity.EntityInLevelCallback;
@@ -140,6 +146,8 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 	private static final double LAVA_FAST_FLOW_SCALE = 0.007;
 	private static final double LAVA_SLOW_FLOW_SCALE = 0.0023333333333333335;
 	public static final String UUID_TAG = "UUID";
+	public static final int MOON_HEIGHT = 700;
+	public static final int FLY_ME_TO_THE_MOON_BUT_PLEASE_NOT_EVERY_TICK_BACK_AND_FORTH_TIME_LIMIT = 200;
 	private static double viewScale = 1.0;
 	private final EntityType<?> type;
 	private int id = ENTITY_COUNTER.incrementAndGet();
@@ -212,10 +220,10 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 	private static final EntityDataAccessor<Integer> DATA_TICKS_FROZEN = SynchedEntityData.defineId(Entity.class, EntityDataSerializers.INT);
 	private EntityInLevelCallback levelCallback = EntityInLevelCallback.NULL;
 	private final VecDeltaCodec packetPositionCodec = new VecDeltaCodec();
-	public boolean noCulling;
+	private boolean noCulling;
 	public boolean hasImpulse;
 	private int portalCooldown;
-	protected boolean isInsidePortal;
+	public Entity.InPortal inPortal = Entity.InPortal.NO;
 	protected int portalTime;
 	protected BlockPos portalEntrancePos;
 	private boolean invulnerable;
@@ -235,6 +243,11 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 	private boolean hasVisualFire;
 	@Nullable
 	private BlockState feetBlockState = null;
+	private int timeSinceLastMoonTeleport = 0;
+	double deltaYLastTick = 0.0;
+	private static final EquipmentSlot[] COPY_SLOTS = EquipmentSlot.values();
+	@Nullable
+	public Component transformDisplayName;
 
 	public Entity(EntityType<?> entityType, Level level) {
 		this.type = entityType;
@@ -390,6 +403,10 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		return this.dimensions.makeBoundingBox(this.position);
 	}
 
+	public EntityDimensions getCurrentDimensions() {
+		return this.dimensions;
+	}
+
 	protected void reapplyPosition() {
 		this.setPos(this.position.x, this.position.y, this.position.z);
 	}
@@ -412,6 +429,12 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		this.baseTick();
 	}
 
+	public void postTick() {
+	}
+
+	public void transformedTick(EntityTransform entityTransform, LivingEntity livingEntity) {
+	}
+
 	public void baseTick() {
 		this.level.getProfiler().push("entityBaseTick");
 		this.feetBlockState = null;
@@ -427,6 +450,66 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		this.xRotO = this.getXRot();
 		this.yRotO = this.getYRot();
 		this.handleNetherPortal();
+		Level bee = this.level;
+		if (bee instanceof ServerLevel serverLevel && !this.isRemoved()) {
+			++this.timeSinceLastMoonTeleport;
+			label114:
+			if (this.canChangeDimensions() && this.getY() > 700.0 && this.timeSinceLastMoonTeleport > 200) {
+				if (Rules.BEELOONS.get() && this instanceof Bee beex && beex.isLeashed()) {
+					break label114;
+				}
+
+				this.timeSinceLastMoonTeleport = 0;
+				ServerLevel serverLevel2;
+				int i;
+				if (this.level.dimensionType().hasSkyLight()) {
+					serverLevel2 = serverLevel.getServer().getLevel(Level.MOON);
+					i = 600;
+				} else if (this.level.dimensionTypeId() == BuiltinDimensionTypes.MOON) {
+					serverLevel2 = serverLevel.getServer().overworld();
+					i = 650;
+				} else {
+					serverLevel2 = null;
+					i = 0;
+				}
+
+				if (serverLevel2 != null) {
+					int j = 0;
+					List<Bee> list = new ArrayList(2);
+					if (Rules.BEELOONS.get() && this instanceof ServerPlayer serverPlayer) {
+						List<Bee> list2 = serverPlayer.getBeeloons();
+						j = list2.size();
+
+						for(Bee bee2 : list2) {
+							bee2.dropLeash(true, false);
+							Bee bee3 = (Bee)bee2.teleportTo(serverLevel2, this.getX(), (double)(i + 2), this.getZ(), Set.of(), bee2.getYRot(), bee2.getXRot());
+							if (list.size() < 2) {
+								list.add(bee3);
+							}
+						}
+					}
+
+					this.teleportTo(serverLevel2, this.getX(), (double)i, this.getZ(), Set.of(), this.getYRot(), 90.0F);
+
+					for(Bee bee4 : list) {
+						bee4.setLeashedTo(this, true);
+					}
+
+					if (j > 2) {
+						ItemStack itemStack = new ItemStack(Items.LEAD, j - 2);
+						ServerPlayer serverPlayer2 = (ServerPlayer)this;
+						boolean bl = serverPlayer2.getInventory().add(itemStack);
+						if (!bl || !itemStack.isEmpty()) {
+							ItemEntity itemEntity = serverPlayer2.drop(itemStack, false);
+							if (itemEntity != null) {
+								itemEntity.setNoPickUpDelay();
+							}
+						}
+					}
+				}
+			}
+		}
+
 		if (this.canSpawnSprintParticle()) {
 			this.spawnSprintParticle();
 		}
@@ -617,7 +700,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 				}
 
 				if (this.onGround) {
-					block.stepOn(this.level, blockPos, blockState, this);
+					this.stepOnBlock(blockPos, blockState, block);
 				}
 
 				Entity.MovementEmission movementEmission = this.getMovementEmission();
@@ -642,6 +725,10 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 
 							if (movementEmission.emitsEvents()) {
 								this.level.gameEvent(GameEvent.STEP, this.position, GameEvent.Context.of(this, this.getBlockStateOn()));
+							}
+
+							if (this.canSpawnFootprintParticle()) {
+								this.spawnFootprintParticle();
 							}
 						} else if (this.isInWater()) {
 							this.nextStep = this.nextStep();
@@ -684,6 +771,14 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 				this.level.getProfiler().pop();
 			}
 		}
+	}
+
+	protected void stepOnBlock(BlockPos blockPos, BlockState blockState, Block block) {
+		block.stepOn(this.level, blockPos, blockState, this);
+	}
+
+	public Entity effectiveEntity() {
+		return this;
 	}
 
 	protected boolean isHorizontalCollisionMinor(Vec3 vec3) {
@@ -804,7 +899,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		return d;
 	}
 
-	private Vec3 collide(Vec3 vec3) {
+	protected Vec3 collide(Vec3 vec3) {
 		AABB aABB = this.getBoundingBox();
 		List<VoxelShape> list = this.level.getEntityCollisions(this, aABB.expandTowards(vec3));
 		Vec3 vec32 = vec3.lengthSqr() == 0.0 ? vec3 : collideBoundingBox(this, vec3, aABB, this.level, list);
@@ -940,19 +1035,20 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 
 	private void handleStepSounds(BlockPos blockPos, BlockState blockState) {
 		BlockPos blockPos2 = this.getPrimaryStepSoundBlockPos(blockPos);
-		if (this instanceof Player && !blockPos.equals(blockPos2)) {
+		Entity entity = this.effectiveEntity();
+		if (entity instanceof Player && !blockPos.equals(blockPos2)) {
 			BlockState blockState2 = this.level.getBlockState(blockPos2);
 			if (blockState2.is(BlockTags.COMBINATION_STEP_SOUND_BLOCKS)) {
-				this.playCombinationStepSounds(blockState2, blockState);
+				entity.playCombinationStepSounds(blockState2, blockState);
 			} else {
-				this.playStepSound(blockPos2, blockState2);
+				entity.playStepSound(blockPos2, blockState2);
 			}
 		} else {
-			this.playStepSound(blockPos, blockState);
+			entity.playStepSound(blockPos, blockState);
 		}
 
-		if (this.shouldPlayAmethystStepSound(blockState)) {
-			this.playAmethystStepSound();
+		if (entity.shouldPlayAmethystStepSound(blockState)) {
+			entity.playAmethystStepSound();
 		}
 	}
 
@@ -1036,8 +1132,16 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 
 	protected void checkFallDamage(double d, boolean bl, BlockState blockState, BlockPos blockPos) {
 		if (bl) {
-			if (this.fallDistance > 0.0F) {
-				blockState.getBlock().fallOn(this.level, blockState, blockPos, this, this.fallDistance);
+			boolean bl2 = this.level.dimensionTypeId() == BuiltinDimensionTypes.MOON;
+			boolean bl3 = Rules.LESS_GRAVITY.get();
+			boolean bl4 = bl2 == !bl3;
+			if (Rules.BIG_MOON_MODE.isBiggerThanNormal() && !bl2) {
+				bl4 = true;
+			}
+
+			double e = bl4 ? this.deltaYLastTick + this.deltaYLastTick * 5.0 : (double)this.fallDistance;
+			if (e > 0.0 && (this.deltaYLastTick < 0.0 || !Rules.BIG_MOON_MODE.isBiggerThanNormal())) {
+				blockState.getBlock().fallOn(this.level, blockState, blockPos, this, (float)e);
 				this.level.gameEvent(GameEvent.HIT_GROUND, this.position, GameEvent.Context.of(this, this.getBlockStateOn()));
 			}
 
@@ -1045,6 +1149,16 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		} else if (d < 0.0) {
 			this.fallDistance -= (float)d;
 		}
+
+		this.deltaYLastTick = this.getDeltaMovement().y;
+	}
+
+	protected float getGravity() {
+		return 0.04F;
+	}
+
+	protected float getEffectiveGravity() {
+		return this.getGravity() * (float)this.level.getGravity();
 	}
 
 	public boolean fireImmune() {
@@ -1190,6 +1304,10 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		return this.isSprinting() && !this.isInWater() && !this.isSpectator() && !this.isCrouching() && !this.isInLava() && this.isAlive();
 	}
 
+	public boolean canSpawnFootprintParticle() {
+		return false;
+	}
+
 	protected void spawnSprintParticle() {
 		int i = Mth.floor(this.getX());
 		int j = Mth.floor(this.getY() - 0.2F);
@@ -1209,6 +1327,10 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 					vec3.z * -4.0
 				);
 		}
+	}
+
+	protected void spawnFootprintParticle() {
+		this.level.addParticle(ParticleTypes.FOOTSTEP, this.getX(), this.getY() + 0.001, this.getZ(), (double)this.yRot, 0.0, 0.0);
 	}
 
 	public boolean isEyeInFluid(TagKey<Fluid> tagKey) {
@@ -1363,6 +1485,11 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 	}
 
 	public boolean hurt(DamageSource damageSource, float f) {
+		float g = Rules.DAMAGE_MODIFIER.get(damageSource.typeHolder());
+		return this.hurtInternal(damageSource, f * g);
+	}
+
+	protected boolean hurtInternal(DamageSource damageSource, float f) {
 		if (this.isInvulnerableTo(damageSource)) {
 			return false;
 		} else {
@@ -1738,8 +1865,13 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		}
 	}
 
+	public void turnIntoGold() {
+	}
+
 	public InteractionResult interact(Player player, InteractionHand interactionHand) {
-		return InteractionResult.PASS;
+		return !this.isVehicle() && Rules.RIDEABLE_ENTITIES.contains(this.type.builtInRegistryHolder().key()) && player.startRiding(this, true)
+			? InteractionResult.SUCCESS
+			: InteractionResult.PASS;
 	}
 
 	public boolean canCollideWith(Entity entity) {
@@ -1747,12 +1879,13 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 	}
 
 	public boolean canBeCollidedWith() {
-		return false;
+		return Rules.ENITITY_COLLISIONS.get();
 	}
 
 	public void rideTick() {
 		this.setDeltaMovement(Vec3.ZERO);
 		this.tick();
+		this.postTick();
 		if (this.isPassenger()) {
 			this.getVehicle().positionRider(this);
 		}
@@ -1924,7 +2057,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		return Vec3.directionFromRotation(this.getRotationVector());
 	}
 
-	public void handleInsidePortal(BlockPos blockPos) {
+	public void handleInsidePortal(BlockPos blockPos, boolean bl) {
 		if (this.isOnPortalCooldown()) {
 			this.setPortalCooldown();
 		} else {
@@ -1932,7 +2065,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 				this.portalEntrancePos = blockPos.immutable();
 			}
 
-			this.isInsidePortal = true;
+			this.inPortal = bl ? Entity.InPortal.OTHER : Entity.InPortal.YES;
 		}
 	}
 
@@ -1940,19 +2073,28 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		if (this.level instanceof ServerLevel) {
 			int i = this.getPortalWaitTime();
 			ServerLevel serverLevel = (ServerLevel)this.level;
-			if (this.isInsidePortal) {
-				MinecraftServer minecraftServer = serverLevel.getServer();
-				ResourceKey<Level> resourceKey = this.level.dimension() == Level.NETHER ? Level.OVERWORLD : Level.NETHER;
-				ServerLevel serverLevel2 = minecraftServer.getLevel(resourceKey);
-				if (serverLevel2 != null && minecraftServer.isNetherEnabled() && !this.isPassenger() && this.portalTime++ >= i) {
-					this.level.getProfiler().push("portal");
-					this.portalTime = i;
-					this.setPortalCooldown();
-					this.changeDimension(serverLevel2);
-					this.level.getProfiler().pop();
+			if (this.inPortal != Entity.InPortal.NO) {
+				if (this.inPortal == Entity.InPortal.OTHER) {
+					if (!this.isPassenger() && this.portalTime++ >= i) {
+						this.teleportTo(this.getX(), Math.min(650.0, this.getY() + 500.0), this.getZ());
+						this.portalTime = i;
+						this.setPortalCooldown();
+						this.sendSystemMessage(Component.translatable("rule.other_portal.oops"));
+					}
+				} else {
+					MinecraftServer minecraftServer = serverLevel.getServer();
+					ResourceKey<Level> resourceKey = this.level.dimension() == Level.NETHER ? Level.OVERWORLD : Level.NETHER;
+					ServerLevel serverLevel2 = minecraftServer.getLevel(resourceKey);
+					if (serverLevel2 != null && minecraftServer.isNetherEnabled() && !this.isPassenger() && this.portalTime++ >= i) {
+						this.level.getProfiler().push("portal");
+						this.portalTime = i;
+						this.setPortalCooldown();
+						this.changeDimension(serverLevel2);
+						this.level.getProfiler().pop();
+					}
 				}
 
-				this.isInsidePortal = false;
+				this.inPortal = Entity.InPortal.NO;
 			} else {
 				if (this.portalTime > 0) {
 					this.portalTime -= 4;
@@ -2513,8 +2655,10 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 
 	@Override
 	public Component getDisplayName() {
-		return PlayerTeam.formatNameForTeam(this.getTeam(), this.getName())
-			.withStyle(style -> style.withHoverEvent(this.createHoverEvent()).withInsertion(this.getStringUUID()));
+		return (Component)(this.transformDisplayName != null
+			? this.transformDisplayName
+			: PlayerTeam.formatNameForTeam(this.getTeam(), this.getName())
+				.withStyle(style -> style.withHoverEvent(this.createHoverEvent()).withInsertion(this.getStringUUID())));
 	}
 
 	public void setCustomName(@Nullable Component component) {
@@ -2549,27 +2693,27 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		}
 	}
 
-	public boolean teleportTo(ServerLevel serverLevel, double d, double e, double f, Set<RelativeMovement> set, float g, float h) {
+	public Entity teleportTo(ServerLevel serverLevel, double d, double e, double f, Set<RelativeMovement> set, float g, float h) {
 		float i = Mth.clamp(h, -90.0F, 90.0F);
 		if (serverLevel == this.level) {
 			this.moveTo(d, e, f, g, i);
 			this.teleportPassengers();
 			this.setYHeadRot(g);
+			return this;
 		} else {
 			this.unRide();
 			Entity entity = this.getType().create(serverLevel);
-			if (entity == null) {
-				return false;
+			if (entity != null) {
+				entity.restoreFrom(this);
+				entity.moveTo(d, e, f, g, i);
+				entity.setYHeadRot(g);
+				this.setRemoved(Entity.RemovalReason.CHANGED_DIMENSION);
+				serverLevel.addDuringTeleport(entity);
+				return entity;
+			} else {
+				return null;
 			}
-
-			entity.restoreFrom(this);
-			entity.moveTo(d, e, f, g, i);
-			entity.setYHeadRot(g);
-			this.setRemoved(Entity.RemovalReason.CHANGED_DIMENSION);
-			serverLevel.addDuringTeleport(entity);
 		}
-
-		return true;
 	}
 
 	public void dismountTo(double d, double e, double f) {
@@ -2596,7 +2740,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 	}
 
 	public boolean shouldShowName() {
-		return this.isCustomNameVisible();
+		return this.transformDisplayName != null || this.isCustomNameVisible();
 	}
 
 	public void onSyncedDataUpdated(List<SynchedEntityData.DataValue<?>> list) {
@@ -3224,6 +3368,22 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		this.maxUpStep = f;
 	}
 
+	public boolean noCulling() {
+		return this.noCulling;
+	}
+
+	public void setNoCulling(boolean bl) {
+		this.noCulling = bl;
+	}
+
+	public boolean canTransformFly() {
+		return false;
+	}
+
+	public String getSkinName() {
+		return this.getName().getString();
+	}
+
 	public final boolean isRemoved() {
 		return this.removalReason != null;
 	}
@@ -3282,6 +3442,48 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 
 	public DamageSources damageSources() {
 		return this.level.damageSources();
+	}
+
+	public void copyTransformedProperties(LivingEntity livingEntity) {
+		this.tickCount = livingEntity.tickCount;
+		this.setPos(livingEntity.getX(), livingEntity.getY(), livingEntity.getZ());
+		this.xOld = livingEntity.xOld;
+		this.yOld = livingEntity.yOld;
+		this.zOld = livingEntity.zOld;
+		this.xo = livingEntity.xo;
+		this.yo = livingEntity.yo;
+		this.zo = livingEntity.zo;
+		this.setYRot(livingEntity.getYRot());
+		this.setXRot(livingEntity.getXRot());
+		this.xRotO = livingEntity.xRotO;
+		this.yRotO = livingEntity.yRotO;
+		this.setYHeadRot(livingEntity.getYHeadRot());
+		this.setYBodyRot(livingEntity.yBodyRot);
+		this.setOnGround(livingEntity.isOnGround());
+		this.setShiftKeyDown(livingEntity.isShiftKeyDown());
+		this.setDeltaMovement(livingEntity.getDeltaMovement());
+		this.setPose(livingEntity.getPose());
+
+		for(EquipmentSlot equipmentSlot : COPY_SLOTS) {
+			this.setItemSlot(equipmentSlot, livingEntity.getItemBySlot(equipmentSlot));
+		}
+
+		this.wasTouchingWater = livingEntity.wasTouchingWater;
+		this.wasEyeInWater = livingEntity.wasEyeInWater;
+		this.vehicle = livingEntity.getVehicle();
+		this.passengers = ImmutableList.copyOf(livingEntity.getPassengers());
+		this.setRemainingFireTicks(livingEntity.displayFireAnimation() ? 1 : -1);
+		if (livingEntity.shouldShowName()) {
+			this.transformDisplayName = livingEntity.getDisplayName();
+		} else {
+			this.transformDisplayName = null;
+		}
+	}
+
+	public static enum InPortal {
+		NO,
+		YES,
+		OTHER;
 	}
 
 	@FunctionalInterface

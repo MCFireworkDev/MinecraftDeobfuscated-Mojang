@@ -4,10 +4,13 @@ import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.voting.rules.Rules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Material;
 
@@ -49,10 +52,11 @@ public class SpongeBlock extends Block {
 			if (blockPos2.equals(blockPos)) {
 				return true;
 			} else {
+				TagKey<Fluid> tagKey = Rules.FIRE_SPONGE.get() ? FluidTags.LAVA : FluidTags.WATER;
 				BlockState blockState = level.getBlockState(blockPos2);
 				FluidState fluidState = level.getFluidState(blockPos2);
 				Material material = blockState.getMaterial();
-				if (!fluidState.is(FluidTags.WATER)) {
+				if (!fluidState.is(tagKey)) {
 					return false;
 				} else {
 					Block block = blockState.getBlock();

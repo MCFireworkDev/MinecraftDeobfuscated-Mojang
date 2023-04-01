@@ -555,6 +555,23 @@ public abstract class AbstractContainerMenu {
 		}
 	}
 
+	public void safeDropItem(Player player, ItemStack itemStack) {
+		label17:
+		if (player.isAlive()) {
+			if (player instanceof ServerPlayer serverPlayer && serverPlayer.hasDisconnected()) {
+				break label17;
+			}
+
+			if (player instanceof ServerPlayer) {
+				player.getInventory().placeItemBackInInventory(itemStack);
+			}
+
+			return;
+		}
+
+		player.drop(itemStack, false);
+	}
+
 	protected void clearContainer(Player player, Container container) {
 		if (!player.isAlive() || player instanceof ServerPlayer && ((ServerPlayer)player).hasDisconnected()) {
 			for(int i = 0; i < container.getContainerSize(); ++i) {
@@ -792,5 +809,8 @@ public abstract class AbstractContainerMenu {
 	public int incrementStateId() {
 		this.stateId = this.stateId + 1 & 32767;
 		return this.stateId;
+	}
+
+	public void tick(Level level) {
 	}
 }

@@ -403,4 +403,15 @@ public class ChestBlock extends AbstractChestBlock<ChestBlockEntity> implements 
 			((ChestBlockEntity)blockEntity).recheckOpen();
 		}
 	}
+
+	@Override
+	public boolean isStickyToNeighbour(
+		Level level, BlockPos blockPos, BlockState blockState, BlockPos blockPos2, BlockState blockState2, Direction direction, Direction direction2
+	) {
+		if (blockState2.is(this) && blockState.getValue(TYPE) != ChestType.SINGLE && blockState2.getValue(TYPE) != ChestType.SINGLE) {
+			return getConnectedDirection(blockState) == direction;
+		} else {
+			return false;
+		}
+	}
 }
