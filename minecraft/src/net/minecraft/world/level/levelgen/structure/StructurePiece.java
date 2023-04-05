@@ -402,7 +402,7 @@ public abstract class StructurePiece {
 
 	protected boolean isReplaceableByStructures(BlockState blockState) {
 		return blockState.isAir()
-			|| blockState.getMaterial().isLiquid()
+			|| blockState.liquid()
 			|| blockState.is(Blocks.GLOW_LICHEN)
 			|| blockState.is(Blocks.SEAGRASS)
 			|| blockState.is(Blocks.TALL_SEAGRASS);

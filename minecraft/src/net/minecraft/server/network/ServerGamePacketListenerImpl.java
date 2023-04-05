@@ -1717,7 +1717,6 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 		ServerLevel serverLevel = this.player.getLevel();
 		BlockPos blockPos = serverboundSignUpdatePacket.getPos();
 		if (serverLevel.hasChunkAt(blockPos)) {
-			BlockState blockState = serverLevel.getBlockState(blockPos);
 			BlockEntity blockEntity = serverLevel.getBlockEntity(blockPos);
 			if (!(blockEntity instanceof SignBlockEntity)) {
 				return;
@@ -1725,8 +1724,6 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
 
 			SignBlockEntity signBlockEntity = (SignBlockEntity)blockEntity;
 			signBlockEntity.updateSignText(this.player, serverboundSignUpdatePacket.isFrontText(), list);
-			signBlockEntity.setAllowedPlayerEditor(null);
-			serverLevel.sendBlockUpdated(blockPos, blockState, blockState, 3);
 		}
 	}
 

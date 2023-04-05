@@ -127,6 +127,7 @@ import net.minecraft.world.level.block.SculkShriekerBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.FluidState;
@@ -2710,8 +2711,8 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				}
 				break;
 			case 1010:
-				Item var63 = Item.byId(j);
-				if (var63 instanceof RecordItem recordItem) {
+				Item var73 = Item.byId(j);
+				if (var73 instanceof RecordItem recordItem) {
 					this.playStreamingMusic(recordItem.getSound(), blockPos);
 				}
 				break;
@@ -2855,7 +2856,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 						blockPos, SoundEvents.LAVA_EXTINGUISH, SoundSource.BLOCKS, 0.5F, 2.6F + (randomSource.nextFloat() - randomSource.nextFloat()) * 0.8F, false
 					);
 
-				for(int m = 0; m < 8; ++m) {
+				for(int z = 0; z < 8; ++z) {
 					this.level
 						.addParticle(
 							ParticleTypes.LARGE_SMOKE,
@@ -2874,21 +2875,21 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 						blockPos, SoundEvents.REDSTONE_TORCH_BURNOUT, SoundSource.BLOCKS, 0.5F, 2.6F + (randomSource.nextFloat() - randomSource.nextFloat()) * 0.8F, false
 					);
 
-				for(int m = 0; m < 5; ++m) {
-					double d = (double)blockPos.getX() + randomSource.nextDouble() * 0.6 + 0.2;
-					double e = (double)blockPos.getY() + randomSource.nextDouble() * 0.6 + 0.2;
-					double f = (double)blockPos.getZ() + randomSource.nextDouble() * 0.6 + 0.2;
-					this.level.addParticle(ParticleTypes.SMOKE, d, e, f, 0.0, 0.0, 0.0);
+				for(int z = 0; z < 5; ++z) {
+					double e = (double)blockPos.getX() + randomSource.nextDouble() * 0.6 + 0.2;
+					double f = (double)blockPos.getY() + randomSource.nextDouble() * 0.6 + 0.2;
+					double aa = (double)blockPos.getZ() + randomSource.nextDouble() * 0.6 + 0.2;
+					this.level.addParticle(ParticleTypes.SMOKE, e, f, aa, 0.0, 0.0, 0.0);
 				}
 				break;
 			case 1503:
 				this.level.playLocalSound(blockPos, SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.BLOCKS, 1.0F, 1.0F, false);
 
-				for(int m = 0; m < 16; ++m) {
-					double d = (double)blockPos.getX() + (5.0 + randomSource.nextDouble() * 6.0) / 16.0;
-					double e = (double)blockPos.getY() + 0.8125;
-					double f = (double)blockPos.getZ() + (5.0 + randomSource.nextDouble() * 6.0) / 16.0;
-					this.level.addParticle(ParticleTypes.SMOKE, d, e, f, 0.0, 0.0, 0.0);
+				for(int z = 0; z < 16; ++z) {
+					double e = (double)blockPos.getX() + (5.0 + randomSource.nextDouble() * 6.0) / 16.0;
+					double f = (double)blockPos.getY() + 0.8125;
+					double aa = (double)blockPos.getZ() + (5.0 + randomSource.nextDouble() * 6.0) / 16.0;
+					this.level.addParticle(ParticleTypes.SMOKE, e, f, aa, 0.0, 0.0, 0.0);
 				}
 				break;
 			case 1504:
@@ -3002,17 +3003,17 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 				BoneMealItem.addGrowthParticles(this.level, blockPos, j);
 				break;
 			case 2006:
-				for(int m = 0; m < 200; ++m) {
-					float ah = randomSource.nextFloat() * 4.0F;
-					float ai = randomSource.nextFloat() * (float) (Math.PI * 2);
-					double e = (double)(Mth.cos(ai) * ah);
-					double f = 0.01 + randomSource.nextDouble() * 0.5;
-					double aa = (double)(Mth.sin(ai) * ah);
+				for(int z = 0; z < 200; ++z) {
+					float am = randomSource.nextFloat() * 4.0F;
+					float aq = randomSource.nextFloat() * (float) (Math.PI * 2);
+					double f = (double)(Mth.cos(aq) * am);
+					double aa = 0.01 + randomSource.nextDouble() * 0.5;
+					double ab = (double)(Mth.sin(aq) * am);
 					Particle particle2 = this.addParticleInternal(
-						ParticleTypes.DRAGON_BREATH, false, (double)blockPos.getX() + e * 0.1, (double)blockPos.getY() + 0.3, (double)blockPos.getZ() + aa * 0.1, e, f, aa
+						ParticleTypes.DRAGON_BREATH, false, (double)blockPos.getX() + f * 0.1, (double)blockPos.getY() + 0.3, (double)blockPos.getZ() + ab * 0.1, f, aa, ab
 					);
 					if (particle2 != null) {
-						particle2.setPower(ah);
+						particle2.setPower(am);
 					}
 				}
 
@@ -3025,7 +3026,7 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 					.addParticle(ParticleTypes.EXPLOSION, (double)blockPos.getX() + 0.5, (double)blockPos.getY() + 0.5, (double)blockPos.getZ() + 0.5, 0.0, 0.0, 0.0);
 				break;
 			case 2009:
-				for(int m = 0; m < 8; ++m) {
+				for(int z = 0; z < 8; ++z) {
 					this.level
 						.addParticle(
 							ParticleTypes.CLOUD,
@@ -3140,22 +3141,26 @@ public class LevelRenderer implements ResourceManagerReloadListener, AutoCloseab
 						);
 				}
 
-				this.level
-					.playLocalSound(
-						(double)blockPos.getX() + 0.5,
-						(double)blockPos.getY() + SculkShriekerBlock.TOP_Y,
-						(double)blockPos.getZ() + 0.5,
-						SoundEvents.SCULK_SHRIEKER_SHRIEK,
-						SoundSource.BLOCKS,
-						2.0F,
-						0.6F + this.level.random.nextFloat() * 0.4F,
-						false
-					);
+				BlockState blockState3 = this.level.getBlockState(blockPos);
+				boolean bl2 = blockState3.hasProperty(BlockStateProperties.WATERLOGGED) && blockState3.getValue(BlockStateProperties.WATERLOGGED);
+				if (!bl2) {
+					this.level
+						.playLocalSound(
+							(double)blockPos.getX() + 0.5,
+							(double)blockPos.getY() + SculkShriekerBlock.TOP_Y,
+							(double)blockPos.getZ() + 0.5,
+							SoundEvents.SCULK_SHRIEKER_SHRIEK,
+							SoundSource.BLOCKS,
+							2.0F,
+							0.6F + this.level.random.nextFloat() * 0.4F,
+							false
+						);
+				}
 				break;
 			case 3008:
 				BlockState blockState2 = Block.stateById(j);
-				Block recordItem = blockState2.getBlock();
-				if (recordItem instanceof BrushableBlock brushableBlock) {
+				Block blockState3 = blockState2.getBlock();
+				if (blockState3 instanceof BrushableBlock brushableBlock) {
 					this.level.playLocalSound(blockPos, brushableBlock.getBrushCompletedSound(), SoundSource.PLAYERS, 1.0F, 1.0F, false);
 				}
 

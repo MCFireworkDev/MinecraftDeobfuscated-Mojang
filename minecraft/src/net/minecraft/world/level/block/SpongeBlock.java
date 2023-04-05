@@ -9,7 +9,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.Material;
 
 public class SpongeBlock extends Block {
 	public static final int MAX_DEPTH = 6;
@@ -51,7 +50,6 @@ public class SpongeBlock extends Block {
 			} else {
 				BlockState blockState = level.getBlockState(blockPos2);
 				FluidState fluidState = level.getFluidState(blockPos2);
-				Material material = blockState.getMaterial();
 				if (!fluidState.is(FluidTags.WATER)) {
 					return false;
 				} else {
@@ -63,7 +61,7 @@ public class SpongeBlock extends Block {
 					if (blockState.getBlock() instanceof LiquidBlock) {
 						level.setBlock(blockPos2, Blocks.AIR.defaultBlockState(), 3);
 					} else {
-						if (material != Material.WATER_PLANT && material != Material.REPLACEABLE_WATER_PLANT) {
+						if (!blockState.is(Blocks.KELP) && !blockState.is(Blocks.KELP_PLANT) && !blockState.is(Blocks.SEAGRASS) && !blockState.is(Blocks.TALL_SEAGRASS)) {
 							return false;
 						}
 

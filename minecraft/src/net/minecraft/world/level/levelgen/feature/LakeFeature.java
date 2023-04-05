@@ -73,8 +73,9 @@ public class LakeFeature extends Feature<LakeFeature.Configuration> {
 									|| u > 0 && bls[(s * 16 + t) * 8 + (u - 1)]
 							);
 						if (bl) {
-							Material material = worldGenLevel.getBlockState(blockPos.offset(s, u, t)).getMaterial();
-							if (u >= 4 && material.isLiquid()) {
+							BlockState blockState2 = worldGenLevel.getBlockState(blockPos.offset(s, u, t));
+							Material material = blockState2.getMaterial();
+							if (u >= 4 && blockState2.liquid()) {
 								return false;
 							}
 
@@ -104,8 +105,8 @@ public class LakeFeature extends Feature<LakeFeature.Configuration> {
 				}
 			}
 
-			BlockState blockState2 = configuration.barrier().getState(randomSource, blockPos);
-			if (!blockState2.isAir()) {
+			BlockState blockState3 = configuration.barrier().getState(randomSource, blockPos);
+			if (!blockState3.isAir()) {
 				for(int t = 0; t < 16; ++t) {
 					for(int u = 0; u < 16; ++u) {
 						for(int v = 0; v < 8; ++v) {
@@ -119,10 +120,10 @@ public class LakeFeature extends Feature<LakeFeature.Configuration> {
 										|| v > 0 && bls[(t * 16 + u) * 8 + (v - 1)]
 								);
 							if (bl2 && (v < 4 || randomSource.nextInt(2) != 0)) {
-								BlockState blockState3 = worldGenLevel.getBlockState(blockPos.offset(t, v, u));
-								if (blockState3.getMaterial().isSolid() && !blockState3.is(BlockTags.LAVA_POOL_STONE_CANNOT_REPLACE)) {
+								BlockState blockState4 = worldGenLevel.getBlockState(blockPos.offset(t, v, u));
+								if (blockState4.getMaterial().isSolid() && !blockState4.is(BlockTags.LAVA_POOL_STONE_CANNOT_REPLACE)) {
 									BlockPos blockPos3 = blockPos.offset(t, v, u);
-									worldGenLevel.setBlock(blockPos3, blockState2, 2);
+									worldGenLevel.setBlock(blockPos3, blockState3, 2);
 									this.markAboveForPostProcessing(worldGenLevel, blockPos3);
 								}
 							}

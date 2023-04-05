@@ -10,6 +10,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SculkSensorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.BlockPositionSource;
@@ -108,7 +109,10 @@ public class SculkSensorBlockEntity extends BlockEntity {
 			if (SculkSensorBlock.canActivate(blockState)) {
 				this.sculkSensor.setLastVibrationFrequency(VibrationListener.getGameEventFrequency(gameEvent));
 				int i = getRedstoneStrengthForDistance(f, gameEventListener.getListenerRadius());
-				SculkSensorBlock.activate(entity, serverLevel, blockPos2, blockState, i, this.sculkSensor.getLastVibrationFrequency());
+				Block var12 = blockState.getBlock();
+				if (var12 instanceof SculkSensorBlock sculkSensorBlock) {
+					sculkSensorBlock.activate(entity, serverLevel, blockPos2, blockState, i, this.sculkSensor.getLastVibrationFrequency());
+				}
 			}
 		}
 
@@ -123,8 +127,8 @@ public class SculkSensorBlockEntity extends BlockEntity {
 		}
 
 		public static int getRedstoneStrengthForDistance(float f, int i) {
-			double d = (double)f / (double)i;
-			return Math.max(1, 15 - Mth.floor(d * 15.0));
+			double d = 15.0 / (double)i;
+			return Math.max(1, 15 - Mth.floor(d * (double)f));
 		}
 	}
 }

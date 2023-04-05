@@ -109,7 +109,6 @@ public final class ItemStack {
 	private final Item item;
 	@Nullable
 	private CompoundTag tag;
-	private boolean emptyCacheFlag;
 	@Nullable
 	private Entity entityRepresentation;
 	@Nullable
@@ -144,13 +143,6 @@ public final class ItemStack {
 		if (this.item != null && this.item.canBeDepleted()) {
 			this.setDamageValue(this.getDamageValue());
 		}
-
-		this.updateEmptyCacheFlag();
-	}
-
-	private void updateEmptyCacheFlag() {
-		this.emptyCacheFlag = false;
-		this.emptyCacheFlag = this.isEmpty();
 	}
 
 	private ItemStack(CompoundTag compoundTag) {
@@ -164,8 +156,6 @@ public final class ItemStack {
 		if (this.getItem().canBeDepleted()) {
 			this.setDamageValue(this.getDamageValue());
 		}
-
-		this.updateEmptyCacheFlag();
 	}
 
 	public static ItemStack of(CompoundTag compoundTag) {
@@ -178,13 +168,7 @@ public final class ItemStack {
 	}
 
 	public boolean isEmpty() {
-		if (this == EMPTY) {
-			return true;
-		} else if (this.getItem() == null || this.is(Items.AIR)) {
-			return true;
-		} else {
-			return this.count <= 0;
-		}
+		return this == EMPTY || this.item == Items.AIR || this.count <= 0;
 	}
 
 	public boolean isItemEnabled(FeatureFlagSet featureFlagSet) {
@@ -192,15 +176,24 @@ public final class ItemStack {
 	}
 
 	public ItemStack split(int i) {
-		int j = Math.min(i, this.count);
-		ItemStack itemStack = this.copy();
-		itemStack.setCount(j);
+		int j = Math.min(i, this.getCount());
+		ItemStack itemStack = this.copyWithCount(j);
 		this.shrink(j);
 		return itemStack;
 	}
 
+	public ItemStack copyAndClear() {
+		if (this.isEmpty()) {
+			return EMPTY;
+		} else {
+			ItemStack itemStack = this.copy();
+			this.setCount(0);
+			return itemStack;
+		}
+	}
+
 	public Item getItem() {
-		return this.emptyCacheFlag ? Items.AIR : this.item;
+		return this.isEmpty() ? Items.AIR : this.item;
 	}
 
 	public Holder<Item> getItemHolder() {
@@ -278,7 +271,7 @@ public final class ItemStack {
 	}
 
 	public boolean isDamageableItem() {
-		if (!this.emptyCacheFlag && this.getItem().getMaxDamage() > 0) {
+		if (!this.isEmpty() && this.getItem().getMaxDamage() > 0) {
 			CompoundTag compoundTag = this.getTag();
 			return compoundTag == null || !compoundTag.getBoolean("Unbreakable");
 		} else {
@@ -406,9 +399,13 @@ public final class ItemStack {
 	}
 
 	public ItemStack copyWithCount(int i) {
-		ItemStack itemStack = this.copy();
-		itemStack.setCount(i);
-		return itemStack;
+		if (this.isEmpty()) {
+			return EMPTY;
+		} else {
+			ItemStack itemStack = this.copy();
+			itemStack.setCount(i);
+			return itemStack;
+		}
 	}
 
 	public static boolean tagMatches(ItemStack itemStack, ItemStack itemStack2) {
@@ -432,7 +429,7 @@ public final class ItemStack {
 	}
 
 	private boolean matches(ItemStack itemStack) {
-		if (this.count != itemStack.count) {
+		if (this.getCount() != itemStack.getCount()) {
 			return false;
 		} else if (!this.is(itemStack.getItem())) {
 			return false;
@@ -464,7 +461,7 @@ public final class ItemStack {
 	}
 
 	public String toString() {
-		return this.count + " " + this.getItem();
+		return this.getCount() + " " + this.getItem();
 	}
 
 	public void inventoryTick(Level level, Entity entity, int i, boolean bl) {
@@ -499,7 +496,7 @@ public final class ItemStack {
 	}
 
 	public boolean hasTag() {
-		return !this.emptyCacheFlag && this.tag != null && !this.tag.isEmpty();
+		return !this.isEmpty() && this.tag != null && !this.tag.isEmpty();
 	}
 
 	@Nullable
@@ -867,7 +864,7 @@ public final class ItemStack {
 
 	@Nullable
 	public Entity getEntityRepresentation() {
-		return !this.emptyCacheFlag ? this.entityRepresentation : null;
+		return !this.isEmpty() ? this.entityRepresentation : null;
 	}
 
 	public int getBaseRepairCost() {
@@ -926,7 +923,7 @@ public final class ItemStack {
 		}
 
 		MutableComponent mutableComponent2 = ComponentUtils.wrapInSquareBrackets(mutableComponent);
-		if (!this.emptyCacheFlag) {
+		if (!this.isEmpty()) {
 			mutableComponent2.withStyle(this.getRarity().color)
 				.withStyle(style -> style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new HoverEvent.ItemStackInfo(this))));
 		}
@@ -959,16 +956,15 @@ public final class ItemStack {
 	}
 
 	public int getCount() {
-		return this.emptyCacheFlag ? 0 : this.count;
+		return this.isEmpty() ? 0 : this.count;
 	}
 
 	public void setCount(int i) {
 		this.count = i;
-		this.updateEmptyCacheFlag();
 	}
 
 	public void grow(int i) {
-		this.setCount(this.count + i);
+		this.setCount(this.getCount() + i);
 	}
 
 	public void shrink(int i) {

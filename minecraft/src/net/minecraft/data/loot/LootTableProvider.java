@@ -11,12 +11,15 @@ import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.storage.loot.LootDataId;
+import net.minecraft.world.level.storage.loot.LootDataResolver;
+import net.minecraft.world.level.storage.loot.LootDataType;
 import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.world.level.storage.loot.LootTables;
 import net.minecraft.world.level.storage.loot.ValidationContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSet;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
@@ -36,19 +39,29 @@ public class LootTableProvider implements DataProvider {
 
 	@Override
 	public CompletableFuture<?> run(CachedOutput cachedOutput) {
-		Map<ResourceLocation, LootTable> map = Maps.<ResourceLocation, LootTable>newHashMap();
+		final Map<ResourceLocation, LootTable> map = Maps.<ResourceLocation, LootTable>newHashMap();
 		this.subProviders.forEach(subProviderEntry -> ((LootTableSubProvider)subProviderEntry.provider().get()).generate((resourceLocationx, builder) -> {
 				if (map.put(resourceLocationx, builder.setParamSet(subProviderEntry.paramSet).build()) != null) {
 					throw new IllegalStateException("Duplicate loot table " + resourceLocationx);
 				}
 			}));
-		ValidationContext validationContext = new ValidationContext(LootContextParamSets.ALL_PARAMS, resourceLocationx -> null, map::get);
+		ValidationContext validationContext = new ValidationContext(LootContextParamSets.ALL_PARAMS, new LootDataResolver() {
+			@Nullable
+			@Override
+			public <T> T getElement(LootDataId<T> lootDataId) {
+				return (T)(lootDataId.type() == LootDataType.TABLE ? map.get(lootDataId.location()) : null);
+			}
+		});
 
 		for(ResourceLocation resourceLocation : Sets.difference(this.requiredTables, map.keySet())) {
 			validationContext.reportProblem("Missing built-in table: " + resourceLocation);
 		}
 
-		map.forEach((resourceLocationx, lootTable) -> LootTables.validate(validationContext, resourceLocationx, lootTable));
+		map.forEach(
+			(resourceLocationx, lootTable) -> lootTable.validate(
+					validationContext.setParams(lootTable.getParamSet()).enterElement("{" + resourceLocationx + "}", new LootDataId<>(LootDataType.TABLE, resourceLocationx))
+				)
+		);
 		Multimap<String, String> multimap = validationContext.getProblems();
 		if (!multimap.isEmpty()) {
 			multimap.forEach((string, string2) -> LOGGER.warn("Found validation problem in {}: {}", string, string2));
@@ -58,7 +71,7 @@ public class LootTableProvider implements DataProvider {
 				ResourceLocation resourceLocationxx = (ResourceLocation)entry.getKey();
 				LootTable lootTable = (LootTable)entry.getValue();
 				Path path = this.pathProvider.json(resourceLocationxx);
-				return DataProvider.saveStable(cachedOutput, LootTables.serialize(lootTable), path);
+				return DataProvider.saveStable(cachedOutput, LootDataType.TABLE.parser().toJsonTree(lootTable), path);
 			}).toArray(i -> new CompletableFuture[i]));
 		}
 	}

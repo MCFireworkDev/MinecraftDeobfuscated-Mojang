@@ -41,6 +41,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.LootDataType;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
@@ -489,7 +490,7 @@ public class EntitySelectorOptions {
 								return false;
 							} else {
 								ServerLevel serverLevel = (ServerLevel)entity.level;
-								LootItemCondition lootItemCondition = serverLevel.getServer().getPredicateManager().get(resourceLocation);
+								LootItemCondition lootItemCondition = serverLevel.getServer().getLootData().getElement(LootDataType.PREDICATE, resourceLocation);
 								if (lootItemCondition == null) {
 									return false;
 								} else {
@@ -497,6 +498,7 @@ public class EntitySelectorOptions {
 										.withParameter(LootContextParams.THIS_ENTITY, entity)
 										.withParameter(LootContextParams.ORIGIN, entity.position())
 										.create(LootContextParamSets.SELECTOR);
+									lootContext.pushVisitedElement(LootContext.createVisitedEntry(lootItemCondition));
 									return bl ^ lootItemCondition.test(lootContext);
 								}
 							}

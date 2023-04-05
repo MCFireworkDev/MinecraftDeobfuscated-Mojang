@@ -226,9 +226,10 @@ public class FallingBlockEntity extends Entity {
 			if (i < 0) {
 				return false;
 			} else {
+				Block bl = this.blockState.getBlock();
 				Predicate<Entity> predicate;
 				DamageSource damageSource2;
-				if (this.blockState.getBlock() instanceof Fallable fallable) {
+				if (bl instanceof Fallable fallable) {
 					predicate = fallable.getHurtsEntitySelector();
 					damageSource2 = fallable.getFallDamageSource(this);
 				} else {
@@ -264,6 +265,8 @@ public class FallingBlockEntity extends Entity {
 		if (this.blockData != null) {
 			compoundTag.put("TileEntityData", this.blockData);
 		}
+
+		compoundTag.putBoolean("CancelDrop", this.cancelDrop);
 	}
 
 	@Override
@@ -286,6 +289,7 @@ public class FallingBlockEntity extends Entity {
 			this.blockData = compoundTag.getCompound("TileEntityData");
 		}
 
+		this.cancelDrop = compoundTag.getBoolean("CancelDrop");
 		if (this.blockState.isAir()) {
 			this.blockState = Blocks.SAND.defaultBlockState();
 		}

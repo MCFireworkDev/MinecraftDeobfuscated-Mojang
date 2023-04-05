@@ -191,7 +191,7 @@ public class GrindstoneMenu extends AbstractContainerMenu {
 	}
 
 	private ItemStack removeNonCurses(ItemStack itemStack, int i, int j) {
-		ItemStack itemStack2 = itemStack.copy();
+		ItemStack itemStack2 = itemStack.copyWithCount(j);
 		itemStack2.removeTagKey("Enchantments");
 		itemStack2.removeTagKey("StoredEnchantments");
 		if (i > 0) {
@@ -200,7 +200,6 @@ public class GrindstoneMenu extends AbstractContainerMenu {
 			itemStack2.removeTagKey("Damage");
 		}
 
-		itemStack2.setCount(j);
 		Map<Enchantment, Integer> map = (Map)EnchantmentHelper.getEnchantments(itemStack)
 			.entrySet()
 			.stream()
