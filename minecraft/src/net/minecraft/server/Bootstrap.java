@@ -18,6 +18,7 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.DefaultAttributes;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -48,6 +49,7 @@ public class Bootstrap {
 					DispenseItemBehavior.bootStrap();
 					CauldronInteraction.bootStrap();
 					BuiltInRegistries.bootStrap();
+					CreativeModeTabs.validate();
 					wrapStreams();
 				}
 			}

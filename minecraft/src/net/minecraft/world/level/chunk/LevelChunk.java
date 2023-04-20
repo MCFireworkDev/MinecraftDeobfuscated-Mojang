@@ -173,7 +173,12 @@ public class LevelChunk extends ChunkAccess {
 		Level var3 = this.level;
 		return var3 instanceof ServerLevel serverLevel
 			? this.gameEventListenerRegistrySections
-				.computeIfAbsent(i, (Int2ObjectFunction<? extends GameEventListenerRegistry>)(ix -> new EuclideanGameEventListenerRegistry(serverLevel)))
+				.computeIfAbsent(
+					i,
+					(Int2ObjectFunction<? extends GameEventListenerRegistry>)(j -> new EuclideanGameEventListenerRegistry(
+							serverLevel, i, this::removeGameEventListenerRegistry
+						))
+				)
 			: super.getListenerRegistry(i);
 	}
 
@@ -429,11 +434,12 @@ public class LevelChunk extends ChunkAccess {
 				int i = SectionPos.blockToSectionCoord(blockEntity.getBlockPos().getY());
 				GameEventListenerRegistry gameEventListenerRegistry = this.getListenerRegistry(i);
 				gameEventListenerRegistry.unregister(gameEventListener);
-				if (gameEventListenerRegistry.isEmpty()) {
-					this.gameEventListenerRegistrySections.remove(i);
-				}
 			}
 		}
+	}
+
+	private void removeGameEventListenerRegistry(int i) {
+		this.gameEventListenerRegistrySections.remove(i);
 	}
 
 	private void removeBlockEntityTicker(BlockPos blockPos) {

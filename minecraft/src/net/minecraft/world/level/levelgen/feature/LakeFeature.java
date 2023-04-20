@@ -12,7 +12,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
-import net.minecraft.world.level.material.Material;
 
 @Deprecated
 public class LakeFeature extends Feature<LakeFeature.Configuration> {
@@ -74,12 +73,11 @@ public class LakeFeature extends Feature<LakeFeature.Configuration> {
 							);
 						if (bl) {
 							BlockState blockState2 = worldGenLevel.getBlockState(blockPos.offset(s, u, t));
-							Material material = blockState2.getMaterial();
 							if (u >= 4 && blockState2.liquid()) {
 								return false;
 							}
 
-							if (u < 4 && !material.isSolid() && worldGenLevel.getBlockState(blockPos.offset(s, u, t)) != blockState) {
+							if (u < 4 && !blockState2.isSolid() && worldGenLevel.getBlockState(blockPos.offset(s, u, t)) != blockState) {
 								return false;
 							}
 						}
@@ -121,7 +119,7 @@ public class LakeFeature extends Feature<LakeFeature.Configuration> {
 								);
 							if (bl2 && (v < 4 || randomSource.nextInt(2) != 0)) {
 								BlockState blockState4 = worldGenLevel.getBlockState(blockPos.offset(t, v, u));
-								if (blockState4.getMaterial().isSolid() && !blockState4.is(BlockTags.LAVA_POOL_STONE_CANNOT_REPLACE)) {
+								if (blockState4.isSolid() && !blockState4.is(BlockTags.LAVA_POOL_STONE_CANNOT_REPLACE)) {
 									BlockPos blockPos3 = blockPos.offset(t, v, u);
 									worldGenLevel.setBlock(blockPos3, blockState3, 2);
 									this.markAboveForPostProcessing(worldGenLevel, blockPos3);

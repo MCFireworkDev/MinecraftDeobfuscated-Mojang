@@ -78,14 +78,14 @@ import org.slf4j.Logger;
 public final class ItemStack {
 	public static final Codec<ItemStack> CODEC = RecordCodecBuilder.create(
 		instance -> instance.group(
-					BuiltInRegistries.ITEM.byNameCodec().fieldOf("id").forGetter(itemStack -> itemStack.item),
-					Codec.INT.fieldOf("Count").forGetter(itemStack -> itemStack.count),
-					CompoundTag.CODEC.optionalFieldOf("tag").forGetter(itemStack -> Optional.ofNullable(itemStack.tag))
+					BuiltInRegistries.ITEM.byNameCodec().fieldOf("id").forGetter(ItemStack::getItem),
+					Codec.INT.fieldOf("Count").forGetter(ItemStack::getCount),
+					CompoundTag.CODEC.optionalFieldOf("tag").forGetter(itemStack -> Optional.ofNullable(itemStack.getTag()))
 				)
 				.apply(instance, ItemStack::new)
 	);
 	private static final Logger LOGGER = LogUtils.getLogger();
-	public static final ItemStack EMPTY = new ItemStack((Item)null);
+	public static final ItemStack EMPTY = new ItemStack((Void)null);
 	public static final DecimalFormat ATTRIBUTE_MODIFIER_FORMAT = Util.make(
 		new DecimalFormat("#.##"), decimalFormat -> decimalFormat.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(Locale.ROOT))
 	);
@@ -106,6 +106,7 @@ public final class ItemStack {
 	private int count;
 	private int popTime;
 	@Deprecated
+	@Nullable
 	private final Item item;
 	@Nullable
 	private CompoundTag tag;
@@ -138,11 +139,15 @@ public final class ItemStack {
 	}
 
 	public ItemStack(ItemLike itemLike, int i) {
-		this.item = itemLike == null ? null : itemLike.asItem();
+		this.item = itemLike.asItem();
 		this.count = i;
-		if (this.item != null && this.item.canBeDepleted()) {
+		if (this.item.canBeDepleted()) {
 			this.setDamageValue(this.getDamageValue());
 		}
+	}
+
+	private ItemStack(@Nullable Void void_) {
+		this.item = null;
 	}
 
 	private ItemStack(CompoundTag compoundTag) {
@@ -343,15 +348,15 @@ public final class ItemStack {
 	}
 
 	public boolean isBarVisible() {
-		return this.item.isBarVisible(this);
+		return this.getItem().isBarVisible(this);
 	}
 
 	public int getBarWidth() {
-		return this.item.getBarWidth(this);
+		return this.getItem().getBarWidth(this);
 	}
 
 	public int getBarColor() {
-		return this.item.getBarColor(this);
+		return this.getItem().getBarColor(this);
 	}
 
 	public boolean overrideStackedOnOther(Slot slot, ClickAction clickAction, Player player) {

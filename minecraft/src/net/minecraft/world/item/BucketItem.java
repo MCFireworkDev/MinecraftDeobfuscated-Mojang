@@ -25,7 +25,6 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
@@ -102,7 +101,6 @@ public class BucketItem extends Item implements DispensibleContainerItem {
 		} else {
 			BlockState blockState = level.getBlockState(blockPos);
 			Block block = blockState.getBlock();
-			Material material = blockState.getMaterial();
 			boolean bl = blockState.canBeReplaced(this.content);
 			boolean bl2 = blockState.isAir()
 				|| bl
