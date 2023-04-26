@@ -89,7 +89,7 @@ public class Pig extends Animal implements ItemSteerable, Saddleable {
 
 	@Override
 	public void onSyncedDataUpdated(EntityDataAccessor<?> entityDataAccessor) {
-		if (DATA_BOOST_TIME.equals(entityDataAccessor) && this.level.isClientSide) {
+		if (DATA_BOOST_TIME.equals(entityDataAccessor) && this.level().isClientSide) {
 			this.steering.onSynced();
 		}
 
@@ -139,11 +139,11 @@ public class Pig extends Animal implements ItemSteerable, Saddleable {
 	public InteractionResult mobInteract(Player player, InteractionHand interactionHand) {
 		boolean bl = this.isFood(player.getItemInHand(interactionHand));
 		if (!bl && this.isSaddled() && !this.isVehicle() && !player.isSecondaryUseActive()) {
-			if (!this.level.isClientSide) {
+			if (!this.level().isClientSide) {
 				player.startRiding(this);
 			}
 
-			return InteractionResult.sidedSuccess(this.level.isClientSide);
+			return InteractionResult.sidedSuccess(this.level().isClientSide);
 		} else {
 			InteractionResult interactionResult = super.mobInteract(player, interactionHand);
 			if (!interactionResult.consumesAction()) {
@@ -177,7 +177,7 @@ public class Pig extends Animal implements ItemSteerable, Saddleable {
 	public void equipSaddle(@Nullable SoundSource soundSource) {
 		this.steering.setSaddle(true);
 		if (soundSource != null) {
-			this.level.playSound(null, this, SoundEvents.PIG_SADDLE, soundSource, 0.5F, 1.0F);
+			this.level().playSound(null, this, SoundEvents.PIG_SADDLE, soundSource, 0.5F, 1.0F);
 		}
 	}
 
@@ -196,10 +196,10 @@ public class Pig extends Animal implements ItemSteerable, Saddleable {
 
 				for(int[] js : is) {
 					mutableBlockPos.set(blockPos.getX() + js[0], blockPos.getY(), blockPos.getZ() + js[1]);
-					double d = this.level.getBlockFloorHeight(mutableBlockPos);
+					double d = this.level().getBlockFloorHeight(mutableBlockPos);
 					if (DismountHelper.isBlockFloorValid(d)) {
 						Vec3 vec3 = Vec3.upFromBottomCenterOf(mutableBlockPos, d);
-						if (DismountHelper.canDismountTo(this.level, livingEntity, aABB.move(vec3))) {
+						if (DismountHelper.canDismountTo(this.level(), livingEntity, aABB.move(vec3))) {
 							livingEntity.setPose(pose);
 							return vec3;
 						}

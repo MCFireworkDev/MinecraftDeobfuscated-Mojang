@@ -486,10 +486,10 @@ public class EntitySelectorOptions {
 					ResourceLocation resourceLocation = ResourceLocation.read(entitySelectorParser.getReader());
 					entitySelectorParser.addPredicate(
 						entity -> {
-							if (!(entity.level instanceof ServerLevel)) {
+							if (!(entity.level() instanceof ServerLevel)) {
 								return false;
 							} else {
-								ServerLevel serverLevel = (ServerLevel)entity.level;
+								ServerLevel serverLevel = (ServerLevel)entity.level();
 								LootItemCondition lootItemCondition = serverLevel.getServer().getLootData().getElement(LootDataType.PREDICATE, resourceLocation);
 								if (lootItemCondition == null) {
 									return false;

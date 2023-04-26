@@ -37,7 +37,7 @@ public class StopAttackingIfTargetInvalid {
 								if (mob.canAttack(livingEntity)
 									&& (!bl || !isTiredOfTryingToReachTarget(mob, instance.tryGet(memoryAccessor2)))
 									&& livingEntity.isAlive()
-									&& livingEntity.level == mob.level
+									&& livingEntity.level() == mob.level()
 									&& !predicate.test(livingEntity)) {
 									return true;
 								} else {
@@ -51,6 +51,6 @@ public class StopAttackingIfTargetInvalid {
 	}
 
 	private static boolean isTiredOfTryingToReachTarget(LivingEntity livingEntity, Optional<Long> optional) {
-		return optional.isPresent() && livingEntity.level.getGameTime() - optional.get() > 200L;
+		return optional.isPresent() && livingEntity.level().getGameTime() - optional.get() > 200L;
 	}
 }

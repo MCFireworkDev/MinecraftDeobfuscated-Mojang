@@ -90,12 +90,12 @@ public class Tadpole extends AbstractFish {
 
 	@Override
 	protected void customServerAiStep() {
-		this.level.getProfiler().push("tadpoleBrain");
-		this.getBrain().tick((ServerLevel)this.level, this);
-		this.level.getProfiler().pop();
-		this.level.getProfiler().push("tadpoleActivityUpdate");
+		this.level().getProfiler().push("tadpoleBrain");
+		this.getBrain().tick((ServerLevel)this.level(), this);
+		this.level().getProfiler().pop();
+		this.level().getProfiler().push("tadpoleActivityUpdate");
 		TadpoleAi.updateActivity(this);
-		this.level.getProfiler().pop();
+		this.level().getProfiler().pop();
 		super.customServerAiStep();
 	}
 
@@ -106,7 +106,7 @@ public class Tadpole extends AbstractFish {
 	@Override
 	public void aiStep() {
 		super.aiStep();
-		if (!this.level.isClientSide) {
+		if (!this.level().isClientSide) {
 			this.setAge(this.age + 1);
 		}
 	}
@@ -146,7 +146,7 @@ public class Tadpole extends AbstractFish {
 		ItemStack itemStack = player.getItemInHand(interactionHand);
 		if (this.isFood(itemStack)) {
 			this.feed(player, itemStack);
-			return InteractionResult.sidedSuccess(this.level.isClientSide);
+			return InteractionResult.sidedSuccess(this.level().isClientSide);
 		} else {
 			return (InteractionResult)Bucketable.bucketMobPickup(player, interactionHand, this).orElse(super.mobInteract(player, interactionHand));
 		}
@@ -199,7 +199,7 @@ public class Tadpole extends AbstractFish {
 	private void feed(Player player, ItemStack itemStack) {
 		this.usePlayerItem(player, itemStack);
 		this.ageUp(AgeableMob.getSpeedUpSecondsWhenFeeding(this.getTicksLeftUntilAdult()));
-		this.level.addParticle(ParticleTypes.HAPPY_VILLAGER, this.getRandomX(1.0), this.getRandomY() + 0.5, this.getRandomZ(1.0), 0.0, 0.0, 0.0);
+		this.level().addParticle(ParticleTypes.HAPPY_VILLAGER, this.getRandomX(1.0), this.getRandomY() + 0.5, this.getRandomZ(1.0), 0.0, 0.0, 0.0);
 	}
 
 	private void usePlayerItem(Player player, ItemStack itemStack) {
@@ -224,12 +224,12 @@ public class Tadpole extends AbstractFish {
 	}
 
 	private void ageUp() {
-		Level frog = this.level;
+		Level frog = this.level();
 		if (frog instanceof ServerLevel serverLevel) {
-			Frog frogx = EntityType.FROG.create(this.level);
+			Frog frogx = EntityType.FROG.create(this.level());
 			if (frogx != null) {
 				frogx.moveTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
-				frogx.finalizeSpawn(serverLevel, this.level.getCurrentDifficultyAt(frogx.blockPosition()), MobSpawnType.CONVERSION, null, null);
+				frogx.finalizeSpawn(serverLevel, this.level().getCurrentDifficultyAt(frogx.blockPosition()), MobSpawnType.CONVERSION, null, null);
 				frogx.setNoAi(this.isNoAi());
 				if (this.hasCustomName()) {
 					frogx.setCustomName(this.getCustomName());

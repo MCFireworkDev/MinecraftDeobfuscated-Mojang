@@ -130,8 +130,8 @@ public class ItemProperties {
 				if (entity == null) {
 					return 0.0F;
 				} else {
-					if (clientLevel == null && entity.level instanceof ClientLevel) {
-						clientLevel = (ClientLevel)entity.level;
+					if (clientLevel == null && entity.level() instanceof ClientLevel) {
+						clientLevel = (ClientLevel)entity.level();
 					}
 
 					if (clientLevel == null) {

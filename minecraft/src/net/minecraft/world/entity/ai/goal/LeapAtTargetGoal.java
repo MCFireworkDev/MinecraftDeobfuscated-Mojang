@@ -28,7 +28,7 @@ public class LeapAtTargetGoal extends Goal {
 				double d = this.mob.distanceToSqr(this.target);
 				if (d < 4.0 || d > 16.0) {
 					return false;
-				} else if (!this.mob.isOnGround()) {
+				} else if (!this.mob.onGround()) {
 					return false;
 				} else {
 					return this.mob.getRandom().nextInt(reducedTickDelay(5)) == 0;
@@ -39,7 +39,7 @@ public class LeapAtTargetGoal extends Goal {
 
 	@Override
 	public boolean canContinueToUse() {
-		return !this.mob.isOnGround();
+		return !this.mob.onGround();
 	}
 
 	@Override

@@ -69,7 +69,7 @@ public class Raids extends SavedData {
 
 	public static boolean canJoinRaid(Raider raider, Raid raid) {
 		if (raider != null && raid != null && raid.getLevel() != null) {
-			return raider.isAlive() && raider.canJoinRaid() && raider.getNoActionTime() <= 2400 && raider.level.dimensionType() == raid.getLevel().dimensionType();
+			return raider.isAlive() && raider.canJoinRaid() && raider.getNoActionTime() <= 2400 && raider.level().dimensionType() == raid.getLevel().dimensionType();
 		} else {
 			return false;
 		}
@@ -82,7 +82,7 @@ public class Raids extends SavedData {
 		} else if (this.level.getGameRules().getBoolean(GameRules.RULE_DISABLE_RAIDS)) {
 			return null;
 		} else {
-			DimensionType dimensionType = serverPlayer.level.dimensionType();
+			DimensionType dimensionType = serverPlayer.level().dimensionType();
 			if (!dimensionType.hasRaids()) {
 				return null;
 			} else {
@@ -108,7 +108,7 @@ public class Raids extends SavedData {
 					blockPos3 = blockPos;
 				}
 
-				Raid raid = this.getOrCreateRaid(serverPlayer.getLevel(), blockPos3);
+				Raid raid = this.getOrCreateRaid(serverPlayer.serverLevel(), blockPos3);
 				boolean bl = false;
 				if (!raid.isStarted()) {
 					if (!this.raidMap.containsKey(raid.getId())) {

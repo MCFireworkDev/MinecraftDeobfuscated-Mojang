@@ -8,9 +8,11 @@ import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
@@ -64,7 +66,8 @@ public class BrushItem extends Item {
 				if (bl) {
 					BlockPos blockPos = blockHitResult.getBlockPos();
 					BlockState blockState = level.getBlockState(blockPos);
-					this.spawnDustParticles(level, blockHitResult, blockState, livingEntity.getViewVector(0.0F), livingEntity.getMainHandItem().equals(itemStack));
+					HumanoidArm humanoidArm = livingEntity.getUsedItemHand() == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
+					this.spawnDustParticles(level, blockHitResult, blockState, livingEntity.getViewVector(0.0F), humanoidArm);
 					Block bl2 = blockState.getBlock();
 					SoundEvent soundEvent;
 					if (bl2 instanceof BrushableBlock brushableBlock) {
@@ -75,8 +78,8 @@ public class BrushItem extends Item {
 
 					level.playSound(player, blockPos, soundEvent, SoundSource.BLOCKS);
 					if (!level.isClientSide()) {
-						BlockEntity var17 = level.getBlockEntity(blockPos);
-						if (var17 instanceof BrushableBlockEntity brushableBlockEntity) {
+						BlockEntity var18 = level.getBlockEntity(blockPos);
+						if (var18 instanceof BrushableBlockEntity brushableBlockEntity) {
 							boolean bl2 = brushableBlockEntity.brush(level.getGameTime(), player, blockHitResult.getDirection());
 							if (bl2) {
 								EquipmentSlot equipmentSlot = itemStack.equals(player.getItemBySlot(EquipmentSlot.OFFHAND)) ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND;
@@ -99,9 +102,9 @@ public class BrushItem extends Item {
 		return ProjectileUtil.getHitResultOnViewVector(livingEntity, entity -> !entity.isSpectator() && entity.isPickable(), MAX_BRUSH_DISTANCE);
 	}
 
-	public void spawnDustParticles(Level level, BlockHitResult blockHitResult, BlockState blockState, Vec3 vec3, boolean bl) {
+	public void spawnDustParticles(Level level, BlockHitResult blockHitResult, BlockState blockState, Vec3 vec3, HumanoidArm humanoidArm) {
 		double d = 3.0;
-		int i = bl ? 1 : -1;
+		int i = humanoidArm == HumanoidArm.RIGHT ? 1 : -1;
 		int j = level.getRandom().nextInt(7, 12);
 		BlockParticleOption blockParticleOption = new BlockParticleOption(ParticleTypes.BLOCK, blockState);
 		Direction direction = blockHitResult.getDirection();

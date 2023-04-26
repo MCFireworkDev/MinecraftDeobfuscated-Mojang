@@ -155,7 +155,7 @@ public class TeleportCommand {
 			performTeleport(
 				commandSourceStack,
 				entity2,
-				(ServerLevel)entity.level,
+				(ServerLevel)entity.level(),
 				entity.getX(),
 				entity.getY(),
 				entity.getZ(),

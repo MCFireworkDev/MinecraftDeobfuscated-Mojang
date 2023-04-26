@@ -3322,7 +3322,10 @@ public class BlockModelGenerators {
 						PropertyDispatch.property(BlockStateProperties.SCULK_SENSOR_PHASE)
 							.generate(
 								sculkSensorPhase -> Variant.variant()
-										.with(VariantProperties.MODEL, sculkSensorPhase == SculkSensorPhase.ACTIVE ? resourceLocation2 : resourceLocation)
+										.with(
+											VariantProperties.MODEL,
+											sculkSensorPhase != SculkSensorPhase.ACTIVE && sculkSensorPhase != SculkSensorPhase.COOLDOWN ? resourceLocation : resourceLocation2
+										)
 							)
 					)
 			);
@@ -3339,7 +3342,10 @@ public class BlockModelGenerators {
 						PropertyDispatch.property(BlockStateProperties.SCULK_SENSOR_PHASE)
 							.generate(
 								sculkSensorPhase -> Variant.variant()
-										.with(VariantProperties.MODEL, sculkSensorPhase == SculkSensorPhase.ACTIVE ? resourceLocation2 : resourceLocation)
+										.with(
+											VariantProperties.MODEL,
+											sculkSensorPhase != SculkSensorPhase.ACTIVE && sculkSensorPhase != SculkSensorPhase.COOLDOWN ? resourceLocation : resourceLocation2
+										)
 							)
 					)
 					.with(createHorizontalFacingDispatch())

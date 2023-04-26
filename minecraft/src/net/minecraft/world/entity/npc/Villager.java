@@ -241,14 +241,14 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 		brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
 		brain.setDefaultActivity(Activity.IDLE);
 		brain.setActiveActivityIfPossible(Activity.IDLE);
-		brain.updateActivityFromSchedule(this.level.getDayTime(), this.level.getGameTime());
+		brain.updateActivityFromSchedule(this.level().getDayTime(), this.level().getGameTime());
 	}
 
 	@Override
 	protected void ageBoundaryReached() {
 		super.ageBoundaryReached();
-		if (this.level instanceof ServerLevel) {
-			this.refreshBrain((ServerLevel)this.level);
+		if (this.level() instanceof ServerLevel) {
+			this.refreshBrain((ServerLevel)this.level());
 		}
 	}
 
@@ -262,9 +262,9 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 
 	@Override
 	protected void customServerAiStep() {
-		this.level.getProfiler().push("villagerBrain");
-		this.getBrain().tick((ServerLevel)this.level, this);
-		this.level.getProfiler().pop();
+		this.level().getProfiler().push("villagerBrain");
+		this.getBrain().tick((ServerLevel)this.level(), this);
+		this.level().getProfiler().pop();
 		if (this.assignProfessionWhenSpawned) {
 			this.assignProfessionWhenSpawned = false;
 		}
@@ -281,16 +281,16 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 			}
 		}
 
-		if (this.lastTradedPlayer != null && this.level instanceof ServerLevel) {
-			((ServerLevel)this.level).onReputationEvent(ReputationEventType.TRADE, this.lastTradedPlayer, this);
-			this.level.broadcastEntityEvent(this, (byte)14);
+		if (this.lastTradedPlayer != null && this.level() instanceof ServerLevel) {
+			((ServerLevel)this.level()).onReputationEvent(ReputationEventType.TRADE, this.lastTradedPlayer, this);
+			this.level().broadcastEntityEvent(this, (byte)14);
 			this.lastTradedPlayer = null;
 		}
 
 		if (!this.isNoAi() && this.random.nextInt(100) == 0) {
-			Raid raid = ((ServerLevel)this.level).getRaidAt(this.blockPosition());
+			Raid raid = ((ServerLevel)this.level()).getRaidAt(this.blockPosition());
 			if (raid != null && raid.isActive() && !raid.isOver()) {
-				this.level.broadcastEntityEvent(this, (byte)42);
+				this.level().broadcastEntityEvent(this, (byte)42);
 			}
 		}
 
@@ -318,11 +318,11 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 			return super.mobInteract(player, interactionHand);
 		} else if (this.isBaby()) {
 			this.setUnhappy();
-			return InteractionResult.sidedSuccess(this.level.isClientSide);
+			return InteractionResult.sidedSuccess(this.level().isClientSide);
 		} else {
 			boolean bl = this.getOffers().isEmpty();
 			if (interactionHand == InteractionHand.MAIN_HAND) {
-				if (bl && !this.level.isClientSide) {
+				if (bl && !this.level().isClientSide) {
 					this.setUnhappy();
 				}
 
@@ -330,20 +330,20 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 			}
 
 			if (bl) {
-				return InteractionResult.sidedSuccess(this.level.isClientSide);
+				return InteractionResult.sidedSuccess(this.level().isClientSide);
 			} else {
-				if (!this.level.isClientSide && !this.offers.isEmpty()) {
+				if (!this.level().isClientSide && !this.offers.isEmpty()) {
 					this.startTrading(player);
 				}
 
-				return InteractionResult.sidedSuccess(this.level.isClientSide);
+				return InteractionResult.sidedSuccess(this.level().isClientSide);
 			}
 		}
 	}
 
 	private void setUnhappy() {
 		this.setUnhappyCounter(40);
-		if (!this.level.isClientSide()) {
+		if (!this.level().isClientSide()) {
 			this.playSound(SoundEvents.VILLAGER_NO, this.getSoundVolume(), this.getVoicePitch());
 		}
 	}
@@ -382,7 +382,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 
 	@Override
 	public boolean isClientSide() {
-		return this.getLevel().isClientSide;
+		return this.level().isClientSide;
 	}
 
 	public void restock() {
@@ -393,7 +393,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 		}
 
 		this.resendOffersToTradingPlayer();
-		this.lastRestockGameTime = this.level.getGameTime();
+		this.lastRestockGameTime = this.level().getGameTime();
 		++this.numberOfRestocksToday;
 	}
 
@@ -418,14 +418,14 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	}
 
 	private boolean allowedToRestock() {
-		return this.numberOfRestocksToday == 0 || this.numberOfRestocksToday < 2 && this.level.getGameTime() > this.lastRestockGameTime + 2400L;
+		return this.numberOfRestocksToday == 0 || this.numberOfRestocksToday < 2 && this.level().getGameTime() > this.lastRestockGameTime + 2400L;
 	}
 
 	public boolean shouldRestock() {
 		long l = this.lastRestockGameTime + 12000L;
-		long m = this.level.getGameTime();
+		long m = this.level().getGameTime();
 		boolean bl = m > l;
-		long n = this.level.getDayTime();
+		long n = this.level().getDayTime();
 		if (this.lastRestockCheckDayTime > 0L) {
 			long o = this.lastRestockCheckDayTime / 24000L;
 			long p = n / 24000L;
@@ -531,8 +531,8 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 		this.lastRestockGameTime = compoundTag.getLong("LastRestock");
 		this.lastGossipDecayTime = compoundTag.getLong("LastGossipDecay");
 		this.setCanPickUpLoot(true);
-		if (this.level instanceof ServerLevel) {
-			this.refreshBrain((ServerLevel)this.level);
+		if (this.level() instanceof ServerLevel) {
+			this.refreshBrain((ServerLevel)this.level());
 		}
 
 		this.numberOfRestocksToday = compoundTag.getInt("RestocksToday");
@@ -600,7 +600,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 		}
 
 		if (merchantOffer.shouldRewardExp()) {
-			this.level.addFreshEntity(new ExperienceOrb(this.level, this.getX(), this.getY() + 0.5, this.getZ(), i));
+			this.level().addFreshEntity(new ExperienceOrb(this.level(), this.getX(), this.getY() + 0.5, this.getZ(), i));
 		}
 	}
 
@@ -614,10 +614,10 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 
 	@Override
 	public void setLastHurtByMob(@Nullable LivingEntity livingEntity) {
-		if (livingEntity != null && this.level instanceof ServerLevel) {
-			((ServerLevel)this.level).onReputationEvent(ReputationEventType.VILLAGER_HURT, livingEntity, this);
+		if (livingEntity != null && this.level() instanceof ServerLevel) {
+			((ServerLevel)this.level()).onReputationEvent(ReputationEventType.VILLAGER_HURT, livingEntity, this);
 			if (this.isAlive() && livingEntity instanceof Player) {
-				this.level.broadcastEntityEvent(this, (byte)13);
+				this.level().broadcastEntityEvent(this, (byte)13);
 			}
 		}
 
@@ -644,7 +644,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	}
 
 	private void tellWitnessesThatIWasMurdered(Entity entity) {
-		Level optional = this.level;
+		Level optional = this.level();
 		if (optional instanceof ServerLevel serverLevel) {
 			Optional<NearestVisibleLivingEntities> optionalx = this.brain.getMemory(MemoryModuleType.NEAREST_VISIBLE_LIVING_ENTITIES);
 			if (!optionalx.isEmpty()) {
@@ -656,8 +656,8 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	}
 
 	public void releasePoi(MemoryModuleType<GlobalPos> memoryModuleType) {
-		if (this.level instanceof ServerLevel) {
-			MinecraftServer minecraftServer = ((ServerLevel)this.level).getServer();
+		if (this.level() instanceof ServerLevel) {
+			MinecraftServer minecraftServer = ((ServerLevel)this.level()).getServer();
 			this.brain.getMemory(memoryModuleType).ifPresent(globalPos -> {
 				ServerLevel serverLevel = minecraftServer.getLevel(globalPos.dimension());
 				if (serverLevel != null) {
@@ -874,7 +874,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	}
 
 	private void maybeDecayGossip() {
-		long l = this.level.getGameTime();
+		long l = this.level().getGameTime();
 		if (this.lastGossipDecayTime == 0L) {
 			this.lastGossipDecayTime = l;
 		} else if (l >= this.lastGossipDecayTime + 24000L) {
@@ -900,7 +900,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	}
 
 	public boolean wantsToSpawnGolem(long l) {
-		if (!this.golemSpawnConditionsMet(this.level.getGameTime())) {
+		if (!this.golemSpawnConditionsMet(this.level().getGameTime())) {
 			return false;
 		} else {
 			return !this.brain.hasMemoryValue(MemoryModuleType.GOLEM_DETECTED_RECENTLY);
@@ -952,7 +952,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	@Override
 	public void startSleeping(BlockPos blockPos) {
 		super.startSleeping(blockPos);
-		this.brain.setMemory(MemoryModuleType.LAST_SLEPT, this.level.getGameTime());
+		this.brain.setMemory(MemoryModuleType.LAST_SLEPT, this.level().getGameTime());
 		this.brain.eraseMemory(MemoryModuleType.WALK_TARGET);
 		this.brain.eraseMemory(MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE);
 	}
@@ -960,7 +960,7 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
 	@Override
 	public void stopSleeping() {
 		super.stopSleeping();
-		this.brain.setMemory(MemoryModuleType.LAST_WOKEN, this.level.getGameTime());
+		this.brain.setMemory(MemoryModuleType.LAST_WOKEN, this.level().getGameTime());
 	}
 
 	private boolean golemSpawnConditionsMet(long l) {

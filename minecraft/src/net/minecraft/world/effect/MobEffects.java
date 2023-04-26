@@ -95,7 +95,7 @@ public class MobEffects {
 		@Override
 		public void applyEffectTick(LivingEntity livingEntity, int i) {
 			if (livingEntity instanceof ServerPlayer serverPlayer && !livingEntity.isSpectator()) {
-				ServerLevel serverLevel = serverPlayer.getLevel();
+				ServerLevel serverLevel = serverPlayer.serverLevel();
 				if (serverLevel.getDifficulty() == Difficulty.PEACEFUL) {
 					return;
 				}
