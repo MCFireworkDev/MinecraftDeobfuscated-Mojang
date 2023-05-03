@@ -2,11 +2,13 @@ package net.minecraft.world.level;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.Optional;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ExtraCodecs;
 import net.minecraft.util.InclusiveRange;
 import net.minecraft.util.random.SimpleWeightedRandomList;
 
@@ -51,14 +53,8 @@ public record SpawnData(CompoundTag entityToSpawn, Optional<SpawnData.CustomSpaw
 		private static final InclusiveRange<Integer> LIGHT_RANGE = new InclusiveRange(0, 15);
 		public static final Codec<SpawnData.CustomSpawnRules> CODEC = RecordCodecBuilder.create(
 			instance -> instance.group(
-						InclusiveRange.INT
-							.optionalFieldOf("block_light_limit", LIGHT_RANGE)
-							.flatXmap(SpawnData.CustomSpawnRules::checkLightBoundaries, SpawnData.CustomSpawnRules::checkLightBoundaries)
-							.forGetter(customSpawnRules -> customSpawnRules.blockLightLimit),
-						InclusiveRange.INT
-							.optionalFieldOf("sky_light_limit", LIGHT_RANGE)
-							.flatXmap(SpawnData.CustomSpawnRules::checkLightBoundaries, SpawnData.CustomSpawnRules::checkLightBoundaries)
-							.forGetter(customSpawnRules -> customSpawnRules.skyLightLimit)
+						lightLimit("block_light_limit").forGetter(customSpawnRules -> customSpawnRules.blockLightLimit),
+						lightLimit("sky_light_limit").forGetter(customSpawnRules -> customSpawnRules.skyLightLimit)
 					)
 					.apply(instance, SpawnData.CustomSpawnRules::new)
 		);
@@ -67,6 +63,10 @@ public record SpawnData(CompoundTag entityToSpawn, Optional<SpawnData.CustomSpaw
 			return !LIGHT_RANGE.contains(inclusiveRange)
 				? DataResult.error(() -> "Light values must be withing range " + LIGHT_RANGE)
 				: DataResult.success(inclusiveRange);
+		}
+
+		private static MapCodec<InclusiveRange<Integer>> lightLimit(String string) {
+			return ExtraCodecs.validate(InclusiveRange.INT.optionalFieldOf(string, LIGHT_RANGE), SpawnData.CustomSpawnRules::checkLightBoundaries);
 		}
 	}
 }

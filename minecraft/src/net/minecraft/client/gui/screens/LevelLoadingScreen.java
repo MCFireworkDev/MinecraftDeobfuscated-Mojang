@@ -97,20 +97,22 @@ public class LevelLoadingScreen extends Screen {
 		int s = j - q / 2;
 		int t = o / 2 + 1;
 		int u = -16772609;
-		if (l != 0) {
-			guiGraphics.fill(i - t, j - t, i - t + 1, j + t, -16772609);
-			guiGraphics.fill(i + t - 1, j - t, i + t, j + t, -16772609);
-			guiGraphics.fill(i - t, j - t, i + t, j - t + 1, -16772609);
-			guiGraphics.fill(i - t, j + t - 1, i + t, j + t, -16772609);
-		}
-
-		for(int v = 0; v < p; ++v) {
-			for(int w = 0; w < p; ++w) {
-				ChunkStatus chunkStatus = storingChunkProgressListener.getStatus(v, w);
-				int x = r + v * m;
-				int y = s + w * m;
-				guiGraphics.fill(x, y, x + k, y + k, COLORS.getInt(chunkStatus) | 0xFF000000);
+		guiGraphics.drawManaged(() -> {
+			if (l != 0) {
+				guiGraphics.fill(i - t, j - t, i - t + 1, j + t, -16772609);
+				guiGraphics.fill(i + t - 1, j - t, i + t, j + t, -16772609);
+				guiGraphics.fill(i - t, j - t, i + t, j - t + 1, -16772609);
+				guiGraphics.fill(i - t, j + t - 1, i + t, j + t, -16772609);
 			}
-		}
+
+			for(int rxx = 0; rxx < p; ++rxx) {
+				for(int sxx = 0; sxx < p; ++sxx) {
+					ChunkStatus chunkStatus = storingChunkProgressListener.getStatus(rxx, sxx);
+					int txx = r + rxx * m;
+					int uxx = s + sxx * m;
+					guiGraphics.fill(txx, uxx, txx + k, uxx + k, COLORS.getInt(chunkStatus) | 0xFF000000);
+				}
+			}
+		});
 	}
 }

@@ -48,15 +48,20 @@ public class GameEventListenerRenderer implements DebugRenderer.SimpleDebugRende
 			VertexConsumer vertexConsumer = multiBufferSource.getBuffer(RenderType.lines());
 
 			for(GameEventListenerRenderer.TrackedListener trackedListener : this.trackedListeners) {
-				trackedListener.getPosition(level).ifPresent(vec3x -> {
-					double gxx = vec3x.x() - (double)trackedListener.getListenerRadius();
-					double hxx = vec3x.y() - (double)trackedListener.getListenerRadius();
-					double ixx = vec3x.z() - (double)trackedListener.getListenerRadius();
-					double jxx = vec3x.x() + (double)trackedListener.getListenerRadius();
-					double kxx = vec3x.y() + (double)trackedListener.getListenerRadius();
-					double lxx = vec3x.z() + (double)trackedListener.getListenerRadius();
-					LevelRenderer.renderVoxelShape(poseStack, vertexConsumer, Shapes.create(new AABB(gxx, hxx, ixx, jxx, kxx, lxx)), -d, -e, -f, 1.0F, 1.0F, 0.0F, 0.35F);
-				});
+				trackedListener.getPosition(level)
+					.ifPresent(
+						vec3x -> {
+							double gxx = vec3x.x() - (double)trackedListener.getListenerRadius();
+							double hxx = vec3x.y() - (double)trackedListener.getListenerRadius();
+							double ixx = vec3x.z() - (double)trackedListener.getListenerRadius();
+							double jxx = vec3x.x() + (double)trackedListener.getListenerRadius();
+							double kxx = vec3x.y() + (double)trackedListener.getListenerRadius();
+							double lxx = vec3x.z() + (double)trackedListener.getListenerRadius();
+							LevelRenderer.renderVoxelShape(
+								poseStack, vertexConsumer, Shapes.create(new AABB(gxx, hxx, ixx, jxx, kxx, lxx)), -d, -e, -f, 1.0F, 1.0F, 0.0F, 0.35F, true
+							);
+						}
+					);
 			}
 
 			VertexConsumer vertexConsumer2 = multiBufferSource.getBuffer(RenderType.debugFilledBox());
