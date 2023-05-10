@@ -228,7 +228,7 @@ public class ServerChunkCache extends ChunkSource {
 	private CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> getChunkFutureMainThread(int i, int j, ChunkStatus chunkStatus, boolean bl) {
 		ChunkPos chunkPos = new ChunkPos(i, j);
 		long l = chunkPos.toLong();
-		int k = 33 + ChunkStatus.getDistance(chunkStatus);
+		int k = ChunkLevel.byStatus(chunkStatus);
 		ChunkHolder chunkHolder = this.getVisibleChunkIfPresent(l);
 		if (bl) {
 			this.distanceManager.addTicket(TicketType.UNKNOWN, chunkPos, k, chunkPos);
@@ -254,7 +254,7 @@ public class ServerChunkCache extends ChunkSource {
 	@Override
 	public boolean hasChunk(int i, int j) {
 		ChunkHolder chunkHolder = this.getVisibleChunkIfPresent(new ChunkPos(i, j).toLong());
-		int k = 33 + ChunkStatus.getDistance(ChunkStatus.FULL);
+		int k = ChunkLevel.byStatus(ChunkStatus.FULL);
 		return !this.chunkAbsent(chunkHolder, k);
 	}
 

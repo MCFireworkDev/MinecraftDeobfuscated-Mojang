@@ -1253,6 +1253,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
 		return this.services.profileRepository();
 	}
 
+	@Nullable
 	public GameProfileCache getProfileCache() {
 		return this.services.profileCache();
 	}

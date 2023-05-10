@@ -43,7 +43,6 @@ import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.npc.InventoryCarrier;
 import net.minecraft.world.entity.npc.Villager;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.raid.Raid;
 import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.level.ChunkPos;
@@ -263,8 +262,8 @@ public class DebugPackets {
 	private static void sendPacketToAllPlayers(ServerLevel serverLevel, FriendlyByteBuf friendlyByteBuf, ResourceLocation resourceLocation) {
 		Packet<?> packet = new ClientboundCustomPayloadPacket(resourceLocation, friendlyByteBuf);
 
-		for(Player player : serverLevel.players()) {
-			((ServerPlayer)player).connection.send(packet);
+		for(ServerPlayer serverPlayer : serverLevel.players()) {
+			serverPlayer.connection.send(packet);
 		}
 	}
 }
