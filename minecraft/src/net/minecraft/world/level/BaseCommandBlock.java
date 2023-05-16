@@ -206,4 +206,6 @@ public abstract class BaseCommandBlock implements CommandSource {
 	public boolean shouldInformAdmins() {
 		return this.getLevel().getGameRules().getBoolean(GameRules.RULE_COMMANDBLOCKOUTPUT);
 	}
+
+	public abstract boolean isValid();
 }

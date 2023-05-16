@@ -46,6 +46,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 	private static final char KEY_MATCH_START = '{';
 	private static final char KEY_MATCH_END = '}';
 	private static final char QUOTED_KEY_START = '"';
+	private static final char SINGLE_QUOTED_KEY_START = '\'';
 
 	public static NbtPathArgument nbtPath() {
 		return new NbtPathArgument();
@@ -80,40 +81,41 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 	}
 
 	private static NbtPathArgument.Node parseNode(StringReader stringReader, boolean bl) throws CommandSyntaxException {
+		Object var10000;
 		switch(stringReader.peek()) {
-			case '"': {
-				String string = stringReader.readString();
-				return readObjectNode(stringReader, string);
-			}
+			case '"':
+			case '\'':
+				var10000 = readObjectNode(stringReader, stringReader.readString());
+				break;
 			case '[':
 				stringReader.skip();
 				int i = stringReader.peek();
 				if (i == 123) {
 					CompoundTag compoundTag2 = new TagParser(stringReader).readStruct();
 					stringReader.expect(']');
-					return new NbtPathArgument.MatchElementNode(compoundTag2);
+					var10000 = new NbtPathArgument.MatchElementNode(compoundTag2);
+				} else if (i == 93) {
+					stringReader.skip();
+					var10000 = NbtPathArgument.AllElementsNode.INSTANCE;
 				} else {
-					if (i == 93) {
-						stringReader.skip();
-						return NbtPathArgument.AllElementsNode.INSTANCE;
-					}
-
 					int j = stringReader.readInt();
 					stringReader.expect(']');
-					return new NbtPathArgument.IndexedElementNode(j);
+					var10000 = new NbtPathArgument.IndexedElementNode(j);
 				}
+				break;
 			case '{':
 				if (!bl) {
 					throw ERROR_INVALID_NODE.createWithContext(stringReader);
 				}
 
 				CompoundTag compoundTag = new TagParser(stringReader).readStruct();
-				return new NbtPathArgument.MatchRootObjectNode(compoundTag);
-			default: {
-				String string = readUnquotedName(stringReader);
-				return readObjectNode(stringReader, string);
-			}
+				var10000 = new NbtPathArgument.MatchRootObjectNode(compoundTag);
+				break;
+			default:
+				var10000 = readObjectNode(stringReader, readUnquotedName(stringReader));
 		}
+
+		return (NbtPathArgument.Node)var10000;
 	}
 
 	private static NbtPathArgument.Node readObjectNode(StringReader stringReader, String string) throws CommandSyntaxException {
@@ -145,7 +147,7 @@ public class NbtPathArgument implements ArgumentType<NbtPathArgument.NbtPath> {
 	}
 
 	private static boolean isAllowedInUnquotedName(char c) {
-		return c != ' ' && c != '"' && c != '[' && c != ']' && c != '.' && c != '{' && c != '}';
+		return c != ' ' && c != '"' && c != '\'' && c != '[' && c != ']' && c != '.' && c != '{' && c != '}';
 	}
 
 	static Predicate<Tag> createTagPredicate(CompoundTag compoundTag) {

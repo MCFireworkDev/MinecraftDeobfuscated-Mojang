@@ -49,7 +49,7 @@ public class OpCommand {
 			if (!playerList.isOp(gameProfile)) {
 				playerList.op(gameProfile);
 				++i;
-				commandSourceStack.sendSuccess(Component.translatable("commands.op.success", ((GameProfile)collection.iterator().next()).getName()), true);
+				commandSourceStack.sendSuccess(() -> Component.translatable("commands.op.success", ((GameProfile)collection.iterator().next()).getName()), true);
 			}
 		}
 

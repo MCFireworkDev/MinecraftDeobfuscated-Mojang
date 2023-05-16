@@ -330,7 +330,7 @@ public class ItemCommands {
 			ItemStack itemStack = applyModifier(commandSourceStack, lootItemFunction, container.getItem(i));
 			container.setItem(i, itemStack);
 			commandSourceStack.sendSuccess(
-				Component.translatable("commands.item.block.set.success", blockPos.getX(), blockPos.getY(), blockPos.getZ(), itemStack.getDisplayName()), true
+				() -> Component.translatable("commands.item.block.set.success", blockPos.getX(), blockPos.getY(), blockPos.getZ(), itemStack.getDisplayName()), true
 			);
 			return 1;
 		} else {
@@ -360,13 +360,13 @@ public class ItemCommands {
 			if (map.size() == 1) {
 				Entry<Entity, ItemStack> entry = (Entry)map.entrySet().iterator().next();
 				commandSourceStack.sendSuccess(
-					Component.translatable(
-						"commands.item.entity.set.success.single", ((Entity)entry.getKey()).getDisplayName(), ((ItemStack)entry.getValue()).getDisplayName()
-					),
+					() -> Component.translatable(
+							"commands.item.entity.set.success.single", ((Entity)entry.getKey()).getDisplayName(), ((ItemStack)entry.getValue()).getDisplayName()
+						),
 					true
 				);
 			} else {
-				commandSourceStack.sendSuccess(Component.translatable("commands.item.entity.set.success.multiple", map.size()), true);
+				commandSourceStack.sendSuccess(() -> Component.translatable("commands.item.entity.set.success.multiple", map.size()), true);
 			}
 
 			return map.size();
@@ -378,7 +378,7 @@ public class ItemCommands {
 		if (i >= 0 && i < container.getContainerSize()) {
 			container.setItem(i, itemStack);
 			commandSourceStack.sendSuccess(
-				Component.translatable("commands.item.block.set.success", blockPos.getX(), blockPos.getY(), blockPos.getZ(), itemStack.getDisplayName()), true
+				() -> Component.translatable("commands.item.block.set.success", blockPos.getX(), blockPos.getY(), blockPos.getZ(), itemStack.getDisplayName()), true
 			);
 			return 1;
 		} else {
@@ -413,10 +413,11 @@ public class ItemCommands {
 		} else {
 			if (list.size() == 1) {
 				commandSourceStack.sendSuccess(
-					Component.translatable("commands.item.entity.set.success.single", ((Entity)list.iterator().next()).getDisplayName(), itemStack.getDisplayName()), true
+					() -> Component.translatable("commands.item.entity.set.success.single", ((Entity)list.iterator().next()).getDisplayName(), itemStack.getDisplayName()),
+					true
 				);
 			} else {
-				commandSourceStack.sendSuccess(Component.translatable("commands.item.entity.set.success.multiple", list.size(), itemStack.getDisplayName()), true);
+				commandSourceStack.sendSuccess(() -> Component.translatable("commands.item.entity.set.success.multiple", list.size(), itemStack.getDisplayName()), true);
 			}
 
 			return list.size();

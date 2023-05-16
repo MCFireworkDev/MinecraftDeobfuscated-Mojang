@@ -238,7 +238,9 @@ public class AttributeCommand {
 	private static int getAttributeValue(CommandSourceStack commandSourceStack, Entity entity, Holder<Attribute> holder, double d) throws CommandSyntaxException {
 		LivingEntity livingEntity = getEntityWithAttribute(entity, holder);
 		double e = livingEntity.getAttributeValue(holder);
-		commandSourceStack.sendSuccess(Component.translatable("commands.attribute.value.get.success", getAttributeDescription(holder), entity.getName(), e), false);
+		commandSourceStack.sendSuccess(
+			() -> Component.translatable("commands.attribute.value.get.success", getAttributeDescription(holder), entity.getName(), e), false
+		);
 		return (int)(e * d);
 	}
 
@@ -246,7 +248,7 @@ public class AttributeCommand {
 		LivingEntity livingEntity = getEntityWithAttribute(entity, holder);
 		double e = livingEntity.getAttributeBaseValue(holder);
 		commandSourceStack.sendSuccess(
-			Component.translatable("commands.attribute.base_value.get.success", getAttributeDescription(holder), entity.getName(), e), false
+			() -> Component.translatable("commands.attribute.base_value.get.success", getAttributeDescription(holder), entity.getName(), e), false
 		);
 		return (int)(e * d);
 	}
@@ -259,7 +261,7 @@ public class AttributeCommand {
 		} else {
 			double e = attributeMap.getModifierValue(holder, uUID);
 			commandSourceStack.sendSuccess(
-				Component.translatable("commands.attribute.modifier.value.get.success", uUID, getAttributeDescription(holder), entity.getName(), e), false
+				() -> Component.translatable("commands.attribute.modifier.value.get.success", uUID, getAttributeDescription(holder), entity.getName(), e), false
 			);
 			return (int)(e * d);
 		}
@@ -268,7 +270,7 @@ public class AttributeCommand {
 	private static int setAttributeBase(CommandSourceStack commandSourceStack, Entity entity, Holder<Attribute> holder, double d) throws CommandSyntaxException {
 		getAttributeInstance(entity, holder).setBaseValue(d);
 		commandSourceStack.sendSuccess(
-			Component.translatable("commands.attribute.base_value.set.success", getAttributeDescription(holder), entity.getName(), d), false
+			() -> Component.translatable("commands.attribute.base_value.set.success", getAttributeDescription(holder), entity.getName(), d), false
 		);
 		return 1;
 	}
@@ -283,7 +285,7 @@ public class AttributeCommand {
 		} else {
 			attributeInstance.addPermanentModifier(attributeModifier);
 			commandSourceStack.sendSuccess(
-				Component.translatable("commands.attribute.modifier.add.success", uUID, getAttributeDescription(holder), entity.getName()), false
+				() -> Component.translatable("commands.attribute.modifier.add.success", uUID, getAttributeDescription(holder), entity.getName()), false
 			);
 			return 1;
 		}
@@ -293,7 +295,7 @@ public class AttributeCommand {
 		AttributeInstance attributeInstance = getAttributeInstance(entity, holder);
 		if (attributeInstance.removePermanentModifier(uUID)) {
 			commandSourceStack.sendSuccess(
-				Component.translatable("commands.attribute.modifier.remove.success", uUID, getAttributeDescription(holder), entity.getName()), false
+				() -> Component.translatable("commands.attribute.modifier.remove.success", uUID, getAttributeDescription(holder), entity.getName()), false
 			);
 			return 1;
 		} else {

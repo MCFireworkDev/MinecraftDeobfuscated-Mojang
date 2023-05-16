@@ -83,10 +83,10 @@ public class TagCommand {
 		} else {
 			if (collection.size() == 1) {
 				commandSourceStack.sendSuccess(
-					Component.translatable("commands.tag.add.success.single", string, ((Entity)collection.iterator().next()).getDisplayName()), true
+					() -> Component.translatable("commands.tag.add.success.single", string, ((Entity)collection.iterator().next()).getDisplayName()), true
 				);
 			} else {
-				commandSourceStack.sendSuccess(Component.translatable("commands.tag.add.success.multiple", string, collection.size()), true);
+				commandSourceStack.sendSuccess(() -> Component.translatable("commands.tag.add.success.multiple", string, collection.size()), true);
 			}
 
 			return i;
@@ -107,10 +107,10 @@ public class TagCommand {
 		} else {
 			if (collection.size() == 1) {
 				commandSourceStack.sendSuccess(
-					Component.translatable("commands.tag.remove.success.single", string, ((Entity)collection.iterator().next()).getDisplayName()), true
+					() -> Component.translatable("commands.tag.remove.success.single", string, ((Entity)collection.iterator().next()).getDisplayName()), true
 				);
 			} else {
-				commandSourceStack.sendSuccess(Component.translatable("commands.tag.remove.success.multiple", string, collection.size()), true);
+				commandSourceStack.sendSuccess(() -> Component.translatable("commands.tag.remove.success.multiple", string, collection.size()), true);
 			}
 
 			return i;
@@ -127,17 +127,17 @@ public class TagCommand {
 		if (collection.size() == 1) {
 			Entity entity2 = (Entity)collection.iterator().next();
 			if (set.isEmpty()) {
-				commandSourceStack.sendSuccess(Component.translatable("commands.tag.list.single.empty", entity2.getDisplayName()), false);
+				commandSourceStack.sendSuccess(() -> Component.translatable("commands.tag.list.single.empty", entity2.getDisplayName()), false);
 			} else {
 				commandSourceStack.sendSuccess(
-					Component.translatable("commands.tag.list.single.success", entity2.getDisplayName(), set.size(), ComponentUtils.formatList(set)), false
+					() -> Component.translatable("commands.tag.list.single.success", entity2.getDisplayName(), set.size(), ComponentUtils.formatList(set)), false
 				);
 			}
 		} else if (set.isEmpty()) {
-			commandSourceStack.sendSuccess(Component.translatable("commands.tag.list.multiple.empty", collection.size()), false);
+			commandSourceStack.sendSuccess(() -> Component.translatable("commands.tag.list.multiple.empty", collection.size()), false);
 		} else {
 			commandSourceStack.sendSuccess(
-				Component.translatable("commands.tag.list.multiple.success", collection.size(), set.size(), ComponentUtils.formatList(set)), false
+				() -> Component.translatable("commands.tag.list.multiple.success", collection.size(), set.size(), ComponentUtils.formatList(set)), false
 			);
 		}
 

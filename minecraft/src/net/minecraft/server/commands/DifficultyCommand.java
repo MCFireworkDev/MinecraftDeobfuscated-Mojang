@@ -25,7 +25,7 @@ public class DifficultyCommand {
 
 		commandDispatcher.register(literalArgumentBuilder.requires(commandSourceStack -> commandSourceStack.hasPermission(2)).executes(commandContext -> {
 			Difficulty difficultyxx = commandContext.getSource().getLevel().getDifficulty();
-			commandContext.getSource().sendSuccess(Component.translatable("commands.difficulty.query", difficultyxx.getDisplayName()), false);
+			commandContext.getSource().sendSuccess(() -> Component.translatable("commands.difficulty.query", difficultyx.getDisplayName()), false);
 			return difficultyxx.getId();
 		}));
 	}
@@ -36,7 +36,7 @@ public class DifficultyCommand {
 			throw ERROR_ALREADY_DIFFICULT.create(difficulty.getKey());
 		} else {
 			minecraftServer.setDifficulty(difficulty, true);
-			commandSourceStack.sendSuccess(Component.translatable("commands.difficulty.success", difficulty.getDisplayName()), true);
+			commandSourceStack.sendSuccess(() -> Component.translatable("commands.difficulty.success", difficulty.getDisplayName()), true);
 			return 0;
 		}
 	}

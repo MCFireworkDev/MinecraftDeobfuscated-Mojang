@@ -108,9 +108,11 @@ public class TitleCommand {
 		}
 
 		if (collection.size() == 1) {
-			commandSourceStack.sendSuccess(Component.translatable("commands.title.cleared.single", ((ServerPlayer)collection.iterator().next()).getDisplayName()), true);
+			commandSourceStack.sendSuccess(
+				() -> Component.translatable("commands.title.cleared.single", ((ServerPlayer)collection.iterator().next()).getDisplayName()), true
+			);
 		} else {
-			commandSourceStack.sendSuccess(Component.translatable("commands.title.cleared.multiple", collection.size()), true);
+			commandSourceStack.sendSuccess(() -> Component.translatable("commands.title.cleared.multiple", collection.size()), true);
 		}
 
 		return collection.size();
@@ -124,9 +126,11 @@ public class TitleCommand {
 		}
 
 		if (collection.size() == 1) {
-			commandSourceStack.sendSuccess(Component.translatable("commands.title.reset.single", ((ServerPlayer)collection.iterator().next()).getDisplayName()), true);
+			commandSourceStack.sendSuccess(
+				() -> Component.translatable("commands.title.reset.single", ((ServerPlayer)collection.iterator().next()).getDisplayName()), true
+			);
 		} else {
-			commandSourceStack.sendSuccess(Component.translatable("commands.title.reset.multiple", collection.size()), true);
+			commandSourceStack.sendSuccess(() -> Component.translatable("commands.title.reset.multiple", collection.size()), true);
 		}
 
 		return collection.size();
@@ -141,10 +145,10 @@ public class TitleCommand {
 
 		if (collection.size() == 1) {
 			commandSourceStack.sendSuccess(
-				Component.translatable("commands.title.show." + string + ".single", ((ServerPlayer)collection.iterator().next()).getDisplayName()), true
+				() -> Component.translatable("commands.title.show." + string + ".single", ((ServerPlayer)collection.iterator().next()).getDisplayName()), true
 			);
 		} else {
-			commandSourceStack.sendSuccess(Component.translatable("commands.title.show." + string + ".multiple", collection.size()), true);
+			commandSourceStack.sendSuccess(() -> Component.translatable("commands.title.show." + string + ".multiple", collection.size()), true);
 		}
 
 		return collection.size();
@@ -158,9 +162,11 @@ public class TitleCommand {
 		}
 
 		if (collection.size() == 1) {
-			commandSourceStack.sendSuccess(Component.translatable("commands.title.times.single", ((ServerPlayer)collection.iterator().next()).getDisplayName()), true);
+			commandSourceStack.sendSuccess(
+				() -> Component.translatable("commands.title.times.single", ((ServerPlayer)collection.iterator().next()).getDisplayName()), true
+			);
 		} else {
-			commandSourceStack.sendSuccess(Component.translatable("commands.title.times.multiple", collection.size()), true);
+			commandSourceStack.sendSuccess(() -> Component.translatable("commands.title.times.multiple", collection.size()), true);
 		}
 
 		return collection.size();

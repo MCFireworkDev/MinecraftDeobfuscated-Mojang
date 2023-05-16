@@ -69,13 +69,13 @@ public class ChaseCommand {
 	private static int stop(CommandSourceStack commandSourceStack) {
 		if (chaseClient != null) {
 			chaseClient.stop();
-			commandSourceStack.sendSuccess(Component.literal("You have now stopped chasing"), false);
+			commandSourceStack.sendSuccess(() -> Component.literal("You have now stopped chasing"), false);
 			chaseClient = null;
 		}
 
 		if (chaseServer != null) {
 			chaseServer.stop();
-			commandSourceStack.sendSuccess(Component.literal("You are no longer being chased"), false);
+			commandSourceStack.sendSuccess(() -> Component.literal("You are no longer being chased"), false);
 			chaseServer = null;
 		}
 
@@ -103,7 +103,7 @@ public class ChaseCommand {
 			try {
 				chaseServer.start();
 				commandSourceStack.sendSuccess(
-					Component.literal("Chase server is now running on port " + i + ". Clients can follow you using /chase follow <ip> <port>"), false
+					() -> Component.literal("Chase server is now running on port " + i + ". Clients can follow you using /chase follow <ip> <port>"), false
 				);
 			} catch (IOException var4) {
 				var4.printStackTrace();
@@ -122,13 +122,13 @@ public class ChaseCommand {
 			chaseClient = new ChaseClient(string, i, commandSourceStack.getServer());
 			chaseClient.start();
 			commandSourceStack.sendSuccess(
-				Component.literal(
-					"You are now chasing "
-						+ string
-						+ ":"
-						+ i
-						+ ". If that server does '/chase lead' then you will automatically go to the same position. Use '/chase stop' to stop chasing."
-				),
+				() -> Component.literal(
+						"You are now chasing "
+							+ string
+							+ ":"
+							+ i
+							+ ". If that server does '/chase lead' then you will automatically go to the same position. Use '/chase stop' to stop chasing."
+					),
 				false
 			);
 			return 0;

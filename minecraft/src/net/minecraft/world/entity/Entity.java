@@ -727,7 +727,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 			return false;
 		} else {
 			boolean bl3 = this.isStateClimbable(blockState);
-			if ((this.onGround() || bl3 || this.isCrouching() && vec3.y == 0.0) && !this.isSwimming()) {
+			if ((this.onGround() || bl3 || this.isCrouching() && vec3.y == 0.0 || this.isOnRails()) && !this.isSwimming()) {
 				if (bl) {
 					this.walkingStepSound(blockPos, blockState);
 				}
@@ -2161,6 +2161,10 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 			Team team = this.getTeam();
 			return team != null && player != null && player.getTeam() == team && team.canSeeFriendlyInvisibles() ? false : this.isInvisible();
 		}
+	}
+
+	public boolean isOnRails() {
+		return false;
 	}
 
 	public void updateDynamicGameEventListener(BiConsumer<DynamicGameEventListener<?>, ServerLevel> biConsumer) {

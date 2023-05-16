@@ -76,6 +76,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.Targeting;
 import net.minecraft.world.entity.TraceableEntity;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -445,13 +446,12 @@ public class ExecuteCommand {
 	}
 
 	private static boolean isChunkLoaded(ServerLevel serverLevel, BlockPos blockPos) {
-		int i = SectionPos.blockToSectionCoord(blockPos.getX());
-		int j = SectionPos.blockToSectionCoord(blockPos.getZ());
-		LevelChunk levelChunk = serverLevel.getChunkSource().getChunkNow(i, j);
-		if (levelChunk != null) {
-			return levelChunk.getFullStatus() == FullChunkStatus.ENTITY_TICKING;
-		} else {
+		ChunkPos chunkPos = new ChunkPos(blockPos);
+		LevelChunk levelChunk = serverLevel.getChunkSource().getChunkNow(chunkPos.x, chunkPos.z);
+		if (levelChunk == null) {
 			return false;
+		} else {
+			return levelChunk.getFullStatus() == FullChunkStatus.ENTITY_TICKING && serverLevel.areEntitiesLoaded(chunkPos.toLong());
 		}
 	}
 
@@ -674,7 +674,7 @@ public class ExecuteCommand {
 		return bl ? commandContext -> {
 			int i = commandNumericPredicate.test(commandContext);
 			if (i > 0) {
-				commandContext.getSource().sendSuccess(Component.translatable("commands.execute.conditional.pass_count", i), false);
+				commandContext.getSource().sendSuccess(() -> Component.translatable("commands.execute.conditional.pass_count", i), false);
 				return i;
 			} else {
 				throw ERROR_CONDITIONAL_FAILED.create();
@@ -682,7 +682,7 @@ public class ExecuteCommand {
 		} : commandContext -> {
 			int i = commandNumericPredicate.test(commandContext);
 			if (i == 0) {
-				commandContext.getSource().sendSuccess(Component.translatable("commands.execute.conditional.pass"), false);
+				commandContext.getSource().sendSuccess(() -> Component.translatable("commands.execute.conditional.pass"), false);
 				return 1;
 			} else {
 				throw ERROR_CONDITIONAL_FAILED_COUNT.create(i);
@@ -739,7 +739,7 @@ public class ExecuteCommand {
 	) {
 		return argumentBuilder.fork(commandNode, commandContext -> expect(commandContext, bl, commandPredicate.test(commandContext))).executes(commandContext -> {
 			if (bl == commandPredicate.test(commandContext)) {
-				((CommandSourceStack)commandContext.getSource()).sendSuccess(Component.translatable("commands.execute.conditional.pass"), false);
+				((CommandSourceStack)commandContext.getSource()).sendSuccess(() -> Component.translatable("commands.execute.conditional.pass"), false);
 				return 1;
 			} else {
 				throw ERROR_CONDITIONAL_FAILED.create();
@@ -757,7 +757,7 @@ public class ExecuteCommand {
 	private static int checkIfRegions(CommandContext<CommandSourceStack> commandContext, boolean bl) throws CommandSyntaxException {
 		OptionalInt optionalInt = checkRegions(commandContext, bl);
 		if (optionalInt.isPresent()) {
-			commandContext.getSource().sendSuccess(Component.translatable("commands.execute.conditional.pass_count", optionalInt.getAsInt()), false);
+			commandContext.getSource().sendSuccess(() -> Component.translatable("commands.execute.conditional.pass_count", optionalInt.getAsInt()), false);
 			return optionalInt.getAsInt();
 		} else {
 			throw ERROR_CONDITIONAL_FAILED.create();
@@ -769,7 +769,7 @@ public class ExecuteCommand {
 		if (optionalInt.isPresent()) {
 			throw ERROR_CONDITIONAL_FAILED_COUNT.create(optionalInt.getAsInt());
 		} else {
-			commandContext.getSource().sendSuccess(Component.translatable("commands.execute.conditional.pass"), false);
+			commandContext.getSource().sendSuccess(() -> Component.translatable("commands.execute.conditional.pass"), false);
 			return 1;
 		}
 	}

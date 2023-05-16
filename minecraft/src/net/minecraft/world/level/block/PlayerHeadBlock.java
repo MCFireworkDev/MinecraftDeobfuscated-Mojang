@@ -2,6 +2,7 @@ package net.minecraft.world.level.block;
 
 import com.mojang.authlib.GameProfile;
 import javax.annotation.Nullable;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
@@ -12,7 +13,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import org.apache.commons.lang3.StringUtils;
 
 public class PlayerHeadBlock extends SkullBlock {
 	protected PlayerHeadBlock(BlockBehaviour.Properties properties) {
@@ -29,7 +29,7 @@ public class PlayerHeadBlock extends SkullBlock {
 				CompoundTag compoundTag = itemStack.getTag();
 				if (compoundTag.contains("SkullOwner", 10)) {
 					gameProfile = NbtUtils.readGameProfile(compoundTag.getCompound("SkullOwner"));
-				} else if (compoundTag.contains("SkullOwner", 8) && !StringUtils.isBlank(compoundTag.getString("SkullOwner"))) {
+				} else if (compoundTag.contains("SkullOwner", 8) && !Util.isBlank(compoundTag.getString("SkullOwner"))) {
 					gameProfile = new GameProfile(null, compoundTag.getString("SkullOwner"));
 				}
 			}

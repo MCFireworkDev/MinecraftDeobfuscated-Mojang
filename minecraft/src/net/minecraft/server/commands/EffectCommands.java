@@ -185,12 +185,14 @@ public class EffectCommands {
 		} else {
 			if (collection.size() == 1) {
 				commandSourceStack.sendSuccess(
-					Component.translatable("commands.effect.give.success.single", mobEffect.getDisplayName(), ((Entity)collection.iterator().next()).getDisplayName(), k / 20),
+					() -> Component.translatable(
+							"commands.effect.give.success.single", mobEffect.getDisplayName(), ((Entity)collection.iterator().next()).getDisplayName(), k / 20
+						),
 					true
 				);
 			} else {
 				commandSourceStack.sendSuccess(
-					Component.translatable("commands.effect.give.success.multiple", mobEffect.getDisplayName(), collection.size(), k / 20), true
+					() -> Component.translatable("commands.effect.give.success.multiple", mobEffect.getDisplayName(), collection.size(), k / 20), true
 				);
 			}
 
@@ -212,10 +214,10 @@ public class EffectCommands {
 		} else {
 			if (collection.size() == 1) {
 				commandSourceStack.sendSuccess(
-					Component.translatable("commands.effect.clear.everything.success.single", ((Entity)collection.iterator().next()).getDisplayName()), true
+					() -> Component.translatable("commands.effect.clear.everything.success.single", ((Entity)collection.iterator().next()).getDisplayName()), true
 				);
 			} else {
-				commandSourceStack.sendSuccess(Component.translatable("commands.effect.clear.everything.success.multiple", collection.size()), true);
+				commandSourceStack.sendSuccess(() -> Component.translatable("commands.effect.clear.everything.success.multiple", collection.size()), true);
 			}
 
 			return i;
@@ -237,14 +239,14 @@ public class EffectCommands {
 		} else {
 			if (collection.size() == 1) {
 				commandSourceStack.sendSuccess(
-					Component.translatable(
-						"commands.effect.clear.specific.success.single", mobEffect.getDisplayName(), ((Entity)collection.iterator().next()).getDisplayName()
-					),
+					() -> Component.translatable(
+							"commands.effect.clear.specific.success.single", mobEffect.getDisplayName(), ((Entity)collection.iterator().next()).getDisplayName()
+						),
 					true
 				);
 			} else {
 				commandSourceStack.sendSuccess(
-					Component.translatable("commands.effect.clear.specific.success.multiple", mobEffect.getDisplayName(), collection.size()), true
+					() -> Component.translatable("commands.effect.clear.specific.success.multiple", mobEffect.getDisplayName(), collection.size()), true
 				);
 			}
 

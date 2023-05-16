@@ -320,7 +320,8 @@ public class CloneCommands {
 				if (m == 0) {
 					throw ERROR_FAILED.create();
 				} else {
-					commandSourceStack.sendSuccess(Component.translatable("commands.clone.success", m), true);
+					int n = m;
+					commandSourceStack.sendSuccess(() -> Component.translatable("commands.clone.success", n), true);
 					return m;
 				}
 			} else {

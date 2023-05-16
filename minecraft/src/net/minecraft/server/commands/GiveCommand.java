@@ -53,8 +53,9 @@ public class GiveCommand {
 	private static int giveItem(CommandSourceStack commandSourceStack, ItemInput itemInput, Collection<ServerPlayer> collection, int i) throws CommandSyntaxException {
 		int j = itemInput.getItem().getMaxStackSize();
 		int k = j * 100;
+		ItemStack itemStack = itemInput.createItemStack(i, false);
 		if (i > k) {
-			commandSourceStack.sendFailure(Component.translatable("commands.give.failed.toomanyitems", k, itemInput.createItemStack(i, false).getDisplayName()));
+			commandSourceStack.sendFailure(Component.translatable("commands.give.failed.toomanyitems", k, itemStack.getDisplayName()));
 			return 0;
 		} else {
 			for(ServerPlayer serverPlayer : collection) {
@@ -63,11 +64,11 @@ public class GiveCommand {
 				while(l > 0) {
 					int m = Math.min(j, l);
 					l -= m;
-					ItemStack itemStack = itemInput.createItemStack(m, false);
-					boolean bl = serverPlayer.getInventory().add(itemStack);
-					if (bl && itemStack.isEmpty()) {
-						itemStack.setCount(1);
-						ItemEntity itemEntity = serverPlayer.drop(itemStack, false);
+					ItemStack itemStack2 = itemInput.createItemStack(m, false);
+					boolean bl = serverPlayer.getInventory().add(itemStack2);
+					if (bl && itemStack2.isEmpty()) {
+						itemStack2.setCount(1);
+						ItemEntity itemEntity = serverPlayer.drop(itemStack2, false);
 						if (itemEntity != null) {
 							itemEntity.makeFakeItem();
 						}
@@ -85,7 +86,7 @@ public class GiveCommand {
 							);
 						serverPlayer.containerMenu.broadcastChanges();
 					} else {
-						ItemEntity itemEntity = serverPlayer.drop(itemStack, false);
+						ItemEntity itemEntity = serverPlayer.drop(itemStack2, false);
 						if (itemEntity != null) {
 							itemEntity.setNoPickUpDelay();
 							itemEntity.setTarget(serverPlayer.getUUID());
@@ -96,15 +97,11 @@ public class GiveCommand {
 
 			if (collection.size() == 1) {
 				commandSourceStack.sendSuccess(
-					Component.translatable(
-						"commands.give.success.single", i, itemInput.createItemStack(i, false).getDisplayName(), ((ServerPlayer)collection.iterator().next()).getDisplayName()
-					),
+					() -> Component.translatable("commands.give.success.single", i, itemStack.getDisplayName(), ((ServerPlayer)collection.iterator().next()).getDisplayName()),
 					true
 				);
 			} else {
-				commandSourceStack.sendSuccess(
-					Component.translatable("commands.give.success.single", i, itemInput.createItemStack(i, false).getDisplayName(), collection.size()), true
-				);
+				commandSourceStack.sendSuccess(() -> Component.translatable("commands.give.success.single", i, itemStack.getDisplayName(), collection.size()), true);
 			}
 
 			return collection.size();

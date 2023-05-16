@@ -176,6 +176,16 @@ public class EnderDragon extends Mob implements Enemy {
 			}
 		}
 
+		if (this.dragonFight == null) {
+			Level g = this.level();
+			if (g instanceof ServerLevel serverLevel) {
+				EndDragonFight endDragonFight = serverLevel.getDragonFight();
+				if (endDragonFight != null && this.getUUID().equals(endDragonFight.getDragonUUID())) {
+					this.dragonFight = endDragonFight;
+				}
+			}
+		}
+
 		this.oFlapTime = this.flapTime;
 		if (this.isDeadOrDying()) {
 			float f = (this.random.nextFloat() - 0.5F) * 8.0F;
