@@ -152,6 +152,7 @@ public class JoinMultiplayerScreen extends Screen {
 		}
 
 		this.pinger.removeAll();
+		this.serverSelectionList.removed();
 	}
 
 	private void refreshServerList() {

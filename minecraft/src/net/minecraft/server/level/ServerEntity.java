@@ -217,12 +217,12 @@ public class ServerEntity {
 
 	public void addPairing(ServerPlayer serverPlayer) {
 		List<Packet<ClientGamePacketListener>> list = new ArrayList();
-		this.sendPairingData(list::add);
+		this.sendPairingData(serverPlayer, list::add);
 		serverPlayer.connection.send(new ClientboundBundlePacket(list));
 		this.entity.startSeenByPlayer(serverPlayer);
 	}
 
-	public void sendPairingData(Consumer<Packet<ClientGamePacketListener>> consumer) {
+	public void sendPairingData(ServerPlayer serverPlayer, Consumer<Packet<ClientGamePacketListener>> consumer) {
 		if (this.entity.isRemoved()) {
 			LOGGER.warn("Fetching packet for removed entity {}", this.entity);
 		}
@@ -266,7 +266,8 @@ public class ServerEntity {
 			}
 		}
 
-		if (this.entity instanceof LivingEntity livingEntity) {
+		Entity var14 = this.entity;
+		if (var14 instanceof LivingEntity livingEntity && livingEntity.getControllingPassenger() == serverPlayer) {
 			for(MobEffectInstance mobEffectInstance : livingEntity.getActiveEffects()) {
 				consumer.accept(new ClientboundUpdateMobEffectPacket(this.entity.getId(), mobEffectInstance));
 			}
