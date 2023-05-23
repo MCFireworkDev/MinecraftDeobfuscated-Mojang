@@ -1000,14 +1000,15 @@ public abstract class LivingEntity extends Entity implements Attackable {
 		this.effectsDirty = true;
 		if (!this.level().isClientSide) {
 			mobEffectInstance.getEffect().addAttributeModifiers(this, this.getAttributes(), mobEffectInstance.getAmplifier());
-			this.sendEffectToRider(mobEffectInstance);
+			this.sendEffectToPassengers(mobEffectInstance);
 		}
 	}
 
-	public void sendEffectToRider(MobEffectInstance mobEffectInstance) {
-		LivingEntity var3 = this.getControllingPassenger();
-		if (var3 instanceof ServerPlayer serverPlayer) {
-			serverPlayer.connection.send(new ClientboundUpdateMobEffectPacket(this.getId(), mobEffectInstance));
+	public void sendEffectToPassengers(MobEffectInstance mobEffectInstance) {
+		for(Entity entity : this.getPassengers()) {
+			if (entity instanceof ServerPlayer serverPlayer) {
+				serverPlayer.connection.send(new ClientboundUpdateMobEffectPacket(this.getId(), mobEffectInstance));
+			}
 		}
 	}
 
@@ -1020,7 +1021,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
 		}
 
 		if (!this.level().isClientSide) {
-			this.sendEffectToRider(mobEffectInstance);
+			this.sendEffectToPassengers(mobEffectInstance);
 		}
 	}
 
@@ -1028,9 +1029,11 @@ public abstract class LivingEntity extends Entity implements Attackable {
 		this.effectsDirty = true;
 		if (!this.level().isClientSide) {
 			mobEffectInstance.getEffect().removeAttributeModifiers(this, this.getAttributes(), mobEffectInstance.getAmplifier());
-			LivingEntity var3 = this.getControllingPassenger();
-			if (var3 instanceof ServerPlayer serverPlayer) {
-				serverPlayer.connection.send(new ClientboundRemoveMobEffectPacket(this.getId(), mobEffectInstance.getEffect()));
+
+			for(Entity entity : this.getPassengers()) {
+				if (entity instanceof ServerPlayer serverPlayer) {
+					serverPlayer.connection.send(new ClientboundRemoveMobEffectPacket(this.getId(), mobEffectInstance.getEffect()));
+				}
 			}
 		}
 	}
