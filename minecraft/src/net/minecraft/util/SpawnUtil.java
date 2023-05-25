@@ -9,6 +9,8 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.StainedGlassBlock;
 import net.minecraft.world.level.block.StainedGlassPaneBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -64,8 +66,18 @@ public class SpawnUtil {
 				&& !blockState.is(Blocks.CACTUS)
 				&& !blockState.is(Blocks.GLASS_PANE)
 				&& !(blockState.getBlock() instanceof StainedGlassPaneBlock)
-				&& !blockState.is(Blocks.CONDUIT)) {
-				return (blockState2.isAir() || blockState2.liquid()) && blockState.isSolid();
+				&& !(blockState.getBlock() instanceof StainedGlassBlock)
+				&& !(blockState.getBlock() instanceof LeavesBlock)
+				&& !blockState.is(Blocks.CONDUIT)
+				&& !blockState.is(Blocks.ICE)
+				&& !blockState.is(Blocks.TNT)
+				&& !blockState.is(Blocks.GLOWSTONE)
+				&& !blockState.is(Blocks.BEACON)
+				&& !blockState.is(Blocks.SEA_LANTERN)
+				&& !blockState.is(Blocks.FROSTED_ICE)
+				&& !blockState.is(Blocks.TINTED_GLASS)
+				&& !blockState.is(Blocks.GLASS)) {
+				return (blockState2.isAir() || blockState2.liquid()) && (blockState.isSolid() || blockState.is(Blocks.POWDER_SNOW));
 			} else {
 				return false;
 			}
