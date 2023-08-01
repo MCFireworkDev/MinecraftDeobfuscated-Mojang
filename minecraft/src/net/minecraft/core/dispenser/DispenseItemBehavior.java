@@ -402,8 +402,8 @@ public interface DispenseItemBehavior {
 				BlockPos blockPos = blockSource.getPos().relative(blockSource.getBlockState().getValue(DispenserBlock.FACING));
 				BlockState blockState = levelAccessor.getBlockState(blockPos);
 				Block block = blockState.getBlock();
-				if (block instanceof BucketPickup) {
-					ItemStack itemStack2 = ((BucketPickup)block).pickupBlock(levelAccessor, blockPos, blockState);
+				if (block instanceof BucketPickup bucketPickup) {
+					ItemStack itemStack2 = bucketPickup.pickupBlock(null, levelAccessor, blockPos, blockState);
 					if (itemStack2.isEmpty()) {
 						return super.execute(blockSource, itemStack);
 					} else {

@@ -143,6 +143,12 @@ public class Main {
 					packOutput, Component.translatable("dataPack.bundle.description"), FeatureFlagSet.of(FeatureFlags.BUNDLE)
 				)
 		);
+		packGenerator3 = dataGenerator.getBuiltinDatapack(bl2, "trade_rebalance");
+		packGenerator3.addProvider(
+			packOutput -> PackMetadataGenerator.forFeaturePack(
+					packOutput, Component.translatable("dataPack.trade_rebalance.description"), FeatureFlagSet.of(FeatureFlags.TRADE_REBALANCE)
+				)
+		);
 		return dataGenerator;
 	}
 }

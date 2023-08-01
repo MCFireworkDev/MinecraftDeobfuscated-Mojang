@@ -137,6 +137,8 @@ public class JukeboxBlockEntity extends BlockEntity implements Clearable, Contai
 			this.items.set(i, itemStack);
 			this.setHasRecordBlockState(null, true);
 			this.startPlaying();
+		} else if (itemStack.isEmpty()) {
+			this.removeItem(i, 1);
 		}
 	}
 

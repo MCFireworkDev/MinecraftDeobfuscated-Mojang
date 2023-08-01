@@ -17,6 +17,7 @@ import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.DimensionDataStorage;
@@ -178,7 +179,9 @@ public class LegacyStructureDataHandler {
 				CompoundTag compoundTag = new CompoundTag();
 
 				try {
-					compoundTag = dimensionDataStorage.readTagFromDisk(string, 1493).getCompound("data").getCompound("Features");
+					compoundTag = dimensionDataStorage.readTagFromDisk(string, DataFixTypes.SAVED_DATA_STRUCTURE_FEATURE_INDICES, 1493)
+						.getCompound("data")
+						.getCompound("Features");
 					if (compoundTag.isEmpty()) {
 						continue;
 					}
@@ -202,9 +205,7 @@ public class LegacyStructureDataHandler {
 				}
 
 				String string5 = string + "_index";
-				StructureFeatureIndexSavedData structureFeatureIndexSavedData = dimensionDataStorage.computeIfAbsent(
-					StructureFeatureIndexSavedData::load, StructureFeatureIndexSavedData::new, string5
-				);
+				StructureFeatureIndexSavedData structureFeatureIndexSavedData = dimensionDataStorage.computeIfAbsent(StructureFeatureIndexSavedData.factory(), string5);
 				if (!structureFeatureIndexSavedData.getAll().isEmpty()) {
 					this.indexMap.put(string, structureFeatureIndexSavedData);
 				} else {

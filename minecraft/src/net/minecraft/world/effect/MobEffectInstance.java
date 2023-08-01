@@ -93,7 +93,6 @@ public class MobEffectInstance implements Comparable<MobEffectInstance> {
 			LOGGER.warn("This method should only be called for matching effects!");
 		}
 
-		int i = this.duration;
 		boolean bl = false;
 		if (mobEffectInstance.amplifier > this.amplifier) {
 			if (mobEffectInstance.isShorterDurationThan(this)) {
@@ -177,8 +176,8 @@ public class MobEffectInstance implements Comparable<MobEffectInstance> {
 	public boolean tick(LivingEntity livingEntity, Runnable runnable) {
 		if (this.hasRemainingDuration()) {
 			int i = this.isInfiniteDuration() ? livingEntity.tickCount : this.duration;
-			if (this.effect.isDurationEffectTick(i, this.amplifier)) {
-				this.applyEffect(livingEntity);
+			if (this.effect.shouldApplyEffectTickThisTick(i, this.amplifier)) {
+				this.effect.applyEffectTick(livingEntity, this.amplifier);
 			}
 
 			this.tickDownDuration();
@@ -205,10 +204,8 @@ public class MobEffectInstance implements Comparable<MobEffectInstance> {
 		return this.duration = this.mapDuration(i -> i - 1);
 	}
 
-	public void applyEffect(LivingEntity livingEntity) {
-		if (this.hasRemainingDuration()) {
-			this.effect.applyEffectTick(livingEntity, this.amplifier);
-		}
+	public void onEffectStarted(LivingEntity livingEntity) {
+		this.effect.onEffectStarted(livingEntity, this.amplifier);
 	}
 
 	public String getDescriptionId() {

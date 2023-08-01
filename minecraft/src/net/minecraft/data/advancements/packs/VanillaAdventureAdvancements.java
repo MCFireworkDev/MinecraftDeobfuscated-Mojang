@@ -57,7 +57,6 @@ import net.minecraft.world.entity.raid.Raid;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.DecoratedPotRecipe;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterList;
@@ -626,7 +625,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 		Advancement.Builder.advancement()
 			.parent(advancement11)
 			.display(
-				DecoratedPotRecipe.createDecoratedPotItem(
+				DecoratedPotBlockEntity.createDecoratedPotItem(
 					new DecoratedPotBlockEntity.Decorations(Items.BRICK, Items.HEART_POTTERY_SHERD, Items.BRICK, Items.EXPLORER_POTTERY_SHERD)
 				),
 				Component.translatable("advancements.adventure.craft_decorated_pot_using_only_sherds.title"),
@@ -675,6 +674,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				true,
 				false
 			)
+			.rewards(AdvancementRewards.Builder.experience(150))
 			.save(consumer, "adventure/trim_with_all_exclusive_armor_patterns");
 		Advancement.Builder.advancement()
 			.parent(advancement)

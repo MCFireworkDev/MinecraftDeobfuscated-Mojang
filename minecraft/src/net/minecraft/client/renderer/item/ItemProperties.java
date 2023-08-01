@@ -94,7 +94,11 @@ public class ItemProperties {
 			} else {
 				return clientLevel == null
 					? 0.0F
-					: ArmorTrim.getTrim(clientLevel.registryAccess(), itemStack).map(ArmorTrim::material).map(Holder::value).map(TrimMaterial::itemModelIndex).orElse(0.0F);
+					: ArmorTrim.getTrim(clientLevel.registryAccess(), itemStack, true)
+						.map(ArmorTrim::material)
+						.map(Holder::value)
+						.map(TrimMaterial::itemModelIndex)
+						.orElse(0.0F);
 			}
 		};
 		registerGeneric(ItemModelGenerators.TRIM_TYPE_PREDICATE_ID, clampedItemPropertyFunction);

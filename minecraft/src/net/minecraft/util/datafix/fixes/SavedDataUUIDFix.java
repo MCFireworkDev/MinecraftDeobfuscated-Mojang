@@ -12,7 +12,7 @@ public class SavedDataUUIDFix extends AbstractUUIDFix {
 	private static final Logger LOGGER = LogUtils.getLogger();
 
 	public SavedDataUUIDFix(Schema schema) {
-		super(schema, References.SAVED_DATA);
+		super(schema, References.SAVED_DATA_RAIDS);
 	}
 
 	@Override
@@ -20,21 +20,21 @@ public class SavedDataUUIDFix extends AbstractUUIDFix {
 		return this.fixTypeEverywhereTyped(
 			"SavedDataUUIDFix",
 			this.getInputSchema().getType(this.typeReference),
-			typed -> typed.updateTyped(
-					typed.getType().findField("data"),
-					typedx -> typedx.update(
-							DSL.remainderFinder(),
-							dynamic -> dynamic.update(
+			typed -> typed.update(
+					DSL.remainderFinder(),
+					dynamic -> dynamic.update(
+							"data",
+							dynamicx -> dynamicx.update(
 									"Raids",
-									dynamicx -> dynamicx.createList(
-											dynamicx.asStream()
+									dynamicxx -> dynamicxx.createList(
+											dynamicxx.asStream()
 												.map(
-													dynamicxx -> dynamicxx.update(
+													dynamicxxx -> dynamicxxx.update(
 															"HeroesOfTheVillage",
-															dynamicxxx -> dynamicxxx.createList(
-																	dynamicxxx.asStream().map(dynamicxxxx -> (Dynamic)createUUIDFromLongs(dynamicxxxx, "UUIDMost", "UUIDLeast").orElseGet(() -> {
+															dynamicxxxx -> dynamicxxxx.createList(
+																	dynamicxxxx.asStream().map(dynamicxxxxx -> (Dynamic)createUUIDFromLongs(dynamicxxxxx, "UUIDMost", "UUIDLeast").orElseGet(() -> {
 																			LOGGER.warn("HeroesOfTheVillage contained invalid UUIDs.");
-																			return dynamicxxxx;
+																			return dynamicxxxxx;
 																		}))
 																)
 														)

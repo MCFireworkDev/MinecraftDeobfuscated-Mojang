@@ -182,7 +182,7 @@ public class ResourceLocation implements Comparable<ResourceLocation> {
 		return c >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c == '_' || c == ':' || c == '/' || c == '.' || c == '-';
 	}
 
-	private static boolean isValidPath(String string) {
+	public static boolean isValidPath(String string) {
 		for(int i = 0; i < string.length(); ++i) {
 			if (!validPathChar(string.charAt(i))) {
 				return false;
@@ -192,7 +192,7 @@ public class ResourceLocation implements Comparable<ResourceLocation> {
 		return true;
 	}
 
-	private static boolean isValidNamespace(String string) {
+	public static boolean isValidNamespace(String string) {
 		for(int i = 0; i < string.length(); ++i) {
 			if (!validNamespaceChar(string.charAt(i))) {
 				return false;
