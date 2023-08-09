@@ -11,6 +11,7 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -109,7 +110,7 @@ public class PathPackResources extends AbstractPackResources {
 			if (stream != null) {
 				stream.close();
 			}
-		} catch (NoSuchFileException var10) {
+		} catch (NotDirectoryException | NoSuchFileException var10) {
 		} catch (IOException var11) {
 			LOGGER.error("Failed to list path {}", path2, var11);
 		}
@@ -147,7 +148,7 @@ public class PathPackResources extends AbstractPackResources {
 			if (directoryStream != null) {
 				directoryStream.close();
 			}
-		} catch (NoSuchFileException var10) {
+		} catch (NotDirectoryException | NoSuchFileException var10) {
 		} catch (IOException var11) {
 			LOGGER.error("Failed to list path {}", path, var11);
 		}

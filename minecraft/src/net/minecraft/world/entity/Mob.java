@@ -614,40 +614,42 @@ public abstract class Mob extends LivingEntity implements Targeting {
 			return this.canReplaceEqualItem(itemStack, itemStack2);
 		} else if (itemStack.getItem() instanceof CrossbowItem && itemStack2.getItem() instanceof CrossbowItem) {
 			return this.canReplaceEqualItem(itemStack, itemStack2);
-		} else if (itemStack.getItem() instanceof ArmorItem) {
-			if (EnchantmentHelper.hasBindingCurse(itemStack2)) {
-				return false;
-			} else if (!(itemStack2.getItem() instanceof ArmorItem)) {
-				return true;
-			} else {
-				ArmorItem armorItem = (ArmorItem)itemStack.getItem();
-				ArmorItem armorItem2 = (ArmorItem)itemStack2.getItem();
-				if (armorItem.getDefense() != armorItem2.getDefense()) {
-					return armorItem.getDefense() > armorItem2.getDefense();
-				} else if (armorItem.getToughness() != armorItem2.getToughness()) {
-					return armorItem.getToughness() > armorItem2.getToughness();
-				} else {
-					return this.canReplaceEqualItem(itemStack, itemStack2);
-				}
-			}
 		} else {
-			if (itemStack.getItem() instanceof DiggerItem) {
-				if (itemStack2.getItem() instanceof BlockItem) {
+			Item diggerItem = itemStack.getItem();
+			if (diggerItem instanceof ArmorItem armorItem) {
+				if (EnchantmentHelper.hasBindingCurse(itemStack2)) {
+					return false;
+				} else if (!(itemStack2.getItem() instanceof ArmorItem)) {
 					return true;
+				} else {
+					ArmorItem armorItem2 = (ArmorItem)itemStack2.getItem();
+					if (armorItem.getDefense() != armorItem2.getDefense()) {
+						return armorItem.getDefense() > armorItem2.getDefense();
+					} else if (armorItem.getToughness() != armorItem2.getToughness()) {
+						return armorItem.getToughness() > armorItem2.getToughness();
+					} else {
+						return this.canReplaceEqualItem(itemStack, itemStack2);
+					}
 				}
-
-				if (itemStack2.getItem() instanceof DiggerItem) {
-					DiggerItem diggerItem = (DiggerItem)itemStack.getItem();
-					DiggerItem diggerItem2 = (DiggerItem)itemStack2.getItem();
-					if (diggerItem.getAttackDamage() != diggerItem2.getAttackDamage()) {
-						return diggerItem.getAttackDamage() > diggerItem2.getAttackDamage();
+			} else {
+				if (itemStack.getItem() instanceof DiggerItem) {
+					if (itemStack2.getItem() instanceof BlockItem) {
+						return true;
 					}
 
-					return this.canReplaceEqualItem(itemStack, itemStack2);
-				}
-			}
+					Item diggerItem2 = itemStack2.getItem();
+					if (diggerItem2 instanceof DiggerItem diggerItem) {
+						DiggerItem diggerItem2x = (DiggerItem)itemStack.getItem();
+						if (diggerItem2x.getAttackDamage() != diggerItem.getAttackDamage()) {
+							return diggerItem2x.getAttackDamage() > diggerItem.getAttackDamage();
+						}
 
-			return false;
+						return this.canReplaceEqualItem(itemStack, itemStack2);
+					}
+				}
+
+				return false;
+			}
 		}
 	}
 

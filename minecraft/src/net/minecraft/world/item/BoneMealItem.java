@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
 
 public class BoneMealItem extends Item {
 	public static final int GRASS_SPREAD_WIDTH = 3;
@@ -39,6 +40,7 @@ public class BoneMealItem extends Item {
 		BlockPos blockPos2 = blockPos.relative(useOnContext.getClickedFace());
 		if (growCrop(useOnContext.getItemInHand(), level, blockPos)) {
 			if (!level.isClientSide) {
+				useOnContext.getPlayer().gameEvent(GameEvent.ITEM_INTERACT_FINISH);
 				level.levelEvent(1505, blockPos, 0);
 			}
 
@@ -48,6 +50,7 @@ public class BoneMealItem extends Item {
 			boolean bl = blockState.isFaceSturdy(level, blockPos, useOnContext.getClickedFace());
 			if (bl && growWaterPlant(useOnContext.getItemInHand(), level, blockPos2, useOnContext.getClickedFace())) {
 				if (!level.isClientSide) {
+					useOnContext.getPlayer().gameEvent(GameEvent.ITEM_INTERACT_FINISH);
 					level.levelEvent(1505, blockPos2, 0);
 				}
 
@@ -60,7 +63,8 @@ public class BoneMealItem extends Item {
 
 	public static boolean growCrop(ItemStack itemStack, Level level, BlockPos blockPos) {
 		BlockState blockState = level.getBlockState(blockPos);
-		if (blockState.getBlock() instanceof BonemealableBlock bonemealableBlock && bonemealableBlock.isValidBonemealTarget(level, blockPos, blockState)) {
+		Block var5 = blockState.getBlock();
+		if (var5 instanceof BonemealableBlock bonemealableBlock && bonemealableBlock.isValidBonemealTarget(level, blockPos, blockState)) {
 			if (level instanceof ServerLevel) {
 				if (bonemealableBlock.isBonemealSuccess(level, level.random, blockPos, blockState)) {
 					bonemealableBlock.performBonemeal((ServerLevel)level, level.random, blockPos, blockState);

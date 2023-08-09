@@ -12,7 +12,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.net.SocketAddress;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -120,6 +119,8 @@ import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.network.protocol.game.ServerboundTeleportToEntityPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+import net.minecraft.network.protocol.status.ClientboundPongResponsePacket;
+import net.minecraft.network.protocol.status.ServerboundPingRequestPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -408,7 +409,7 @@ public class ServerGamePacketListenerImpl
 				double p = l * l + m * m + n * n;
 				if (p - o > 100.0 && !this.isSingleplayerOwner()) {
 					LOGGER.warn("{} (vehicle of {}) moved too quickly! {},{},{}", entity.getName().getString(), this.player.getName().getString(), l, m, n);
-					this.connection.send(new ClientboundMoveVehiclePacket(entity));
+					this.send(new ClientboundMoveVehiclePacket(entity));
 					return;
 				}
 
@@ -440,7 +441,7 @@ public class ServerGamePacketListenerImpl
 				boolean bl4 = serverLevel.noCollision(entity, entity.getBoundingBox().deflate(0.0625));
 				if (bl && (bl3 || !bl4)) {
 					entity.absMoveTo(d, e, f, j, k);
-					this.connection.send(new ClientboundMoveVehiclePacket(entity));
+					this.send(new ClientboundMoveVehiclePacket(entity));
 					return;
 				}
 
@@ -525,7 +526,7 @@ public class ServerGamePacketListenerImpl
 			.getCommands()
 			.getDispatcher()
 			.getCompletionSuggestions(parseResults)
-			.thenAccept(suggestions -> this.connection.send(new ClientboundCommandSuggestionsPacket(serverboundCommandSuggestionPacket.getId(), suggestions)));
+			.thenAccept(suggestions -> this.send(new ClientboundCommandSuggestionsPacket(serverboundCommandSuggestionPacket.getId(), suggestions)));
 	}
 
 	@Override
@@ -1476,6 +1477,11 @@ public class ServerGamePacketListenerImpl
 	}
 
 	@Override
+	public void handlePingRequest(ServerboundPingRequestPacket serverboundPingRequestPacket) {
+		this.connection.send(new ClientboundPongResponsePacket(serverboundPingRequestPacket.getTime()));
+	}
+
+	@Override
 	public void handleInteract(ServerboundInteractPacket serverboundInteractPacket) {
 		PacketUtils.ensureRunningOnSameThread(serverboundInteractPacket, this, this.player.serverLevel());
 		final ServerLevel serverLevel = this.player.serverLevel();
@@ -1738,7 +1744,7 @@ public class ServerGamePacketListenerImpl
 						return;
 					}
 
-					this.resetPlayerChatState(data.validate(this.player.getGameProfile(), signatureValidator, Duration.ZERO));
+					this.resetPlayerChatState(data.validate(this.player.getGameProfile(), signatureValidator));
 				} catch (ProfilePublicKey.ValidationException var6) {
 					LOGGER.error("Failed to validate profile key: {}", var6.getMessage());
 					this.disconnect(var6.getComponent());
@@ -1759,7 +1765,7 @@ public class ServerGamePacketListenerImpl
 	@Override
 	public void handleChunkBatchReceived(ServerboundChunkBatchReceivedPacket serverboundChunkBatchReceivedPacket) {
 		PacketUtils.ensureRunningOnSameThread(serverboundChunkBatchReceivedPacket, this, this.player.serverLevel());
-		this.chunkSender.onChunkBatchReceivedByClient(serverboundChunkBatchReceivedPacket.desiredBatchSize());
+		this.chunkSender.onChunkBatchReceivedByClient(serverboundChunkBatchReceivedPacket.desiredChunksPerTick());
 	}
 
 	private void resetPlayerChatState(RemoteChatSession remoteChatSession) {

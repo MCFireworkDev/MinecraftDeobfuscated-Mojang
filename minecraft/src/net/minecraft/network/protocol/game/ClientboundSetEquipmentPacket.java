@@ -39,7 +39,7 @@ public class ClientboundSetEquipmentPacket implements Packet<ClientGamePacketLis
 
 		for(int j = 0; j < i; ++j) {
 			Pair<EquipmentSlot, ItemStack> pair = (Pair)this.slots.get(j);
-			EquipmentSlot equipmentSlot = (EquipmentSlot)pair.getFirst();
+			EquipmentSlot equipmentSlot = pair.getFirst();
 			boolean bl = j != i - 1;
 			int k = equipmentSlot.ordinal();
 			friendlyByteBuf.writeByte(bl ? k | -128 : k);

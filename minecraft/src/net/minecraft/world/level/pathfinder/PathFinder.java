@@ -111,7 +111,7 @@ public class PathFinder {
 				.map(target -> this.reconstructPath(target.getBestNode(), (BlockPos)map.get(target), false))
 				.min(Comparator.comparingDouble(Path::getDistToTarget).thenComparingInt(Path::getNodeCount));
 		profilerFiller.pop();
-		return !optional.isPresent() ? null : (Path)optional.get();
+		return optional.isEmpty() ? null : (Path)optional.get();
 	}
 
 	protected float distance(Node node, Node node2) {

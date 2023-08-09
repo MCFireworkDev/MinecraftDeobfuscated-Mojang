@@ -267,7 +267,7 @@ public class StructureTemplateManager {
 
 	public boolean save(ResourceLocation resourceLocation) {
 		Optional<StructureTemplate> optional = (Optional)this.structureRepository.get(resourceLocation);
-		if (!optional.isPresent()) {
+		if (optional.isEmpty()) {
 			return false;
 		} else {
 			StructureTemplate structureTemplate = (StructureTemplate)optional.get();

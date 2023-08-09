@@ -82,7 +82,7 @@ public class LootTableProvider implements DataProvider {
 				ResourceLocation resourceLocationxx = (ResourceLocation)entry.getKey();
 				LootTable lootTable = (LootTable)entry.getValue();
 				Path path = this.pathProvider.json(resourceLocationxx);
-				return DataProvider.saveStable(cachedOutput, LootDataType.TABLE.parser().toJsonTree(lootTable), path);
+				return DataProvider.saveStable(cachedOutput, LootTable.CODEC, lootTable, path);
 			}).toArray(i -> new CompletableFuture[i]));
 		}
 	}

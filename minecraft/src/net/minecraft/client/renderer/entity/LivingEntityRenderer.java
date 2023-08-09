@@ -20,6 +20,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
@@ -57,24 +58,27 @@ public abstract class LivingEntityRenderer<T extends LivingEntity, M extends Ent
 		float h = Mth.rotLerp(g, livingEntity.yBodyRotO, livingEntity.yBodyRot);
 		float j = Mth.rotLerp(g, livingEntity.yHeadRotO, livingEntity.yHeadRot);
 		float k = j - h;
-		if (livingEntity.isPassenger() && livingEntity.getVehicle() instanceof LivingEntity livingEntity2) {
-			h = Mth.rotLerp(g, livingEntity2.yBodyRotO, livingEntity2.yBodyRot);
-			k = j - h;
-			float l = Mth.wrapDegrees(k);
-			if (l < -85.0F) {
-				l = -85.0F;
-			}
+		if (livingEntity.isPassenger()) {
+			Entity l = livingEntity.getVehicle();
+			if (l instanceof LivingEntity livingEntity2) {
+				h = Mth.rotLerp(g, livingEntity2.yBodyRotO, livingEntity2.yBodyRot);
+				k = j - h;
+				float lx = Mth.wrapDegrees(k);
+				if (lx < -85.0F) {
+					lx = -85.0F;
+				}
 
-			if (l >= 85.0F) {
-				l = 85.0F;
-			}
+				if (lx >= 85.0F) {
+					lx = 85.0F;
+				}
 
-			h = j - l;
-			if (l * l > 2500.0F) {
-				h += l * 0.2F;
-			}
+				h = j - lx;
+				if (lx * lx > 2500.0F) {
+					h += lx * 0.2F;
+				}
 
-			k = j - h;
+				k = j - h;
+			}
 		}
 
 		float m = Mth.lerp(g, livingEntity.xRotO, livingEntity.getXRot());

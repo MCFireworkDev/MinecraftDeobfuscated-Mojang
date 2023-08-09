@@ -1,42 +1,26 @@
 package net.minecraft.advancements.critereon;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
+import java.util.Optional;
 import javax.annotation.Nullable;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.GsonHelper;
+import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.phys.Vec3;
 
-public class FishingHookPredicate implements EntitySubPredicate {
-	public static final FishingHookPredicate ANY = new FishingHookPredicate(false);
-	private static final String IN_OPEN_WATER_KEY = "in_open_water";
-	private final boolean inOpenWater;
-
-	private FishingHookPredicate(boolean bl) {
-		this.inOpenWater = bl;
-	}
+public record FishingHookPredicate(Optional<Boolean> inOpenWater) implements EntitySubPredicate {
+	public static final FishingHookPredicate ANY = new FishingHookPredicate(Optional.empty());
+	public static final MapCodec<FishingHookPredicate> CODEC = RecordCodecBuilder.mapCodec(
+		instance -> instance.group(ExtraCodecs.strictOptionalField(Codec.BOOL, "in_open_water").forGetter(FishingHookPredicate::inOpenWater))
+				.apply(instance, FishingHookPredicate::new)
+	);
 
 	public static FishingHookPredicate inOpenWater(boolean bl) {
-		return new FishingHookPredicate(bl);
-	}
-
-	public static FishingHookPredicate fromJson(JsonObject jsonObject) {
-		JsonElement jsonElement = jsonObject.get("in_open_water");
-		return jsonElement != null ? new FishingHookPredicate(GsonHelper.convertToBoolean(jsonElement, "in_open_water")) : ANY;
-	}
-
-	@Override
-	public JsonObject serializeCustomData() {
-		if (this == ANY) {
-			return new JsonObject();
-		} else {
-			JsonObject jsonObject = new JsonObject();
-			jsonObject.add("in_open_water", new JsonPrimitive(this.inOpenWater));
-			return jsonObject;
-		}
+		return new FishingHookPredicate(Optional.of(bl));
 	}
 
 	@Override
@@ -46,13 +30,12 @@ public class FishingHookPredicate implements EntitySubPredicate {
 
 	@Override
 	public boolean matches(Entity entity, ServerLevel serverLevel, @Nullable Vec3 vec3) {
-		if (this == ANY) {
+		if (this.inOpenWater.isEmpty()) {
 			return true;
-		} else if (!(entity instanceof FishingHook)) {
-			return false;
+		} else if (entity instanceof FishingHook fishingHook) {
+			return this.inOpenWater.get() == fishingHook.isOpenWaterFishing();
 		} else {
-			FishingHook fishingHook = (FishingHook)entity;
-			return this.inOpenWater == fishingHook.isOpenWaterFishing();
+			return false;
 		}
 	}
 }

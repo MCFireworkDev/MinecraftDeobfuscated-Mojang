@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -104,7 +105,7 @@ public class EntitySelectorOptions {
 			register("distance", entitySelectorParser -> {
 				int i = entitySelectorParser.getReader().getCursor();
 				MinMaxBounds.Doubles doubles = MinMaxBounds.Doubles.fromReader(entitySelectorParser.getReader());
-				if ((doubles.getMin() == null || !(doubles.getMin() < 0.0)) && (doubles.getMax() == null || !(doubles.getMax() < 0.0))) {
+				if ((!doubles.min().isPresent() || !(doubles.min().get() < 0.0)) && (!doubles.max().isPresent() || !(doubles.max().get() < 0.0))) {
 					entitySelectorParser.setDistance(doubles);
 					entitySelectorParser.setWorldLimited();
 				} else {
@@ -115,7 +116,7 @@ public class EntitySelectorOptions {
 			register("level", entitySelectorParser -> {
 				int i = entitySelectorParser.getReader().getCursor();
 				MinMaxBounds.Ints ints = MinMaxBounds.Ints.fromReader(entitySelectorParser.getReader());
-				if ((ints.getMin() == null || ints.getMin() >= 0) && (ints.getMax() == null || ints.getMax() >= 0)) {
+				if ((!ints.min().isPresent() || ints.min().get() >= 0) && (!ints.max().isPresent() || ints.max().get() >= 0)) {
 					entitySelectorParser.setLevel(ints);
 					entitySelectorParser.setIncludesEntities(false);
 				} else {
@@ -499,7 +500,7 @@ public class EntitySelectorOptions {
 										.withParameter(LootContextParams.THIS_ENTITY, entity)
 										.withParameter(LootContextParams.ORIGIN, entity.position())
 										.create(LootContextParamSets.SELECTOR);
-									LootContext lootContext = new LootContext.Builder(lootParams).create(null);
+									LootContext lootContext = new LootContext.Builder(lootParams).create(Optional.empty());
 									lootContext.pushVisitedElement(LootContext.createVisitedEntry(lootItemCondition));
 									return bl ^ lootItemCondition.test(lootContext);
 								}

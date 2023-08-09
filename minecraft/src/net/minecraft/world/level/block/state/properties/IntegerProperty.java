@@ -40,7 +40,11 @@ public class IntegerProperty extends Property<Integer> {
 		if (this == object) {
 			return true;
 		} else {
-			return object instanceof IntegerProperty integerProperty && super.equals(object) ? this.values.equals(integerProperty.values) : false;
+			if (object instanceof IntegerProperty integerProperty && super.equals(object)) {
+				return this.values.equals(integerProperty.values);
+			}
+
+			return false;
 		}
 	}
 
