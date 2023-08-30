@@ -55,6 +55,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
@@ -356,7 +357,7 @@ public class Sheep extends Animal implements Shearable {
 		return (DyeColor)this.level()
 			.getRecipeManager()
 			.getRecipeFor(RecipeType.CRAFTING, craftingContainer, this.level())
-			.map(craftingRecipe -> craftingRecipe.assemble(craftingContainer, this.level().registryAccess()))
+			.map(recipeHolder -> ((CraftingRecipe)recipeHolder.value()).assemble(craftingContainer, this.level().registryAccess()))
 			.map(ItemStack::getItem)
 			.filter(DyeItem.class::isInstance)
 			.map(DyeItem.class::cast)

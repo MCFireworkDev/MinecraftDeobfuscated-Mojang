@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.level.Level;
@@ -25,8 +26,8 @@ public class SmithingMenu extends ItemCombinerMenu {
 	public static final int SLOT_Y_PLACEMENT = 48;
 	private final Level level;
 	@Nullable
-	private SmithingRecipe selectedRecipe;
-	private final List<SmithingRecipe> recipes;
+	private RecipeHolder<SmithingRecipe> selectedRecipe;
+	private final List<RecipeHolder<SmithingRecipe>> recipes;
 
 	public SmithingMenu(int i, Inventory inventory) {
 		this(i, inventory, ContainerLevelAccess.NULL);
@@ -41,9 +42,9 @@ public class SmithingMenu extends ItemCombinerMenu {
 	@Override
 	protected ItemCombinerMenuSlotDefinition createInputSlotDefinitions() {
 		return ItemCombinerMenuSlotDefinition.create()
-			.withSlot(0, 8, 48, itemStack -> this.recipes.stream().anyMatch(smithingRecipe -> smithingRecipe.isTemplateIngredient(itemStack)))
-			.withSlot(1, 26, 48, itemStack -> this.recipes.stream().anyMatch(smithingRecipe -> smithingRecipe.isBaseIngredient(itemStack)))
-			.withSlot(2, 44, 48, itemStack -> this.recipes.stream().anyMatch(smithingRecipe -> smithingRecipe.isAdditionIngredient(itemStack)))
+			.withSlot(0, 8, 48, itemStack -> this.recipes.stream().anyMatch(recipeHolder -> ((SmithingRecipe)recipeHolder.value()).isTemplateIngredient(itemStack)))
+			.withSlot(1, 26, 48, itemStack -> this.recipes.stream().anyMatch(recipeHolder -> ((SmithingRecipe)recipeHolder.value()).isBaseIngredient(itemStack)))
+			.withSlot(2, 44, 48, itemStack -> this.recipes.stream().anyMatch(recipeHolder -> ((SmithingRecipe)recipeHolder.value()).isAdditionIngredient(itemStack)))
 			.withResultSlot(3, 98, 48)
 			.build();
 	}
@@ -55,7 +56,7 @@ public class SmithingMenu extends ItemCombinerMenu {
 
 	@Override
 	protected boolean mayPickup(Player player, boolean bl) {
-		return this.selectedRecipe != null && this.selectedRecipe.matches(this.inputSlots, this.level);
+		return this.selectedRecipe != null && this.selectedRecipe.value().matches(this.inputSlots, this.level);
 	}
 
 	@Override
@@ -82,15 +83,15 @@ public class SmithingMenu extends ItemCombinerMenu {
 
 	@Override
 	public void createResult() {
-		List<SmithingRecipe> list = this.level.getRecipeManager().getRecipesFor(RecipeType.SMITHING, this.inputSlots, this.level);
+		List<RecipeHolder<SmithingRecipe>> list = this.level.getRecipeManager().getRecipesFor(RecipeType.SMITHING, this.inputSlots, this.level);
 		if (list.isEmpty()) {
 			this.resultSlots.setItem(0, ItemStack.EMPTY);
 		} else {
-			SmithingRecipe smithingRecipe = (SmithingRecipe)list.get(0);
-			ItemStack itemStack = smithingRecipe.assemble(this.inputSlots, this.level.registryAccess());
+			RecipeHolder<SmithingRecipe> recipeHolder = (RecipeHolder)list.get(0);
+			ItemStack itemStack = recipeHolder.value().assemble(this.inputSlots, this.level.registryAccess());
 			if (itemStack.isItemEnabled(this.level.enabledFeatures())) {
-				this.selectedRecipe = smithingRecipe;
-				this.resultSlots.setRecipeUsed(smithingRecipe);
+				this.selectedRecipe = recipeHolder;
+				this.resultSlots.setRecipeUsed(recipeHolder);
 				this.resultSlots.setItem(0, itemStack);
 			}
 		}
@@ -124,7 +125,7 @@ public class SmithingMenu extends ItemCombinerMenu {
 	private OptionalInt findSlotToQuickMoveTo(ItemStack itemStack) {
 		return this.recipes
 			.stream()
-			.flatMapToInt(smithingRecipe -> findSlotMatchingIngredient(smithingRecipe, itemStack).stream())
+			.flatMapToInt(recipeHolder -> findSlotMatchingIngredient((SmithingRecipe)recipeHolder.value(), itemStack).stream())
 			.filter(i -> !this.getSlot(i).hasItem())
 			.findFirst();
 	}

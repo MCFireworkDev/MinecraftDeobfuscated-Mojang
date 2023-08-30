@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
-import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.commands.CommandSigningContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -157,7 +157,7 @@ import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.BaseCommandBlock;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
@@ -505,10 +505,10 @@ public class ServerGamePacketListenerImpl
 	public void handleSeenAdvancements(ServerboundSeenAdvancementsPacket serverboundSeenAdvancementsPacket) {
 		PacketUtils.ensureRunningOnSameThread(serverboundSeenAdvancementsPacket, this, this.player.serverLevel());
 		if (serverboundSeenAdvancementsPacket.getAction() == ServerboundSeenAdvancementsPacket.Action.OPENED_TAB) {
-			ResourceLocation resourceLocation = serverboundSeenAdvancementsPacket.getTab();
-			Advancement advancement = this.server.getAdvancements().getAdvancement(resourceLocation);
-			if (advancement != null) {
-				this.player.getAdvancements().setSelectedTab(advancement);
+			ResourceLocation resourceLocation = (ResourceLocation)Objects.requireNonNull(serverboundSeenAdvancementsPacket.getTab());
+			AdvancementHolder advancementHolder = this.server.getAdvancements().get(resourceLocation);
+			if (advancementHolder != null) {
+				this.player.getAdvancements().setSelectedTab(advancementHolder);
 			}
 		}
 	}
@@ -1197,33 +1197,22 @@ public class ServerGamePacketListenerImpl
 				serverboundChatPacket.message(), serverboundChatPacket.timeStamp(), serverboundChatPacket.lastSeenMessages()
 			);
 			if (optional.isPresent()) {
-				this.server
-					.submit(
-						() -> {
-							PlayerChatMessage playerChatMessage;
-							try {
-								playerChatMessage = this.getSignedMessage(serverboundChatPacket, (LastSeenMessages)optional.get());
-							} catch (SignedMessageChain.DecodeException var6) {
-								this.handleMessageDecodeFailure(var6);
-								return;
-							}
-		
-							CompletableFuture<FilteredText> completableFuture = this.filterTextPacket(playerChatMessage.signedContent());
-							CompletableFuture<Component> completableFuture2 = this.server.getChatDecorator().decorate(this.player, playerChatMessage.decoratedContent());
-							this.chatMessageChain
-								.append(
-									executor -> CompletableFuture.allOf(completableFuture, completableFuture2)
-											.thenAcceptAsync(
-												void_ -> {
-													PlayerChatMessage playerChatMessage2 = playerChatMessage.withUnsignedContent((Component)completableFuture2.join())
-														.filter(((FilteredText)completableFuture.join()).mask());
-													this.broadcastChatMessage(playerChatMessage2);
-												},
-												executor
-											)
-								);
-						}
-					);
+				this.server.submit(() -> {
+					PlayerChatMessage playerChatMessage;
+					try {
+						playerChatMessage = this.getSignedMessage(serverboundChatPacket, (LastSeenMessages)optional.get());
+					} catch (SignedMessageChain.DecodeException var6) {
+						this.handleMessageDecodeFailure(var6);
+						return;
+					}
+
+					CompletableFuture<FilteredText> completableFuture = this.filterTextPacket(playerChatMessage.signedContent());
+					Component component = this.server.getChatDecorator().decorate(this.player, playerChatMessage.decoratedContent());
+					this.chatMessageChain.append(executor -> completableFuture.thenAcceptAsync(filteredText -> {
+							PlayerChatMessage playerChatMessage2 = playerChatMessage.withUnsignedContent(component).filter(filteredText.mask());
+							this.broadcastChatMessage(playerChatMessage2);
+						}, executor));
+				});
 			}
 		}
 	}
@@ -1624,7 +1613,9 @@ public class ServerGamePacketListenerImpl
 				this.server
 					.getRecipeManager()
 					.byKey(serverboundPlaceRecipePacket.getRecipe())
-					.ifPresent(recipe -> ((RecipeBookMenu)this.player.containerMenu).handlePlacement(serverboundPlaceRecipePacket.isShiftDown(), recipe, this.player));
+					.ifPresent(
+						recipeHolder -> ((RecipeBookMenu)this.player.containerMenu).handlePlacement(serverboundPlaceRecipePacket.isShiftDown(), recipeHolder, this.player)
+					);
 			}
 		}
 	}

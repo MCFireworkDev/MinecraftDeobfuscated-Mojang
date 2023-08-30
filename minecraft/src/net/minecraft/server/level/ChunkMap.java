@@ -744,7 +744,12 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 			.thenApplyAsync(either -> either.ifLeft(levelChunk -> {
 					levelChunk.postProcessGeneration();
 					this.level.startTickingChunk(levelChunk);
-					this.onChunkAvailable(levelChunk);
+					CompletableFuture<?> completableFuturexx = chunkHolder.getChunkSendSyncFuture();
+					if (completableFuturexx.isDone()) {
+						this.onChunkReadyToSend(levelChunk);
+					} else {
+						completableFuturexx.thenAcceptAsync(object -> this.onChunkReadyToSend(levelChunk), this.mainThreadExecutor);
+					}
 				}), this.mainThreadExecutor);
 		completableFuture2.handle((either, throwable) -> {
 			this.tickingGenerated.getAndIncrement();
@@ -753,7 +758,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 		return completableFuture2;
 	}
 
-	private void onChunkAvailable(LevelChunk levelChunk) {
+	private void onChunkReadyToSend(LevelChunk levelChunk) {
 		ChunkPos chunkPos = levelChunk.getPos();
 
 		for(ServerPlayer serverPlayer : this.playerMap.getAllPlayers()) {
@@ -873,7 +878,7 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 	}
 
 	private void markChunkPendingToSend(ServerPlayer serverPlayer, ChunkPos chunkPos) {
-		LevelChunk levelChunk = this.getTickingChunkIfPresent(chunkPos.toLong());
+		LevelChunk levelChunk = this.getChunkToSend(chunkPos.toLong());
 		if (levelChunk != null) {
 			markChunkPendingToSend(serverPlayer, levelChunk);
 		}
@@ -888,9 +893,9 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 	}
 
 	@Nullable
-	public LevelChunk getTickingChunkIfPresent(long l) {
+	public LevelChunk getChunkToSend(long l) {
 		ChunkHolder chunkHolder = this.getVisibleChunkIfPresent(l);
-		return chunkHolder == null ? null : chunkHolder.getTickingChunk();
+		return chunkHolder == null ? null : chunkHolder.getChunkToSend();
 	}
 
 	public int size() {
@@ -1241,6 +1246,16 @@ public class ChunkMap extends ChunkStorage implements ChunkHolder.PlayerProvider
 
 	void onFullChunkStatusChange(ChunkPos chunkPos, FullChunkStatus fullChunkStatus) {
 		this.chunkStatusListener.onChunkStatusChange(chunkPos, fullChunkStatus);
+	}
+
+	public void waitForLightBeforeSending(ChunkPos chunkPos, int i) {
+		int j = i + 1;
+		ChunkPos.rangeClosed(chunkPos, j).forEach(chunkPosx -> {
+			ChunkHolder chunkHolder = this.getVisibleChunkIfPresent(chunkPosx.toLong());
+			if (chunkHolder != null) {
+				chunkHolder.addSendDependency(this.lightEngine.waitForPendingTasks(chunkPosx.x, chunkPosx.z));
+			}
+		});
 	}
 
 	class DistanceManager extends net.minecraft.server.level.DistanceManager {

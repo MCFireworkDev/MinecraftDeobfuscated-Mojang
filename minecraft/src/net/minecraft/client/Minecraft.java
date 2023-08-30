@@ -236,7 +236,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.PlayerHeadItem;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -820,12 +820,14 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 				list -> new FullTextSearchTree(
 						recipeCollection -> recipeCollection.getRecipes()
 								.stream()
-								.flatMap(recipe -> recipe.getResultItem(recipeCollection.registryAccess()).getTooltipLines(null, TooltipFlag.Default.NORMAL).stream())
+								.flatMap(
+									recipeHolder -> recipeHolder.value().getResultItem(recipeCollection.registryAccess()).getTooltipLines(null, TooltipFlag.Default.NORMAL).stream()
+								)
 								.map(component -> ChatFormatting.stripFormatting(component.getString()).trim())
 								.filter(string -> !string.isEmpty()),
 						recipeCollection -> recipeCollection.getRecipes()
 								.stream()
-								.map(recipe -> BuiltInRegistries.ITEM.getKey(recipe.getResultItem(recipeCollection.registryAccess()).getItem())),
+								.map(recipeHolder -> BuiltInRegistries.ITEM.getKey(recipeHolder.value().getResultItem(recipeCollection.registryAccess()).getItem())),
 						list
 					)
 			);

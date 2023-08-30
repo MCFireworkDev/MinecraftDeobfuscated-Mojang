@@ -54,7 +54,7 @@ public class ModelProvider implements DataProvider {
 		Consumer<Item> consumer2 = set::add;
 		new BlockModelGenerators(consumer, biConsumer, consumer2).run();
 		new ItemModelGenerators(biConsumer).run();
-		List<Block> list = BuiltInRegistries.BLOCK.stream().filter(block -> !map.containsKey(block)).toList();
+		List<Block> list = BuiltInRegistries.BLOCK.entrySet().stream().filter(entry -> true).map(Entry::getValue).filter(block -> !map.containsKey(block)).toList();
 		if (!list.isEmpty()) {
 			throw new IllegalStateException("Missing blockstate definitions for: " + list);
 		} else {
