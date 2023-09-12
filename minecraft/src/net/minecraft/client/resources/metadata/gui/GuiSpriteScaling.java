@@ -5,7 +5,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.lang.runtime.ObjectMethods;
 import java.util.OptionalInt;
 import java.util.function.Function;
 import net.fabricmc.api.EnvType;
@@ -78,24 +77,12 @@ public interface GuiSpriteScaling {
 	}
 
 	@Environment(EnvType.CLIENT)
-	public static final class Stretch extends Record implements GuiSpriteScaling {
+	public static record Stretch() implements GuiSpriteScaling {
 		public static final Codec<GuiSpriteScaling.Stretch> CODEC = Codec.unit(GuiSpriteScaling.Stretch::new);
 
 		@Override
 		public GuiSpriteScaling.Type type() {
 			return GuiSpriteScaling.Type.STRETCH;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",GuiSpriteScaling.Stretch,"">(this);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",GuiSpriteScaling.Stretch,"">(this);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",GuiSpriteScaling.Stretch,"">(this, object);
 		}
 	}
 

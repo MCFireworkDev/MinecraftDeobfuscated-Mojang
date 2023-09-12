@@ -10,7 +10,6 @@ import com.mojang.serialization.MapLike;
 import com.mojang.serialization.RecordBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
-import java.lang.runtime.ObjectMethods;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -167,7 +166,7 @@ public class ApplyBonusCount extends LootItemConditionalFunction {
 	static record FormulaType(ResourceLocation id, Codec<? extends ApplyBonusCount.Formula> codec) {
 	}
 
-	static final class OreDrops extends Record implements ApplyBonusCount.Formula {
+	static record OreDrops() implements ApplyBonusCount.Formula {
 		public static final Codec<ApplyBonusCount.OreDrops> CODEC = Codec.unit(ApplyBonusCount.OreDrops::new);
 		public static final ApplyBonusCount.FormulaType TYPE = new ApplyBonusCount.FormulaType(new ResourceLocation("ore_drops"), CODEC);
 
@@ -188,18 +187,6 @@ public class ApplyBonusCount extends LootItemConditionalFunction {
 		@Override
 		public ApplyBonusCount.FormulaType getType() {
 			return TYPE;
-		}
-
-		public final String toString() {
-			return ObjectMethods.bootstrap<"toString",ApplyBonusCount.OreDrops,"">(this);
-		}
-
-		public final int hashCode() {
-			return ObjectMethods.bootstrap<"hashCode",ApplyBonusCount.OreDrops,"">(this);
-		}
-
-		public final boolean equals(Object object) {
-			return ObjectMethods.bootstrap<"equals",ApplyBonusCount.OreDrops,"">(this, object);
 		}
 	}
 
