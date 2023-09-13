@@ -400,14 +400,13 @@ public class ArmorStand extends LivingEntity {
 			this.causeDamage(damageSource, 4.0F);
 			return false;
 		} else {
-			boolean bl = damageSource.getDirectEntity() instanceof AbstractArrow;
-			boolean bl2 = bl && ((AbstractArrow)damageSource.getDirectEntity()).getPierceLevel() > 0;
-			boolean bl3 = "player".equals(damageSource.getMsgId());
-			if (!bl3 && !bl) {
+			boolean bl = "player".equals(damageSource.getMsgId());
+			boolean bl2 = damageSource.is(DamageTypeTags.ALWAYS_KILLS_ARMOR_STANDS);
+			if (!bl && !bl2) {
 				return false;
 			} else {
-				Entity var7 = damageSource.getEntity();
-				if (var7 instanceof Player player && !player.getAbilities().mayBuild) {
+				Entity var6 = damageSource.getEntity();
+				if (var6 instanceof Player player && !player.getAbilities().mayBuild) {
 					return false;
 				}
 
@@ -415,10 +414,15 @@ public class ArmorStand extends LivingEntity {
 					this.playBrokenSound();
 					this.showBreakingParticles();
 					this.kill();
-					return bl2;
+					var6 = damageSource.getDirectEntity();
+					if (var6 instanceof AbstractArrow abstractArrow && abstractArrow.getPierceLevel() > 0) {
+						return true;
+					}
+
+					return false;
 				} else {
 					long l = this.level().getGameTime();
-					if (l - this.lastHit > 5L && !bl) {
+					if (l - this.lastHit > 5L && !bl2) {
 						this.level().broadcastEntityEvent(this, (byte)32);
 						this.gameEvent(GameEvent.ENTITY_DAMAGE, damageSource.getEntity());
 						this.lastHit = l;
