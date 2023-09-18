@@ -30,6 +30,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.animal.IronGolem;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.WanderingTrader;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -48,6 +50,7 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
 public abstract class AbstractMinecart extends Entity {
+	private static final float LOWERED_PASSENGER_ATTACHMENT_Y = 0.0F;
 	private static final float PASSENGER_ATTACHMENT_Y = 0.1875F;
 	private static final EntityDataAccessor<Integer> DATA_ID_HURT = SynchedEntityData.defineId(AbstractMinecart.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> DATA_ID_HURTDIR = SynchedEntityData.defineId(AbstractMinecart.class, EntityDataSerializers.INT);
@@ -150,7 +153,8 @@ public abstract class AbstractMinecart extends Entity {
 
 	@Override
 	protected Vector3f getPassengerAttachmentPoint(Entity entity, EntityDimensions entityDimensions, float f) {
-		return new Vector3f(0.0F, 0.1875F, 0.0F);
+		boolean bl = entity instanceof Villager || entity instanceof WanderingTrader;
+		return new Vector3f(0.0F, bl ? 0.0F : 0.1875F, 0.0F);
 	}
 
 	@Override
