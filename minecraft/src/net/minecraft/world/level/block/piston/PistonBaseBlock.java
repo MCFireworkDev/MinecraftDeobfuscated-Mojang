@@ -2,6 +2,10 @@ package net.minecraft.world.level.block.piston;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -37,6 +41,10 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class PistonBaseBlock extends DirectionalBlock {
+	public static final MapCodec<PistonBaseBlock> CODEC = RecordCodecBuilder.mapCodec(
+		instance -> instance.group(Codec.BOOL.fieldOf("sticky").forGetter(pistonBaseBlock -> pistonBaseBlock.isSticky), propertiesCodec())
+				.apply(instance, PistonBaseBlock::new)
+	);
 	public static final BooleanProperty EXTENDED = BlockStateProperties.EXTENDED;
 	public static final int TRIGGER_EXTEND = 0;
 	public static final int TRIGGER_CONTRACT = 1;
@@ -49,6 +57,11 @@ public class PistonBaseBlock extends DirectionalBlock {
 	protected static final VoxelShape UP_AABB = Block.box(0.0, 0.0, 0.0, 16.0, 12.0, 16.0);
 	protected static final VoxelShape DOWN_AABB = Block.box(0.0, 4.0, 0.0, 16.0, 16.0, 16.0);
 	private final boolean isSticky;
+
+	@Override
+	public MapCodec<PistonBaseBlock> codec() {
+		return CODEC;
+	}
 
 	public PistonBaseBlock(boolean bl, BlockBehaviour.Properties properties) {
 		super(properties);

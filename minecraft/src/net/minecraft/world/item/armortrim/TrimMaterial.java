@@ -8,6 +8,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.RegistryFileCodec;
 import net.minecraft.resources.RegistryFixedCodec;
 import net.minecraft.util.ExtraCodecs;
@@ -25,7 +26,7 @@ public record TrimMaterial(
 					Codec.unboundedMap(ArmorMaterials.CODEC, Codec.STRING)
 						.optionalFieldOf("override_armor_materials", Map.of())
 						.forGetter(TrimMaterial::overrideArmorMaterials),
-					ExtraCodecs.COMPONENT.fieldOf("description").forGetter(TrimMaterial::description)
+					ComponentSerialization.CODEC.fieldOf("description").forGetter(TrimMaterial::description)
 				)
 				.apply(instance, TrimMaterial::new)
 	);

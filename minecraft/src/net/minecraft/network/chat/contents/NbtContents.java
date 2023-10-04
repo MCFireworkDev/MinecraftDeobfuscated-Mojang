@@ -4,6 +4,10 @@ import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.DataFixUtils;
 import com.mojang.logging.LogUtils;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -14,6 +18,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.Entity;
@@ -21,6 +26,16 @@ import org.slf4j.Logger;
 
 public class NbtContents implements ComponentContents {
 	private static final Logger LOGGER = LogUtils.getLogger();
+	public static final MapCodec<NbtContents> CODEC = RecordCodecBuilder.mapCodec(
+		instance -> instance.group(
+					Codec.STRING.fieldOf("nbt").forGetter(NbtContents::getNbtPath),
+					Codec.BOOL.optionalFieldOf("interpret", Boolean.valueOf(false)).forGetter(NbtContents::isInterpreting),
+					ComponentSerialization.CODEC.optionalFieldOf("separator").forGetter(NbtContents::getSeparator),
+					DataSource.CODEC.forGetter(NbtContents::getDataSource)
+				)
+				.apply(instance, NbtContents::new)
+	);
+	public static final ComponentContents.Type<NbtContents> TYPE = new ComponentContents.Type<>(CODEC, "nbt");
 	private final boolean interpreting;
 	private final Optional<Component> separator;
 	private final String nbtPathPattern;
@@ -127,5 +142,10 @@ public class NbtContents implements ComponentContents {
 		} else {
 			return Component.empty();
 		}
+	}
+
+	@Override
+	public ComponentContents.Type<?> type() {
+		return TYPE;
 	}
 }

@@ -46,7 +46,7 @@ public class RecordItem extends Item {
 				Player player = useOnContext.getPlayer();
 				BlockEntity var8 = level.getBlockEntity(blockPos);
 				if (var8 instanceof JukeboxBlockEntity jukeboxBlockEntity) {
-					jukeboxBlockEntity.setFirstItem(itemStack.copy());
+					jukeboxBlockEntity.setTheItem(itemStack.copy());
 					level.gameEvent(GameEvent.BLOCK_CHANGE, blockPos, GameEvent.Context.of(player, blockState));
 				}
 

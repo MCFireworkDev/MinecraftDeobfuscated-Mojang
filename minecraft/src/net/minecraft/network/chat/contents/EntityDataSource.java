@@ -2,6 +2,10 @@ package net.minecraft.network.chat.contents;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -13,6 +17,11 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 
 public record EntityDataSource(String selectorPattern, @Nullable EntitySelector compiledSelector) implements DataSource {
+	public static final MapCodec<EntityDataSource> SUB_CODEC = RecordCodecBuilder.mapCodec(
+		instance -> instance.group(Codec.STRING.fieldOf("entity").forGetter(EntityDataSource::selectorPattern)).apply(instance, EntityDataSource::new)
+	);
+	public static final DataSource.Type<EntityDataSource> TYPE = new DataSource.Type<>(SUB_CODEC, "entity");
+
 	public EntityDataSource(String string) {
 		this(string, compileSelector(string));
 	}
@@ -35,6 +44,11 @@ public record EntityDataSource(String selectorPattern, @Nullable EntitySelector 
 		} else {
 			return Stream.empty();
 		}
+	}
+
+	@Override
+	public DataSource.Type<?> type() {
+		return TYPE;
 	}
 
 	public String toString() {

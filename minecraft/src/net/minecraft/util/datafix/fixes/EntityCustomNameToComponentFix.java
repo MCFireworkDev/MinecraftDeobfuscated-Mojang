@@ -9,7 +9,7 @@ import com.mojang.datafixers.schemas.Schema;
 import com.mojang.serialization.Dynamic;
 import java.util.Objects;
 import java.util.Optional;
-import net.minecraft.network.chat.Component;
+import net.minecraft.util.datafix.ComponentDataFixUtils;
 import net.minecraft.util.datafix.schemas.NamespacedSchema;
 
 public class EntityCustomNameToComponentFix extends DataFix {
@@ -30,8 +30,6 @@ public class EntityCustomNameToComponentFix extends DataFix {
 
 	public static Dynamic<?> fixTagCustomName(Dynamic<?> dynamic) {
 		String string = dynamic.get("CustomName").asString("");
-		return string.isEmpty()
-			? dynamic.remove("CustomName")
-			: dynamic.set("CustomName", dynamic.createString(Component.Serializer.toJson(Component.literal(string))));
+		return string.isEmpty() ? dynamic.remove("CustomName") : dynamic.set("CustomName", ComponentDataFixUtils.createPlainTextComponent(dynamic.getOps(), string));
 	}
 }

@@ -2,12 +2,18 @@ package net.minecraft.world.level.block;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.FluidTags;
@@ -23,6 +29,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.FlowingFluid;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.level.storage.loot.LootParams;
@@ -31,6 +38,15 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class LiquidBlock extends Block implements BucketPickup {
+	private static final Codec<FlowingFluid> FLOWING_FLUID = BuiltInRegistries.FLUID
+		.byNameCodec()
+		.comapFlatMap(
+			fluid -> fluid instanceof FlowingFluid flowingFluid ? DataResult.success(flowingFluid) : DataResult.error(() -> "Not a flowing fluid: " + fluid),
+			flowingFluid -> flowingFluid
+		);
+	public static final MapCodec<LiquidBlock> CODEC = RecordCodecBuilder.mapCodec(
+		instance -> instance.group(FLOWING_FLUID.fieldOf("fluid").forGetter(liquidBlock -> liquidBlock.fluid), propertiesCodec()).apply(instance, LiquidBlock::new)
+	);
 	public static final IntegerProperty LEVEL = BlockStateProperties.LEVEL;
 	protected final FlowingFluid fluid;
 	private final List<FluidState> stateCache;
@@ -38,6 +54,11 @@ public class LiquidBlock extends Block implements BucketPickup {
 	public static final ImmutableList<Direction> POSSIBLE_FLOW_DIRECTIONS = ImmutableList.of(
 		Direction.DOWN, Direction.SOUTH, Direction.NORTH, Direction.EAST, Direction.WEST
 	);
+
+	@Override
+	public MapCodec<LiquidBlock> codec() {
+		return CODEC;
+	}
 
 	protected LiquidBlock(FlowingFluid flowingFluid, BlockBehaviour.Properties properties) {
 		super(properties);

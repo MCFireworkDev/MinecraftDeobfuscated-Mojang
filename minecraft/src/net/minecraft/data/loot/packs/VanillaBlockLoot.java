@@ -1370,9 +1370,11 @@ public class VanillaBlockLoot extends BlockLootSubProvider {
 				LootPool.lootPool()
 					.setRolls(ConstantValue.exactly(1.0F))
 					.add(
-						((LootPoolSingletonContainer.Builder)((LootPoolSingletonContainer.Builder)DynamicLoot.dynamicEntry(DecoratedPotBlock.SHERDS_DYNAMIC_DROP_ID)
-									.when(MatchTool.toolMatches(ItemPredicate.Builder.item().of(ItemTags.BREAKS_DECORATED_POTS))))
-								.when(HAS_NO_SILK_TOUCH))
+						((LootPoolSingletonContainer.Builder)DynamicLoot.dynamicEntry(DecoratedPotBlock.SHERDS_DYNAMIC_DROP_ID)
+								.when(
+									LootItemBlockStatePropertyCondition.hasBlockStateProperties(block)
+										.setProperties(StatePropertiesPredicate.Builder.properties().hasProperty(DecoratedPotBlock.CRACKED, true))
+								))
 							.otherwise(LootItem.lootTableItem(block).apply(CopyNbtFunction.copyData(ContextNbtProvider.BLOCK_ENTITY).copy("sherds", "BlockEntityTag.sherds")))
 					)
 			);
