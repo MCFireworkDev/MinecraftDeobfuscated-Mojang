@@ -2218,7 +2218,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 	}
 
 	@Nullable
-	public Team getTeam() {
+	public PlayerTeam getTeam() {
 		return this.level().getScoreboard().getPlayersTeam(this.getScoreboardName());
 	}
 

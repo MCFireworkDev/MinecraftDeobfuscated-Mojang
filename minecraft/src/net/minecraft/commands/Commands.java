@@ -10,6 +10,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.context.CommandContextBuilder;
+import com.mojang.brigadier.context.ContextChain;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
@@ -18,6 +19,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -26,6 +28,7 @@ import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
+import net.minecraft.commands.execution.ExecutionContext;
 import net.minecraft.commands.synchronization.ArgumentTypeInfos;
 import net.minecraft.commands.synchronization.ArgumentUtils;
 import net.minecraft.commands.synchronization.SuggestionProviders;
@@ -43,6 +46,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.protocol.game.ClientboundCommandsPacket;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.commands.AdvancementCommands;
 import net.minecraft.server.commands.AttributeCommand;
 import net.minecraft.server.commands.BanIpCommands;
@@ -124,6 +128,7 @@ import net.minecraft.server.commands.data.DataCommands;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.profiling.jfr.JvmProfiler;
+import net.minecraft.world.level.GameRules;
 import org.slf4j.Logger;
 
 public class Commands {
@@ -229,7 +234,7 @@ public class Commands {
 			PublishCommand.register(this.dispatcher);
 		}
 
-		this.dispatcher.setConsumer((commandContext, bl, i) -> commandContext.getSource().onCommandComplete(commandContext, bl, i));
+		this.dispatcher.setConsumer(ExecutionCommandSource.resultConsumer());
 	}
 
 	public static <S> ParseResults<S> mapSource(ParseResults<S> parseResults, UnaryOperator<S> unaryOperator) {
@@ -238,75 +243,81 @@ public class Commands {
 		return new ParseResults<>(commandContextBuilder2, parseResults.getReader(), parseResults.getExceptions());
 	}
 
-	public int performPrefixedCommand(CommandSourceStack commandSourceStack, String string) {
+	public void performPrefixedCommand(CommandSourceStack commandSourceStack, String string) {
 		string = string.startsWith("/") ? string.substring(1) : string;
-		return this.performCommand(this.dispatcher.parse(string, commandSourceStack), string);
+		this.performCommand(this.dispatcher.parse(string, commandSourceStack), string);
 	}
 
-	public int performCommand(ParseResults<CommandSourceStack> parseResults, String string) {
+	public void performCommand(ParseResults<CommandSourceStack> parseResults, String string) {
 		CommandSourceStack commandSourceStack = parseResults.getContext().getSource();
 		commandSourceStack.getServer().getProfiler().push((Supplier<String>)(() -> "/" + string));
 
-		int i;
 		try {
-			try {
-				return this.dispatcher.execute(parseResults);
-			} catch (CommandRuntimeException var13) {
-				commandSourceStack.sendFailure(var13.getComponent());
-				return 0;
-			} catch (CommandSyntaxException var14) {
-				commandSourceStack.sendFailure(ComponentUtils.fromMessage(var14.getRawMessage()));
-				if (var14.getInput() != null && var14.getCursor() >= 0) {
-					i = Math.min(var14.getInput().length(), var14.getCursor());
-					MutableComponent mutableComponent = Component.empty()
-						.withStyle(ChatFormatting.GRAY)
-						.withStyle(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/" + string)));
-					if (i > 10) {
-						mutableComponent.append(CommonComponents.ELLIPSIS);
-					}
-
-					mutableComponent.append(var14.getInput().substring(Math.max(0, i - 10), i));
-					if (i < var14.getInput().length()) {
-						Component component = Component.literal(var14.getInput().substring(i)).withStyle(ChatFormatting.RED, ChatFormatting.UNDERLINE);
-						mutableComponent.append(component);
-					}
-
-					mutableComponent.append(Component.translatable("command.context.here").withStyle(ChatFormatting.RED, ChatFormatting.ITALIC));
-					commandSourceStack.sendFailure(mutableComponent);
-				}
-			} catch (Exception var15) {
-				MutableComponent mutableComponent2 = Component.literal(var15.getMessage() == null ? var15.getClass().getName() : var15.getMessage());
-				if (LOGGER.isDebugEnabled()) {
-					LOGGER.error("Command exception: /{}", string, var15);
-					StackTraceElement[] stackTraceElements = var15.getStackTrace();
-
-					for(int j = 0; j < Math.min(stackTraceElements.length, 3); ++j) {
-						mutableComponent2.append("\n\n")
-							.append(stackTraceElements[j].getMethodName())
-							.append("\n ")
-							.append(stackTraceElements[j].getFileName())
-							.append(":")
-							.append(String.valueOf(stackTraceElements[j].getLineNumber()));
-					}
+			validateParseResults(parseResults);
+			ContextChain<CommandSourceStack> contextChain = (ContextChain)ContextChain.tryFlatten(parseResults.getContext().build(string))
+				.orElseThrow(() -> CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().createWithContext(parseResults.getReader()));
+			executeCommandInContext(
+				commandSourceStack, executionContext -> ExecutionContext.queueInitialCommandExecution(executionContext, string, contextChain, commandSourceStack)
+			);
+		} catch (CommandRuntimeException var13) {
+			commandSourceStack.sendFailure(var13.getComponent());
+		} catch (CommandSyntaxException var14) {
+			commandSourceStack.sendFailure(ComponentUtils.fromMessage(var14.getRawMessage()));
+			if (var14.getInput() != null && var14.getCursor() >= 0) {
+				int i = Math.min(var14.getInput().length(), var14.getCursor());
+				MutableComponent mutableComponent = Component.empty()
+					.withStyle(ChatFormatting.GRAY)
+					.withStyle(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/" + string)));
+				if (i > 10) {
+					mutableComponent.append(CommonComponents.ELLIPSIS);
 				}
 
-				commandSourceStack.sendFailure(
-					Component.translatable("command.failed").withStyle(style -> style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, mutableComponent2)))
-				);
-				if (SharedConstants.IS_RUNNING_IN_IDE) {
-					commandSourceStack.sendFailure(Component.literal(Util.describeError(var15)));
-					LOGGER.error("'/{}' threw an exception", string, var15);
+				mutableComponent.append(var14.getInput().substring(Math.max(0, i - 10), i));
+				if (i < var14.getInput().length()) {
+					Component component = Component.literal(var14.getInput().substring(i)).withStyle(ChatFormatting.RED, ChatFormatting.UNDERLINE);
+					mutableComponent.append(component);
 				}
 
-				return 0;
+				mutableComponent.append(Component.translatable("command.context.here").withStyle(ChatFormatting.RED, ChatFormatting.ITALIC));
+				commandSourceStack.sendFailure(mutableComponent);
+			}
+		} catch (Exception var15) {
+			MutableComponent mutableComponent2 = Component.literal(var15.getMessage() == null ? var15.getClass().getName() : var15.getMessage());
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.error("Command exception: /{}", string, var15);
+				StackTraceElement[] stackTraceElements = var15.getStackTrace();
+
+				for(int j = 0; j < Math.min(stackTraceElements.length, 3); ++j) {
+					mutableComponent2.append("\n\n")
+						.append(stackTraceElements[j].getMethodName())
+						.append("\n ")
+						.append(stackTraceElements[j].getFileName())
+						.append(":")
+						.append(String.valueOf(stackTraceElements[j].getLineNumber()));
+				}
 			}
 
-			i = 0;
+			commandSourceStack.sendFailure(
+				Component.translatable("command.failed").withStyle(style -> style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, mutableComponent2)))
+			);
+			if (SharedConstants.IS_RUNNING_IN_IDE) {
+				commandSourceStack.sendFailure(Component.literal(Util.describeError(var15)));
+				LOGGER.error("'/{}' threw an exception", string, var15);
+			}
 		} finally {
 			commandSourceStack.getServer().getProfiler().pop();
 		}
+	}
 
-		return i;
+	public static void executeCommandInContext(CommandSourceStack commandSourceStack, Consumer<ExecutionContext<CommandSourceStack>> consumer) throws CommandSyntaxException {
+		MinecraftServer minecraftServer = commandSourceStack.getServer();
+		int i = minecraftServer.getGameRules().getInt(GameRules.RULE_MAX_COMMAND_CHAIN_LENGTH);
+		int j = minecraftServer.getGameRules().getInt(GameRules.RULE_MAX_COMMAND_FORK_COUNT);
+
+		try (ExecutionContext<CommandSourceStack> executionContext = new ExecutionContext<>(i, j, minecraftServer.getProfiler())) {
+			consumer.accept(executionContext);
+			executionContext.runCommandQueue();
+		}
 	}
 
 	public void sendCommands(ServerPlayer serverPlayer) {
@@ -372,6 +383,13 @@ public class Commands {
 
 	public CommandDispatcher<CommandSourceStack> getDispatcher() {
 		return this.dispatcher;
+	}
+
+	public static <S> void validateParseResults(ParseResults<S> parseResults) throws CommandSyntaxException {
+		CommandSyntaxException commandSyntaxException = getParseException(parseResults);
+		if (commandSyntaxException != null) {
+			throw commandSyntaxException;
+		}
 	}
 
 	@Nullable

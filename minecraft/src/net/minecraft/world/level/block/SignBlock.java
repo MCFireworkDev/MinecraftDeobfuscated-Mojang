@@ -9,7 +9,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.PlainTextContents;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
@@ -95,7 +94,7 @@ public abstract class SignBlock extends BaseEntityBlock implements SimpleWaterlo
 				SignText signText = signBlockEntity.getText(bl2x);
 				boolean bl3 = signBlockEntity.executeClickCommandsIfPresent(player, level, blockPos, bl2x);
 				if (signBlockEntity.isWaxed()) {
-					level.playSound(null, signBlockEntity.getBlockPos(), SoundEvents.WAXED_SIGN_INTERACT_FAIL, SoundSource.BLOCKS);
+					level.playSound(null, signBlockEntity.getBlockPos(), signBlockEntity.getSignInteractionFailedSoundEvent(), SoundSource.BLOCKS);
 					return this.getInteractionResult(bl);
 				} else if (bl
 					&& !this.otherPlayerIsEditingSign(player, signBlockEntity)

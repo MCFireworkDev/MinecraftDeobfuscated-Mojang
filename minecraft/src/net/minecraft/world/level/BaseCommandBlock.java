@@ -1,6 +1,5 @@
 package net.minecraft.world.level;
 
-import com.mojang.brigadier.context.CommandContext;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.annotation.Nullable;
@@ -115,7 +114,7 @@ public abstract class BaseCommandBlock implements CommandSource {
 			if (minecraftServer.isCommandBlockEnabled() && !StringUtil.isNullOrEmpty(this.command)) {
 				try {
 					this.lastOutput = null;
-					CommandSourceStack commandSourceStack = this.createCommandSourceStack().withCallback((commandContext, bl, i) -> {
+					CommandSourceStack commandSourceStack = this.createCommandSourceStack().withCallback((commandSourceStack, bl, i) -> {
 						if (bl) {
 							++this.successCount;
 						}
