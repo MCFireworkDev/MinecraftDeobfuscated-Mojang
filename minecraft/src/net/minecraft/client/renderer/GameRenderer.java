@@ -185,8 +185,6 @@ public class GameRenderer implements AutoCloseable {
 	@Nullable
 	private static ShaderInstance rendertypeTranslucentMovingBlockShader;
 	@Nullable
-	private static ShaderInstance rendertypeTranslucentNoCrumblingShader;
-	@Nullable
 	private static ShaderInstance rendertypeArmorCutoutNoCullShader;
 	@Nullable
 	private static ShaderInstance rendertypeEntitySolidShader;
@@ -558,12 +556,6 @@ public class GameRenderer implements AutoCloseable {
 				Pair.of(
 					new ShaderInstance(resourceProvider, "rendertype_translucent_moving_block", DefaultVertexFormat.BLOCK),
 					(Consumer)shaderInstance -> rendertypeTranslucentMovingBlockShader = shaderInstance
-				)
-			);
-			list2.add(
-				Pair.of(
-					new ShaderInstance(resourceProvider, "rendertype_translucent_no_crumbling", DefaultVertexFormat.BLOCK),
-					(Consumer)shaderInstance -> rendertypeTranslucentNoCrumblingShader = shaderInstance
 				)
 			);
 			list2.add(
@@ -1525,11 +1517,6 @@ public class GameRenderer implements AutoCloseable {
 	@Nullable
 	public static ShaderInstance getRendertypeTranslucentMovingBlockShader() {
 		return rendertypeTranslucentMovingBlockShader;
-	}
-
-	@Nullable
-	public static ShaderInstance getRendertypeTranslucentNoCrumblingShader() {
-		return rendertypeTranslucentNoCrumblingShader;
 	}
 
 	@Nullable

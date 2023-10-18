@@ -462,6 +462,10 @@ public final class ItemStack {
 		this.getItem().onCraftedBy(this, level, player);
 	}
 
+	public void onCraftedBySystem(Level level) {
+		this.getItem().onCraftedPostProcess(this, level);
+	}
+
 	public int getUseDuration() {
 		return this.getItem().getUseDuration(this);
 	}

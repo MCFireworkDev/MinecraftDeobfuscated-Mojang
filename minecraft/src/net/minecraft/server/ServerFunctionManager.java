@@ -2,7 +2,6 @@ package net.minecraft.server;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +62,7 @@ public class ServerFunctionManager {
 			Commands.executeCommandInContext(
 				commandSourceStack, executionContext -> executionContext.queueInitialFunctionCall(instantiatedFunction, commandSourceStack)
 			);
-		} catch (CommandSyntaxException | FunctionInstantiationException var8) {
+		} catch (FunctionInstantiationException var8) {
 		} finally {
 			profilerFiller.pop();
 		}

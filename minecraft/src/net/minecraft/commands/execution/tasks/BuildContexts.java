@@ -1,5 +1,6 @@
 package net.minecraft.commands.execution.tasks;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.RedirectModifier;
 import com.mojang.brigadier.context.CommandContext;
@@ -8,7 +9,6 @@ import com.mojang.brigadier.context.ContextChain.Stage;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -24,7 +24,8 @@ import net.minecraft.commands.execution.UnboundEntryAction;
 import net.minecraft.network.chat.Component;
 
 public class BuildContexts<T extends ExecutionCommandSource<T>> {
-	private static final DynamicCommandExceptionType ERROR_FORK_LIMIT_REACHED = new DynamicCommandExceptionType(
+	@VisibleForTesting
+	public static final DynamicCommandExceptionType ERROR_FORK_LIMIT_REACHED = new DynamicCommandExceptionType(
 		object -> Component.translatableEscape("command.forkLimit", object)
 	);
 	private final String commandInput;
@@ -35,7 +36,7 @@ public class BuildContexts<T extends ExecutionCommandSource<T>> {
 		this.command = contextChain;
 	}
 
-	protected void execute(List<T> list, ExecutionContext<T> executionContext, int i, boolean bl) throws CommandSyntaxException {
+	protected void execute(List<T> list, ExecutionContext<T> executionContext, int i, boolean bl) {
 		ContextChain<T> contextChain = this.command;
 		boolean bl2 = bl;
 		List<T> list2 = list;
@@ -54,17 +55,26 @@ public class BuildContexts<T extends ExecutionCommandSource<T>> {
 
 					if (redirectModifier != null) {
 						executionContext.incrementCost();
-						List<T> list3 = new ArrayList();
+						customModifierExecutor = new ArrayList();
 
 						for(T executionCommandSource : list2) {
-							Collection<T> collection = ContextChain.runModifier(commandContext, executionCommandSource, ExecutionCommandSource.resultConsumer(), bl2);
-							list3.addAll(collection);
-							if (list3.size() >= j) {
-								throw ERROR_FORK_LIMIT_REACHED.create(j);
+							try {
+								for(T executionCommandSource2 : ContextChain.runModifier(commandContext, executionCommandSource, ExecutionCommandSource.resultConsumer(), bl2)) {
+									customModifierExecutor.add(executionCommandSource2);
+									if (customModifierExecutor.size() >= j) {
+										executionCommandSource2.handleError(ERROR_FORK_LIMIT_REACHED.create(j), bl2, executionContext.tracer());
+										return;
+									}
+								}
+							} catch (CommandSyntaxException var20) {
+								executionCommandSource.handleError(var20, bl2, executionContext.tracer());
+								if (!bl2) {
+									return;
+								}
 							}
 						}
 
-						list2 = list3;
+						list2 = customModifierExecutor;
 					}
 				}
 			} finally {
@@ -135,7 +145,7 @@ public class BuildContexts<T extends ExecutionCommandSource<T>> {
 		}
 
 		@Override
-		public void execute(ExecutionContext<T> executionContext, int i) throws CommandSyntaxException {
+		public void execute(ExecutionContext<T> executionContext, int i) {
 			this.execute(this.sources, executionContext, i, this.startForked);
 		}
 	}
@@ -149,7 +159,7 @@ public class BuildContexts<T extends ExecutionCommandSource<T>> {
 		}
 
 		@Override
-		public void execute(ExecutionContext<T> executionContext, int i) throws CommandSyntaxException {
+		public void execute(ExecutionContext<T> executionContext, int i) {
 			this.traceCommandStart(executionContext, i);
 			this.execute(List.of(this.source), executionContext, i, false);
 		}
@@ -160,7 +170,7 @@ public class BuildContexts<T extends ExecutionCommandSource<T>> {
 			super(string, contextChain);
 		}
 
-		public void execute(T executionCommandSource, ExecutionContext<T> executionContext, int i) throws CommandSyntaxException {
+		public void execute(T executionCommandSource, ExecutionContext<T> executionContext, int i) {
 			this.traceCommandStart(executionContext, i);
 			this.execute(List.of(executionCommandSource), executionContext, i, false);
 		}
