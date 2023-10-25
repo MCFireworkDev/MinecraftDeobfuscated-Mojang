@@ -53,7 +53,7 @@ public class DoorBlock extends Block {
 	private final BlockSetType type;
 
 	@Override
-	public MapCodec<DoorBlock> codec() {
+	public MapCodec<? extends DoorBlock> codec() {
 		return CODEC;
 	}
 
@@ -80,17 +80,13 @@ public class DoorBlock extends Block {
 		Direction direction = blockState.getValue(FACING);
 		boolean bl = !blockState.getValue(OPEN);
 		boolean bl2 = blockState.getValue(HINGE) == DoorHingeSide.RIGHT;
-		switch(direction) {
-			case EAST:
-			default:
-				return bl ? EAST_AABB : (bl2 ? NORTH_AABB : SOUTH_AABB);
-			case SOUTH:
-				return bl ? SOUTH_AABB : (bl2 ? EAST_AABB : WEST_AABB);
-			case WEST:
-				return bl ? WEST_AABB : (bl2 ? SOUTH_AABB : NORTH_AABB);
-			case NORTH:
-				return bl ? NORTH_AABB : (bl2 ? WEST_AABB : EAST_AABB);
-		}
+
+		return switch(direction) {
+			case SOUTH -> bl ? SOUTH_AABB : (bl2 ? EAST_AABB : WEST_AABB);
+			case WEST -> bl ? WEST_AABB : (bl2 ? SOUTH_AABB : NORTH_AABB);
+			case NORTH -> bl ? NORTH_AABB : (bl2 ? WEST_AABB : EAST_AABB);
+			default -> bl ? EAST_AABB : (bl2 ? NORTH_AABB : SOUTH_AABB);
+		};
 	}
 
 	@Override
@@ -103,11 +99,8 @@ public class DoorBlock extends Block {
 				? Blocks.AIR.defaultBlockState()
 				: super.updateShape(blockState, direction, blockState2, levelAccessor, blockPos, blockPos2);
 		} else {
-			return blockState2.is(this) && blockState2.getValue(HALF) != doubleBlockHalf
-				? blockState.setValue(FACING, (Direction)blockState2.getValue(FACING))
-					.setValue(OPEN, (Boolean)blockState2.getValue(OPEN))
-					.setValue(HINGE, (DoorHingeSide)blockState2.getValue(HINGE))
-					.setValue(POWERED, (Boolean)blockState2.getValue(POWERED))
+			return blockState2.getBlock() instanceof DoorBlock && blockState2.getValue(HALF) != doubleBlockHalf
+				? blockState2.setValue(HALF, doubleBlockHalf)
 				: Blocks.AIR.defaultBlockState();
 		}
 	}
@@ -123,16 +116,10 @@ public class DoorBlock extends Block {
 
 	@Override
 	public boolean isPathfindable(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, PathComputationType pathComputationType) {
-		switch(pathComputationType) {
-			case LAND:
-				return blockState.getValue(OPEN);
-			case WATER:
-				return false;
-			case AIR:
-				return blockState.getValue(OPEN);
-			default:
-				return false;
-		}
+		return switch(pathComputationType) {
+			case LAND, AIR -> blockState.getValue(OPEN);
+			case WATER -> false;
+		};
 	}
 
 	@Nullable

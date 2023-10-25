@@ -13,16 +13,16 @@ public interface ChangeOverTimeBlock<T extends Enum<T>> {
 
 	float getChanceModifier();
 
-	default void onRandomTick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, RandomSource randomSource) {
+	default void changeOverTime(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, RandomSource randomSource) {
 		float f = 0.05688889F;
 		if (randomSource.nextFloat() < 0.05688889F) {
-			this.applyChangeOverTime(blockState, serverLevel, blockPos, randomSource);
+			this.getNextState(blockState, serverLevel, blockPos, randomSource).ifPresent(blockStatex -> serverLevel.setBlockAndUpdate(blockPos, blockStatex));
 		}
 	}
 
 	T getAge();
 
-	default void applyChangeOverTime(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, RandomSource randomSource) {
+	default Optional<BlockState> getNextState(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, RandomSource randomSource) {
 		int i = this.getAge().ordinal();
 		int j = 0;
 		int k = 0;
@@ -34,14 +34,13 @@ public interface ChangeOverTimeBlock<T extends Enum<T>> {
 			}
 
 			if (!blockPos2.equals(blockPos)) {
-				BlockState blockState2 = serverLevel.getBlockState(blockPos2);
-				Block block = blockState2.getBlock();
-				if (block instanceof ChangeOverTimeBlock) {
-					Enum<?> enum_ = ((ChangeOverTimeBlock)block).getAge();
-					if (this.getAge().getClass() == enum_.getClass()) {
-						int m = enum_.ordinal();
+				Block enum_ = serverLevel.getBlockState(blockPos2).getBlock();
+				if (enum_ instanceof ChangeOverTimeBlock changeOverTimeBlock) {
+					Enum<?> enum_x = changeOverTimeBlock.getAge();
+					if (this.getAge().getClass() == enum_x.getClass()) {
+						int m = enum_x.ordinal();
 						if (m < i) {
-							return;
+							return Optional.empty();
 						}
 
 						if (m > i) {
@@ -56,8 +55,6 @@ public interface ChangeOverTimeBlock<T extends Enum<T>> {
 
 		float f = (float)(k + 1) / (float)(k + j + 1);
 		float g = f * f * this.getChanceModifier();
-		if (randomSource.nextFloat() < g) {
-			this.getNext(blockState).ifPresent(blockStatex -> serverLevel.setBlockAndUpdate(blockPos, blockStatex));
-		}
+		return randomSource.nextFloat() < g ? this.getNext(blockState) : Optional.empty();
 	}
 }

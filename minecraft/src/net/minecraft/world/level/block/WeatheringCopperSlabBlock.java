@@ -28,7 +28,7 @@ public class WeatheringCopperSlabBlock extends SlabBlock implements WeatheringCo
 
 	@Override
 	public void randomTick(BlockState blockState, ServerLevel serverLevel, BlockPos blockPos, RandomSource randomSource) {
-		this.onRandomTick(blockState, serverLevel, blockPos, randomSource);
+		this.changeOverTime(blockState, serverLevel, blockPos, randomSource);
 	}
 
 	@Override
