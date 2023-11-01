@@ -3132,8 +3132,8 @@ public abstract class LivingEntity extends Entity implements Attackable {
 				level.broadcastEntityEvent(this, (byte)46);
 			}
 
-			if (this instanceof PathfinderMob) {
-				((PathfinderMob)this).getNavigation().stop();
+			if (this instanceof PathfinderMob pathfinderMob) {
+				pathfinderMob.getNavigation().stop();
 			}
 
 			return true;
