@@ -31,17 +31,7 @@ public abstract class NamedEntityWriteReadFix extends DataFix {
 		Type<?> type4 = this.getOutputSchema().getChoiceType(this.type, this.entityName);
 		OpticFinder<?> opticFinder = DSL.namedChoice(this.entityName, type2);
 		return this.fixTypeEverywhereTyped(
-			this.name,
-			type,
-			type3,
-			typed -> typed.updateTyped(
-					opticFinder,
-					type4,
-					typedx -> (Typed)Util.getOrThrow(
-								typedx.write().map(this::fix).flatMap(type4::readTyped), string -> new IllegalStateException("Could not parse the value " + string)
-							)
-							.getFirst()
-				)
+			this.name, type, type3, typed -> typed.updateTyped(opticFinder, type4, typedx -> Util.writeAndReadTypedOrThrow(typedx, type4, this::fix))
 		);
 	}
 

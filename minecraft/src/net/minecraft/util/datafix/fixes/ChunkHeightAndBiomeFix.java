@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
+import net.minecraft.Util;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableObject;
 
@@ -133,52 +134,45 @@ public class ChunkHeightAndBiomeFix extends DataFix {
 						);
 						Set<String> set = Sets.newHashSet();
 						MutableObject<Supplier<ChunkProtoTickListFix.PoorMansPalettedContainer>> mutableObject = new MutableObject((Supplier)() -> null);
-						typed2 = typed2.updateTyped(
-							opticFinder2,
-							type4,
-							typedxx -> {
-								IntSet intSet = new IntOpenHashSet();
-								Dynamic<?> dynamic3 = (Dynamic)typedxx.write().result().orElseThrow(() -> new IllegalStateException("Malformed Chunk.Level.Sections"));
-								List<Dynamic<?>> list = (List)dynamic3.asStream().map(dynamic2xx -> {
-									int jxx = dynamic2xx.get("Y").asInt(0);
-									Dynamic<?> dynamic3xx = DataFixUtils.orElse(dynamic2xx.get("Palette").result().flatMap(dynamic2xxx -> {
-										dynamic2xxx.asStream().map(dynamicxxxx -> dynamicxxxx.get("Name").asString("minecraft:air")).forEach(set::add);
-										return dynamic2xx.get("BlockStates").result().map(dynamic2xxxx -> makeOptimizedPalettedContainer(dynamic2xxx, dynamic2xxxx));
-									}), dynamic2);
-									Dynamic<?> dynamic4xx = dynamic2xx;
-									int kxx = jxx - i;
-									if (kxx >= 0 && kxx < dynamics.length) {
-										dynamic4xx = dynamic2xx.set("biomes", dynamics[kxx]);
-									}
-			
-									intSet.add(jxx);
-									if (dynamic2xx.get("Y").asInt(Integer.MAX_VALUE) == 0) {
-										mutableObject.setValue((Supplier)() -> {
-											List<? extends Dynamic<?>> listxx = dynamic3x.get("palette").asList(Function.identity());
-											long[] ls = dynamic3x.get("data").asLongStream().toArray();
-											return new ChunkProtoTickListFix.PoorMansPalettedContainer(listxx, ls);
-										});
-									}
-			
-									return dynamic4xx.set("block_states", dynamic3xx).remove("Palette").remove("BlockStates");
-								}).collect(Collectors.toCollection(ArrayList::new));
-			
-								for(int j = 0; j < dynamics.length; ++j) {
-									int k = j + i;
-									if (intSet.add(k)) {
-										Dynamic<?> dynamic4 = dynamic.createMap(Map.of(dynamic.createString("Y"), dynamic.createInt(k)));
-										dynamic4 = dynamic4.set("block_states", dynamic2);
-										dynamic4 = dynamic4.set("biomes", dynamics[j]);
-										list.add(dynamic4);
-									}
+						typed2 = typed2.updateTyped(opticFinder2, type4, typedxx -> {
+							IntSet intSet = new IntOpenHashSet();
+							Dynamic<?> dynamic3 = (Dynamic)typedxx.write().result().orElseThrow(() -> new IllegalStateException("Malformed Chunk.Level.Sections"));
+							List<Dynamic<?>> list = (List)dynamic3.asStream().map(dynamic2xx -> {
+								int jxx = dynamic2xx.get("Y").asInt(0);
+								Dynamic<?> dynamic3xx = DataFixUtils.orElse(dynamic2xx.get("Palette").result().flatMap(dynamic2xxx -> {
+									dynamic2xxx.asStream().map(dynamicxxxx -> dynamicxxxx.get("Name").asString("minecraft:air")).forEach(set::add);
+									return dynamic2xx.get("BlockStates").result().map(dynamic2xxxx -> makeOptimizedPalettedContainer(dynamic2xxx, dynamic2xxxx));
+								}), dynamic2);
+								Dynamic<?> dynamic4xx = dynamic2xx;
+								int kxx = jxx - i;
+								if (kxx >= 0 && kxx < dynamics.length) {
+									dynamic4xx = dynamic2xx.set("biomes", dynamics[kxx]);
 								}
-			
-								return (Typed)((Pair)type4.readTyped(dynamic.createList(list.stream()))
-										.result()
-										.orElseThrow(() -> new IllegalStateException("ChunkHeightAndBiomeFix failed.")))
-									.getFirst();
+		
+								intSet.add(jxx);
+								if (dynamic2xx.get("Y").asInt(Integer.MAX_VALUE) == 0) {
+									mutableObject.setValue((Supplier)() -> {
+										List<? extends Dynamic<?>> listxx = dynamic3x.get("palette").asList(Function.identity());
+										long[] ls = dynamic3x.get("data").asLongStream().toArray();
+										return new ChunkProtoTickListFix.PoorMansPalettedContainer(listxx, ls);
+									});
+								}
+		
+								return dynamic4xx.set("block_states", dynamic3xx).remove("Palette").remove("BlockStates");
+							}).collect(Collectors.toCollection(ArrayList::new));
+		
+							for(int j = 0; j < dynamics.length; ++j) {
+								int k = j + i;
+								if (intSet.add(k)) {
+									Dynamic<?> dynamic4 = dynamic.createMap(Map.of(dynamic.createString("Y"), dynamic.createInt(k)));
+									dynamic4 = dynamic4.set("block_states", dynamic2);
+									dynamic4 = dynamic4.set("biomes", dynamics[j]);
+									list.add(dynamic4);
+								}
 							}
-						);
+		
+							return Util.readTypedOrThrow(type4, dynamic.createList(list.stream()));
+						});
 						return typed2.update(
 							DSL.remainderFinder(),
 							dynamicx -> {

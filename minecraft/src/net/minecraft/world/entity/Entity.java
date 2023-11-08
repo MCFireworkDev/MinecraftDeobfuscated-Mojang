@@ -2826,7 +2826,7 @@ public abstract class Entity implements Nameable, EntityAccess, CommandSource {
 		return InteractionResult.PASS;
 	}
 
-	public boolean ignoreExplosion() {
+	public boolean ignoreExplosion(Explosion explosion) {
 		return false;
 	}
 

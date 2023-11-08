@@ -24,10 +24,9 @@ import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.Spawner;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.BlockHitResult;
@@ -58,42 +57,39 @@ public class SpawnEggItem extends Item {
 			BlockPos blockPos = useOnContext.getClickedPos();
 			Direction direction = useOnContext.getClickedFace();
 			BlockState blockState = level.getBlockState(blockPos);
-			if (blockState.is(Blocks.SPAWNER)) {
-				BlockEntity blockEntity = level.getBlockEntity(blockPos);
-				if (blockEntity instanceof SpawnerBlockEntity spawnerBlockEntity) {
-					EntityType<?> entityType = this.getType(itemStack.getTag());
-					spawnerBlockEntity.setEntityId(entityType, level.getRandom());
-					blockEntity.setChanged();
-					level.sendBlockUpdated(blockPos, blockState, blockState, 3);
-					level.gameEvent(useOnContext.getPlayer(), GameEvent.BLOCK_CHANGE, blockPos);
-					itemStack.shrink(1);
-					return InteractionResult.CONSUME;
-				}
-			}
-
-			BlockPos blockPos2;
-			if (blockState.getCollisionShape(level, blockPos).isEmpty()) {
-				blockPos2 = blockPos;
-			} else {
-				blockPos2 = blockPos.relative(direction);
-			}
-
-			EntityType<?> entityType2 = this.getType(itemStack.getTag());
-			if (entityType2.spawn(
-					(ServerLevel)level,
-					itemStack,
-					useOnContext.getPlayer(),
-					blockPos2,
-					MobSpawnType.SPAWN_EGG,
-					true,
-					!Objects.equals(blockPos, blockPos2) && direction == Direction.UP
-				)
-				!= null) {
+			BlockEntity entityType = level.getBlockEntity(blockPos);
+			if (entityType instanceof Spawner spawner) {
+				EntityType<?> entityTypex = this.getType(itemStack.getTag());
+				spawner.setEntityId(entityTypex, level.getRandom());
+				level.sendBlockUpdated(blockPos, blockState, blockState, 3);
+				level.gameEvent(useOnContext.getPlayer(), GameEvent.BLOCK_CHANGE, blockPos);
 				itemStack.shrink(1);
-				level.gameEvent(useOnContext.getPlayer(), GameEvent.ENTITY_PLACE, blockPos);
-			}
+				return InteractionResult.CONSUME;
+			} else {
+				BlockPos blockPos2;
+				if (blockState.getCollisionShape(level, blockPos).isEmpty()) {
+					blockPos2 = blockPos;
+				} else {
+					blockPos2 = blockPos.relative(direction);
+				}
 
-			return InteractionResult.CONSUME;
+				EntityType<?> entityType = this.getType(itemStack.getTag());
+				if (entityType.spawn(
+						(ServerLevel)level,
+						itemStack,
+						useOnContext.getPlayer(),
+						blockPos2,
+						MobSpawnType.SPAWN_EGG,
+						true,
+						!Objects.equals(blockPos, blockPos2) && direction == Direction.UP
+					)
+					!= null) {
+					itemStack.shrink(1);
+					level.gameEvent(useOnContext.getPlayer(), GameEvent.ENTITY_PLACE, blockPos);
+				}
+
+				return InteractionResult.CONSUME;
+			}
 		}
 	}
 

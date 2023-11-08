@@ -92,6 +92,7 @@ import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.network.protocol.common.ClientboundUpdateTagsPacket;
 import net.minecraft.network.protocol.common.custom.BeeDebugPayload;
 import net.minecraft.network.protocol.common.custom.BrainDebugPayload;
+import net.minecraft.network.protocol.common.custom.BreezeDebugPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.common.custom.GameEventDebugPayload;
 import net.minecraft.network.protocol.common.custom.GameEventListenerDebugPayload;
@@ -1164,7 +1165,11 @@ public class ClientPacketListener extends ClientCommonPacketListenerImpl impleme
 			clientboundExplodePacket.getY(),
 			clientboundExplodePacket.getZ(),
 			clientboundExplodePacket.getPower(),
-			clientboundExplodePacket.getToBlow()
+			clientboundExplodePacket.getToBlow(),
+			clientboundExplodePacket.getBlockInteraction(),
+			clientboundExplodePacket.getSmallExplosionParticles(),
+			clientboundExplodePacket.getLargeExplosionParticles(),
+			clientboundExplodePacket.getExplosionSound()
 		);
 		explosion.finalizeExplosion(true);
 		this.minecraft
@@ -1995,6 +2000,8 @@ public class ClientPacketListener extends ClientCommonPacketListenerImpl impleme
 				.debugRenderer
 				.gameEventListenerRenderer
 				.trackListener(gameEventListenerDebugPayload.listenerPos(), gameEventListenerDebugPayload.listenerRange());
+		} else if (customPacketPayload instanceof BreezeDebugPayload breezeDebugPayload) {
+			this.minecraft.debugRenderer.breezeDebugRenderer.add(breezeDebugPayload.breezeInfo());
 		} else {
 			this.handleUnknownCustomPayload(customPacketPayload);
 		}

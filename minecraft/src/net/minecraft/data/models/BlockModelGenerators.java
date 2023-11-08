@@ -54,6 +54,7 @@ import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.MangrovePropaguleBlock;
 import net.minecraft.world.level.block.PitcherCropBlock;
 import net.minecraft.world.level.block.SnifferEggBlock;
+import net.minecraft.world.level.block.entity.trialspawner.TrialSpawnerState;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.BambooLeaves;
 import net.minecraft.world.level.block.state.properties.BellAttachType;
@@ -3400,6 +3401,26 @@ public class BlockModelGenerators {
 			);
 	}
 
+	private void createTrialSpawner() {
+		Block block = Blocks.TRIAL_SPAWNER;
+		TextureMapping textureMapping = TextureMapping.trialSpawner(block, "_side_inactive", "_top_inactive");
+		TextureMapping textureMapping2 = TextureMapping.trialSpawner(block, "_side_active", "_top_active");
+		TextureMapping textureMapping3 = TextureMapping.trialSpawner(block, "_side_active", "_top_ejecting_reward");
+		ResourceLocation resourceLocation = ModelTemplates.CUBE_BOTTOM_TOP_INNER_FACES.create(block, textureMapping, this.modelOutput);
+		ResourceLocation resourceLocation2 = ModelTemplates.CUBE_BOTTOM_TOP_INNER_FACES.createWithSuffix(block, "_active", textureMapping2, this.modelOutput);
+		ResourceLocation resourceLocation3 = ModelTemplates.CUBE_BOTTOM_TOP_INNER_FACES
+			.createWithSuffix(block, "_ejecting_reward", textureMapping3, this.modelOutput);
+		this.delegateItemModel(block, resourceLocation);
+		this.blockStateOutput
+			.accept(MultiVariantGenerator.multiVariant(block).with(PropertyDispatch.property(BlockStateProperties.TRIAL_SPAWNER_STATE).generate(trialSpawnerState -> {
+				return switch(trialSpawnerState) {
+					case INACTIVE, COOLDOWN -> Variant.variant().with(VariantProperties.MODEL, resourceLocation);
+					case WAITING_FOR_PLAYERS, ACTIVE, WAITING_FOR_REWARD_EJECTION -> Variant.variant().with(VariantProperties.MODEL, resourceLocation2);
+					case EJECTING_REWARD -> Variant.variant().with(VariantProperties.MODEL, resourceLocation3);
+				};
+			})));
+	}
+
 	private void createSculkSensor() {
 		ResourceLocation resourceLocation = ModelLocationUtils.getModelLocation(Blocks.SCULK_SENSOR, "_inactive");
 		ResourceLocation resourceLocation2 = ModelLocationUtils.getModelLocation(Blocks.SCULK_SENSOR, "_active");
@@ -4329,7 +4350,7 @@ public class BlockModelGenerators {
 		this.createTrivialCube(Blocks.SHROOMLIGHT);
 		this.createTrivialCube(Blocks.SOUL_SAND);
 		this.createTrivialCube(Blocks.SOUL_SOIL);
-		this.createTrivialCube(Blocks.SPAWNER);
+		this.createTrivialBlock(Blocks.SPAWNER, TexturedModel.CUBE_INNER_FACES);
 		this.createTrivialCube(Blocks.SPONGE);
 		this.createTrivialBlock(Blocks.SEAGRASS, TexturedModel.SEAGRASS);
 		this.createSimpleFlatItemModel(Items.SEAGRASS);
@@ -4439,6 +4460,7 @@ public class BlockModelGenerators {
 		this.createFrogspawnBlock();
 		this.createMangrovePropagule();
 		this.createMuddyMangroveRoots();
+		this.createTrialSpawner();
 		this.createNonTemplateHorizontalBlock(Blocks.LADDER);
 		this.createSimpleFlatItemModel(Blocks.LADDER);
 		this.createNonTemplateHorizontalBlock(Blocks.LECTERN);

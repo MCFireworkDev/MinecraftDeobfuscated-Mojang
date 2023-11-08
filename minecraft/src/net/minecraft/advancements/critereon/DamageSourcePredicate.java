@@ -1,16 +1,11 @@
 package net.minecraft.advancements.critereon;
 
 import com.google.common.collect.ImmutableList;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder.Instance;
 import java.util.List;
 import java.util.Optional;
-import javax.annotation.Nullable;
-import net.minecraft.Util;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -45,16 +40,6 @@ public record DamageSourcePredicate(List<TagPredicate<DamageType>> tags, Optiona
 		} else {
 			return !this.sourceEntity.isPresent() || ((EntityPredicate)this.sourceEntity.get()).matches(serverLevel, vec3, damageSource.getEntity());
 		}
-	}
-
-	public static Optional<DamageSourcePredicate> fromJson(@Nullable JsonElement jsonElement) {
-		return jsonElement != null && !jsonElement.isJsonNull()
-			? Optional.of((DamageSourcePredicate)Util.getOrThrow(CODEC.parse(JsonOps.INSTANCE, jsonElement), JsonParseException::new))
-			: Optional.empty();
-	}
-
-	public JsonElement serializeToJson() {
-		return Util.getOrThrow(CODEC.encodeStart(JsonOps.INSTANCE, this), IllegalStateException::new);
 	}
 
 	public static class Builder {

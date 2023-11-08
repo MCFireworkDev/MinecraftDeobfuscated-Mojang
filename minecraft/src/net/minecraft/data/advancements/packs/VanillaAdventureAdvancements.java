@@ -9,8 +9,8 @@ import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementRequirements;
 import net.minecraft.advancements.AdvancementRewards;
+import net.minecraft.advancements.AdvancementType;
 import net.minecraft.advancements.Criterion;
-import net.minecraft.advancements.FrameType;
 import net.minecraft.advancements.critereon.BlockPredicate;
 import net.minecraft.advancements.critereon.ChanneledLightningTrigger;
 import net.minecraft.advancements.critereon.DamagePredicate;
@@ -142,7 +142,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.root.title"),
 				Component.translatable("advancements.adventure.root.description"),
 				new ResourceLocation("textures/gui/advancements/backgrounds/adventure.png"),
-				FrameType.TASK,
+				AdvancementType.TASK,
 				false,
 				false,
 				false
@@ -158,7 +158,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.sleep_in_bed.title"),
 				Component.translatable("advancements.adventure.sleep_in_bed.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -173,7 +173,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.trade.title"),
 				Component.translatable("advancements.adventure.trade.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -187,7 +187,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.trade_at_world_height.title"),
 				Component.translatable("advancements.adventure.trade_at_world_height.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -206,7 +206,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.kill_a_mob.title"),
 				Component.translatable("advancements.adventure.kill_a_mob.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -220,7 +220,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.kill_all_mobs.title"),
 				Component.translatable("advancements.adventure.kill_all_mobs.description"),
 				null,
-				FrameType.CHALLENGE,
+				AdvancementType.CHALLENGE,
 				true,
 				true,
 				false
@@ -234,7 +234,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.shoot_arrow.title"),
 				Component.translatable("advancements.adventure.shoot_arrow.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -258,7 +258,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.throw_trident.title"),
 				Component.translatable("advancements.adventure.throw_trident.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -282,7 +282,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.very_very_frightening.title"),
 				Component.translatable("advancements.adventure.very_very_frightening.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -296,7 +296,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.summon_iron_golem.title"),
 				Component.translatable("advancements.adventure.summon_iron_golem.description"),
 				null,
-				FrameType.GOAL,
+				AdvancementType.GOAL,
 				true,
 				true,
 				false
@@ -310,7 +310,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.sniper_duel.title"),
 				Component.translatable("advancements.adventure.sniper_duel.description"),
 				null,
-				FrameType.CHALLENGE,
+				AdvancementType.CHALLENGE,
 				true,
 				true,
 				false
@@ -331,7 +331,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.totem_of_undying.title"),
 				Component.translatable("advancements.adventure.totem_of_undying.description"),
 				null,
-				FrameType.GOAL,
+				AdvancementType.GOAL,
 				true,
 				true,
 				false
@@ -345,7 +345,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.ol_betsy.title"),
 				Component.translatable("advancements.adventure.ol_betsy.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -359,7 +359,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.whos_the_pillager_now.title"),
 				Component.translatable("advancements.adventure.whos_the_pillager_now.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -373,7 +373,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.two_birds_one_arrow.title"),
 				Component.translatable("advancements.adventure.two_birds_one_arrow.description"),
 				null,
-				FrameType.CHALLENGE,
+				AdvancementType.CHALLENGE,
 				true,
 				true,
 				false
@@ -393,7 +393,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.arbalistic.title"),
 				Component.translatable("advancements.adventure.arbalistic.description"),
 				null,
-				FrameType.CHALLENGE,
+				AdvancementType.CHALLENGE,
 				true,
 				true,
 				true
@@ -408,7 +408,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.voluntary_exile.title"),
 				Component.translatable("advancements.adventure.voluntary_exile.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				true
@@ -425,7 +425,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.hero_of_the_village.title"),
 				Component.translatable("advancements.adventure.hero_of_the_village.description"),
 				null,
-				FrameType.CHALLENGE,
+				AdvancementType.CHALLENGE,
 				true,
 				true,
 				true
@@ -440,7 +440,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.honey_block_slide.title"),
 				Component.translatable("advancements.adventure.honey_block_slide.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -454,7 +454,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.bullseye.title"),
 				Component.translatable("advancements.adventure.bullseye.description"),
 				null,
-				FrameType.CHALLENGE,
+				AdvancementType.CHALLENGE,
 				true,
 				true,
 				false
@@ -475,7 +475,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.walk_on_powder_snow_with_leather_boots.title"),
 				Component.translatable("advancements.adventure.walk_on_powder_snow_with_leather_boots.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -489,7 +489,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.lightning_rod_with_villager_no_fire.title"),
 				Component.translatable("advancements.adventure.lightning_rod_with_villager_no_fire.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -506,7 +506,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.spyglass_at_parrot.title"),
 				Component.translatable("advancements.adventure.spyglass_at_parrot.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -520,7 +520,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.spyglass_at_ghast.title"),
 				Component.translatable("advancements.adventure.spyglass_at_ghast.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -534,7 +534,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.play_jukebox_in_meadows.title"),
 				Component.translatable("advancements.adventure.play_jukebox_in_meadows.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -554,7 +554,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.spyglass_at_dragon.title"),
 				Component.translatable("advancements.adventure.spyglass_at_dragon.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -568,7 +568,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.fall_from_world_height.title"),
 				Component.translatable("advancements.adventure.fall_from_world_height.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -589,7 +589,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.kill_mob_near_sculk_catalyst.title"),
 				Component.translatable("advancements.adventure.kill_mob_near_sculk_catalyst.description"),
 				null,
-				FrameType.CHALLENGE,
+				AdvancementType.CHALLENGE,
 				true,
 				true,
 				false
@@ -603,7 +603,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.avoid_vibration.title"),
 				Component.translatable("advancements.adventure.avoid_vibration.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -617,7 +617,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.salvage_sherd.title"),
 				Component.translatable("advancements.adventure.salvage_sherd.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -632,7 +632,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.craft_decorated_pot_using_only_sherds.title"),
 				Component.translatable("advancements.adventure.craft_decorated_pot_using_only_sherds.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -657,7 +657,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.trim_with_any_armor_pattern.title"),
 				Component.translatable("advancements.adventure.trim_with_any_armor_pattern.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -670,7 +670,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.trim_with_all_exclusive_armor_patterns.title"),
 				Component.translatable("advancements.adventure.trim_with_all_exclusive_armor_patterns.description"),
 				null,
-				FrameType.CHALLENGE,
+				AdvancementType.CHALLENGE,
 				true,
 				true,
 				false
@@ -684,7 +684,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.read_power_from_chiseled_bookshelf.title"),
 				Component.translatable("advancements.adventure.read_power_from_chiseled_bookshelf.description"),
 				null,
-				FrameType.TASK,
+				AdvancementType.TASK,
 				true,
 				true,
 				false
@@ -762,7 +762,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 		list.forEach(pair -> builder.addCriterion((String)pair.getFirst(), (Criterion<?>)pair.getSecond()));
 		String string = "has_sherd";
 		builder.addCriterion("has_sherd", InventoryChangeTrigger.TriggerInstance.hasItems(ItemPredicate.Builder.item().of(ItemTags.DECORATED_POT_SHERDS)));
-		builder.requirements(new AdvancementRequirements(new String[][]{(String[])list.stream().map(Pair::getFirst).toArray(i -> new String[i]), {"has_sherd"}}));
+		builder.requirements(new AdvancementRequirements(List.of(list.stream().map(Pair::getFirst).toList(), List.of("has_sherd"))));
 		return builder;
 	}
 
@@ -776,7 +776,7 @@ public class VanillaAdventureAdvancements implements AdvancementSubProvider {
 				Component.translatable("advancements.adventure.adventuring_time.title"),
 				Component.translatable("advancements.adventure.adventuring_time.description"),
 				null,
-				FrameType.CHALLENGE,
+				AdvancementType.CHALLENGE,
 				true,
 				true,
 				false

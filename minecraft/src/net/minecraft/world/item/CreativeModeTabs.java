@@ -1612,6 +1612,7 @@ public class CreativeModeTabs {
 					output.accept(Items.EYE_ARMOR_TRIM_SMITHING_TEMPLATE);
 					output.accept(Items.SPIRE_ARMOR_TRIM_SMITHING_TEMPLATE);
 					output.accept(Items.EXPERIENCE_BOTTLE);
+					output.accept(Items.TRIAL_KEY);
 					Set<EnchantmentCategory> set = EnumSet.allOf(EnchantmentCategory.class);
 					itemDisplayParameters.holders().lookup(Registries.ENCHANTMENT).ifPresent(registryLookup -> {
 						generateEnchantmentBookTypesOnlyMaxLevel(output, registryLookup, set, CreativeModeTab.TabVisibility.PARENT_TAB_ONLY);
@@ -1628,6 +1629,7 @@ public class CreativeModeTabs {
 				.icon(() -> new ItemStack(Items.PIG_SPAWN_EGG))
 				.displayItems((itemDisplayParameters, output) -> {
 					output.accept(Items.SPAWNER);
+					output.accept(Items.TRIAL_SPAWNER);
 					output.accept(Items.ALLAY_SPAWN_EGG);
 					output.accept(Items.AXOLOTL_SPAWN_EGG);
 					output.accept(Items.BAT_SPAWN_EGG);
@@ -1647,6 +1649,7 @@ public class CreativeModeTabs {
 					output.accept(Items.ENDERMAN_SPAWN_EGG);
 					output.accept(Items.ENDERMITE_SPAWN_EGG);
 					output.accept(Items.EVOKER_SPAWN_EGG);
+					output.accept(Items.BREEZE_SPAWN_EGG);
 					output.accept(Items.FOX_SPAWN_EGG);
 					output.accept(Items.FROG_SPAWN_EGG);
 					output.accept(Items.GHAST_SPAWN_EGG);
