@@ -69,6 +69,7 @@ public class TestCommand {
 						.executes(commandContext -> runNearbyTest(commandContext.getSource(), false))
 						.then(Commands.literal("untilFailed").executes(commandContext -> runNearbyTest(commandContext.getSource(), true)))
 				)
+				.then(Commands.literal("resetthis").executes(commandContext -> resetNearbyTest(commandContext.getSource())))
 				.then(Commands.literal("runthese").executes(commandContext -> runAllNearbyTests(commandContext.getSource(), false)))
 				.then(
 					Commands.literal("runfailed")
@@ -295,6 +296,23 @@ public class TestCommand {
 		} else {
 			GameTestRunner.clearMarkers(serverLevel);
 			runTest(serverLevel, blockPos2, null, bl);
+			return 1;
+		}
+	}
+
+	private static int resetNearbyTest(CommandSourceStack commandSourceStack) {
+		BlockPos blockPos = BlockPos.containing(commandSourceStack.getPosition());
+		ServerLevel serverLevel = commandSourceStack.getLevel();
+		BlockPos blockPos2 = StructureUtils.findNearestStructureBlock(blockPos, 15, serverLevel);
+		if (blockPos2 == null) {
+			say(serverLevel, "Couldn't find any structure block within 15 radius", ChatFormatting.RED);
+			return 0;
+		} else {
+			StructureBlockEntity structureBlockEntity = (StructureBlockEntity)serverLevel.getBlockEntity(blockPos2);
+			structureBlockEntity.placeStructure(serverLevel);
+			String string = structureBlockEntity.getMetaData();
+			TestFunction testFunction = GameTestRegistry.getTestFunction(string);
+			say(serverLevel, "Reset succeded for: " + testFunction, ChatFormatting.GREEN);
 			return 1;
 		}
 	}
@@ -557,7 +575,7 @@ public class TestCommand {
 	}
 
 	private static void say(ServerLevel serverLevel, String string, ChatFormatting chatFormatting) {
-		serverLevel.getPlayers(serverPlayer -> true).forEach(serverPlayer -> serverPlayer.sendSystemMessage(Component.literal(chatFormatting + string)));
+		serverLevel.getPlayers(serverPlayer -> true).forEach(serverPlayer -> serverPlayer.sendSystemMessage(Component.literal(string).withStyle(chatFormatting)));
 	}
 
 	static class TestSummaryDisplayer implements GameTestListener {

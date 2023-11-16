@@ -36,18 +36,17 @@ public class RealmsBackupInfoScreen extends RealmsScreen {
 	@Override
 	public void init() {
 		this.layout.addToHeader(new StringWidget(TITLE, this.font));
-		this.backupInfoList = new RealmsBackupInfoScreen.BackupInfoList(this.minecraft);
-		this.addRenderableWidget(this.backupInfoList);
+		this.backupInfoList = this.layout.addToContents(new RealmsBackupInfoScreen.BackupInfoList(this.minecraft));
 		this.layout.addToFooter(Button.builder(CommonComponents.GUI_BACK, button -> this.onClose()).build());
-		this.layout.arrangeElements();
+		this.repositionElements();
 		this.layout.visitWidgets(guiEventListener -> {
 		});
 	}
 
 	@Override
 	protected void repositionElements() {
+		this.backupInfoList.setSize(this.width, this.height - this.layout.getFooterHeight() - this.layout.getHeaderHeight());
 		this.layout.arrangeElements();
-		this.backupInfoList.updateSize(this.width, this.height, this.layout.getHeaderHeight(), this.height - this.layout.getFooterHeight());
 	}
 
 	@Override
@@ -86,9 +85,8 @@ public class RealmsBackupInfoScreen extends RealmsScreen {
 			super(
 				minecraft,
 				RealmsBackupInfoScreen.this.width,
-				RealmsBackupInfoScreen.this.height,
+				RealmsBackupInfoScreen.this.height - RealmsBackupInfoScreen.this.layout.getFooterHeight() - RealmsBackupInfoScreen.this.layout.getHeaderHeight(),
 				RealmsBackupInfoScreen.this.layout.getHeaderHeight(),
-				RealmsBackupInfoScreen.this.height - RealmsBackupInfoScreen.this.layout.getFooterHeight(),
 				36
 			);
 			if (RealmsBackupInfoScreen.this.backup.changeList != null) {

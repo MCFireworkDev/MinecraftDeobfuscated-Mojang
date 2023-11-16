@@ -48,7 +48,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.scores.Objective;
-import net.minecraft.world.scores.Score;
+import net.minecraft.world.scores.ReadOnlyScoreInfo;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
 
@@ -375,7 +375,6 @@ public class EntitySelectorOptions {
 				if (!map.isEmpty()) {
 					entitySelectorParser.addPredicate(entity -> {
 						Scoreboard scoreboard = entity.getServer().getScoreboard();
-						String stringxx = entity.getScoreboardName();
 
 						for(Entry<String, MinMaxBounds.Ints> entry : map.entrySet()) {
 							Objective objective = scoreboard.getObjective((String)entry.getKey());
@@ -383,13 +382,12 @@ public class EntitySelectorOptions {
 								return false;
 							}
 
-							if (!scoreboard.hasPlayerScore(stringxx, objective)) {
+							ReadOnlyScoreInfo readOnlyScoreInfo = scoreboard.getPlayerScoreInfo(entity, objective);
+							if (readOnlyScoreInfo == null) {
 								return false;
 							}
 
-							Score score = scoreboard.getOrCreatePlayerScore(stringxx, objective);
-							int i = score.getScore();
-							if (!((MinMaxBounds.Ints)entry.getValue()).matches(i)) {
+							if (!((MinMaxBounds.Ints)entry.getValue()).matches(readOnlyScoreInfo.value())) {
 								return false;
 							}
 						}
