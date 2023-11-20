@@ -117,7 +117,7 @@ public class FlatLevelGeneratorPresets {
 			);
 			this.register(
 				FlatLevelGeneratorPresets.OVERWORLD,
-				Blocks.GRASS,
+				Blocks.SHORT_GRASS,
 				Biomes.PLAINS,
 				ImmutableSet.of(
 					BuiltinStructureSets.VILLAGES,

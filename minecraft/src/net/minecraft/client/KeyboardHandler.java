@@ -383,7 +383,20 @@ public class KeyboardHandler {
 			}
 
 			if (this.minecraft.getNarrator().isActive() && this.minecraft.options.narratorHotkey().get()) {
-				boolean bl2 = screen == null || !(screen.getFocused() instanceof EditBox) || !((EditBox)screen.getFocused()).canConsumeInput();
+				boolean var10000;
+				label136: {
+					if (screen != null) {
+						GuiEventListener bl4 = screen.getFocused();
+						if (bl4 instanceof EditBox editBox && editBox.canConsumeInput()) {
+							var10000 = false;
+							break label136;
+						}
+					}
+
+					var10000 = true;
+				}
+
+				boolean bl2 = var10000;
 				if (k != 0 && i == 66 && Screen.hasControlDown() && bl2) {
 					boolean bl3 = this.minecraft.options.narrator().get() == NarratorStatus.OFF;
 					this.minecraft.options.narrator().set(NarratorStatus.byId(((NarratorStatus)this.minecraft.options.narrator().get()).getId() + 1));
@@ -414,12 +427,12 @@ public class KeyboardHandler {
 			}
 
 			if (this.minecraft.screen != null) {
-				Screen var14 = this.minecraft.screen;
-				if (!(var14 instanceof PauseScreen)) {
+				Screen var15 = this.minecraft.screen;
+				if (!(var15 instanceof PauseScreen)) {
 					return;
 				}
 
-				PauseScreen pauseScreen = (PauseScreen)var14;
+				PauseScreen pauseScreen = (PauseScreen)var15;
 				if (pauseScreen.showsPauseMenu()) {
 					return;
 				}

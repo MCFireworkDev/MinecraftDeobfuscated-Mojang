@@ -1700,7 +1700,7 @@ public class ClientPacketListener extends ClientCommonPacketListenerImpl impleme
 			ServerList.saveSingleServer(this.serverData);
 			if (!this.seenInsecureChatWarning && !clientboundServerDataPacket.enforcesSecureChat()) {
 				SystemToast systemToast = SystemToast.multiline(
-					this.minecraft, SystemToast.SystemToastIds.UNSECURE_SERVER_WARNING, UNSECURE_SERVER_TOAST_TITLE, UNSERURE_SERVER_TOAST
+					this.minecraft, SystemToast.SystemToastId.UNSECURE_SERVER_WARNING, UNSECURE_SERVER_TOAST_TITLE, UNSERURE_SERVER_TOAST
 				);
 				this.minecraft.getToasts().addToast(systemToast);
 				this.seenInsecureChatWarning = true;
