@@ -384,12 +384,12 @@ public class KeyboardHandler {
 
 			if (this.minecraft.getNarrator().isActive() && this.minecraft.options.narratorHotkey().get()) {
 				boolean var10000;
-				label136: {
+				label155: {
 					if (screen != null) {
 						GuiEventListener bl4 = screen.getFocused();
 						if (bl4 instanceof EditBox editBox && editBox.canConsumeInput()) {
 							var10000 = false;
-							break label136;
+							break label155;
 						}
 					}
 
@@ -426,22 +426,30 @@ public class KeyboardHandler {
 				}
 			}
 
-			if (this.minecraft.screen != null) {
-				Screen var15 = this.minecraft.screen;
-				if (!(var15 instanceof PauseScreen)) {
-					return;
+			InputConstants.Key key;
+			boolean bl3;
+			boolean var20;
+			label185: {
+				key = InputConstants.getKey(i, j);
+				bl3 = this.minecraft.screen == null;
+				label144:
+				if (!bl3) {
+					Screen var13 = this.minecraft.screen;
+					if (var13 instanceof PauseScreen pauseScreen && !pauseScreen.showsPauseMenu()) {
+						break label144;
+					}
+
+					var20 = false;
+					break label185;
 				}
 
-				PauseScreen pauseScreen = (PauseScreen)var15;
-				if (pauseScreen.showsPauseMenu()) {
-					return;
-				}
+				var20 = true;
 			}
 
-			InputConstants.Key key = InputConstants.getKey(i, j);
+			boolean bl4 = var20;
 			if (k == 0) {
 				KeyMapping.set(key, false);
-				if (i == 292) {
+				if (bl4 && i == 292) {
 					if (this.handledDebugKey) {
 						this.handledDebugKey = false;
 					} else {
@@ -449,31 +457,35 @@ public class KeyboardHandler {
 					}
 				}
 			} else {
-				if (i == 293 && this.minecraft.gameRenderer != null) {
-					this.minecraft.gameRenderer.togglePostEffect();
-				}
-
-				boolean bl4 = false;
-				if (i == 256) {
-					this.minecraft.pauseGame(bl);
-					bl4 |= bl;
-				}
-
-				bl4 |= bl && this.handleDebugKeys(i);
-				this.handledDebugKey |= bl4;
-				if (i == 290) {
-					this.minecraft.options.hideGui = !this.minecraft.options.hideGui;
-				}
-
+				boolean bl5 = false;
 				if (bl4) {
-					KeyMapping.set(key, false);
-				} else {
-					KeyMapping.set(key, true);
-					KeyMapping.click(key);
+					if (i == 293 && this.minecraft.gameRenderer != null) {
+						this.minecraft.gameRenderer.togglePostEffect();
+					}
+
+					if (i == 256) {
+						this.minecraft.pauseGame(bl);
+						bl5 |= bl;
+					}
+
+					bl5 |= bl && this.handleDebugKeys(i);
+					this.handledDebugKey |= bl5;
+					if (i == 290) {
+						this.minecraft.options.hideGui = !this.minecraft.options.hideGui;
+					}
+
+					if (this.minecraft.getDebugOverlay().showProfilerChart() && !bl && i >= 48 && i <= 57) {
+						this.minecraft.debugFpsMeterKeyPress(i - 48);
+					}
 				}
 
-				if (this.minecraft.getDebugOverlay().showProfilerChart() && !bl && i >= 48 && i <= 57) {
-					this.minecraft.debugFpsMeterKeyPress(i - 48);
+				if (bl3) {
+					if (bl5) {
+						KeyMapping.set(key, false);
+					} else {
+						KeyMapping.set(key, true);
+						KeyMapping.click(key);
+					}
 				}
 			}
 		}

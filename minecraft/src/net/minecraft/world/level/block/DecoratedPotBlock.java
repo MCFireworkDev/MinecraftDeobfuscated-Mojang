@@ -102,40 +102,44 @@ public class DecoratedPotBlock extends BaseEntityBlock implements SimpleWaterlog
 		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
 	) {
 		BlockEntity itemStack = level.getBlockEntity(blockPos);
-		if (!(itemStack instanceof DecoratedPotBlockEntity)) {
-			return InteractionResult.PASS;
-		} else {
-			DecoratedPotBlockEntity decoratedPotBlockEntity = (DecoratedPotBlockEntity)itemStack;
-			ItemStack var13 = player.getItemInHand(interactionHand);
-			ItemStack itemStack2 = decoratedPotBlockEntity.getTheItem();
-			if (!var13.isEmpty() && (itemStack2.isEmpty() || ItemStack.isSameItemSameTags(itemStack2, var13) && itemStack2.getCount() < itemStack2.getMaxStackSize())) {
-				decoratedPotBlockEntity.wobble(DecoratedPotBlockEntity.WobbleStyle.POSITIVE);
-				player.awardStat(Stats.ITEM_USED.get(var13.getItem()));
-				ItemStack itemStack3 = player.isCreative() ? var13.copyWithCount(1) : var13.split(1);
-				float f;
-				if (decoratedPotBlockEntity.isEmpty()) {
-					decoratedPotBlockEntity.setTheItem(itemStack3);
-					f = (float)itemStack3.getCount() / (float)itemStack3.getMaxStackSize();
-				} else {
-					itemStack2.grow(1);
-					f = (float)itemStack2.getCount() / (float)itemStack2.getMaxStackSize();
-				}
-
-				level.playSound(null, blockPos, SoundEvents.DECORATED_POT_INSERT, SoundSource.BLOCKS, 1.0F, 0.7F + 0.5F * f);
-				if (level instanceof ServerLevel serverLevel) {
-					serverLevel.sendParticles(
-						ParticleTypes.DUST_PLUME, (double)blockPos.getX() + 0.5, (double)blockPos.getY() + 1.2, (double)blockPos.getZ() + 0.5, 7, 0.0, 0.0, 0.0, 0.0
-					);
-				}
-
-				level.updateNeighbourForOutputSignal(blockPos, this);
+		if (itemStack instanceof DecoratedPotBlockEntity decoratedPotBlockEntity) {
+			if (level.isClientSide) {
+				return InteractionResult.CONSUME;
 			} else {
-				level.playSound(null, blockPos, SoundEvents.DECORATED_POT_INSERT_FAIL, SoundSource.BLOCKS, 1.0F, 1.0F);
-				decoratedPotBlockEntity.wobble(DecoratedPotBlockEntity.WobbleStyle.NEGATIVE);
-			}
+				ItemStack itemStackx = player.getItemInHand(interactionHand);
+				ItemStack itemStack2 = decoratedPotBlockEntity.getTheItem();
+				if (!itemStackx.isEmpty()
+					&& (itemStack2.isEmpty() || ItemStack.isSameItemSameTags(itemStack2, itemStackx) && itemStack2.getCount() < itemStack2.getMaxStackSize())) {
+					decoratedPotBlockEntity.wobble(DecoratedPotBlockEntity.WobbleStyle.POSITIVE);
+					player.awardStat(Stats.ITEM_USED.get(itemStackx.getItem()));
+					ItemStack itemStack3 = player.isCreative() ? itemStackx.copyWithCount(1) : itemStackx.split(1);
+					float f;
+					if (decoratedPotBlockEntity.isEmpty()) {
+						decoratedPotBlockEntity.setTheItem(itemStack3);
+						f = (float)itemStack3.getCount() / (float)itemStack3.getMaxStackSize();
+					} else {
+						itemStack2.grow(1);
+						f = (float)itemStack2.getCount() / (float)itemStack2.getMaxStackSize();
+					}
 
-			level.gameEvent(player, GameEvent.BLOCK_CHANGE, blockPos);
-			return InteractionResult.SUCCESS;
+					level.playSound(null, blockPos, SoundEvents.DECORATED_POT_INSERT, SoundSource.BLOCKS, 1.0F, 0.7F + 0.5F * f);
+					if (level instanceof ServerLevel serverLevel) {
+						serverLevel.sendParticles(
+							ParticleTypes.DUST_PLUME, (double)blockPos.getX() + 0.5, (double)blockPos.getY() + 1.2, (double)blockPos.getZ() + 0.5, 7, 0.0, 0.0, 0.0, 0.0
+						);
+					}
+
+					level.updateNeighbourForOutputSignal(blockPos, this);
+				} else {
+					level.playSound(null, blockPos, SoundEvents.DECORATED_POT_INSERT_FAIL, SoundSource.BLOCKS, 1.0F, 1.0F);
+					decoratedPotBlockEntity.wobble(DecoratedPotBlockEntity.WobbleStyle.NEGATIVE);
+				}
+
+				level.gameEvent(player, GameEvent.BLOCK_CHANGE, blockPos);
+				return InteractionResult.SUCCESS;
+			}
+		} else {
+			return InteractionResult.PASS;
 		}
 	}
 

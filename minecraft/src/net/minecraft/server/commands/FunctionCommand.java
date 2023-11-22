@@ -11,11 +11,8 @@ import com.mojang.brigadier.exceptions.Dynamic2CommandExceptionType;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.function.Function;
 import javax.annotation.Nullable;
 import net.minecraft.commands.CommandResultCallback;
 import net.minecraft.commands.CommandSourceStack;
@@ -259,8 +256,7 @@ public class FunctionCommand {
 			ExecutionControl<CommandSourceStack> executionControl
 		) throws CommandSyntaxException {
 			CommandContext<CommandSourceStack> commandContext = contextChain.getTopContext().copyFor(commandSourceStack);
-			Pair<ResourceLocation, Collection<CommandFunction<CommandSourceStack>>> pair = FunctionArgument.getFunctionOrTag(commandContext, "name")
-				.mapSecond(either -> either.map(Collections::singleton, Function.identity()));
+			Pair<ResourceLocation, Collection<CommandFunction<CommandSourceStack>>> pair = FunctionArgument.getFunctionCollection(commandContext, "name");
 			Collection<CommandFunction<CommandSourceStack>> collection = (Collection)pair.getSecond();
 			if (collection.isEmpty()) {
 				throw FunctionCommand.ERROR_NO_FUNCTIONS.create(Component.translationArg(pair.getFirst()));
