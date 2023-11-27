@@ -12,7 +12,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.net.SocketAddress;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -22,7 +21,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
@@ -223,7 +221,6 @@ public class ServerGamePacketListenerImpl
 	private int aboveGroundVehicleTickCount;
 	private int receivedMovePacketCount;
 	private int knownMovePacketCount;
-	private final AtomicReference<Instant> lastChatTimeStamp = new AtomicReference(Instant.EPOCH);
 	@Nullable
 	private RemoteChatSession chatSession;
 	private SignedMessageChain.Decoder signedMessageDecoder;
@@ -241,9 +238,7 @@ public class ServerGamePacketListenerImpl
 		this.player = serverPlayer;
 		serverPlayer.connection = this;
 		serverPlayer.getTextFilter().join();
-		this.signedMessageDecoder = minecraftServer.enforceSecureProfile()
-			? SignedMessageChain.Decoder.REJECT_ALL
-			: SignedMessageChain.Decoder.unsigned(serverPlayer.getUUID());
+		this.signedMessageDecoder = SignedMessageChain.Decoder.unsigned(serverPlayer.getUUID(), minecraftServer::enforceSecureProfile);
 		this.chatMessageChain = new FutureChain(minecraftServer);
 	}
 
@@ -1216,9 +1211,7 @@ public class ServerGamePacketListenerImpl
 		if (isChatMessageIllegal(serverboundChatPacket.message())) {
 			this.disconnect(Component.translatable("multiplayer.disconnect.illegal_characters"));
 		} else {
-			Optional<LastSeenMessages> optional = this.tryHandleChat(
-				serverboundChatPacket.message(), serverboundChatPacket.timeStamp(), serverboundChatPacket.lastSeenMessages()
-			);
+			Optional<LastSeenMessages> optional = this.tryHandleChat(serverboundChatPacket.lastSeenMessages());
 			if (optional.isPresent()) {
 				this.server.submit(() -> {
 					PlayerChatMessage playerChatMessage;
@@ -1245,9 +1238,7 @@ public class ServerGamePacketListenerImpl
 		if (isChatMessageIllegal(serverboundChatCommandPacket.command())) {
 			this.disconnect(Component.translatable("multiplayer.disconnect.illegal_characters"));
 		} else {
-			Optional<LastSeenMessages> optional = this.tryHandleChat(
-				serverboundChatCommandPacket.command(), serverboundChatCommandPacket.timeStamp(), serverboundChatCommandPacket.lastSeenMessages()
-			);
+			Optional<LastSeenMessages> optional = this.tryHandleChat(serverboundChatCommandPacket.lastSeenMessages());
 			if (optional.isPresent()) {
 				this.server.submit(() -> {
 					this.performChatCommand(serverboundChatCommandPacket, (LastSeenMessages)optional.get());
@@ -1274,6 +1265,7 @@ public class ServerGamePacketListenerImpl
 	}
 
 	private void handleMessageDecodeFailure(SignedMessageChain.DecodeException decodeException) {
+		LOGGER.warn("Failed to update secure chat state for {}: '{}'", this.player.getGameProfile().getName(), decodeException.getComponent().getString());
 		if (decodeException.shouldDisconnect()) {
 			this.disconnect(decodeException.getComponent());
 		} else {
@@ -1302,20 +1294,14 @@ public class ServerGamePacketListenerImpl
 		return commandDispatcher.parse(string, this.player.createCommandSourceStack());
 	}
 
-	private Optional<LastSeenMessages> tryHandleChat(String string, Instant instant, LastSeenMessages.Update update) {
-		if (!this.updateChatOrder(instant)) {
-			LOGGER.warn("{} sent out-of-order chat: '{}'", this.player.getName().getString(), string);
-			this.disconnect(Component.translatable("multiplayer.disconnect.out_of_order_chat"));
+	private Optional<LastSeenMessages> tryHandleChat(LastSeenMessages.Update update) {
+		Optional<LastSeenMessages> optional = this.unpackAndApplyLastSeen(update);
+		if (this.player.getChatVisibility() == ChatVisiblity.HIDDEN) {
+			this.send(new ClientboundSystemChatPacket(Component.translatable("chat.disabled.options").withStyle(ChatFormatting.RED), false));
 			return Optional.empty();
 		} else {
-			Optional<LastSeenMessages> optional = this.unpackAndApplyLastSeen(update);
-			if (this.player.getChatVisibility() == ChatVisiblity.HIDDEN) {
-				this.send(new ClientboundSystemChatPacket(Component.translatable("chat.disabled.options").withStyle(ChatFormatting.RED), false));
-				return Optional.empty();
-			} else {
-				this.player.resetLastActionTime();
-				return optional;
-			}
+			this.player.resetLastActionTime();
+			return optional;
 		}
 	}
 
@@ -1329,18 +1315,6 @@ public class ServerGamePacketListenerImpl
 
 			return optional;
 		}
-	}
-
-	private boolean updateChatOrder(Instant instant) {
-		Instant instant2;
-		do {
-			instant2 = (Instant)this.lastChatTimeStamp.get();
-			if (instant.isBefore(instant2)) {
-				return false;
-			}
-		} while(!this.lastChatTimeStamp.compareAndSet(instant2, instant));
-
-		return true;
 	}
 
 	private static boolean isChatMessageIllegal(String string) {
@@ -1446,7 +1420,7 @@ public class ServerGamePacketListenerImpl
 	public void addPendingMessage(PlayerChatMessage playerChatMessage) {
 		MessageSignature messageSignature = playerChatMessage.signature();
 		if (messageSignature != null) {
-			this.messageSignatureCache.push(playerChatMessage);
+			this.messageSignatureCache.push(playerChatMessage.signedBody(), playerChatMessage.signature());
 			int i;
 			synchronized(this.lastSeenMessages) {
 				this.lastSeenMessages.addPending(messageSignature);
