@@ -7,10 +7,12 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.logging.LogUtils;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.Map.Entry;
 import javax.annotation.Nullable;
 import net.minecraft.commands.arguments.ParticleArgument;
+import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -19,6 +21,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -42,7 +45,7 @@ public class AreaEffectCloud extends Entity implements TraceableEntity {
 	public static final float DEFAULT_WIDTH = 6.0F;
 	public static final float HEIGHT = 0.5F;
 	private static final String TAG_EFFECTS = "effects";
-	private Potion potion = Potions.EMPTY;
+	private Holder<Potion> potion = Potions.EMPTY;
 	private final List<MobEffectInstance> effects = Lists.<MobEffectInstance>newArrayList();
 	private final Map<Entity, Integer> victims = Maps.newHashMap();
 	private int duration = 600;
@@ -94,15 +97,15 @@ public class AreaEffectCloud extends Entity implements TraceableEntity {
 		return this.getEntityData().get(DATA_RADIUS);
 	}
 
-	public void setPotion(Potion potion) {
-		this.potion = potion;
+	public void setPotion(Holder<Potion> holder) {
+		this.potion = holder;
 		if (!this.fixedColor) {
 			this.updateColor();
 		}
 	}
 
 	private void updateColor() {
-		if (this.potion == Potions.EMPTY && this.effects.isEmpty()) {
+		if (this.potion.is(Potions.EMPTY) && this.effects.isEmpty()) {
 			this.getEntityData().set(DATA_COLOR, 0);
 		} else {
 			this.getEntityData().set(DATA_COLOR, PotionUtils.getColor(PotionUtils.getAllEffects(this.potion, this.effects)));
@@ -225,7 +228,7 @@ public class AreaEffectCloud extends Entity implements TraceableEntity {
 				this.victims.entrySet().removeIf(entry -> this.tickCount >= entry.getValue());
 				List<MobEffectInstance> list = Lists.<MobEffectInstance>newArrayList();
 
-				for(MobEffectInstance mobEffectInstance : this.potion.getEffects()) {
+				for(MobEffectInstance mobEffectInstance : this.potion.value().getEffects()) {
 					list.add(
 						new MobEffectInstance(
 							mobEffectInstance.getEffect(),
@@ -252,8 +255,8 @@ public class AreaEffectCloud extends Entity implements TraceableEntity {
 									this.victims.put(livingEntity, this.tickCount + this.reapplicationDelay);
 
 									for(MobEffectInstance mobEffectInstance2 : list) {
-										if (mobEffectInstance2.getEffect().isInstantenous()) {
-											mobEffectInstance2.getEffect().applyInstantenousEffect(this, this.getOwner(), livingEntity, mobEffectInstance2.getAmplifier(), 0.5);
+										if (mobEffectInstance2.getEffect().value().isInstantenous()) {
+											mobEffectInstance2.getEffect().value().applyInstantenousEffect(this, this.getOwner(), livingEntity, mobEffectInstance2.getAmplifier(), 0.5);
 										} else {
 											livingEntity.addEffect(new MobEffectInstance(mobEffectInstance2), this);
 										}
@@ -396,8 +399,9 @@ public class AreaEffectCloud extends Entity implements TraceableEntity {
 			compoundTag.putInt("Color", this.getColor());
 		}
 
-		if (this.potion != Potions.EMPTY) {
-			compoundTag.putString("Potion", BuiltInRegistries.POTION.getKey(this.potion).toString());
+		Optional<ResourceKey<Potion>> optional = this.potion.unwrapKey();
+		if (optional.isPresent() && !this.potion.is(Potions.EMPTY)) {
+			compoundTag.putString("Potion", ((ResourceKey)optional.get()).location().toString());
 		}
 
 		if (!this.effects.isEmpty()) {
@@ -420,7 +424,7 @@ public class AreaEffectCloud extends Entity implements TraceableEntity {
 		super.onSyncedDataUpdated(entityDataAccessor);
 	}
 
-	public Potion getPotion() {
+	public Holder<Potion> getPotion() {
 		return this.potion;
 	}
 

@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -24,7 +25,7 @@ import net.minecraft.world.level.gameevent.GameEventListener;
 import net.minecraft.world.level.gameevent.PositionSource;
 import net.minecraft.world.phys.Vec3;
 
-public class SculkCatalystBlockEntity extends BlockEntity implements GameEventListener.Holder<SculkCatalystBlockEntity.CatalystListener> {
+public class SculkCatalystBlockEntity extends BlockEntity implements GameEventListener.Provider<SculkCatalystBlockEntity.CatalystListener> {
 	private final SculkCatalystBlockEntity.CatalystListener catalystListener;
 
 	public SculkCatalystBlockEntity(BlockPos blockPos, BlockState blockState) {
@@ -79,8 +80,8 @@ public class SculkCatalystBlockEntity extends BlockEntity implements GameEventLi
 		}
 
 		@Override
-		public boolean handleGameEvent(ServerLevel serverLevel, GameEvent gameEvent, GameEvent.Context context, Vec3 vec3) {
-			if (gameEvent == GameEvent.ENTITY_DIE) {
+		public boolean handleGameEvent(ServerLevel serverLevel, Holder<GameEvent> holder, GameEvent.Context context, Vec3 vec3) {
+			if (holder.is(GameEvent.ENTITY_DIE)) {
 				Entity i = context.sourceEntity();
 				if (i instanceof LivingEntity livingEntity) {
 					if (!livingEntity.wasExperienceConsumed()) {

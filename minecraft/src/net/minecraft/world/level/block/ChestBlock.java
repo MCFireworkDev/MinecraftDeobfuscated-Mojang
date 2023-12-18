@@ -18,7 +18,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.CompoundContainer;
 import net.minecraft.world.Container;
 import net.minecraft.world.Containers;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.LivingEntity;
@@ -250,9 +249,7 @@ public class ChestBlock extends AbstractChestBlock<ChestBlockEntity> implements 
 	}
 
 	@Override
-	public InteractionResult use(
-		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
-	) {
+	public InteractionResult useWithoutItem(BlockState blockState, Level level, BlockPos blockPos, Player player, BlockHitResult blockHitResult) {
 		if (level.isClientSide) {
 			return InteractionResult.SUCCESS;
 		} else {

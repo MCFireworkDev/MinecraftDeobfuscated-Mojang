@@ -5,7 +5,6 @@ import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -50,12 +49,10 @@ public class JukeboxBlock extends BaseEntityBlock {
 	}
 
 	@Override
-	public InteractionResult use(
-		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
-	) {
+	public InteractionResult useWithoutItem(BlockState blockState, Level level, BlockPos blockPos, Player player, BlockHitResult blockHitResult) {
 		if (blockState.getValue(HAS_RECORD)) {
-			BlockEntity var8 = level.getBlockEntity(blockPos);
-			if (var8 instanceof JukeboxBlockEntity jukeboxBlockEntity) {
+			BlockEntity var7 = level.getBlockEntity(blockPos);
+			if (var7 instanceof JukeboxBlockEntity jukeboxBlockEntity) {
 				jukeboxBlockEntity.popOutRecord();
 				return InteractionResult.sidedSuccess(level.isClientSide);
 			}

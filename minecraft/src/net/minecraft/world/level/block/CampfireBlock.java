@@ -17,7 +17,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -89,29 +89,29 @@ public class CampfireBlock extends BaseEntityBlock implements SimpleWaterloggedB
 	}
 
 	@Override
-	public InteractionResult use(
-		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	public ItemInteractionResult useItemOn(
+		ItemStack itemStack, BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
 	) {
 		BlockEntity blockEntity = level.getBlockEntity(blockPos);
 		if (blockEntity instanceof CampfireBlockEntity campfireBlockEntity) {
-			ItemStack itemStack = player.getItemInHand(interactionHand);
-			Optional<RecipeHolder<CampfireCookingRecipe>> optional = campfireBlockEntity.getCookableRecipe(itemStack);
+			ItemStack itemStack2 = player.getItemInHand(interactionHand);
+			Optional<RecipeHolder<CampfireCookingRecipe>> optional = campfireBlockEntity.getCookableRecipe(itemStack2);
 			if (optional.isPresent()) {
 				if (!level.isClientSide
 					&& campfireBlockEntity.placeFood(
 						player,
-						player.getAbilities().instabuild ? itemStack.copy() : itemStack,
+						player.getAbilities().instabuild ? itemStack2.copy() : itemStack2,
 						((CampfireCookingRecipe)((RecipeHolder)optional.get()).value()).getCookingTime()
 					)) {
 					player.awardStat(Stats.INTERACT_WITH_CAMPFIRE);
-					return InteractionResult.SUCCESS;
+					return ItemInteractionResult.SUCCESS;
 				}
 
-				return InteractionResult.CONSUME;
+				return ItemInteractionResult.CONSUME;
 			}
 		}
 
-		return InteractionResult.PASS;
+		return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 	}
 
 	@Override

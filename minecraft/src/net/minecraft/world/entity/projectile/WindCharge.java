@@ -5,10 +5,8 @@ import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.monster.breeze.Breeze;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
@@ -34,8 +32,8 @@ public class WindCharge extends AbstractHurtingProjectile implements ItemSupplie
 
 	@Override
 	protected AABB makeBoundingBox() {
-		float f = this.getType().getDimensions().width / 2.0F;
-		float g = this.getType().getDimensions().height;
+		float f = this.getType().getDimensions().width() / 2.0F;
+		float g = this.getType().getDimensions().height();
 		float h = 0.15F;
 		return new AABB(
 			this.position().x - (double)f,
@@ -45,11 +43,6 @@ public class WindCharge extends AbstractHurtingProjectile implements ItemSupplie
 			this.position().y - 0.15F + (double)g,
 			this.position().z + (double)f
 		);
-	}
-
-	@Override
-	protected float getEyeHeight(Pose pose, EntityDimensions entityDimensions) {
-		return 0.0F;
 	}
 
 	@Override
@@ -68,7 +61,7 @@ public class WindCharge extends AbstractHurtingProjectile implements ItemSupplie
 		if (!this.level().isClientSide) {
 			Entity var10000 = entityHitResult.getEntity();
 			Entity var3 = this.getOwner();
-			var10000.hurt(this.damageSources().mobProjectile(this, var3 instanceof LivingEntity livingEntity ? livingEntity : null), 1.0F);
+			var10000.hurt(this.damageSources().windCharge(this, var3 instanceof LivingEntity livingEntity ? livingEntity : null), 1.0F);
 			this.explode();
 		}
 	}

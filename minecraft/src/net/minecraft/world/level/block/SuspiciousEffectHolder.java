@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -39,10 +40,10 @@ public interface SuspiciousEffectHolder {
 		return suspiciousEffectHolder instanceof SuspiciousEffectHolder suspiciousEffectHolder2 ? suspiciousEffectHolder2 : null;
 	}
 
-	public static record EffectEntry(MobEffect effect, int duration) {
+	public static record EffectEntry(Holder<MobEffect> effect, int duration) {
 		public static final Codec<SuspiciousEffectHolder.EffectEntry> CODEC = RecordCodecBuilder.create(
 			instance -> instance.group(
-						BuiltInRegistries.MOB_EFFECT.byNameCodec().fieldOf("id").forGetter(SuspiciousEffectHolder.EffectEntry::effect),
+						BuiltInRegistries.MOB_EFFECT.holderByNameCodec().fieldOf("id").forGetter(SuspiciousEffectHolder.EffectEntry::effect),
 						Codec.INT.optionalFieldOf("duration", Integer.valueOf(160)).forGetter(SuspiciousEffectHolder.EffectEntry::duration)
 					)
 					.apply(instance, SuspiciousEffectHolder.EffectEntry::new)

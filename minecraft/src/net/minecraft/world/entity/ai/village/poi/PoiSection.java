@@ -23,7 +23,6 @@ import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.SectionPos;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.VisibleForDebug;
 import org.slf4j.Logger;
 
@@ -67,7 +66,7 @@ public class PoiSection {
 
 	public void add(BlockPos blockPos, Holder<PoiType> holder) {
 		if (this.add(new PoiRecord(blockPos, holder, this.setDirty))) {
-			LOGGER.debug("Added POI of type {} @ {}", holder.unwrapKey().map(resourceKey -> resourceKey.location().toString()).orElse("[unregistered]"), blockPos);
+			LOGGER.debug("Added POI of type {} @ {}", holder.getRegisteredName(), blockPos);
 			this.setDirty.run();
 		}
 	}

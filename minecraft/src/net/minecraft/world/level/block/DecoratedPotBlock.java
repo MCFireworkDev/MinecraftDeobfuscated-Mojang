@@ -20,6 +20,7 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
@@ -98,28 +99,27 @@ public class DecoratedPotBlock extends BaseEntityBlock implements SimpleWaterlog
 	}
 
 	@Override
-	public InteractionResult use(
-		BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
+	public ItemInteractionResult useItemOn(
+		ItemStack itemStack, BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult
 	) {
-		BlockEntity itemStack = level.getBlockEntity(blockPos);
-		if (itemStack instanceof DecoratedPotBlockEntity decoratedPotBlockEntity) {
+		BlockEntity itemStack2 = level.getBlockEntity(blockPos);
+		if (itemStack2 instanceof DecoratedPotBlockEntity decoratedPotBlockEntity) {
 			if (level.isClientSide) {
-				return InteractionResult.CONSUME;
+				return ItemInteractionResult.CONSUME;
 			} else {
-				ItemStack itemStackx = player.getItemInHand(interactionHand);
-				ItemStack itemStack2 = decoratedPotBlockEntity.getTheItem();
-				if (!itemStackx.isEmpty()
-					&& (itemStack2.isEmpty() || ItemStack.isSameItemSameTags(itemStack2, itemStackx) && itemStack2.getCount() < itemStack2.getMaxStackSize())) {
+				ItemStack itemStack2x = decoratedPotBlockEntity.getTheItem();
+				if (!itemStack.isEmpty()
+					&& (itemStack2x.isEmpty() || ItemStack.isSameItemSameTags(itemStack2x, itemStack) && itemStack2x.getCount() < itemStack2x.getMaxStackSize())) {
 					decoratedPotBlockEntity.wobble(DecoratedPotBlockEntity.WobbleStyle.POSITIVE);
-					player.awardStat(Stats.ITEM_USED.get(itemStackx.getItem()));
-					ItemStack itemStack3 = player.isCreative() ? itemStackx.copyWithCount(1) : itemStackx.split(1);
+					player.awardStat(Stats.ITEM_USED.get(itemStack.getItem()));
+					ItemStack itemStack3 = player.isCreative() ? itemStack.copyWithCount(1) : itemStack.split(1);
 					float f;
 					if (decoratedPotBlockEntity.isEmpty()) {
 						decoratedPotBlockEntity.setTheItem(itemStack3);
 						f = (float)itemStack3.getCount() / (float)itemStack3.getMaxStackSize();
 					} else {
-						itemStack2.grow(1);
-						f = (float)itemStack2.getCount() / (float)itemStack2.getMaxStackSize();
+						itemStack2x.grow(1);
+						f = (float)itemStack2x.getCount() / (float)itemStack2x.getMaxStackSize();
 					}
 
 					level.playSound(null, blockPos, SoundEvents.DECORATED_POT_INSERT, SoundSource.BLOCKS, 1.0F, 0.7F + 0.5F * f);
@@ -130,14 +130,25 @@ public class DecoratedPotBlock extends BaseEntityBlock implements SimpleWaterlog
 					}
 
 					decoratedPotBlockEntity.setChanged();
+					level.gameEvent(player, GameEvent.BLOCK_CHANGE, blockPos);
+					return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
 				} else {
-					level.playSound(null, blockPos, SoundEvents.DECORATED_POT_INSERT_FAIL, SoundSource.BLOCKS, 1.0F, 1.0F);
-					decoratedPotBlockEntity.wobble(DecoratedPotBlockEntity.WobbleStyle.NEGATIVE);
+					return super.useItemOn(itemStack, blockState, level, blockPos, player, interactionHand, blockHitResult);
 				}
-
-				level.gameEvent(player, GameEvent.BLOCK_CHANGE, blockPos);
-				return InteractionResult.SUCCESS;
 			}
+		} else {
+			return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
+		}
+	}
+
+	@Override
+	public InteractionResult useWithoutItem(BlockState blockState, Level level, BlockPos blockPos, Player player, BlockHitResult blockHitResult) {
+		BlockEntity var7 = level.getBlockEntity(blockPos);
+		if (var7 instanceof DecoratedPotBlockEntity decoratedPotBlockEntity) {
+			level.playSound(null, blockPos, SoundEvents.DECORATED_POT_INSERT_FAIL, SoundSource.BLOCKS, 1.0F, 1.0F);
+			decoratedPotBlockEntity.wobble(DecoratedPotBlockEntity.WobbleStyle.NEGATIVE);
+			level.gameEvent(player, GameEvent.BLOCK_CHANGE, blockPos);
+			return InteractionResult.SUCCESS;
 		} else {
 			return InteractionResult.PASS;
 		}

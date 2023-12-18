@@ -571,7 +571,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 		this.gpuWarnlistManager = new GpuWarnlistManager();
 		this.resourceManager.registerReloadListener(this.gpuWarnlistManager);
 		this.resourceManager.registerReloadListener(this.regionalCompliancies);
-		this.gui = new Gui(this, this.itemRenderer);
+		this.gui = new Gui(this);
 		this.debugRenderer = new DebugRenderer(this);
 		RealmsClient realmsClient = RealmsClient.create(this);
 		this.realmsDataFetcher = new RealmsDataFetcher(realmsClient);
@@ -1191,7 +1191,6 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 			this.profiler.pop();
 		}
 
-		this.mouseHandler.turnPlayer();
 		this.window.setErrorSection("Render");
 		this.profiler.push("sound");
 		this.soundManager.updateSource(this.gameRenderer.getMainCamera());
@@ -1214,6 +1213,8 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 		FogRenderer.setupNoFog();
 		this.profiler.push("display");
 		RenderSystem.enableCull();
+		this.profiler.popPush("mouse");
+		this.mouseHandler.handleAccumulatedMovement();
 		this.profiler.pop();
 		if (!this.noRender) {
 			this.profiler.popPush("gameRenderer");
@@ -1289,7 +1290,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
 				"%d fps T: %s%s%s%s B: %d%s",
 				fps,
 				k == 260 ? "inf" : k,
-				this.options.enableVsync().get() ? " vsync" : "",
+				this.options.enableVsync().get() ? " vsync" : " ",
 				this.options.graphicsMode().get(),
 				this.options.cloudStatus().get() == CloudStatus.OFF ? "" : (this.options.cloudStatus().get() == CloudStatus.FAST ? " fast-clouds" : " fancy-clouds"),
 				this.options.biomeBlendRadius().get(),

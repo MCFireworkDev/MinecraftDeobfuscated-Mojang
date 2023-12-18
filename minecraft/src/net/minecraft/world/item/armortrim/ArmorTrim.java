@@ -65,7 +65,7 @@ public class ArmorTrim {
 	}
 
 	public boolean hasPatternAndMaterial(Holder<TrimPattern> holder, Holder<TrimMaterial> holder2) {
-		return holder == this.pattern && holder2 == this.material;
+		return holder.equals(this.pattern) && holder2.equals(this.material);
 	}
 
 	public Holder<TrimPattern> pattern() {
@@ -89,7 +89,7 @@ public class ArmorTrim {
 			return false;
 		} else {
 			ArmorTrim armorTrim = (ArmorTrim)object;
-			return armorTrim.pattern == this.pattern && armorTrim.material == this.material;
+			return this.pattern.equals(armorTrim.pattern) && this.material.equals(armorTrim.material);
 		}
 	}
 

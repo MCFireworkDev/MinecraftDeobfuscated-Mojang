@@ -137,10 +137,6 @@ public class LocateCommand {
 		}
 	}
 
-	private static String getElementName(Pair<BlockPos, ? extends Holder<?>> pair) {
-		return (String)pair.getSecond().unwrapKey().map(resourceKey -> resourceKey.location().toString()).orElse("[unregistered]");
-	}
-
 	public static int showLocateResult(
 		CommandSourceStack commandSourceStack,
 		ResourceOrTagArgument.Result<?> result,
@@ -150,7 +146,7 @@ public class LocateCommand {
 		boolean bl,
 		Duration duration
 	) {
-		String string2 = result.unwrap().map(reference -> result.asPrintable(), named -> result.asPrintable() + " (" + getElementName(pair) + ")");
+		String string2 = result.unwrap().map(reference -> result.asPrintable(), named -> result.asPrintable() + " (" + pair.getSecond().getRegisteredName() + ")");
 		return showLocateResult(commandSourceStack, blockPos, pair, string, bl, string2, duration);
 	}
 
@@ -164,7 +160,7 @@ public class LocateCommand {
 		Duration duration
 	) {
 		String string2 = result.unwrap()
-			.map(resourceKey -> resourceKey.location().toString(), tagKey -> "#" + tagKey.location() + " (" + getElementName(pair) + ")");
+			.map(resourceKey -> resourceKey.location().toString(), tagKey -> "#" + tagKey.location() + " (" + pair.getSecond().getRegisteredName() + ")");
 		return showLocateResult(commandSourceStack, blockPos, pair, string, bl, string2, duration);
 	}
 

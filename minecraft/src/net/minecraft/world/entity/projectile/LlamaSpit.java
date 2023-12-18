@@ -60,7 +60,7 @@ public class LlamaSpit extends Projectile {
 		super.onHitEntity(entityHitResult);
 		Entity var3 = this.getOwner();
 		if (var3 instanceof LivingEntity livingEntity) {
-			entityHitResult.getEntity().hurt(this.damageSources().mobProjectile(this, livingEntity), 1.0F);
+			entityHitResult.getEntity().hurt(this.damageSources().spit(this, livingEntity), 1.0F);
 		}
 	}
 
